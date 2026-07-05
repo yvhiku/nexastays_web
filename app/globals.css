@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 347 76% 59%;
+    --primary-foreground: 0 0% 100%;
+    --background: 330 33% 99%;
+    --foreground: 330 30% 10%;
+    --muted: 330 15% 96%;
+    --muted-foreground: 330 10% 45%;
+    --accent: 27 94% 69%;
+    --accent-foreground: 27 60% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 330 30% 10%;
+    --border: 330 20% 93%;
+    --input: 330 20% 93%;
+    --ring: 347 76% 59%;
+    --radius: 0.875rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-nexa-bg text-nexa-ink font-sans antialiased overflow-x-hidden;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display leading-tight;
+  }
+
+  p {
+    @apply text-nexa-ink-3 leading-[1.75];
+  }
+}
