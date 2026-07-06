@@ -15,7 +15,7 @@ import { getSavedListingIds } from "@/lib/saved-listings";
 import type { StaysListing } from "@/lib/stays-types";
 
 function SavedListingsContent() {
-  const { token } = useAuth();
+  const { token, userId } = useAuth();
   const { t, localePath } = useLanguage();
   const [listings, setListings] = useState<StaysListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ function SavedListingsContent() {
   const loadSaved = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const ids = getSavedListingIds();
+    const ids = getSavedListingIds(userId);
     if (ids.length === 0) {
       setListings([]);
       setLoading(false);
@@ -40,7 +40,7 @@ function SavedListingsContent() {
     } finally {
       setLoading(false);
     }
-  }, [token, t]);
+  }, [token, userId, t]);
 
   useEffect(() => {
     void loadSaved();

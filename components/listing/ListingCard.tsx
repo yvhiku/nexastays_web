@@ -10,6 +10,7 @@ import { LISTING_TYPES } from "@/lib/host-listing-constants";
 import { getShortLocationLabel } from "@/lib/listing-location";
 import type { StaysListing } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
 
 const placeholderImg = "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
@@ -46,6 +47,7 @@ export function ListingCard({
   localePath,
 }: ListingCardProps) {
   const router = useRouter();
+  const { userId } = useAuth();
   const price = listing.rate_plan?.base_price ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const photoCount = listing.media?.filter((m) => m.kind === "PHOTO").length ?? 0;
@@ -55,11 +57,11 @@ export function ListingCard({
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setSaved(isListingSaved(listing.id));
-    const onChange = () => setSaved(isListingSaved(listing.id));
+    setSaved(isListingSaved(listing.id, userId));
+    const onChange = () => setSaved(isListingSaved(listing.id, userId));
     window.addEventListener("nexa-saved-listings-changed", onChange);
     return () => window.removeEventListener("nexa-saved-listings-changed", onChange);
-  }, [listing.id]);
+  }, [listing.id, userId]);
 
   const detailUrl = new URLSearchParams();
   if (checkin) detailUrl.set("checkin", checkin);
@@ -115,7 +117,7 @@ export function ListingCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setSaved(toggleSavedListing(listing.id));
+                setSaved(toggleSavedListing(listing.id, userId));
               }}
               aria-label={t("common.save")}
               aria-pressed={saved}

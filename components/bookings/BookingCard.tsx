@@ -26,11 +26,13 @@ import {
   CreditCard,
   FileText,
   AlertTriangle,
+  Calendar,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80";
+  "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, {
@@ -60,7 +62,7 @@ function PaymentCountdown({ expiresAt }: { expiresAt: string }) {
   }, [expiresAt]);
 
   return (
-    <span className="text-xs font-medium text-orange-700" aria-live="polite">
+    <span className="text-[0.7rem] font-medium text-orange-700" aria-live="polite">
       {remaining}
     </span>
   );
@@ -104,200 +106,260 @@ function BookingCardComponent({
     return translated !== key ? translated : lifecycle.replace(/_/g, " ");
   }, [lifecycle, t]);
 
+  const actionBtnClass = "h-8 px-3 text-xs font-semibold rounded-lg";
+
   return (
     <article
-      className="group rounded-2xl border border-nexa-line/70 bg-white shadow-nexa-card overflow-hidden transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line"
+      className="group rounded-xl border border-nexa-line/60 bg-white shadow-sm overflow-hidden transition-all duration-200 hover:shadow-nexa-card hover:border-nexa-line"
       aria-label={`${booking.listing?.title ?? t("bookings.listing")} — ${statusLabel}`}
     >
-      <div className="flex flex-col lg:flex-row">
-        <div className="relative w-full lg:w-[220px] xl:w-[260px] shrink-0 aspect-[4/3] lg:aspect-auto lg:min-h-[200px]">
+      <div className="flex flex-col sm:flex-row sm:items-stretch">
+        {/* Image — compact left strip */}
+        <div className="relative w-full sm:w-[148px] md:w-[160px] shrink-0 h-[120px] sm:h-auto sm:min-h-[132px]">
           <Image
             src={imageSrc}
             alt={booking.listing?.title ?? t("bookings.listing")}
             fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 260px"
+            className="object-cover sm:rounded-l-xl"
+            sizes="(max-width: 640px) 100vw, 160px"
             unoptimized
           />
         </div>
 
-        <div className="flex flex-1 flex-col sm:flex-row min-w-0">
-          <div className="flex-1 p-5 sm:p-6 min-w-0">
-            <div className="flex flex-wrap items-start gap-2 mb-2">
-              <h3 className="font-semibold text-lg text-nexa-ink truncate flex-1 min-w-0">
+        {/* Middle — details */}
+        <div className="flex flex-1 flex-col min-w-0 border-b sm:border-b-0 sm:border-r border-nexa-line/40">
+          <div className="flex-1 px-4 py-3 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h3 className="font-semibold text-[0.95rem] leading-snug text-nexa-ink line-clamp-2 flex-1 min-w-0">
                 {booking.listing?.title ?? t("bookings.listing")}
               </h3>
-              <span
-                className={cn(
-                  "inline-flex px-2.5 py-1 rounded-full text-[0.7rem] font-semibold uppercase tracking-wide border",
-                  lifecycleBadgeClasses(lifecycle),
-                )}
-              >
-                {statusLabel}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span
+                  className={cn(
+                    "inline-flex px-2 py-0.5 rounded-full text-[0.62rem] font-bold uppercase tracking-wide border whitespace-nowrap",
+                    lifecycleBadgeClasses(lifecycle),
+                  )}
+                >
+                  {statusLabel}
+                </span>
+                <span className="text-sm font-bold text-nexa-ink whitespace-nowrap">
+                  {price} {booking.currency}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-nexa-ink-4 flex items-center gap-1">
+              <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+              <span className="truncate">{booking.listing?.city ?? "—"}, Morocco</span>
+            </p>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-nexa-ink-3">
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3 shrink-0 text-nexa-ink-4" aria-hidden />
+                {formatDate(booking.checkin_date)} – {formatDate(booking.checkout_date)}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Users className="h-3 w-3 shrink-0 text-nexa-ink-4" aria-hidden />
+                {booking.guest_count}{" "}
+                {booking.guest_count === 1 ? t("myBookings.guest") : t("myBookings.guests")}
               </span>
             </div>
 
-            <p className="text-sm text-nexa-ink-4 flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-              {booking.listing?.city ?? "—"}
-            </p>
-
-            <p className="text-sm text-nexa-ink-3 mt-2">
-              {formatDate(booking.checkin_date)} – {formatDate(booking.checkout_date)} ·{" "}
-              {booking.guest_count}{" "}
-              {booking.guest_count === 1 ? t("myBookings.guest") : t("myBookings.guests")}
-            </p>
-
-            <p className="text-base font-semibold text-nexa-ink mt-3">
-              {price} {booking.currency}
-            </p>
-
             {lifecycle === "PENDING_PAYMENT" && expiresAt && (
-              <p className="text-xs text-orange-700 mt-2 flex items-center gap-2">
-                <CreditCard className="h-3.5 w-3.5" aria-hidden />
+              <p className="text-[0.7rem] text-orange-700 mt-1.5 flex items-center gap-1.5">
+                <CreditCard className="h-3 w-3" aria-hidden />
                 {t("myBookings.paymentExpires")} <PaymentCountdown expiresAt={expiresAt} />
               </p>
             )}
 
             {booking.payment_failed && (
-              <p className="text-xs text-red-600 mt-2 flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+              <p className="text-[0.7rem] text-red-600 mt-1 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" aria-hidden />
                 {t("myBookings.paymentFailed")}
               </p>
             )}
           </div>
 
-          <div className="flex sm:flex-col gap-2 p-5 sm:p-6 sm:pl-0 lg:pl-0 lg:pr-6 lg:justify-center border-t sm:border-t-0 border-nexa-line/50 shrink-0">
-            {lifecycle === "UPCOMING" && (
-              <>
-                <Button size="sm" asChild className="gap-1">
-                  <Link href={detailHref}>
-                    {t("myBookings.viewDetails")} <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                {canCancelBooking(booking) && onCancel && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 border-red-200 hover:bg-red-50 gap-1"
-                    onClick={() => onCancel(booking.id)}
-                    disabled={cancelling}
-                  >
-                    <XCircle className="h-4 w-4" />
-                    {cancelling ? t("myBookings.cancelling") : t("myBookings.cancelBooking")}
-                  </Button>
-                )}
-                {canComplainBooking(booking) && (
-                  <Button size="sm" variant="outline" asChild className="gap-1">
-                    <Link href={`/contact?booking=${booking.id}`}>
-                      <MessageCircle className="h-4 w-4" />
-                      {t("myBookings.reportIssue")}
-                    </Link>
-                  </Button>
-                )}
-              </>
-            )}
-
-            {lifecycle === "ACTIVE" && (
-              <>
-                <Button size="sm" asChild className="gap-1">
-                  <Link href={detailHref}>{t("myBookings.openStay")}</Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild className="gap-1">
-                  <Link href={detailHref}>
-                    <Navigation className="h-4 w-4" />
-                    {t("myBookings.getDirections")}
-                  </Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild className="gap-1">
-                  <Link href={detailHref}>
-                    <Phone className="h-4 w-4" />
-                    {t("myBookings.contactHost")}
-                  </Link>
-                </Button>
-              </>
-            )}
-
-            {lifecycle === "PENDING_PAYMENT" && (
-              <>
-                <Button size="sm" asChild className="gap-1">
-                  <Link href={detailHref}>
-                    {t("myBookings.completePayment")} <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                {canCancelBooking(booking) && onCancel && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                    onClick={() => onCancel(booking.id)}
-                    disabled={cancelling}
-                  >
-                    {t("myBookings.cancelBooking")}
-                  </Button>
-                )}
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={detailHref}>{t("myBookings.viewDetails")}</Link>
-                </Button>
-              </>
-            )}
-
-            {lifecycle === "COMPLETED" && (
-              <>
-                <Button size="sm" variant="outline" asChild className="gap-1">
-                  <Link href={detailHref}>
-                    <FileText className="h-4 w-4" />
-                    {t("myBookings.viewReceipt")}
-                  </Link>
-                </Button>
-                {canReviewBooking(booking) && (
-                  <Button size="sm" variant="outline" asChild className="gap-1">
-                    <Link href={`${detailHref}#review`}>
-                      <Star className="h-4 w-4" />
-                      {t("myBookings.leaveReview")}
-                    </Link>
-                  </Button>
-                )}
-                <Button size="sm" asChild className="gap-1">
-                  <Link href={listingHref}>
-                    <RotateCcw className="h-4 w-4" />
-                    {t("myBookings.bookAgain")}
-                  </Link>
-                </Button>
-              </>
-            )}
-
-            {(lifecycle === "CANCELLED" || lifecycle === "EXPIRED") && (
-              <>
-                <Button size="sm" asChild className="gap-1">
-                  <Link href={listingHref}>
-                    <RotateCcw className="h-4 w-4" />
-                    {t("myBookings.bookAgain")}
-                  </Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={detailHref}>{t("myBookings.viewDetails")}</Link>
-                </Button>
-              </>
-            )}
+          {/* Mobile actions — horizontal row */}
+          <div className="flex sm:hidden flex-wrap gap-2 px-4 pb-3">
+            <BookingCardActions
+              lifecycle={lifecycle}
+              booking={booking}
+              detailHref={detailHref}
+              listingHref={listingHref}
+              t={t}
+              onCancel={onCancel}
+              cancelling={cancelling}
+              btnClass={actionBtnClass}
+              horizontal
+            />
           </div>
+        </div>
+
+        {/* Desktop actions — compact vertical stack */}
+        <div className="hidden sm:flex flex-col justify-center gap-1.5 px-3 py-3 shrink-0 w-[148px] md:w-[156px] bg-nexa-bg-1/30">
+          <BookingCardActions
+            lifecycle={lifecycle}
+            booking={booking}
+            detailHref={detailHref}
+            listingHref={listingHref}
+            t={t}
+            onCancel={onCancel}
+            cancelling={cancelling}
+            btnClass={cn(actionBtnClass, "w-full justify-center")}
+            horizontal={false}
+          />
         </div>
       </div>
 
-      <footer className="px-5 sm:px-6 py-3 bg-nexa-bg-1/80 border-t border-nexa-line/50 flex flex-wrap gap-x-6 gap-y-1 text-xs text-nexa-ink-4">
+      <footer className="px-4 py-2 bg-nexa-bg-1/60 border-t border-nexa-line/40 flex flex-wrap items-center justify-between gap-x-4 gap-y-0.5 text-[0.7rem] text-nexa-ink-4">
         <span>
-          {t("myBookings.bookingId")}: <span className="font-mono text-nexa-ink-3">{booking.id.slice(0, 8)}…</span>
+          {t("myBookings.bookingId")}:{" "}
+          <span className="font-mono text-nexa-ink-3">#{booking.id.slice(0, 8).toUpperCase()}</span>
         </span>
         {booking.created_at && (
           <span>
             {t("myBookings.bookedOn")} {formatDate(booking.created_at)}
           </span>
         )}
-        <span>
+        <span className="font-semibold text-nexa-ink-3">
           {t("myBookings.total")}: {price} {booking.currency}
         </span>
       </footer>
     </article>
+  );
+}
+
+interface BookingCardActionsProps {
+  lifecycle: ReturnType<typeof resolveBookingLifecycle>;
+  booking: StaysBooking;
+  detailHref: string;
+  listingHref: string;
+  t: (key: string) => string;
+  onCancel?: (id: string) => void;
+  cancelling?: boolean;
+  btnClass: string;
+  horizontal: boolean;
+}
+
+function BookingCardActions({
+  lifecycle,
+  booking,
+  detailHref,
+  listingHref,
+  t,
+  onCancel,
+  cancelling,
+  btnClass,
+  horizontal,
+}: BookingCardActionsProps) {
+  const wrap = horizontal ? "contents" : "flex flex-col gap-1.5 w-full";
+
+  const primary = (label: string, href: string, icon?: React.ReactNode) => (
+    <Button size="sm" asChild className={cn(btnClass, "gap-1")}>
+      <Link href={href}>
+        {label}
+        {icon ?? <ChevronRight className="h-3 w-3" />}
+      </Link>
+    </Button>
+  );
+
+  const outline = (
+    label: string,
+    opts: { href?: string; onClick?: () => void; className?: string; icon?: React.ReactNode },
+  ) => {
+    const cls = cn(btnClass, "gap-1", opts.className);
+    if (opts.href) {
+      return (
+        <Button size="sm" variant="outline" asChild className={cls}>
+          <Link href={opts.href}>
+            {opts.icon}
+            {label}
+          </Link>
+        </Button>
+      );
+    }
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className={cls}
+        onClick={opts.onClick}
+        disabled={cancelling}
+      >
+        {opts.icon}
+        {label}
+      </Button>
+    );
+  };
+
+  return (
+    <div className={wrap}>
+      {lifecycle === "UPCOMING" && (
+        <>
+          {primary(t("myBookings.viewDetails"), detailHref)}
+          {canCancelBooking(booking) && onCancel &&
+            outline(cancelling ? t("myBookings.cancelling") : t("myBookings.cancelBooking"), {
+              onClick: () => onCancel(booking.id),
+              className: "text-red-600 border-red-200 hover:bg-red-50",
+              icon: <XCircle className="h-3 w-3" />,
+            })}
+          {canComplainBooking(booking) &&
+            outline(t("myBookings.reportIssue"), {
+              href: `/contact?booking=${booking.id}`,
+              icon: <MessageCircle className="h-3 w-3" />,
+            })}
+        </>
+      )}
+
+      {lifecycle === "ACTIVE" && (
+        <>
+          {primary(t("myBookings.openStay"), detailHref)}
+          {outline(t("myBookings.getDirections"), {
+            href: detailHref,
+            icon: <Navigation className="h-3 w-3" />,
+          })}
+          {outline(t("myBookings.contactHost"), {
+            href: detailHref,
+            icon: <Phone className="h-3 w-3" />,
+          })}
+        </>
+      )}
+
+      {lifecycle === "PENDING_PAYMENT" && (
+        <>
+          {primary(t("myBookings.completePayment"), detailHref)}
+          {canCancelBooking(booking) && onCancel &&
+            outline(t("myBookings.cancelBooking"), {
+              onClick: () => onCancel(booking.id),
+              className: "text-red-600 border-red-200 hover:bg-red-50",
+            })}
+          {outline(t("myBookings.viewDetails"), { href: detailHref })}
+        </>
+      )}
+
+      {lifecycle === "COMPLETED" && (
+        <>
+          {outline(t("myBookings.viewReceipt"), {
+            href: detailHref,
+            icon: <FileText className="h-3 w-3" />,
+          })}
+          {canReviewBooking(booking) &&
+            outline(t("myBookings.leaveReview"), {
+              href: `${detailHref}/review`,
+              icon: <Star className="h-3 w-3" />,
+            })}
+          {primary(t("myBookings.bookAgain"), listingHref, <RotateCcw className="h-3 w-3" />)}
+        </>
+      )}
+
+      {(lifecycle === "CANCELLED" || lifecycle === "EXPIRED") && (
+        <>
+          {primary(t("myBookings.bookAgain"), listingHref, <RotateCcw className="h-3 w-3" />)}
+          {outline(t("myBookings.viewDetails"), { href: detailHref })}
+        </>
+      )}
+    </div>
   );
 }
 

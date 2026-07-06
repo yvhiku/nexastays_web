@@ -38,7 +38,10 @@
     @apply font-display leading-tight;
   }
 
-  p {
-    @apply text-nexa-ink-3 leading-[1.75];
+  .rating-star {
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .rating-star:hover {
+    transform: scale(1.12);
   }
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Shield, FileText, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StaysListing } from "@/lib/stays-types";
+import { addDaysToDateString } from "@/lib/booking-dates";
 
 interface ListingBookingCardProps {
   listing: StaysListing;
@@ -60,6 +61,7 @@ export function ListingBookingCard({
     userProfile.kyc_status !== "VERIFIED";
 
   const today = new Date().toISOString().split("T")[0];
+  const checkoutMin = checkin ? addDaysToDateString(checkin, 1) : today;
 
   return (
     <div className="md:sticky md:top-[100px] bg-white/80 backdrop-blur-xl rounded-2xl shadow-nexa-card border border-white p-6">
@@ -100,7 +102,7 @@ export function ListingBookingCard({
               value={checkout}
               onChange={(e) => onCheckoutChange(e.target.value)}
               required
-              min={checkin || today}
+              min={checkoutMin}
               className="w-full bg-transparent border-none p-0 text-sm focus:ring-0 focus:outline-none"
             />
           </div>
@@ -136,7 +138,7 @@ export function ListingBookingCard({
         <Button
           type="submit"
           className="w-full justify-center py-6 text-base font-bold rounded-xl bg-nexa-primary-soft text-nexa-primary-dark hover:bg-nexa-primary/20 border-0 shadow-md"
-          disabled={booking || !checkin || !checkout || !!kycBlocked}
+          disabled={booking || !checkin || !checkout || nights < 1 || !!kycBlocked}
         >
           {booking ? "Booking…" : isAuthenticated ? "Request to Book" : "Sign in to Book"}
         </Button>

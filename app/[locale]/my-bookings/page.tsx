@@ -209,7 +209,7 @@ function MyBookingsContent() {
             </div>
           ) : (
             <>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {visibleBookings.map((b) => (
                   <BookingCard
                     key={b.id}

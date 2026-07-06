@@ -41,7 +41,52 @@ export interface StaysListing {
     full_name?: string | null;
   } | null;
   media?: { asset_id: string; kind: "PHOTO" | "VIDEO" | "WALKTHROUGH"; sort_order?: number }[];
+  avg_rating?: number | null;
+  review_count?: number;
 }
+
+export interface ListingReviewMedia {
+  asset_id: string;
+  display_order: number;
+}
+
+export interface ListingReview {
+  id: string;
+  listing_id: string;
+  guest_id: string;
+  guest_name: string;
+  guest_photo_url: string | null;
+  rating: number;
+  comment: string;
+  created_at: string;
+  edited_at?: string | null;
+  is_verified_stay: boolean;
+  is_edited: boolean;
+  media: ListingReviewMedia[];
+}
+
+export interface ListingReviewsSummary {
+  overall_avg_rating: number | null;
+  total_count: number;
+  distribution: Record<string, number>;
+  distribution_pct: Record<string, number>;
+}
+
+export interface ListingReviewsResponse {
+  reviews: ListingReview[];
+  summary: ListingReviewsSummary;
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface StaysReviewDetail extends ListingReview {
+  booking_id: string;
+  status: string;
+  can_edit: boolean;
+}
+
+export type ReviewSort = "newest" | "highest" | "lowest";
 
 /** Occupant/guest identity for booking verification */
 export interface CreateBookingOccupantDto {
@@ -64,11 +109,14 @@ export interface CreateBookingDto {
   occupants?: CreateBookingOccupantDto[];
 }
 
-/** Occupant info shared with host/admin — full_name and id_number only (no ID document) */
+/** Occupant info — guests see minimal fields; hosts see contact details too */
 export interface BookingOccupantInfo {
   full_name: string;
   id_number: string | null;
   is_primary?: boolean;
+  phone?: string | null;
+  email?: string | null;
+  gender?: string | null;
 }
 
 export type BookingLifecycle =
@@ -100,6 +148,11 @@ export interface StaysBooking {
   can_review?: boolean;
   can_complain?: boolean;
   can_cancel?: boolean;
+  has_reviewed?: boolean;
+  review_blocked_reason?: "OWN_LISTING";
+  viewer_role?: "GUEST" | "HOST";
+  guest_name?: string | null;
+  guest_phone?: string | null;
   occupants?: BookingOccupantInfo[];
   listing?: {
     id: string;
@@ -107,6 +160,8 @@ export interface StaysBooking {
     city: string;
     address?: string | null;
     check_in_instructions?: string | null;
+    checkin_time?: string | null;
+    checkout_time?: string | null;
     check_in_contact?: {
       full_name: string;
       phone: string;

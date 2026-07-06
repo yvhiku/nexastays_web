@@ -19,6 +19,10 @@ import {
   lifecycleBadgeClasses,
   canReviewBooking,
 } from "@/lib/booking-lifecycle";
+import { StarRatingDisplay } from "@/components/reviews/StarRatingSelector";
+import { HostBookingDetailView } from "@/components/bookings/HostBookingDetailView";
+import { getBookingReview } from "@/lib/stays-api";
+import type { StaysReviewDetail } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -70,6 +74,7 @@ export default function BookingDetailPage() {
   const [consentAccepted, setConsentAccepted] = useState<boolean | null>(null);
   const [consentChecked, setConsentChecked] = useState(false);
   const [acceptingConsent, setAcceptingConsent] = useState(false);
+  const [existingReview, setExistingReview] = useState<StaysReviewDetail | null>(null);
 
   useEffect(() => {
     getBooking(id, token)
@@ -77,6 +82,15 @@ export default function BookingDetailPage() {
       .catch((err) => setError(err instanceof Error ? err.message : t("bookings.failedLoad")))
       .finally(() => setLoading(false));
   }, [id, token, t]);
+
+  useEffect(() => {
+    if (!token || !booking) return;
+    if (booking.has_reviewed || resolveBookingLifecycle(booking) === "COMPLETED") {
+      getBookingReview(id, token)
+        .then((r) => setExistingReview(r))
+        .catch(() => setExistingReview(null));
+    }
+  }, [id, token, booking]);
 
   useEffect(() => {
     if (token && booking?.status === "PAYMENT_PENDING" && consentAccepted === null) {
@@ -115,6 +129,24 @@ export default function BookingDetailPage() {
   const lifecycleKey = `myBookings.lifecycle.${lifecycle}`;
   const lifecycleLabel = t(lifecycleKey) !== lifecycleKey ? t(lifecycleKey) : lifecycle;
   const paid = ["CONFIRMED", "CHECKED_IN", "COMPLETED"].includes(booking.status);
+  const isHostView = booking.viewer_role === "HOST";
+
+  if (isHostView) {
+    return (
+      <>
+        <NavBar />
+        <main className="pt-[72px] min-h-screen bg-nexa-bg-1">
+          <HostBookingDetailView
+            booking={booking}
+            t={t}
+            tf={tf}
+            localePath={localePath}
+          />
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   const timelineSteps = [
     {
@@ -381,7 +413,7 @@ export default function BookingDetailPage() {
               </Button>
             </Section>
 
-            <Section title={t("bookings.support")}>
+            <Section title={t("bookings.support")} id="review">
               <div className="flex flex-wrap gap-3">
                 <Button variant="outline" asChild className="gap-2">
                   <Link href={`/contact?booking=${booking.id}`}>
@@ -389,15 +421,40 @@ export default function BookingDetailPage() {
                     {t("myBookings.reportIssue")}
                   </Link>
                 </Button>
-                {canReviewBooking(booking) && (
-                  <Button variant="outline" asChild className="gap-2" id="review">
-                    <Link href={localePath(`/listings/${booking.listing_id}`)}>
+                {existingReview && (
+                  <>
+                    <Button variant="outline" asChild className="gap-2">
+                      <Link href={localePath(`/bookings/${booking.id}/review`)}>
+                        <Star className="h-4 w-4" aria-hidden />
+                        {t("myBookings.viewReview")}
+                      </Link>
+                    </Button>
+                    {existingReview.can_edit && (
+                      <Button asChild className="gap-2">
+                        <Link href={localePath(`/bookings/${booking.id}/review`)}>
+                          {t("myBookings.editReview")}
+                        </Link>
+                      </Button>
+                    )}
+                  </>
+                )}
+                {!existingReview && canReviewBooking(booking) && (
+                  <Button asChild className="gap-2">
+                    <Link href={localePath(`/bookings/${booking.id}/review`)}>
                       <Star className="h-4 w-4" aria-hidden />
                       {t("myBookings.leaveReview")}
                     </Link>
                   </Button>
                 )}
               </div>
+              {existingReview && (
+                <div className="mt-4 p-4 rounded-xl bg-nexa-bg-2 border border-nexa-line/40">
+                  <StarRatingDisplay rating={existingReview.rating} size="md" />
+                  {existingReview.comment && (
+                    <p className="mt-2 text-sm text-nexa-ink-3">{existingReview.comment}</p>
+                  )}
+                </div>
+              )}
             </Section>
           </div>
 

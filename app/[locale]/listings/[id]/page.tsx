@@ -28,6 +28,7 @@ import { getListing, createBooking, getListingMediaUrl, searchListings } from "@
 import { ListingHeroGallery } from "@/components/listing/ListingHeroGallery";
 import { ListingBookingCard } from "@/components/listing/ListingBookingCard";
 import { ListingLocationSection } from "@/components/listing/ListingLocationSection";
+import { ListingReviewsSection } from "@/components/reviews/ListingReviewsSection";
 import { getShortLocationLabel } from "@/lib/listing-location";
 import { getCurrentUserOrNull } from "@/lib/kyc-api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +36,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useStaysFees } from "@/contexts/StaysFeeContext";
 import { calculateBookingFees } from "@/lib/stays-fees";
 import { GuestVerificationStep } from "@/components/booking/GuestVerificationStep";
+import {
+  addDaysToDateString,
+  bookingNights,
+  isValidBookingRange,
+  readDateSearchParam,
+} from "@/lib/booking-dates";
 import type { StaysListing, CreateBookingOccupantDto } from "@/lib/stays-types";
 import {
   amenityLabel,
@@ -89,8 +96,12 @@ export default function ListingDetailPage() {
   } | null>(null);
   const [showVerificationStep, setShowVerificationStep] = useState(false);
 
-  const [checkin, setCheckin] = useState(searchParams.get("checkin") || "");
-  const [checkout, setCheckout] = useState(searchParams.get("checkout") || "");
+  const [checkin, setCheckin] = useState(
+    () => readDateSearchParam(searchParams, ["checkin", "checkin_date"]),
+  );
+  const [checkout, setCheckout] = useState(
+    () => readDateSearchParam(searchParams, ["checkout", "checkout_date"]),
+  );
   const [guests, setGuests] = useState(parseInt(searchParams.get("guests") || "1", 10));
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
@@ -98,8 +109,8 @@ export default function ListingDetailPage() {
   const [videoPlaying, setVideoPlaying] = useState(false);
 
   useEffect(() => {
-    setCheckin(searchParams.get("checkin") || "");
-    setCheckout(searchParams.get("checkout") || "");
+    setCheckin(readDateSearchParam(searchParams, ["checkin", "checkin_date"]));
+    setCheckout(readDateSearchParam(searchParams, ["checkout", "checkout_date"]));
     setGuests(parseInt(searchParams.get("guests") || "1", 10));
   }, [searchParams]);
 
@@ -136,6 +147,17 @@ export default function ListingDetailPage() {
     setFullscreenImage(photoUrls[index] ?? placeholderImg);
   };
 
+  const handleCheckinChange = (value: string) => {
+    setCheckin(value);
+    if (value && checkout && !isValidBookingRange(value, checkout)) {
+      setCheckout(addDaysToDateString(value, 1));
+    }
+  };
+
+  const handleCheckoutChange = (value: string) => {
+    setCheckout(value);
+  };
+
   const handleBookClick = (e: React.FormEvent) => {
     e.preventDefault();
     if (!listing) return;
@@ -143,7 +165,16 @@ export default function ListingDetailPage() {
       router.push(`${localePath("/login")}?redirect=${encodeURIComponent(localePath(`/listings/${id}`))}`);
       return;
     }
+    if (!checkin || !checkout) {
+      setBookingError("Please select check-in and check-out dates.");
+      return;
+    }
+    if (!isValidBookingRange(checkin, checkout)) {
+      setBookingError("Check-out must be at least one night after check-in.");
+      return;
+    }
     if (userProfile && userProfile.kyc_status !== "APPROVED" && userProfile.kyc_status !== "VERIFIED") return;
+    setBookingError(null);
     setShowVerificationStep(true);
   };
 
@@ -215,9 +246,7 @@ export default function ListingDetailPage() {
   const amenities = normalizeAmenities(listing.rules?.amenities);
   const maxGuests = listing.rules?.max_guests ?? 6;
   const nights =
-    checkin && checkout
-      ? Math.ceil((new Date(checkout).getTime() - new Date(checkin).getTime()) / (1000 * 60 * 60 * 24))
-      : 0;
+    checkin && checkout ? bookingNights(checkin, checkout) : 0;
   const subtotal = nights * price + cleaningFee;
   const { guestFee, totalGuestPays: total } = calculateBookingFees(subtotal, rates);
   const guestFeeLabel = `${rates.guest_fee_percent}%`;
@@ -508,6 +537,12 @@ export default function ListingDetailPage() {
                 </section>
               )}
 
+              <ListingReviewsSection
+                listingId={listing.id}
+                initialAvg={(listing as StaysListing & { avg_rating?: number }).avg_rating}
+                initialCount={(listing as StaysListing & { review_count?: number }).review_count}
+              />
+
               {/* House Rules */}
               <section className="border-t border-nexa-line/60 pt-10">
                 <h2 className="font-display text-2xl font-semibold mb-8">Things to know</h2>
@@ -591,8 +626,8 @@ export default function ListingDetailPage() {
                 isAuthenticated={isAuthenticated}
                 userProfile={userProfile}
                 localePath={localePath}
-                onCheckinChange={setCheckin}
-                onCheckoutChange={setCheckout}
+                onCheckinChange={handleCheckinChange}
+                onCheckoutChange={handleCheckoutChange}
                 onGuestsChange={setGuests}
                 onSubmit={handleBookClick}
               />

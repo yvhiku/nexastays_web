@@ -24,6 +24,9 @@ import type {
   HostBooking,
   HostDashboardStats,
   CreateHostListingBody,
+  ListingReviewsResponse,
+  StaysReviewDetail,
+  ReviewSort,
 } from "./stays-types";
 import { getStaysApiBaseUrl } from "./env";
 
@@ -32,6 +35,11 @@ const API_BASE = getStaysApiBaseUrl();
 /** Public URL for listing media (photos, walkthrough) - no auth needed */
 export function getListingMediaUrl(listingId: string, assetId: string): string {
   return `${API_BASE}/stays/listings/${encodeURIComponent(listingId)}/media/${encodeURIComponent(assetId)}`;
+}
+
+/** Public URL for review photo attachments */
+export function getReviewMediaUrl(assetId: string): string {
+  return `${API_BASE}/stays/reviews/media/${encodeURIComponent(assetId)}`;
 }
 
 const client = axios.create({
@@ -110,6 +118,15 @@ function handleError(err: unknown): never {
       throw new Error("Please wait a moment and try again.");
     }
     const msg = e.response?.data?.message ?? e.response?.data?.error ?? e.message ?? "Request failed";
+    if (msg === "ReviewNotAllowed") {
+      throw new Error("You can only review after your stay is completed.");
+    }
+    if (msg === "ReviewOwnListingNotAllowed") {
+      throw new Error("You cannot review a stay at your own property.");
+    }
+    if (msg === "ReviewAlreadyExists") {
+      throw new Error("You have already reviewed this stay.");
+    }
     throw new Error(msg);
   }
   throw err;
@@ -511,6 +528,91 @@ export async function uploadHostSelfie(
   return unwrap<{ asset_id: string }>(res);
 }
 
+/** List reviews for a listing (public) */
+export async function getListingReviews(
+  listingId: string,
+  params?: { page?: number; limit?: number; sort?: ReviewSort }
+): Promise<ListingReviewsResponse> {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.sort) q.set("sort", params.sort);
+  const res = await client
+    .get(`/stays/listings/${listingId}/reviews?${q.toString()}`)
+    .catch(handleError);
+  return unwrap<ListingReviewsResponse>(res);
+}
+
+/** Get review for a booking (guest) */
+export async function getBookingReview(
+  bookingId: string,
+  token?: string | null
+): Promise<StaysReviewDetail | null> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .get(`/stays/bookings/${bookingId}/review`, { headers })
+    .catch(handleError);
+  const data = unwrap<StaysReviewDetail | null>(res);
+  return data ?? null;
+}
+
+/** Submit a review */
+export async function createReview(
+  body: {
+    bookingId: string;
+    rating: number;
+    comment?: string;
+    assetIds?: string[];
+  },
+  token?: string | null
+): Promise<StaysReviewDetail> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post("/stays/reviews", body, { headers })
+    .catch(handleError);
+  return unwrap<StaysReviewDetail>(res);
+}
+
+/** Legacy: submit review by booking path */
+export async function submitBookingReview(
+  bookingId: string,
+  body: { rating: number; comment?: string },
+  token?: string | null
+): Promise<StaysReviewDetail> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(`/stays/bookings/${bookingId}/review`, body, { headers })
+    .catch(handleError);
+  return unwrap<StaysReviewDetail>(res);
+}
+
+/** Edit a review within 48h */
+export async function updateReview(
+  reviewId: string,
+  body: { rating?: number; comment?: string; assetIds?: string[] },
+  token?: string | null
+): Promise<StaysReviewDetail> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .patch(`/stays/reviews/${reviewId}`, body, { headers })
+    .catch(handleError);
+  return unwrap<StaysReviewDetail>(res);
+}
+
+/** Upload review photo (max 10MB, jpg/png/webp) */
+export async function uploadReviewPhoto(
+  file: File,
+  token?: string | null
+): Promise<{ asset_id: string }> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const form = new FormData();
+  form.append("file", file);
+  const res = await client
+    .post("/stays/reviews/media/photo", form, { headers })
+    .catch(handleError);
+  return unwrap<{ asset_id: string }>(res);
+}
+
 export const staysApi = {
   searchListings,
   getListing,
@@ -533,4 +635,11 @@ export const staysApi = {
   uploadHostDocumentBack,
   uploadHostSelfie,
   uploadOccupantIdDocument,
+  getListingReviews,
+  getBookingReview,
+  createReview,
+  submitBookingReview,
+  updateReview,
+  uploadReviewPhoto,
+  getReviewMediaUrl,
 };
