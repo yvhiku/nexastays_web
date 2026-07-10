@@ -18,6 +18,7 @@ export const LISTING_TYPES = [
   { id: "VILLA" as const, emoji: "🏡", label: "Villa" },
   { id: "RIAD" as const, emoji: "🕌", label: "Riad" },
   { id: "HOTEL" as const, emoji: "🏨", label: "Hotel" },
+  { id: "HOSTEL" as const, emoji: "🛏️", label: "Hostel" },
 ];
 
 export const AMENITY_OPTIONS = [

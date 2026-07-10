@@ -7,6 +7,8 @@ import Image from "next/image";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { GuestSelect } from "@/components/ui/GuestSelect";
 import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,27 +17,50 @@ import { ListingCard } from "@/components/listing/ListingCard";
 import type { StaysListing } from "@/lib/stays-types";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
 import { VIBE_CARDS } from "@/lib/vibe-assets";
+import { addDaysToDateString } from "@/lib/booking-dates";
+import { sanitizeCityInput, sanitizeDateInput, sanitizeGuestCount } from "@/lib/input-sanitize";
+
+function todayISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+const filterFieldClass =
+  "relative flex-1 min-w-0 h-11 rounded-xl border border-nexa-line bg-white px-3 flex items-center focus-within:border-nexa-primary focus-within:ring-2 focus-within:ring-nexa-primary/20 transition-colors";
 
 export default function ListingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, tf, localePath } = useLanguage();
+  const { t, tf, locale, localePath } = useLanguage();
   const [listings, setListings] = useState<StaysListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [verifiedOnly, setVerifiedOnly] = useState(
-    searchParams.get("verified_walkthrough_only") === "true"
-  );
-  const [instantOnly, setInstantOnly] = useState(
-    searchParams.get("instant_booking_only") === "true"
-  );
-  const [selectedType, setSelectedType] = useState<string>("all");
+  const city = sanitizeCityInput(searchParams.get("city") || "");
+  const checkin = sanitizeDateInput(searchParams.get("checkin_date") || "");
+  const checkout = sanitizeDateInput(searchParams.get("checkout_date") || "");
+  const guests = sanitizeGuestCount(searchParams.get("guests") || "");
+  const verifiedOnly = searchParams.get("verified_walkthrough_only") === "true";
+  const instantOnly = searchParams.get("instant_booking_only") === "true";
+  const listingTypeParam = (searchParams.get("listing_type") || "all").toUpperCase();
+  const selectedType = ["APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"].includes(listingTypeParam)
+    ? listingTypeParam
+    : "all";
+
+  const [draftCity, setDraftCity] = useState(city);
+  const [draftCheckin, setDraftCheckin] = useState(checkin);
+  const [draftCheckout, setDraftCheckout] = useState(checkout);
+  const [draftGuests, setDraftGuests] = useState(guests ? String(guests) : "");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const city = searchParams.get("city") || "";
-  const checkin = searchParams.get("checkin_date") || "";
-  const checkout = searchParams.get("checkout_date") || "";
-  const guests = searchParams.get("guests") ? parseInt(searchParams.get("guests")!, 10) : undefined;
+  useEffect(() => {
+    setDraftCity(city);
+    setDraftCheckin(checkin);
+    setDraftCheckout(checkout);
+    setDraftGuests(guests ? String(guests) : "");
+  }, [city, checkin, checkout, guests]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +74,10 @@ export default function ListingsPage() {
       guests,
       verified_walkthrough_only: verifiedOnly || undefined,
       instant_booking_only: instantOnly || undefined,
+      listing_type:
+        selectedType === "all"
+          ? undefined
+          : (selectedType as "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL"),
     })
       .then((data) => {
         if (!cancelled) setListings(data);
@@ -64,30 +93,83 @@ export default function ListingsPage() {
       });
 
     return () => { cancelled = true; };
-  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, t]);
+  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, selectedType, t]);
 
-  const refreshWithFilters = (newVerified?: boolean, newInstant?: boolean) => {
-    const v = newVerified ?? verifiedOnly;
-    const i = newInstant ?? instantOnly;
+  const buildListingsParams = (overrides?: {
+    city?: string;
+    checkin?: string;
+    checkout?: string;
+    guests?: string;
+    verified?: boolean;
+    instant?: boolean;
+    listingType?: string;
+  }) => {
     const params = new URLSearchParams();
-    if (city) params.set("city", city);
-    if (checkin) params.set("checkin_date", checkin);
-    if (checkout) params.set("checkout_date", checkout);
-    if (guests) params.set("guests", String(guests));
+    const nextCity = overrides?.city ?? draftCity;
+    const nextCheckin = overrides?.checkin ?? draftCheckin;
+    const nextCheckout = overrides?.checkout ?? draftCheckout;
+    const nextGuests = overrides?.guests ?? draftGuests;
+    const v = overrides?.verified ?? verifiedOnly;
+    const i = overrides?.instant ?? instantOnly;
+    const type = overrides?.listingType ?? selectedType;
+    if (nextCity.trim()) params.set("city", sanitizeCityInput(nextCity));
+    if (nextCheckin) {
+      const d = sanitizeDateInput(nextCheckin);
+      if (d) params.set("checkin_date", d);
+    }
+    if (nextCheckout) {
+      const d = sanitizeDateInput(nextCheckout);
+      if (d) params.set("checkout_date", d);
+    }
+    if (nextGuests) {
+      const g = sanitizeGuestCount(nextGuests);
+      if (g) params.set("guests", String(g));
+    }
     if (v) params.set("verified_walkthrough_only", "true");
     if (i) params.set("instant_booking_only", "true");
-    window.history.replaceState({}, "", `/listings?${params.toString()}`);
-    setVerifiedOnly(v);
-    setInstantOnly(i);
+    if (type && type !== "all") params.set("listing_type", type);
+    return params;
   };
 
-  const searchSummary = [city || t("listings.anywhere"), checkin && checkout ? `${checkin} – ${checkout}` : null, guests ? tf("listings.guestsCount", { count: guests }) : null]
-    .filter(Boolean)
-    .join(" · ");
+  const navigateWithParams = (params: URLSearchParams) => {
+    const qs = params.toString();
+    router.replace(localePath(`/listings${qs ? `?${qs}` : ""}`));
+  };
 
-  const displayListings = selectedType === "all"
-    ? listings
-    : listings.filter((l) => l.listing_type.toUpperCase() === selectedType.toUpperCase());
+  const refreshWithFilters = (newVerified?: boolean, newInstant?: boolean) => {
+    navigateWithParams(
+      buildListingsParams({
+        verified: newVerified ?? verifiedOnly,
+        instant: newInstant ?? instantOnly,
+      }),
+    );
+  };
+
+  const setPropertyType = (type: string) => {
+    navigateWithParams(buildListingsParams({ listingType: type }));
+  };
+
+  const applySearch = () => {
+    navigateWithParams(buildListingsParams());
+  };
+
+  const applyVibe = (filters: {
+    city?: string;
+    listing_type?: string;
+    guests?: number;
+  }) => {
+    const params = buildListingsParams({
+      ...(filters.city != null ? { city: filters.city } : {}),
+      ...(filters.guests != null ? { guests: String(filters.guests) } : {}),
+      ...(filters.listing_type != null ? { listingType: filters.listing_type } : {}),
+    });
+    if (filters.city != null) setDraftCity(filters.city);
+    if (filters.guests != null) setDraftGuests(String(filters.guests));
+    navigateWithParams(params);
+  };
+
+  const minCheckin = todayISO();
+  const displayListings = listings;
 
   return (
     <>
@@ -126,10 +208,10 @@ export default function ListingsPage() {
                 {t("listings.propertyType")}
               </h4>
               <div className="flex flex-wrap gap-2">
-                {["all", "APARTMENT", "HOTEL", "RIAD", "VILLA"].map((type) => (
+                {["all", "APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"].map((type) => (
                   <span
                     key={type}
-                    onClick={() => setSelectedType(type)}
+                    onClick={() => setPropertyType(type)}
                     className={cn(
                       "py-1.5 px-3.5 rounded-full text-[0.78rem] border cursor-pointer transition-all",
                       selectedType === type ? "border-nexa-primary text-nexa-primary bg-nexa-primary-soft" : "border-nexa-line text-nexa-ink-3 hover:border-nexa-primary"
@@ -143,42 +225,71 @@ export default function ListingsPage() {
           </aside>
 
           <div className="bg-nexa-bg">
-            <div className="bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 md:px-8 flex flex-wrap items-center gap-3 sm:gap-4 sticky top-[72px] z-10">
+            <div className="bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 md:px-8 flex flex-wrap items-center gap-3 sm:gap-4 sticky top-[72px] z-20 overflow-visible">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const form = e.currentTarget;
-                  const fd = new FormData(form);
-                  const params = new URLSearchParams();
-                  const c = (fd.get("city") as string)?.trim();
-                  const ci = (fd.get("checkin") as string)?.trim();
-                  const co = (fd.get("checkout") as string)?.trim();
-                  const g = (fd.get("guests") as string)?.trim();
-                  if (c) params.set("city", c);
-                  if (ci) params.set("checkin_date", ci);
-                  if (co) params.set("checkout_date", co);
-                  if (g) params.set("guests", g);
-                  if (verifiedOnly) params.set("verified_walkthrough_only", "true");
-                  if (instantOnly) params.set("instant_booking_only", "true");
-                  router.replace(`/listings?${params.toString()}`);
+                  applySearch();
                 }}
                 className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3"
               >
-                <select name="city" defaultValue={city} className="flex-1 min-w-0 h-11 rounded-xl border border-nexa-line px-3 py-2 text-sm bg-nexa-bg-2">
-                  <option value="">{t("listings.anyCity")}</option>
-                  {MOROCCO_CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <input type="date" name="checkin" defaultValue={checkin} min={new Date().toISOString().split("T")[0]} className="w-full sm:w-auto min-w-0 flex-1 h-11 rounded-xl border border-nexa-line px-3 py-2 text-sm" />
-                <input type="date" name="checkout" defaultValue={checkout} min={checkin || new Date().toISOString().split("T")[0]} className="w-full sm:w-auto min-w-0 flex-1 h-11 rounded-xl border border-nexa-line px-3 py-2 text-sm" />
-                <select name="guests" defaultValue={guests || ""} className="h-11 rounded-xl border border-nexa-line px-3 py-2 text-sm min-w-[100px]">
-                  <option value="">{t("listingDetail.guests")}</option>
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
-                    <option key={n} value={n}>{tf("listings.guestsCount", { count: n })}</option>
-                  ))}
-                </select>
-                <button type="submit" className="px-4 py-2.5 rounded-xl bg-nexa-primary text-white font-semibold text-sm hover:bg-nexa-primary-dark shrink-0">
+                <div className={cn(filterFieldClass, "bg-nexa-bg-2 sm:max-w-[180px]")}>
+                  <GuestSelect
+                    value={draftCity}
+                    onChange={setDraftCity}
+                    aria-label={t("listings.anyCity")}
+                    className="w-full"
+                    options={[
+                      { value: "", label: t("listings.anyCity") },
+                      ...MOROCCO_CITIES.map((c) => ({ value: c, label: c })),
+                    ]}
+                  />
+                </div>
+                <div className={filterFieldClass}>
+                  <DatePicker
+                    value={draftCheckin}
+                    onChange={(next) => {
+                      setDraftCheckin(next);
+                      if (draftCheckout && next && draftCheckout <= next) {
+                        setDraftCheckout("");
+                      }
+                    }}
+                    placeholder={t("home.search.addDates")}
+                    clearLabel={t("home.search.clearDate")}
+                    todayLabel={t("home.search.today")}
+                    locale={locale}
+                    min={minCheckin}
+                    className="w-full"
+                  />
+                </div>
+                <div className={filterFieldClass}>
+                  <DatePicker
+                    value={draftCheckout}
+                    onChange={setDraftCheckout}
+                    placeholder={t("home.search.addDates")}
+                    clearLabel={t("home.search.clearDate")}
+                    todayLabel={t("home.search.today")}
+                    locale={locale}
+                    min={draftCheckin ? addDaysToDateString(draftCheckin, 1) : minCheckin}
+                    className="w-full"
+                  />
+                </div>
+                <div className={cn(filterFieldClass, "sm:max-w-[140px]")}>
+                  <GuestSelect
+                    value={draftGuests}
+                    onChange={setDraftGuests}
+                    aria-label={t("listingDetail.guests")}
+                    className="w-full"
+                    options={[
+                      { value: "", label: t("listingDetail.guests") },
+                      ...[1, 2, 3, 4, 5, 6].map((n) => ({
+                        value: String(n),
+                        label: tf("listings.guestsCount", { count: n }),
+                      })),
+                    ]}
+                  />
+                </div>
+                <button type="submit" className="px-4 py-2.5 min-h-[44px] rounded-xl bg-nexa-primary text-white font-semibold text-sm hover:bg-nexa-primary-dark shrink-0 shadow-[0_4px_16px_rgba(232,80,122,.32)]">
                   🔍 {t("common.search")}
                 </button>
               </form>
@@ -212,9 +323,11 @@ export default function ListingsPage() {
               </div>
               <div className="flex gap-3 overflow-x-auto pb-1 mb-7 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {VIBE_CARDS.map((vibe) => (
-                  <div
+                  <button
+                    type="button"
                     key={vibe.id}
-                    className="group shrink-0 w-[148px] h-[88px] rounded-xl overflow-hidden relative cursor-pointer hover:scale-[1.02] transition-transform shadow-sm"
+                    onClick={() => applyVibe(vibe.filters)}
+                    className="group shrink-0 w-[148px] h-[88px] rounded-xl overflow-hidden relative cursor-pointer hover:scale-[1.02] transition-transform shadow-sm text-left"
                   >
                     <Image
                       src={vibe.src}
@@ -231,7 +344,7 @@ export default function ListingsPage() {
                     <span className="absolute bottom-2.5 left-2.5 right-2.5 text-white text-[0.78rem] font-bold leading-tight drop-shadow-md">
                       {t(vibe.labelKey)}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
 
@@ -255,7 +368,19 @@ export default function ListingsPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-9">
                   {displayListings.map((l) => (
-                    <ListingCard key={l.id} listing={l} checkin={checkin || undefined} checkout={checkout || undefined} guests={guests} city={city || undefined} t={t} localePath={localePath} />
+                    <ListingCard
+                      key={l.id}
+                      listing={l}
+                      checkin={checkin || undefined}
+                      checkout={checkout || undefined}
+                      guests={guests}
+                      city={city || undefined}
+                      verifiedWalkthroughOnly={verifiedOnly}
+                      instantBookingOnly={instantOnly}
+                      listingType={selectedType}
+                      t={t}
+                      localePath={localePath}
+                    />
                   ))}
                 </div>
               )}
@@ -325,12 +450,12 @@ export default function ListingsPage() {
               </label>
             </div>
             <div className="mb-6">
-              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">Property Type</h4>
+              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">{t("listings.propertyType")}</h4>
               <div className="flex flex-wrap gap-2">
-                {["all", "APARTMENT", "HOTEL", "RIAD", "VILLA"].map((type) => (
+                {["all", "APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"].map((type) => (
                   <span
                     key={type}
-                    onClick={() => { setSelectedType(type); setMobileFiltersOpen(false); }}
+                    onClick={() => { setPropertyType(type); setMobileFiltersOpen(false); }}
                     className={cn(
                       "py-2.5 px-4 rounded-full text-sm border cursor-pointer transition-all min-h-[44px] flex items-center",
                       selectedType === type ? "border-nexa-primary text-nexa-primary bg-nexa-primary-soft" : "border-nexa-line text-nexa-ink-3"

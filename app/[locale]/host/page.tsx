@@ -16,13 +16,12 @@ import {
   uploadHostSelfie,
   normalizeHostVerificationStatus,
 } from "@/lib/stays-api";
-import { sendOtp } from "@/lib/auth-api";
+import { sendOtp, verifyOtp } from "@/lib/auth-api";
 import { validateEmail } from "@/lib/validators";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Menu } from "lucide-react";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
-import { getDemoOtpCode } from "@/lib/env";
 import { AppLoader } from "@/components/AppLoader";
 
 const hostStepKeys = [
@@ -336,8 +335,6 @@ export default function HostPage() {
     }
   }, [statusChecked, hostStatus, router, localePath]);
 
-  const demoOtpCode = getDemoOtpCode();
-
   const goToStep = (target: number) => {
     if (target > step) return;
     setStep(target);
@@ -390,21 +387,31 @@ export default function HostPage() {
   };
 
   const handleSendEmailCode = async () => {
+    // Email delivery is not wired yet — confirmation is re-typing the address.
     setEmailCodeSent(true);
     setStep3Error(null);
   };
 
-  const handleStep3Continue = () => {
-    if (smsCode !== demoOtpCode) {
-      setStep3Error(`Invalid SMS code. For now, use ${demoOtpCode}.`);
+  const handleStep3Continue = async () => {
+    if (!smsCodeSent || smsCode.trim().length < 4) {
+      setStep3Error("Request an SMS code and enter it to verify your phone.");
       return;
     }
-    if (emailCode !== demoOtpCode) {
-      setStep3Error(`Invalid email code. For now, use ${demoOtpCode}.`);
+    if (email.trim().toLowerCase() !== emailCode.trim().toLowerCase()) {
+      setStep3Error("Re-enter your email address exactly to confirm it.");
       return;
     }
     setStep3Error(null);
-    setStep(4);
+    try {
+      const result = await verifyOtp(phone, smsCode.trim());
+      if (!result.verified) {
+        setStep3Error("Invalid or expired SMS code. Request a new code and try again.");
+        return;
+      }
+      setStep(4);
+    } catch (e) {
+      setStep3Error(e instanceof Error ? e.message : "Phone verification failed");
+    }
   };
 
   const resolvedHostStatus = hostStatus
@@ -678,7 +685,7 @@ export default function HostPage() {
                   {t("hostApply.step3Subtitle")}
                 </p>
                 <p className="text-sm text-nexa-ink-4 mb-6 rounded-lg bg-nexa-bg-2 px-3 py-2">
-                  Demo mode: use <span className="font-semibold text-nexa-ink">{demoOtpCode}</span> for both SMS and email codes until real delivery is enabled.
+                  Verify your phone with the SMS code from Nexa Identity, then re-enter your email to confirm it.
                 </p>
                 <div className="space-y-4 mb-6">
                   <div>
@@ -686,7 +693,7 @@ export default function HostPage() {
                     <Input
                       type="text"
                       inputMode="numeric"
-                      placeholder={`Enter ${demoOtpCode}`}
+                      placeholder="6-digit code"
                       value={smsCode}
                       onChange={(e) => {
                         setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 6));
@@ -700,29 +707,27 @@ export default function HostPage() {
                       className="text-xs text-nexa-primary mt-1 hover:underline"
                       onClick={handleSendSmsCode}
                     >
-                      {smsCodeSent ? `Code sent (use ${demoOtpCode})` : "Send code"}
+                      {smsCodeSent ? "Code sent — resend" : "Send code"}
                     </button>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-nexa-ink mb-1">Email verification</label>
+                    <label className="block text-sm font-medium text-nexa-ink mb-1">Confirm email address</label>
                     <Input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder={`Enter ${demoOtpCode}`}
+                      type="email"
+                      placeholder={email || "you@example.com"}
                       value={emailCode}
                       onChange={(e) => {
-                        setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                        setEmailCode(e.target.value);
                         setStep3Error(null);
                       }}
-                      maxLength={6}
-                      className="max-w-[200px]"
+                      className="max-w-md"
                     />
                     <button
                       type="button"
                       className="text-xs text-nexa-primary mt-1 hover:underline"
                       onClick={handleSendEmailCode}
                     >
-                      {emailCodeSent ? `Code sent (use ${demoOtpCode})` : "Send link/code"}
+                      {emailCodeSent ? "Email noted for account" : "Confirm email on file"}
                     </button>
                   </div>
                   {step3Error && (
@@ -735,7 +740,7 @@ export default function HostPage() {
                   <Button variant="ghost" onClick={() => goToStep(2)}>← Back</Button>
                   <Button
                     onClick={handleStep3Continue}
-                    disabled={smsCode.length !== 6 || emailCode.length !== 6}
+                    disabled={smsCode.length < 4 || !emailCode.trim()}
                   >
                     Continue →
                   </Button>

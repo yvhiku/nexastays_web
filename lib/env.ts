@@ -1,6 +1,9 @@
 /**
  * API base URLs for split Nexa backends (Identity + Stays).
  * Legacy NEXT_PUBLIC_API_BASE_URL is used as fallback for both when split vars are unset.
+ *
+ * Only non-secret public URLs belong in NEXT_PUBLIC_* vars.
+ * Never put API keys, DB passwords, JWT secrets, Sumsub secrets, or OTP codes here.
  */
 
 const DEFAULT_IDENTITY = "http://127.0.0.1:3001/api/v1";
@@ -31,9 +34,4 @@ export function getStaysApiBaseUrl(): string {
 /** @deprecated Prefer getIdentityApiBaseUrl or getStaysApiBaseUrl */
 export function getApiBaseUrl(): string {
   return getIdentityApiBaseUrl();
-}
-
-/** Demo OTP for phone/email verification until real delivery is enabled. */
-export function getDemoOtpCode(): string {
-  return process.env.NEXT_PUBLIC_DEMO_OTP_CODE || "123456";
 }

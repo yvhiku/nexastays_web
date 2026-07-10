@@ -9,11 +9,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { DESTINATION_IMAGES } from "@/lib/destination-assets";
 
 const destinations = [
-  { img: DESTINATION_IMAGES.marrakech, titleKey: "home.destinations.marrakech", subtitleKey: "home.destinations.marrakechSub", span: 2 },
-  { img: DESTINATION_IMAGES.agadir, titleKey: "home.destinations.agadir", subtitleKey: "home.destinations.agadirSub", span: 1 },
-  { img: DESTINATION_IMAGES.tangier, titleKey: "home.destinations.tangier", subtitleKey: "home.destinations.tangierSub", span: 1 },
-  { img: DESTINATION_IMAGES.casablanca, titleKey: "home.destinations.casablanca", subtitleKey: "home.destinations.casablancaSub", span: 1 },
-  { img: DESTINATION_IMAGES.fes, titleKey: "home.destinations.fes", subtitleKey: "home.destinations.fesSub", span: 1 },
+  { img: DESTINATION_IMAGES.marrakech, city: "Marrakech", titleKey: "home.destinations.marrakech", subtitleKey: "home.destinations.marrakechSub", span: 2 },
+  { img: DESTINATION_IMAGES.agadir, city: "Agadir", titleKey: "home.destinations.agadir", subtitleKey: "home.destinations.agadirSub", span: 1 },
+  { img: DESTINATION_IMAGES.tangier, city: "Tangier", titleKey: "home.destinations.tangier", subtitleKey: "home.destinations.tangierSub", span: 1 },
+  { img: DESTINATION_IMAGES.casablanca, city: "Casablanca", titleKey: "home.destinations.casablanca", subtitleKey: "home.destinations.casablancaSub", span: 1 },
+  { img: DESTINATION_IMAGES.fes, city: "Fes", titleKey: "home.destinations.fes", subtitleKey: "home.destinations.fesSub", span: 1 },
 ];
 
 export const DestinationsSection = () => {
@@ -46,7 +46,7 @@ export const DestinationsSection = () => {
                 dest.span === 2 ? "sm:row-span-2 min-h-[440px]" : ""
               }`}
             >
-              <Link href={localePath(`/listings?city=${t(dest.titleKey)}`)}>
+              <Link href={localePath(`/listings?city=${encodeURIComponent(dest.city)}`)}>
                 <div className="relative h-[220px] sm:h-full min-h-[220px]">
                   <Image
                     src={dest.img}

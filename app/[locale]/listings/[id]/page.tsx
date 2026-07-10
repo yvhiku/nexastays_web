@@ -24,7 +24,7 @@ import {
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
-import { getListing, createBooking, getListingMediaUrl, searchListings } from "@/lib/stays-api";
+import { getListing, createBooking, getListingMediaUrl, searchListings, getListingAvailability } from "@/lib/stays-api";
 import { ListingHeroGallery } from "@/components/listing/ListingHeroGallery";
 import { ListingBookingCard } from "@/components/listing/ListingBookingCard";
 import { ListingLocationSection } from "@/components/listing/ListingLocationSection";
@@ -39,7 +39,9 @@ import { GuestVerificationStep } from "@/components/booking/GuestVerificationSte
 import {
   addDaysToDateString,
   bookingNights,
+  expandBlockedNights,
   isValidBookingRange,
+  rangeOverlapsBlockedNights,
   readDateSearchParam,
 } from "@/lib/booking-dates";
 import type { StaysListing, CreateBookingOccupantDto } from "@/lib/stays-types";
@@ -103,6 +105,7 @@ export default function ListingDetailPage() {
     () => readDateSearchParam(searchParams, ["checkout", "checkout_date"]),
   );
   const [guests, setGuests] = useState(parseInt(searchParams.get("guests") || "1", 10));
+  const [blockedNights, setBlockedNights] = useState<string[]>([]);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [showAllAmenities, setShowAllAmenities] = useState(false);
@@ -133,6 +136,17 @@ export default function ListingDetailPage() {
       .finally(() => setLoading(false));
   }, [id, token]);
 
+  useEffect(() => {
+    const from = (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    })();
+    const to = addDaysToDateString(from, 540);
+    getListingAvailability(id, from, to)
+      .then((data) => setBlockedNights(expandBlockedNights(data.blocked_ranges)))
+      .catch(() => setBlockedNights([]));
+  }, [id]);
+
   const photoUrls = useMemo(() => {
     if (!listing?.media) return [placeholderImg];
     const photos = listing.media
@@ -151,10 +165,19 @@ export default function ListingDetailPage() {
     setCheckin(value);
     if (value && checkout && !isValidBookingRange(value, checkout)) {
       setCheckout(addDaysToDateString(value, 1));
+      return;
+    }
+    if (value && checkout && rangeOverlapsBlockedNights(value, checkout, blockedNights)) {
+      setCheckout("");
     }
   };
 
   const handleCheckoutChange = (value: string) => {
+    if (checkin && value && rangeOverlapsBlockedNights(checkin, value, blockedNights)) {
+      setBookingError("Selected dates overlap an existing booking. Please choose different dates.");
+      return;
+    }
+    setBookingError(null);
     setCheckout(value);
   };
 
@@ -162,7 +185,8 @@ export default function ListingDetailPage() {
     e.preventDefault();
     if (!listing) return;
     if (!isAuthenticated || !token) {
-      router.push(`${localePath("/login")}?redirect=${encodeURIComponent(localePath(`/listings/${id}`))}`);
+      const returnTo = `${localePath(`/listings/${id}`)}${typeof window !== "undefined" ? window.location.search : ""}`;
+      router.push(`${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`);
       return;
     }
     if (!checkin || !checkout) {
@@ -171,6 +195,10 @@ export default function ListingDetailPage() {
     }
     if (!isValidBookingRange(checkin, checkout)) {
       setBookingError("Check-out must be at least one night after check-in.");
+      return;
+    }
+    if (rangeOverlapsBlockedNights(checkin, checkout, blockedNights)) {
+      setBookingError("Selected dates overlap an existing booking. Please choose different dates.");
       return;
     }
     if (userProfile && userProfile.kyc_status !== "APPROVED" && userProfile.kyc_status !== "VERIFIED") return;
@@ -204,14 +232,20 @@ export default function ListingDetailPage() {
 
   const backHref = (() => {
     const p = new URLSearchParams();
-    const ci = searchParams.get("checkin");
-    const co = searchParams.get("checkout");
+    const ci = readDateSearchParam(searchParams, ["checkin", "checkin_date"]);
+    const co = readDateSearchParam(searchParams, ["checkout", "checkout_date"]);
     const g = searchParams.get("guests");
     const c = searchParams.get("city");
+    const verified = searchParams.get("verified_walkthrough_only");
+    const instant = searchParams.get("instant_booking_only");
+    const listingType = searchParams.get("listing_type");
     if (ci) p.set("checkin_date", ci);
     if (co) p.set("checkout_date", co);
     if (g) p.set("guests", g);
     if (c) p.set("city", c);
+    if (verified === "true") p.set("verified_walkthrough_only", "true");
+    if (instant === "true") p.set("instant_booking_only", "true");
+    if (listingType) p.set("listing_type", listingType);
     return localePath(`/listings${p.toString() ? `?${p}` : ""}`);
   })();
 
@@ -260,8 +294,8 @@ export default function ListingDetailPage() {
 
   const similarDetailUrl = (listingId: string) => {
     const p = new URLSearchParams();
-    if (checkin) p.set("checkin", checkin);
-    if (checkout) p.set("checkout", checkout);
+    if (checkin) p.set("checkin_date", checkin);
+    if (checkout) p.set("checkout_date", checkout);
     if (guests) p.set("guests", String(guests));
     if (listing.city) p.set("city", listing.city);
     return localePath(`/listings/${listingId}${p.toString() ? `?${p}` : ""}`);
@@ -626,6 +660,7 @@ export default function ListingDetailPage() {
                 isAuthenticated={isAuthenticated}
                 userProfile={userProfile}
                 localePath={localePath}
+                blockedNights={blockedNights}
                 onCheckinChange={handleCheckinChange}
                 onCheckoutChange={handleCheckoutChange}
                 onGuestsChange={setGuests}

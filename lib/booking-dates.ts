@@ -37,3 +37,35 @@ export function bookingNights(checkin: string, checkout: string): number {
 export function isValidBookingRange(checkin: string, checkout: string): boolean {
   return bookingNights(checkin, checkout) >= 1;
 }
+
+/** Expand [checkin, checkout) ranges into occupied night ISO dates. */
+export function expandBlockedNights(
+  ranges: Array<{ checkin_date: string; checkout_date: string }>,
+): string[] {
+  const nights = new Set<string>();
+  for (const range of ranges) {
+    let cursor = range.checkin_date;
+    while (cursor < range.checkout_date) {
+      nights.add(cursor);
+      cursor = addDaysToDateString(cursor, 1);
+    }
+  }
+  return [...nights];
+}
+
+/** True if any night in [checkin, checkout) is blocked. */
+export function rangeOverlapsBlockedNights(
+  checkin: string,
+  checkout: string,
+  blockedNights: string[],
+): boolean {
+  if (!checkin || !checkout || blockedNights.length === 0) return false;
+  const blocked = new Set(blockedNights);
+  let cursor = checkin;
+  while (cursor < checkout) {
+    if (blocked.has(cursor)) return true;
+    cursor = addDaysToDateString(cursor, 1);
+  }
+  return false;
+}
+

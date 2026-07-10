@@ -4,8 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { Shield, FileText, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { GuestSelect } from "@/components/ui/GuestSelect";
 import type { StaysListing } from "@/lib/stays-types";
 import { addDaysToDateString } from "@/lib/booking-dates";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ListingBookingCardProps {
   listing: StaysListing;
@@ -25,10 +28,20 @@ interface ListingBookingCardProps {
   isAuthenticated: boolean;
   userProfile: { kyc_status: string } | null;
   localePath: (p: string) => string;
+  /** Occupied nights (YYYY-MM-DD) that cannot be booked. */
+  blockedNights?: string[];
   onCheckinChange: (v: string) => void;
   onCheckoutChange: (v: string) => void;
   onGuestsChange: (v: number) => void;
   onSubmit: (e: React.FormEvent) => void;
+}
+
+function todayISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function ListingBookingCard({
@@ -49,19 +62,40 @@ export function ListingBookingCard({
   isAuthenticated,
   userProfile,
   localePath,
+  blockedNights = [],
   onCheckinChange,
   onCheckoutChange,
   onGuestsChange,
   onSubmit,
 }: ListingBookingCardProps) {
+  const { t, locale } = useLanguage();
   const kycBlocked =
     isAuthenticated &&
     userProfile &&
     userProfile.kyc_status !== "APPROVED" &&
     userProfile.kyc_status !== "VERIFIED";
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayISO();
   const checkoutMin = checkin ? addDaysToDateString(checkin, 1) : today;
+
+  const checkoutDisabledDates = React.useMemo(() => {
+    if (!checkin || blockedNights.length === 0) return blockedNights;
+    const blocked = new Set(blockedNights);
+    const invalid: string[] = [];
+    // Look ahead ~18 months of candidate checkout days
+    let cursor = addDaysToDateString(checkin, 1);
+    const horizon = addDaysToDateString(today, 540);
+    let crossedBlockedNight = false;
+    while (cursor <= horizon) {
+      const lastNight = addDaysToDateString(cursor, -1);
+      if (lastNight >= checkin && blocked.has(lastNight)) {
+        crossedBlockedNight = true;
+      }
+      if (crossedBlockedNight) invalid.push(cursor);
+      cursor = addDaysToDateString(cursor, 1);
+    }
+    return invalid;
+  }, [checkin, blockedNights, today]);
 
   return (
     <div className="md:sticky md:top-[100px] bg-white/80 backdrop-blur-xl rounded-2xl shadow-nexa-card border border-white p-6">
@@ -80,49 +114,57 @@ export function ListingBookingCard({
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 border border-nexa-line rounded-xl overflow-hidden">
-          <div className="p-3 border-b sm:border-b-0 sm:border-r border-nexa-line">
-            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide">
+          <div className="relative p-3 border-b sm:border-b-0 sm:border-r border-nexa-line">
+            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               Check-in
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={checkin}
-              onChange={(e) => onCheckinChange(e.target.value)}
-              required
+              onChange={onCheckinChange}
               min={today}
-              className="w-full bg-transparent border-none p-0 text-sm focus:ring-0 focus:outline-none"
+              disabledDates={blockedNights}
+              placeholder={t("home.search.addDates")}
+              clearLabel={t("home.search.clearDate")}
+              todayLabel={t("home.search.today")}
+              locale={locale}
             />
           </div>
-          <div className="p-3">
-            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide">
+          <div className="relative p-3">
+            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               Check-out
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={checkout}
-              onChange={(e) => onCheckoutChange(e.target.value)}
-              required
+              onChange={onCheckoutChange}
               min={checkoutMin}
-              className="w-full bg-transparent border-none p-0 text-sm focus:ring-0 focus:outline-none"
+              disabledDates={checkoutDisabledDates}
+              placeholder={t("home.search.addDates")}
+              clearLabel={t("home.search.clearDate")}
+              todayLabel={t("home.search.today")}
+              locale={locale}
             />
           </div>
-          <div className="p-3 border-t border-nexa-line col-span-2">
-            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide">
+          <div className="relative p-3 border-t border-nexa-line col-span-2">
+            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               Guests
             </label>
-            <select
-              value={guests}
-              onChange={(e) => onGuestsChange(parseInt(e.target.value, 10))}
-              className="w-full bg-transparent border-none p-0 text-sm focus:ring-0 focus:outline-none"
-            >
-              {Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>
-                  {n} guest{n > 1 ? "s" : ""}
-                </option>
-              ))}
-            </select>
+            <GuestSelect
+              value={String(guests)}
+              onChange={(v) => onGuestsChange(parseInt(v, 10))}
+              aria-label="Guests"
+              options={Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => ({
+                value: String(n),
+                label: `${n} guest${n > 1 ? "s" : ""}`,
+              }))}
+            />
           </div>
         </div>
+
+        {blockedNights.length > 0 && (
+          <p className="text-xs text-nexa-ink-4">
+            Greyed-out dates are already booked for this stay.
+          </p>
+        )}
 
         {kycBlocked && (
           <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">

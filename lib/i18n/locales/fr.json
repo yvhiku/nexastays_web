@@ -56,6 +56,8 @@
       "guests": "Voyageurs",
       "destinationPlaceholder": "Marrakech, Casablanca, Agadir...",
       "addDates": "Choisir une date",
+      "clearDate": "Effacer",
+      "today": "Aujourd'hui",
       "guest1": "1 voyageur",
       "guest2": "2 voyageurs",
       "guest3": "3 voyageurs",

@@ -28,6 +28,11 @@ import type {
   StaysReviewDetail,
   ReviewSort,
 } from "./stays-types";
+import {
+  sanitizeCityInput,
+  sanitizeDateInput,
+  sanitizeGuestCount,
+} from "./input-sanitize";
 import { getStaysApiBaseUrl } from "./env";
 
 const API_BASE = getStaysApiBaseUrl();
@@ -137,14 +142,19 @@ export async function searchListings(
   params: SearchListingsParams
 ): Promise<StaysListing[]> {
   const q = new URLSearchParams();
-  if (params.city) q.set("city", params.city);
-  if (params.checkin_date) q.set("checkin_date", params.checkin_date);
-  if (params.checkout_date) q.set("checkout_date", params.checkout_date);
-  if (params.guests != null) q.set("guests", String(params.guests));
+  const city = params.city ? sanitizeCityInput(params.city) : "";
+  const checkin = params.checkin_date ? sanitizeDateInput(params.checkin_date) : "";
+  const checkout = params.checkout_date ? sanitizeDateInput(params.checkout_date) : "";
+  const guests = params.guests != null ? sanitizeGuestCount(params.guests) : undefined;
+  if (city) q.set("city", city);
+  if (checkin) q.set("checkin_date", checkin);
+  if (checkout) q.set("checkout_date", checkout);
+  if (guests != null) q.set("guests", String(guests));
   if (params.verified_walkthrough_only != null)
     q.set("verified_walkthrough_only", String(params.verified_walkthrough_only));
   if (params.instant_booking_only != null)
     q.set("instant_booking_only", String(params.instant_booking_only));
+  if (params.listing_type) q.set("listing_type", params.listing_type);
 
   const res = await client
     .get(`/stays/listings/search?${q.toString()}`)
@@ -175,6 +185,29 @@ export async function createBooking(
     .post("/stays/bookings", dto, { headers })
     .catch(handleError);
   return unwrap<StaysBooking>(res);
+}
+
+/** Blocked date ranges for a listing (booked / host-blocked nights). */
+export async function getListingAvailability(
+  listingId: string,
+  from: string,
+  to: string,
+): Promise<{
+  listing_id: string;
+  from: string;
+  to: string;
+  blocked_ranges: Array<{
+    checkin_date: string;
+    checkout_date: string;
+    source: "BOOKING" | "BLOCK";
+  }>;
+}> {
+  const res = await client
+    .get(`/stays/listings/${listingId}/availability`, {
+      params: { from, to },
+    })
+    .catch(handleError);
+  return unwrap(res);
 }
 
 /** Create or get payment intent for booking (PAYMENT_PENDING) */
@@ -543,17 +576,23 @@ export async function getListingReviews(
   return unwrap<ListingReviewsResponse>(res);
 }
 
-/** Get review for a booking (guest) */
+/** Get review for a booking (guest). Returns null if none / not owned. */
 export async function getBookingReview(
   bookingId: string,
   token?: string | null
 ): Promise<StaysReviewDetail | null> {
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
-  const res = await client
-    .get(`/stays/bookings/${bookingId}/review`, { headers })
-    .catch(handleError);
-  const data = unwrap<StaysReviewDetail | null>(res);
-  return data ?? null;
+  try {
+    const res = await client.get(`/stays/bookings/${bookingId}/review`, {
+      headers,
+    });
+    return unwrap<StaysReviewDetail | null>(res) ?? null;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      return null;
+    }
+    return handleError(err);
+  }
 }
 
 /** Submit a review */
@@ -616,6 +655,7 @@ export async function uploadReviewPhoto(
 export const staysApi = {
   searchListings,
   getListing,
+  getListingAvailability,
   createBooking,
   getBooking,
   getHostMe,

@@ -9,9 +9,6 @@ import { changePhone } from "@/lib/kyc-api";
 import { normalizeMoroccanPhone, getLocalPhonePart } from "@/lib/validators";
 import { cn } from "@/lib/utils";
 
-const IS_DEV = process.env.NODE_ENV === "development";
-const DEV_OTP_HINT = "Use 123456 for all OTP codes";
-
 type Step = "current_otp" | "new_phone" | "new_otp" | "done";
 
 interface ChangePhoneModalProps {
@@ -119,12 +116,6 @@ export function ChangePhoneModal({
         </div>
 
         <div className="p-6 space-y-6">
-          {IS_DEV && (
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-              {DEV_OTP_HINT}
-            </div>
-          )}
-
           {error && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
               {error}

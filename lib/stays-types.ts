@@ -7,12 +7,13 @@ export interface SearchListingsParams {
   guests?: number;
   verified_walkthrough_only?: boolean;
   instant_booking_only?: boolean;
+  listing_type?: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
 }
 
 export interface StaysListing {
   id: string;
   title: string;
-  listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA";
+  listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
   city: string;
   neighborhood?: string | null;
   geo_lat?: number | null;
@@ -53,7 +54,7 @@ export interface ListingReviewMedia {
 export interface ListingReview {
   id: string;
   listing_id: string;
-  guest_id: string;
+  guest_id?: string;
   guest_name: string;
   guest_photo_url: string | null;
   rating: number;
@@ -331,7 +332,7 @@ export interface UpdateHostListingBody {
 
 export interface CreateHostListingBody {
   title: string;
-  listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA";
+  listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
   city: string;
   address?: string;
   description?: string;

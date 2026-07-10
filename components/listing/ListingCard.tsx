@@ -33,6 +33,9 @@ export interface ListingCardProps {
   checkout?: string;
   guests?: number;
   city?: string;
+  verifiedWalkthroughOnly?: boolean;
+  instantBookingOnly?: boolean;
+  listingType?: string;
   t: (key: string) => string;
   localePath: (path: string) => string;
 }
@@ -43,6 +46,9 @@ export function ListingCard({
   checkout,
   guests,
   city,
+  verifiedWalkthroughOnly,
+  instantBookingOnly,
+  listingType,
   t,
   localePath,
 }: ListingCardProps) {
@@ -64,10 +70,13 @@ export function ListingCard({
   }, [listing.id, userId]);
 
   const detailUrl = new URLSearchParams();
-  if (checkin) detailUrl.set("checkin", checkin);
-  if (checkout) detailUrl.set("checkout", checkout);
+  if (checkin) detailUrl.set("checkin_date", checkin);
+  if (checkout) detailUrl.set("checkout_date", checkout);
   if (guests) detailUrl.set("guests", String(guests));
   if (city) detailUrl.set("city", city);
+  if (verifiedWalkthroughOnly) detailUrl.set("verified_walkthrough_only", "true");
+  if (instantBookingOnly) detailUrl.set("instant_booking_only", "true");
+  if (listingType && listingType !== "all") detailUrl.set("listing_type", listingType);
   const linkHref = localePath(
     `/listings/${listing.id}${detailUrl.toString() ? `?${detailUrl}` : ""}`,
   );
