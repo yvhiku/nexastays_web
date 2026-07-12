@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing } from "@/lib/stays-api";
+import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus } from "@/lib/stays-api";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
 import { HostKpiSection } from "@/components/host/HostKpiSection";
@@ -62,7 +62,7 @@ function HostDashboardContent() {
     setLoading(true);
     setError(null);
     getHostVerification(token)
-      .then(setHostStatus)
+      .then((s) => setHostStatus(normalizeHostVerificationStatus(s)))
       .catch((e) => setError(e instanceof Error ? e.message : t("hostDashboard.failedLoad")))
       .finally(() => setLoading(false));
   }, [token]);
@@ -252,15 +252,24 @@ function HostDashboardContent() {
           )}
 
           {status === "REJECTED" && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-700 shrink-0">
                 <XCircle className="h-8 w-8" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p className="text-nexa-ink font-medium">{t("hostDashboard.notApproved")}</p>
                 <p className="text-nexa-ink-3 text-sm mt-1">
-                  {hostStatus?.rejection_reason ?? hostStatus?.message ?? t("hostDashboard.reapplyMessage")}
+                  {t("hostDashboard.reapplyMessage")}
                 </p>
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
+                    {t("hostDashboard.rejectionReasonLabel")}
+                  </p>
+                  <p className="mt-1 text-sm text-nexa-ink whitespace-pre-wrap">
+                    {hostStatus?.rejection_reason?.trim() ||
+                      t("hostDashboard.reapplyMessage")}
+                  </p>
+                </div>
                 <Button className="mt-4" asChild>
                   <Link href={localePath("/host")}>{t("hostDashboard.applyAgain")}</Link>
                 </Button>

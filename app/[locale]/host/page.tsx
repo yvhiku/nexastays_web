@@ -16,11 +16,12 @@ import {
   uploadHostSelfie,
   normalizeHostVerificationStatus,
 } from "@/lib/stays-api";
+import type { HostVerificationStatus } from "@/lib/stays-types";
 import { sendOtp, verifyOtp } from "@/lib/auth-api";
 import { validateEmail } from "@/lib/validators";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Menu } from "lucide-react";
+import { Menu, XCircle } from "lucide-react";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { AppLoader } from "@/components/AppLoader";
 
@@ -236,8 +237,8 @@ export default function HostPage() {
   const { t, localePath } = useLanguage();
   const { token, isAuthenticated, user } = useAuth();
   const [step, setStep] = useState(1);
-  const [hostType, setHostType] = useState<"apartment" | "hotel">("apartment");
-  const [hostStatus, setHostStatus] = useState<{ status: string; message?: string } | null>(null);
+  const [hostType, setHostType] = useState<"apartment" | "hotel" | "hostel">("apartment");
+  const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
   const [hostLoading, setHostLoading] = useState(false);
   const [hostSubmitLoading, setHostSubmitLoading] = useState(false);
   const [hostError, setHostError] = useState<string | null>(null);
@@ -252,6 +253,7 @@ export default function HostPage() {
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
   const [statusChecked, setStatusChecked] = useState(false);
   const [applicationSubmitted, setApplicationSubmitted] = useState(false);
+  const [reapplying, setReapplying] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -261,9 +263,9 @@ export default function HostPage() {
   const [step2Error, setStep2Error] = useState<string | null>(null);
   const [step3Error, setStep3Error] = useState<string | null>(null);
   const [smsCodeSent, setSmsCodeSent] = useState(false);
-  const [emailCodeSent, setEmailCodeSent] = useState(false);
 
-  const hostTypeApi = hostType === "hotel" ? "HOTEL" : "APARTMENT";
+  const hostTypeApi =
+    hostType === "hotel" ? "HOTEL" : hostType === "hostel" ? "HOSTEL" : "APARTMENT";
 
   useEffect(() => {
     if (!user) return;
@@ -302,6 +304,18 @@ export default function HostPage() {
     );
   };
 
+  const normalizedHostStatus = hostStatus
+    ? normalizeHostVerificationStatus(
+        hostStatus as Parameters<typeof normalizeHostVerificationStatus>[0],
+      )
+    : null;
+  const isRejected =
+    !reapplying &&
+    !applicationSubmitted &&
+    (normalizedHostStatus?.status === "REJECTED" ||
+      normalizedHostStatus?.application_status === "REJECTED");
+  const showApplicationForm = statusChecked && !applicationSubmitted && !isRejected;
+
   // Load host status on mount. If the user has already applied (or is approved),
   // show the confirmation screen instead of the application form.
   useEffect(() => {
@@ -315,6 +329,7 @@ export default function HostPage() {
         setHostStatus(s);
         if (isApplicationPendingOrApproved(s)) {
           setApplicationSubmitted(true);
+          setReapplying(false);
         }
       })
       .catch(() => {})
@@ -368,6 +383,10 @@ export default function HostPage() {
       setStep2Error(emailCheck.error ?? "Valid email is required.");
       return;
     }
+    if (email.trim().toLowerCase() !== emailCode.trim().toLowerCase()) {
+      setStep2Error("Re-enter your email address exactly to confirm it.");
+      return;
+    }
     setStep2Error(null);
     setStep(3);
   };
@@ -386,19 +405,9 @@ export default function HostPage() {
     }
   };
 
-  const handleSendEmailCode = async () => {
-    // Email delivery is not wired yet — confirmation is re-typing the address.
-    setEmailCodeSent(true);
-    setStep3Error(null);
-  };
-
   const handleStep3Continue = async () => {
     if (!smsCodeSent || smsCode.trim().length < 4) {
       setStep3Error("Request an SMS code and enter it to verify your phone.");
-      return;
-    }
-    if (email.trim().toLowerCase() !== emailCode.trim().toLowerCase()) {
-      setStep3Error("Re-enter your email address exactly to confirm it.");
       return;
     }
     setStep3Error(null);
@@ -544,7 +553,53 @@ export default function HostPage() {
               </div>
             )}
 
-            {statusChecked && !applicationSubmitted && step === 1 && (
+            {statusChecked && isRejected && (
+              <div className="py-4">
+                <div className="flex flex-col items-start gap-4 rounded-2xl border border-red-200 bg-red-50/80 p-6 sm:p-8">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <XCircle className="h-7 w-7" />
+                  </div>
+                  <div className="w-full">
+                    <h2 className="text-2xl font-semibold text-nexa-ink">
+                      {t("hostApply.rejectedTitle")}
+                    </h2>
+                    <p className="mt-2 text-nexa-ink-3">
+                      {t("hostApply.rejectedDesc")}
+                    </p>
+                    <div className="mt-4 rounded-xl border border-red-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
+                        {t("hostApply.rejectionReasonLabel")}
+                      </p>
+                      <p className="mt-1 text-sm text-nexa-ink whitespace-pre-wrap">
+                        {normalizedHostStatus?.rejection_reason?.trim() ||
+                          t("hostDashboard.reapplyMessage")}
+                      </p>
+                    </div>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                      <Button
+                        onClick={() => {
+                          setReapplying(true);
+                          setStep(1);
+                          setHostError(null);
+                          setDocFrontAssetId(null);
+                          setDocBackAssetId(null);
+                          setSelfieAssetId(null);
+                        }}
+                      >
+                        {t("hostApply.reapplyCta")}
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link href={localePath("/host/dashboard")}>
+                          {t("hostApply.goToDashboard")}
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showApplicationForm && step === 1 && (
               <div>
                 <span className="text-xs font-semibold tracking-[0.12em] uppercase text-nexa-primary">
                   Step 1 of {totalSteps}
@@ -558,8 +613,9 @@ export default function HostPage() {
                 <p className="text-sm text-nexa-ink-4 mb-8 rounded-lg bg-nexa-bg-2 px-3 py-2">
                   {t("hostApply.launchNote")}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                   <button
+                    type="button"
                     onClick={() => setHostType("apartment")}
                     className={cn(
                       "border-2 rounded-[22px] p-7 text-center cursor-pointer transition-all",
@@ -575,6 +631,7 @@ export default function HostPage() {
                     </p>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setHostType("hotel")}
                     className={cn(
                       "border-2 rounded-[22px] p-7 text-center cursor-pointer transition-all",
@@ -587,12 +644,26 @@ export default function HostPage() {
                     <h3 className="font-semibold mb-1">{t("hostApply.step1HotelTitle")}</h3>
                     <p className="text-sm text-nexa-ink-3">{t("hostApply.step1HotelDesc")}</p>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setHostType("hostel")}
+                    className={cn(
+                      "border-2 rounded-[22px] p-7 text-center cursor-pointer transition-all",
+                      hostType === "hostel"
+                        ? "border-nexa-primary bg-nexa-primary-soft"
+                        : "border-nexa-line hover:border-nexa-primary"
+                    )}
+                  >
+                    <div className="text-4xl mb-3">🛏️</div>
+                    <h3 className="font-semibold mb-1">{t("hostApply.step1HostelTitle")}</h3>
+                    <p className="text-sm text-nexa-ink-3">{t("hostApply.step1HostelDesc")}</p>
+                  </button>
                 </div>
                 <Button onClick={handleStep1Continue}>Continue →</Button>
               </div>
             )}
 
-            {statusChecked && !applicationSubmitted && step === 2 && (
+            {showApplicationForm && step === 2 && (
               <div>
                 <span className="text-xs font-semibold uppercase text-nexa-primary">
                   Step 2 of {totalSteps}
@@ -634,9 +705,29 @@ export default function HostPage() {
                         type="email"
                         placeholder="you@example.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setStep2Error(null);
+                        }}
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">
+                      Confirm email address <span className="text-nexa-primary">*</span>
+                    </label>
+                    <Input
+                      type="email"
+                      placeholder="Re-enter your email"
+                      value={emailCode}
+                      onChange={(e) => {
+                        setEmailCode(e.target.value);
+                        setStep2Error(null);
+                      }}
+                    />
+                    <p className="mt-1 text-xs text-nexa-ink-4">
+                      Type your email again to confirm — no code is sent to email.
+                    </p>
                   </div>
                   <label className="flex items-start gap-2.5 text-sm cursor-pointer">
                     <input
@@ -677,7 +768,7 @@ export default function HostPage() {
               </div>
             )}
 
-            {statusChecked && !applicationSubmitted && step === 3 && (
+            {showApplicationForm && step === 3 && (
               <div>
                 <span className="text-xs font-semibold uppercase text-nexa-primary">Step 3 of {totalSteps}</span>
                 <h2 className="text-2xl font-semibold mt-2 mb-2">{t("hostApply.step3Title")}</h2>
@@ -685,7 +776,7 @@ export default function HostPage() {
                   {t("hostApply.step3Subtitle")}
                 </p>
                 <p className="text-sm text-nexa-ink-4 mb-6 rounded-lg bg-nexa-bg-2 px-3 py-2">
-                  Verify your phone with the SMS code from Nexa Identity, then re-enter your email to confirm it.
+                  We will send a one-time code by SMS to {phone || "your phone"}. Email is not used for this step.
                 </p>
                 <div className="space-y-4 mb-6">
                   <div>
@@ -707,27 +798,7 @@ export default function HostPage() {
                       className="text-xs text-nexa-primary mt-1 hover:underline"
                       onClick={handleSendSmsCode}
                     >
-                      {smsCodeSent ? "Code sent — resend" : "Send code"}
-                    </button>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-nexa-ink mb-1">Confirm email address</label>
-                    <Input
-                      type="email"
-                      placeholder={email || "you@example.com"}
-                      value={emailCode}
-                      onChange={(e) => {
-                        setEmailCode(e.target.value);
-                        setStep3Error(null);
-                      }}
-                      className="max-w-md"
-                    />
-                    <button
-                      type="button"
-                      className="text-xs text-nexa-primary mt-1 hover:underline"
-                      onClick={handleSendEmailCode}
-                    >
-                      {emailCodeSent ? "Email noted for account" : "Confirm email on file"}
+                      {smsCodeSent ? "Code sent — resend" : "Send SMS code"}
                     </button>
                   </div>
                   {step3Error && (
@@ -740,7 +811,7 @@ export default function HostPage() {
                   <Button variant="ghost" onClick={() => goToStep(2)}>← Back</Button>
                   <Button
                     onClick={handleStep3Continue}
-                    disabled={smsCode.length < 4 || !emailCode.trim()}
+                    disabled={smsCode.length < 4}
                   >
                     Continue →
                   </Button>
@@ -748,7 +819,7 @@ export default function HostPage() {
               </div>
             )}
 
-            {statusChecked && !applicationSubmitted && step === 4 && (
+            {showApplicationForm && step === 4 && (
               <HostVerificationStep
                 token={token}
                 isAuthenticated={isAuthenticated}
@@ -821,6 +892,7 @@ export default function HostPage() {
                     setHostStatus(normalized);
                     if (isApplicationPendingOrApproved(normalized)) {
                       setApplicationSubmitted(true);
+                      setReapplying(false);
                     }
                   } catch (e) {
                     setHostError(e instanceof Error ? e.message : "Application failed");
@@ -845,6 +917,7 @@ export default function HostPage() {
                     setHostStatus(normalized);
                     if (isApplicationPendingOrApproved(normalized)) {
                       setApplicationSubmitted(true);
+                      setReapplying(false);
                     }
                   } catch (e) {
                     setHostError(e instanceof Error ? e.message : "Submission failed");

@@ -14,11 +14,11 @@ export const LISTING_WIZARD_STEPS = [
 export const MIN_LISTING_PHOTOS = 12;
 
 export const LISTING_TYPES = [
-  { id: "APARTMENT" as const, emoji: "🏠", label: "Apartment" },
-  { id: "VILLA" as const, emoji: "🏡", label: "Villa" },
-  { id: "RIAD" as const, emoji: "🕌", label: "Riad" },
-  { id: "HOTEL" as const, emoji: "🏨", label: "Hotel" },
-  { id: "HOSTEL" as const, emoji: "🛏️", label: "Hostel" },
+  { id: "APARTMENT" as const, label: "Apartment" },
+  { id: "VILLA" as const, label: "Villa" },
+  { id: "RIAD" as const, label: "Riad" },
+  { id: "HOTEL" as const, label: "Hotel" },
+  { id: "HOSTEL" as const, label: "Hostel" },
 ];
 
 export const AMENITY_OPTIONS = [

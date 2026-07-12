@@ -121,6 +121,8 @@ const frOverlay = {
     step1ApartmentDesc: "Appartements, studios, maisons, villas ou unités uniques",
     step1HotelTitle: "Hôte hôtel / résidence",
     step1HotelDesc: "Hôtels, résidences, apart-hôtels ou plusieurs chambres",
+    step1HostelTitle: "Hôte auberge / hostel",
+    step1HostelDesc: "Auberges de jeunesse, dortoirs, chambres partagées",
     step2Title: "Votre profil hôte",
     step2Subtitle:
       "Utilisez le même nom que sur vos documents si une vérification est demandée.",
@@ -357,6 +359,8 @@ const arOverlay = {
     step1ApartmentDesc: "شقق، استوديوهات، منازل، فلل أو وحدات فردية",
     step1HotelTitle: "مضيف فندق / إقامة",
     step1HotelDesc: "فنادق، إقامات، شقق فندقية أو عدة غرف",
+    step1HostelTitle: "مضيف نزل / هوستل",
+    step1HostelDesc: "نزل، مهاجع، غرف مشتركة أو إقامات للمسافرين",
     step2Title: "ملف المضيف",
     step2Subtitle: "استخدم الاسم نفسه كما في وثائقك إذا طُلب التحقق.",
     step3Title: "تأكيد جهة الاتصال",

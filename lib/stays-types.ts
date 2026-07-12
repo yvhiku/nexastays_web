@@ -169,6 +169,7 @@ export interface StaysBooking {
       role?: string;
       access_instructions?: string | null;
     } | null;
+    host?: { full_name?: string | null } | null;
     media?: { asset_id: string; kind: string; sort_order?: number }[];
   } | null;
 }
@@ -182,6 +183,11 @@ export interface HostVerificationStatus {
   reviewed_at?: string | null;
   rejection_reason?: string | null;
 }
+
+/** Raw payload from GET/POST /host/verification (field names vary by API version). */
+export type HostVerificationPayload = HostVerificationStatus & {
+  host_verification_status?: string;
+};
 
 export interface HostMeStatus {
   is_host: boolean;
@@ -333,12 +339,29 @@ export interface UpdateHostListingBody {
 export interface CreateHostListingBody {
   title: string;
   listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
+  booking_model?:
+    | "ENTIRE_PROPERTY"
+    | "PRIVATE_ROOM"
+    | "MULTI_UNIT"
+    | "ROOM_TYPES"
+    | "DORM_BEDS"
+    | "PRIVATE_ROOMS"
+    | "DORM_AND_PRIVATE"
+    | "BOTH";
   city: string;
+  country?: string;
+  neighborhood?: string;
+  postal_code?: string;
+  building_name?: string;
+  landmark?: string;
   address?: string;
   description?: string;
   checkin_time?: string;
   checkout_time?: string;
   instant_booking?: boolean;
+  property_details?: Record<string, unknown>;
+  safety_features?: Record<string, unknown>;
+  policies?: Record<string, unknown>;
   rules?: {
     pets_policy?: "ALLOWED" | "DOGS_CATS" | "NO";
     smoking_policy?: "ALLOWED" | "NOT_ALLOWED";
@@ -359,6 +382,34 @@ export interface CreateHostListingBody {
     full_name: string;
     phone: string;
     role: "OWNER" | "CO_HOST" | "AGENT";
+    access_instructions?: string;
   };
-  media: { asset_id: string; kind: "PHOTO" | "WALKTHROUGH"; sort_order?: number }[];
+  media: {
+    asset_id: string;
+    kind: "PHOTO" | "WALKTHROUGH";
+    sort_order?: number;
+    category?: string;
+    is_cover?: boolean;
+  }[];
+  unit_types?: Array<{
+    kind:
+      | "APARTMENT_UNIT"
+      | "VILLA_UNIT"
+      | "HOTEL_ROOM"
+      | "RIAD_ROOM"
+      | "HOSTEL_DORM"
+      | "HOSTEL_PRIVATE";
+    name: string;
+    quantity?: number;
+    max_guests?: number;
+    bed_config?: unknown[];
+    size_sqm?: number;
+    amenities?: string[];
+    pricing_unit?: "NIGHT" | "BED_NIGHT" | "ROOM_NIGHT";
+    base_price: number;
+    currency?: string;
+    details?: Record<string, unknown>;
+    sort_order?: number;
+    is_active?: boolean;
+  }>;
 }

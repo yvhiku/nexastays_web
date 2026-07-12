@@ -15,6 +15,7 @@ import type {
   CreateBookingDto,
   StaysBooking,
   HostVerificationStatus,
+  HostVerificationPayload,
   HostMeStatus,
   SubmitHostOnboardingBody,
   SubmitHostVerificationBody,
@@ -449,34 +450,32 @@ export async function submitHostOnboarding(
 
 /** Normalize GET /host/verification (status vs application_status). */
 export function normalizeHostVerificationStatus(
-  raw: HostVerificationStatus & Record<string, unknown>,
+  raw: HostVerificationPayload,
 ): HostVerificationStatus {
-  const applicationStatus =
-    (raw.application_status as string | undefined) ??
-    (raw.status as string | undefined);
-  const hostVerification = raw.host_verification_status as string | undefined;
-  let status = raw.status as HostVerificationStatus["status"] | undefined;
-  if (!status || status === "NOT_STARTED") {
-    if (
-      applicationStatus === "PENDING" ||
-      applicationStatus === "APPROVED" ||
-      applicationStatus === "REJECTED"
-    ) {
-      status = applicationStatus as HostVerificationStatus["status"];
-    } else if (
-      hostVerification === "PENDING" ||
-      hostVerification === "APPROVED" ||
-      hostVerification === "REJECTED"
-    ) {
-      status = hostVerification as HostVerificationStatus["status"];
-    } else {
-      status = "NOT_STARTED";
+  const applicationStatus = raw.application_status;
+  const hostVerification = raw.host_verification_status;
+  const rawStatus = raw.status;
+
+  const pickLifecycle = (...candidates: Array<string | undefined>) => {
+    for (const c of candidates) {
+      if (c === "PENDING" || c === "APPROVED" || c === "REJECTED") return c;
+      if (c === "DRAFT" || c === "NOT_STARTED") return "NOT_STARTED";
     }
-  }
+    return undefined;
+  };
+
+  const status = (pickLifecycle(
+    applicationStatus,
+    rawStatus,
+    hostVerification,
+  ) ?? "NOT_STARTED") as HostVerificationStatus["status"];
+
   return {
     ...raw,
     status,
-    application_status: applicationStatus,
+    application_status: applicationStatus ?? status,
+    rejection_reason:
+      (raw.rejection_reason as string | null | undefined) ?? null,
   };
 }
 
@@ -488,7 +487,9 @@ export async function getHostVerification(
   const res = await client
     .get("/stays/host/verification", { headers })
     .catch(handleError);
-  return normalizeHostVerificationStatus(unwrap<HostVerificationStatus>(res));
+  return normalizeHostVerificationStatus(
+    unwrap<HostVerificationPayload>(res),
+  );
 }
 
 /** Submit host verification (requires JWT) */
