@@ -169,6 +169,9 @@ export interface StaysBooking {
       role?: string;
       access_instructions?: string | null;
     } | null;
+    rules?: {
+      cancellation_policy?: "FLEXIBLE" | "MODERATE" | "STRICT" | string | null;
+    } | null;
     host?: { full_name?: string | null } | null;
     media?: { asset_id: string; kind: string; sort_order?: number }[];
   } | null;
@@ -275,6 +278,9 @@ export interface HostListingSummary {
   title: string;
   listing_type: string;
   city: string;
+  neighborhood?: string | null;
+  geo_lat?: number | null;
+  geo_lng?: number | null;
   status: string;
   description?: string | null;
   address?: string | null;
@@ -310,7 +316,10 @@ export interface HostListingDetail extends HostListingSummary {
 export interface UpdateHostListingBody {
   title?: string;
   city?: string;
+  neighborhood?: string;
   address?: string;
+  geo_lat?: number;
+  geo_lng?: number;
   description?: string;
   checkin_time?: string;
   checkout_time?: string;
@@ -355,6 +364,8 @@ export interface CreateHostListingBody {
   building_name?: string;
   landmark?: string;
   address?: string;
+  geo_lat?: number;
+  geo_lng?: number;
   description?: string;
   checkin_time?: string;
   checkout_time?: string;

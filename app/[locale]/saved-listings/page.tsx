@@ -63,6 +63,7 @@ function SavedListingsContent() {
               {t("savedListings.title")}
             </h1>
             <p className="text-nexa-ink-3 mt-2">{t("savedListings.subtitle")}</p>
+            <p className="text-xs text-nexa-ink-4 mt-1">{t("savedListings.deviceOnly")}</p>
           </div>
 
           {error && (

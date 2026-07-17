@@ -31,6 +31,7 @@ export const MOROCCO_CITIES: readonly string[] = [
   "Safi",
   "Sale",
   "Settat",
+  "Taghazout",
   "Tangier",
   "Tan-Tan",
   "Taroudant",

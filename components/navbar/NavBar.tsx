@@ -112,13 +112,13 @@ export const NavBar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 inset-x-0 z-50 h-[72px] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center">
-      <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-4 md:gap-6">
+      <nav className="fixed top-0 inset-x-0 z-50 h-[72px] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip">
+      <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0">
         <Link
           href={localePath("/")}
-          className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0 min-w-0"
         >
-          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border-2 border-nexa-primary-soft">
+          <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border-2 border-nexa-primary-soft shrink-0">
             <Image
               src={NEXA_STAYS_LOGO_SRC}
               alt="Nexa Stays"
@@ -127,18 +127,18 @@ export const NavBar = () => {
               className="object-cover"
             />
           </div>
-          <span className="font-display text-lg sm:text-xl font-bold text-nexa-ink">
+          <span className="font-display text-lg sm:text-xl font-bold text-nexa-ink truncate">
             Nexa <span className="text-nexa-primary">Stays</span>
           </span>
         </Link>
 
-        <div className="hidden lg:flex flex-1 items-center justify-center gap-7 min-w-0">
+        <div className="hidden xl:flex flex-1 items-center justify-center gap-4 2xl:gap-7 min-w-0 overflow-hidden">
           {visibleNavLinks.map(({ href, labelKey, id }) => (
             <Link
               key={id}
               href={href.startsWith("/#") ? localePath("/") + href.slice(1) : localePath(href)}
               className={cn(
-                "text-sm font-medium py-1 border-b-2 border-transparent transition-colors",
+                "text-sm font-medium py-1 border-b-2 border-transparent transition-colors whitespace-nowrap shrink-0",
                 isActive(href, id)
                   ? "text-nexa-primary border-nexa-primary"
                   : "text-nexa-ink-3 hover:text-nexa-primary"
@@ -147,15 +147,17 @@ export const NavBar = () => {
               {t(labelKey)}
             </Link>
           ))}
-          <LanguageSelector />
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="hidden xl:block">
+            <LanguageSelector />
+          </div>
           {isAuthenticated ? (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-nexa-bg-2 transition-colors text-nexa-ink"
+                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg hover:bg-nexa-bg-2 transition-colors text-nexa-ink"
                 aria-expanded={profileOpen}
                 aria-haspopup="true"
               >
@@ -164,7 +166,7 @@ export const NavBar = () => {
                   token={tokenType === "jwt" ? token : null}
                   size="sm"
                 />
-                <span className="text-sm font-medium hidden sm:inline">{t("common.profile")}</span>
+                <span className="text-sm font-medium hidden md:inline">{t("common.profile")}</span>
                 <ChevronDown className={cn("h-4 w-4 transition-transform", profileOpen && "rotate-180")} />
               </button>
               {profileOpen && (
@@ -230,7 +232,7 @@ export const NavBar = () => {
           )}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
+            className="xl:hidden flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -239,10 +241,10 @@ export const NavBar = () => {
       </div>
     </nav>
 
-      {/* Mobile menu overlay */}
+      {/* Mobile / tablet menu overlay */}
     <div
       className={cn(
-        "fixed inset-0 z-[60] lg:hidden transition-opacity duration-300",
+        "fixed inset-0 z-[60] xl:hidden transition-opacity duration-300",
         mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
       aria-hidden={!mobileMenuOpen}

@@ -14,6 +14,12 @@ export function validateStep(
       if (!form.city.trim()) return "City is required.";
       if (!form.address.trim()) return "Street address is required.";
       if (!form.title.trim()) return "Listing title is required.";
+      if (!/^[A-Za-z]{2}$/.test(form.country.trim())) {
+        return "Country must be a 2-letter code (e.g. MA).";
+      }
+      if (form.geoLat == null || form.geoLng == null) {
+        return "Place the listing on the map so guests can find it.";
+      }
       return null;
     case "details":
       if (!form.description.trim() || form.description.trim().length < 20) {
@@ -37,6 +43,9 @@ export function validateStep(
     case "policies":
       if (!form.contactName.trim()) return "Check-in contact name is required.";
       if (!form.contactPhone.trim()) return "Check-in contact phone is required.";
+      if (!/^[+\d\s\-()]+$/.test(form.contactPhone.trim())) {
+        return "Check-in contact phone may only include digits, spaces, +, -, and parentheses.";
+      }
       return null;
     case "pricing": {
       if (isMultiUnitFlow(form.listingType, form.bookingModel)) {

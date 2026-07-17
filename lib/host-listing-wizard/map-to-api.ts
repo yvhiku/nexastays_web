@@ -11,10 +11,17 @@ export function buildCreateHostListingBody(
   }
 
   const multi = isMultiUnitFlow(form.listingType, form.bookingModel);
-  const unitBase =
+  const unitPrices =
     multi && form.unitTypes.length > 0
-      ? Math.min(...form.unitTypes.map((u) => Number(u.basePrice) || 0).filter((n) => n > 0))
+      ? form.unitTypes.map((u) => Number(u.basePrice) || 0).filter((n) => n > 0)
+      : [];
+  const unitBase =
+    unitPrices.length > 0
+      ? Math.min(...unitPrices)
       : Number(form.basePrice) || 0;
+  if (!Number.isFinite(unitBase) || unitBase <= 0) {
+    throw new Error("A valid nightly price greater than zero is required.");
+  }
 
   const body: CreateHostListingBody = {
     title: form.title.trim(),
@@ -27,6 +34,8 @@ export function buildCreateHostListingBody(
     building_name: form.buildingName.trim() || undefined,
     landmark: form.landmark.trim() || undefined,
     address: form.address.trim(),
+    geo_lat: form.geoLat ?? undefined,
+    geo_lng: form.geoLng ?? undefined,
     description: form.description.trim(),
     checkin_time: form.checkinTime,
     checkout_time: form.checkoutTime,

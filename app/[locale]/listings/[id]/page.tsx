@@ -45,6 +45,8 @@ import {
   readDateSearchParam,
 } from "@/lib/booking-dates";
 import type { StaysListing, CreateBookingOccupantDto } from "@/lib/stays-types";
+import { sanitizeGuestCount } from "@/lib/input-sanitize";
+import { trackEvent } from "@/lib/analytics";
 import {
   amenityLabel,
   normalizeAmenities,
@@ -104,7 +106,9 @@ export default function ListingDetailPage() {
   const [checkout, setCheckout] = useState(
     () => readDateSearchParam(searchParams, ["checkout", "checkout_date"]),
   );
-  const [guests, setGuests] = useState(parseInt(searchParams.get("guests") || "1", 10));
+  const [guests, setGuests] = useState(
+    () => sanitizeGuestCount(searchParams.get("guests") || "1") ?? 1,
+  );
   const [blockedNights, setBlockedNights] = useState<string[]>([]);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
@@ -114,7 +118,7 @@ export default function ListingDetailPage() {
   useEffect(() => {
     setCheckin(readDateSearchParam(searchParams, ["checkin", "checkin_date"]));
     setCheckout(readDateSearchParam(searchParams, ["checkout", "checkout_date"]));
-    setGuests(parseInt(searchParams.get("guests") || "1", 10));
+    setGuests(sanitizeGuestCount(searchParams.get("guests") || "1") ?? 1);
   }, [searchParams]);
 
   useEffect(() => {
@@ -124,17 +128,45 @@ export default function ListingDetailPage() {
   }, [isAuthenticated, token]);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
     getListing(id, token)
       .then((data) => {
+        if (cancelled) return;
         setListing(data);
-        return searchListings({ city: data.city, guests: 1 });
+        searchListings({ city: data.city, guests: 1 })
+          .then((results) => {
+            if (!cancelled) {
+              setSimilarListings(results.filter((l) => l.id !== id).slice(0, 6));
+            }
+          })
+          .catch(() => {
+            if (!cancelled) setSimilarListings([]);
+          });
       })
-      .then((results) => {
-        setSimilarListings(results.filter((l) => l.id !== id).slice(0, 6));
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load");
+          setListing(null);
+        }
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id, token]);
+
+  useEffect(() => {
+    if (!listing) return;
+    trackEvent("listing_viewed", {
+      listing_id: listing.id,
+      city: listing.city,
+      guests,
+    });
+  }, [listing, guests]);
 
   useEffect(() => {
     const from = (() => {
@@ -146,6 +178,12 @@ export default function ListingDetailPage() {
       .then((data) => setBlockedNights(expandBlockedNights(data.blocked_ranges)))
       .catch(() => setBlockedNights([]));
   }, [id]);
+
+  useEffect(() => {
+    if (!listing) return;
+    const max = Math.max(1, listing.rules?.max_guests ?? 6);
+    setGuests((g) => sanitizeGuestCount(g, max) ?? 1);
+  }, [listing]);
 
   const photoUrls = useMemo(() => {
     if (!listing?.media) return [placeholderImg];
@@ -202,12 +240,40 @@ export default function ListingDetailPage() {
       return;
     }
     if (userProfile && userProfile.kyc_status !== "APPROVED" && userProfile.kyc_status !== "VERIFIED") return;
+    trackEvent("booking_started", {
+      listing_id: listing.id,
+      checkin,
+      checkout,
+      guests,
+    });
     setBookingError(null);
+    const max = Math.max(1, listing.rules?.max_guests ?? 6);
+    const guestCount = sanitizeGuestCount(guests, max) ?? 1;
+
+    // Solo booking: reuse verified account identity — skip re-entry / ID upload.
+    if (
+      guestCount === 1 &&
+      userProfile?.full_name &&
+      userProfile.full_name.trim().length >= 2
+    ) {
+      void handleVerificationConfirm([
+        {
+          full_name: userProfile.full_name.trim(),
+          is_primary: true,
+          phone: userProfile.phone_number || undefined,
+          email: userProfile.email || undefined,
+        },
+      ]);
+      return;
+    }
+
     setShowVerificationStep(true);
   };
 
   const handleVerificationConfirm = async (occupants: CreateBookingOccupantDto[]) => {
     if (!listing || !token) return;
+    const max = Math.max(1, listing.rules?.max_guests ?? 6);
+    const guestCount = sanitizeGuestCount(guests, max) ?? 1;
     setBookingError(null);
     setBooking(true);
     try {
@@ -216,11 +282,17 @@ export default function ListingDetailPage() {
           listing_id: id,
           checkin_date: checkin,
           checkout_date: checkout,
-          guest_count: guests,
+          guest_count: guestCount,
           occupants,
         },
         token
       );
+      trackEvent("booking_created", {
+        booking_id: b.id,
+        listing_id: id,
+        total_paid: b.total_paid,
+        currency: b.currency,
+      });
       setShowVerificationStep(false);
       router.push(localePath(`/bookings/${b.id}`));
     } catch (err) {
@@ -278,7 +350,7 @@ export default function ListingDetailPage() {
   const cleaningFee = listing.rate_plan?.cleaning_fee ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const amenities = normalizeAmenities(listing.rules?.amenities);
-  const maxGuests = listing.rules?.max_guests ?? 6;
+  const maxGuests = Math.max(1, listing.rules?.max_guests ?? 6);
   const nights =
     checkin && checkout ? bookingNights(checkin, checkout) : 0;
   const subtotal = nights * price + cleaningFee;

@@ -53,7 +53,7 @@ export function ListingCard({
   localePath,
 }: ListingCardProps) {
   const router = useRouter();
-  const { userId } = useAuth();
+  const { userId, isAuthenticated } = useAuth();
   const price = listing.rate_plan?.base_price ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const photoCount = listing.media?.filter((m) => m.kind === "PHOTO").length ?? 0;
@@ -87,7 +87,7 @@ export function ListingCard({
     `${listingTypeLabel(listing.listing_type)} in ${listing.city}`;
 
   return (
-    <article className="group bg-white rounded-2xl overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5">
+    <article className="group bg-white rounded-2xl overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5 min-w-0 w-full">
       <div className="relative block">
         <ListingImageGallery
           listingId={listing.id}
@@ -126,6 +126,16 @@ export function ListingCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (!isAuthenticated || !userId) {
+                  const returnTo =
+                    typeof window !== "undefined"
+                      ? `${window.location.pathname}${window.location.search}`
+                      : linkHref;
+                  router.push(
+                    `${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`,
+                  );
+                  return;
+                }
                 setSaved(toggleSavedListing(listing.id, userId));
               }}
               aria-label={t("common.save")}

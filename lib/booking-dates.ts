@@ -10,6 +10,40 @@ export function readDateSearchParam(
   return "";
 }
 
+/**
+ * Parse a calendar date without UTC shift.
+ * `new Date("YYYY-MM-DD")` is UTC midnight and can land on the previous local day.
+ */
+export function parseLocalDateOnly(value: string | Date): Date {
+  if (value instanceof Date) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+  const trimmed = value.trim();
+  // Exact calendar dates only — do not strip time from ISO timestamps.
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (match) {
+    return new Date(
+      Number(match[1]),
+      Number(match[2]) - 1,
+      Number(match[3]),
+    );
+  }
+  const d = new Date(trimmed);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+export function formatLocalDateOnly(
+  value: string | Date,
+  options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  },
+  locale?: string,
+): string {
+  return parseLocalDateOnly(value).toLocaleDateString(locale, options);
+}
+
 export function addDaysToDateString(isoDate: string, days: number): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
   if (!match) return isoDate;

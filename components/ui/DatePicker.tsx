@@ -188,7 +188,7 @@ export function DatePicker({
           id={listboxId}
           role="dialog"
           aria-label={monthLabel}
-          className="absolute left-0 top-[calc(100%+0.75rem)] z-50 w-[280px] rounded-2xl border border-nexa-line bg-white p-3 shadow-nexa-lg"
+          className="absolute start-0 top-[calc(100%+0.75rem)] z-50 w-[min(280px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border border-nexa-line bg-white p-3 shadow-nexa-lg"
         >
           <div className="flex items-center justify-between gap-2 mb-3 px-1">
             <p className="text-sm font-semibold text-nexa-ink capitalize">{monthLabel}</p>

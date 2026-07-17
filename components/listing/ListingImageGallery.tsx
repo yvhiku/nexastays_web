@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getListingMediaUrl } from "@/lib/stays-api";
 import { cn } from "@/lib/utils";
@@ -119,13 +120,14 @@ export function ListingImageGallery({
             onImageClick?.(imgSrc);
           }
         }}
-        className="block w-full h-full focus:outline-none focus:ring-0 cursor-pointer"
+        className="relative block w-full h-full focus:outline-none focus:ring-0 cursor-pointer"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={imgSrc}
           alt={`${alt} — ${currentIndex + 1} of ${items.length}`}
-          className="w-full h-full object-cover select-none"
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover select-none"
           draggable={false}
           onError={handleImageError}
         />

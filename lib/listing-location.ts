@@ -44,7 +44,7 @@ export function parseNeighborhood(listing: StaysListing): string {
   return "";
 }
 
-/** Full address string for display and Google Maps search. */
+/** Full address string for display and open-in-maps search. */
 export function getFullMapsSearchQuery(listing: StaysListing): string {
   const rawAddress = listing.address?.trim() ?? "";
   const city = listing.city?.trim() ?? "";
@@ -91,23 +91,31 @@ export function hasListingLocationInfo(listing: StaysListing): boolean {
   );
 }
 
-export function hasMapCoordinates(listing: StaysListing): boolean {
-  return listing.geo_lat != null && listing.geo_lng != null;
-}
-
-export function getStaticMapUrl(listing: StaysListing): string | null {
-  if (!hasMapCoordinates(listing)) return null;
-  const lat = Number(listing.geo_lat).toFixed(6);
-  const lng = Number(listing.geo_lng).toFixed(6);
+export function hasMapCoordinates(listing: {
+  geo_lat?: number | null;
+  geo_lng?: number | null;
+}): boolean {
+  const lat = listing.geo_lat;
+  const lng = listing.geo_lng;
   return (
-    `https://staticmap.openstreetmap.de/staticmap.php` +
-    `?center=${lat},${lng}&zoom=15&size=600x280&maptype=mapnik` +
-    `&markers=${lat},${lng},red-pushpin`
+    lat != null &&
+    lng != null &&
+    Number.isFinite(Number(lat)) &&
+    Number.isFinite(Number(lng)) &&
+    Number(lat) >= -90 &&
+    Number(lat) <= 90 &&
+    Number(lng) >= -180 &&
+    Number(lng) <= 180
   );
 }
 
-/** Always search by full address text — more accurate than lat/lng pins for guests. */
+/** Opens the place in Google Maps (embedded map stays OSM). */
 export function getMapsSearchUrl(listing: StaysListing): string | null {
+  if (hasMapCoordinates(listing)) {
+    const lat = Number(listing.geo_lat);
+    const lng = Number(listing.geo_lng);
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
   const query = getFullMapsSearchQuery(listing);
   if (!query) return null;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;

@@ -29,11 +29,15 @@ export function toggleSavedListing(
   listingId: string,
   userId: string | null | undefined,
 ): boolean {
-  if (!userId) return false;
+  if (!userId || typeof window === "undefined") return false;
   const ids = getSavedListingIds(userId);
   const exists = ids.includes(listingId);
   const next = exists ? ids.filter((id) => id !== listingId) : [...ids, listingId];
-  localStorage.setItem(storageKey(userId), JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent("nexa-saved-listings-changed"));
+  try {
+    localStorage.setItem(storageKey(userId), JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("nexa-saved-listings-changed"));
+  } catch {
+    return exists;
+  }
   return !exists;
 }

@@ -8,6 +8,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { GuestSelect } from "@/components/ui/GuestSelect";
 import type { StaysListing } from "@/lib/stays-types";
 import { addDaysToDateString } from "@/lib/booking-dates";
+import { sanitizeGuestCount } from "@/lib/input-sanitize";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ListingBookingCardProps {
@@ -149,10 +150,15 @@ export function ListingBookingCard({
               Guests
             </label>
             <GuestSelect
-              value={String(guests)}
-              onChange={(v) => onGuestsChange(parseInt(v, 10))}
+              value={String(sanitizeGuestCount(guests, Math.max(1, maxGuests)) ?? 1)}
+              onChange={(v) =>
+                onGuestsChange(sanitizeGuestCount(v, Math.max(1, maxGuests)) ?? 1)
+              }
               aria-label="Guests"
-              options={Array.from({ length: maxGuests }, (_, i) => i + 1).map((n) => ({
+              options={Array.from(
+                { length: Math.max(1, maxGuests) },
+                (_, i) => i + 1,
+              ).map((n) => ({
                 value: String(n),
                 label: `${n} guest${n > 1 ? "s" : ""}`,
               }))}

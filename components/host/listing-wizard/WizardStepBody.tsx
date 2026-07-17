@@ -32,6 +32,7 @@ import {
   selectClassName,
   textareaClassName,
 } from "@/components/host/listing-wizard/wizard-ui";
+import { HostLocationMapPicker } from "@/components/host/listing-wizard/HostLocationMapPicker";
 
 const TYPES: ListingType[] = ["APARTMENT", "VILLA", "RIAD", "HOTEL", "HOSTEL"];
 
@@ -320,6 +321,18 @@ export function WizardStepBody({
                   onChange={(e) => patch({ landmark: e.target.value })}
                 />
               </Field>
+            </div>
+            <div className="mt-4">
+              <HostLocationMapPicker
+                city={form.city}
+                neighborhood={form.neighborhood}
+                address={form.address}
+                latitude={form.geoLat}
+                longitude={form.geoLng}
+                onCoordinatesChange={({ lat, lng }) =>
+                  patch({ geoLat: lat, geoLng: lng })
+                }
+              />
             </div>
           </div>
         </SectionCard>

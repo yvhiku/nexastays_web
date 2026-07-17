@@ -1,4 +1,5 @@
 import type { StaysBooking, BookingLifecycle } from "./stays-types";
+import { parseLocalDateOnly } from "./booking-dates";
 
 const CANCELLED_STATUSES = ["CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"];
 const PAID_STAY_STATUSES = ["CONFIRMED", "CHECKED_IN", "COMPLETED"];
@@ -11,7 +12,7 @@ function startOfDay(d: Date): Date {
 }
 
 function parseDateOnly(value: string | Date): Date {
-  return startOfDay(new Date(value));
+  return startOfDay(parseLocalDateOnly(value));
 }
 
 export function getPaymentExpiresAt(createdAt: string | Date): Date {
@@ -191,7 +192,10 @@ export function filterAndSortBookings(
           new Date(b.created_at ?? b.checkin_date).getTime()
         );
       case "checkin":
-        return new Date(a.checkin_date).getTime() - new Date(b.checkin_date).getTime();
+        return (
+          parseDateOnly(a.checkin_date).getTime() -
+          parseDateOnly(b.checkin_date).getTime()
+        );
       case "price": {
         const pa = a.total_paid ?? a.total_subtotal;
         const pb = b.total_paid ?? b.total_subtotal;

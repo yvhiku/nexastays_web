@@ -22,20 +22,30 @@ export function validateFullName(value: string): ValidationResult {
   return { valid: true };
 }
 
-/** Validate a single guest identity based on role and gender */
+/** Validate a single guest identity based on role and gender.
+ *  When `options.skipIdForVerifiedPrimary` is true, primary guests who
+ *  already passed account KYC do not need ID number / phone / email again.
+ */
 export function validateGuestIdentity(
   guest: GuestIdentityFormData,
-  index: number
+  index: number,
+  options?: { skipIdForVerifiedPrimary?: boolean }
 ): ValidationResult {
   const err = validateFullName(guest.full_name);
   if (!err.valid) return { valid: false, error: `Guest ${index + 1}: ${err.error}` };
 
-  const idErr = validateIdNumber(guest.id_number);
-  if (!idErr.valid) return { valid: false, error: `Guest ${index + 1}: ${idErr.error}` };
+  const skipId =
+    !!options?.skipIdForVerifiedPrimary && guest.is_primary && index === 0;
 
-  // Primary guest and male guests: require phone, email
+  if (!skipId) {
+    const idErr = validateIdNumber(guest.id_number);
+    if (!idErr.valid) return { valid: false, error: `Guest ${index + 1}: ${idErr.error}` };
+  }
+
+  // Primary guest and male guests: require phone, email — unless verified primary
   const needsPhoneEmail =
-    guest.is_primary || guest.gender === "MALE" || guest.gender === "PREFER_NOT_TO_SAY";
+    !skipId &&
+    (guest.is_primary || guest.gender === "MALE" || guest.gender === "PREFER_NOT_TO_SAY");
 
   if (needsPhoneEmail) {
     if (!guest.phone || guest.phone.trim().length < 10) {
@@ -56,11 +66,15 @@ export function validateGuestIdentity(
   return { valid: true };
 }
 
-/** Validate that all guests have ID document uploaded */
+/** Validate ID document uploads. Verified primary guests may skip upload. */
 export function validateIdDocumentUploaded(
-  guests: GuestIdentityFormData[]
+  guests: GuestIdentityFormData[],
+  options?: { skipIdForVerifiedPrimary?: boolean }
 ): ValidationResult {
   for (let i = 0; i < guests.length; i++) {
+    const skip =
+      !!options?.skipIdForVerifiedPrimary && guests[i].is_primary && i === 0;
+    if (skip) continue;
     if (!guests[i].id_document_front_asset_id?.trim()) {
       return {
         valid: false,

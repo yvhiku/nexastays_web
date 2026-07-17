@@ -8,8 +8,15 @@ import { getIdentityApiBaseUrl } from "./env";
 import { unwrapResponse } from "./api-client";
 import { normalizeError } from "./api-client";
 import { normalizeMoroccanPhone, validateImageFile } from "./validators";
+import {
+  notifyAuthLogout,
+  notifyTokenRefreshed,
+  refreshToken as refreshTokenApi,
+} from "./auth-api";
 
 const API_BASE = getIdentityApiBaseUrl();
+const JWT_KEY = "nexa_access_token";
+const REFRESH_TOKEN_KEY = "nexa_refresh_token";
 
 function getAuthHeaders(getToken: () => string | null): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -77,6 +84,37 @@ const jsonClient = axios.create({
   headers: { "Content-Type": "application/json" },
   timeout: 15000,
 });
+
+jsonClient.interceptors.response.use(
+  (res) => res,
+  async (err) => {
+    const config = err.config as typeof err.config & { __refreshRetried?: boolean };
+    if (
+      err.response?.status === 401 &&
+      config &&
+      !config.__refreshRetried &&
+      typeof window !== "undefined"
+    ) {
+      const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (refresh) {
+        config.__refreshRetried = true;
+        try {
+          const tokens = await refreshTokenApi(refresh);
+          localStorage.setItem(JWT_KEY, tokens.access_token);
+          if (tokens.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+          notifyTokenRefreshed(tokens.access_token);
+          config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
+          return jsonClient.request(config);
+        } catch {
+          localStorage.removeItem(JWT_KEY);
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          notifyAuthLogout();
+        }
+      }
+    }
+    return Promise.reject(err);
+  },
+);
 
 /** Update user profile (name, email, etc.) - requires JWT */
 export async function updateProfile(

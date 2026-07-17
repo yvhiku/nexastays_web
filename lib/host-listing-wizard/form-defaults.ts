@@ -46,6 +46,8 @@ export function defaultWizardForm(): ListingWizardFormState {
     buildingName: "",
     postalCode: "",
     landmark: "",
+    geoLat: null,
+    geoLng: null,
     description: "",
     maxGuests: 2,
     bedrooms: [newBedroom(1)],

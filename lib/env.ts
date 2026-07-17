@@ -8,6 +8,7 @@
 
 const DEFAULT_IDENTITY = "http://127.0.0.1:3001/api/v1";
 const DEFAULT_STAYS = "http://127.0.0.1:3002/api/v1";
+const DEFAULT_SITE = "http://localhost:3005";
 
 function legacyBase(): string | undefined {
   return process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -29,6 +30,11 @@ export function getStaysApiBaseUrl(): string {
     legacyBase() ||
     DEFAULT_STAYS
   );
+}
+
+/** Public website origin used for canonical URLs, sitemap, and social cards. */
+export function getPublicSiteUrl(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE).replace(/\/$/, "");
 }
 
 /** @deprecated Prefer getIdentityApiBaseUrl or getStaysApiBaseUrl */

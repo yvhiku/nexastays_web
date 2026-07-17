@@ -61,34 +61,32 @@ function LargeStarRating({ value, onChange, disabled }: LargeStarRatingProps) {
     <div className="flex justify-center gap-2" role="radiogroup" aria-label="Overall rating">
       {Array.from({ length: 5 }, (_, i) => {
         const fill = Math.min(1, Math.max(0, value - i));
-        const filled = fill > 0;
         return (
           <div key={i} className="relative group">
+            {/* Empty base star */}
             <svg
               viewBox="0 0 24 24"
               className={cn(
-                "w-10 h-10 sm:w-11 sm:h-11 transition-all duration-200 rating-star",
-                filled ? "text-nexa-primary fill-nexa-primary/90" : "text-nexa-line fill-nexa-bg-2",
+                "w-10 h-10 sm:w-11 sm:h-11 text-nexa-line fill-nexa-bg-2 transition-all duration-200 rating-star",
                 !disabled && "group-hover:scale-110",
               )}
               aria-hidden
             >
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
             </svg>
-            {fill > 0 && fill < 1 && (
-              <div
-                className="absolute inset-0 overflow-hidden"
-                style={{ width: `${fill * 100}%` }}
+            {/* Clipped fill overlay for full and half stars */}
+            <div
+              className="absolute inset-0 overflow-hidden pointer-events-none"
+              style={{ width: `${fill * 100}%` }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-10 h-10 sm:w-11 sm:h-11 text-nexa-primary fill-nexa-primary/90"
+                aria-hidden
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-10 h-10 sm:w-11 sm:h-11 text-nexa-primary fill-nexa-primary/90"
-                  aria-hidden
-                >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
-                </svg>
-              </div>
-            )}
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+              </svg>
+            </div>
             <button
               type="button"
               disabled={disabled}

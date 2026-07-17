@@ -224,6 +224,7 @@ export async function createPaymentIntent(
   amount: number;
   currency: string;
   status: string;
+  redirect_url?: string;
 }> {
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
   const res = await client
@@ -385,6 +386,25 @@ export async function resumeHostListing(
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
   const res = await client
     .post(`/stays/host/listings/${id}/resume`, {}, { headers })
+    .catch(handleError);
+  return unwrap(res);
+}
+
+/** Host block/unblock date range for a listing calendar. */
+export async function setHostAvailabilityBlock(
+  id: string,
+  body: { from: string; to: string; is_blocked?: boolean },
+  token?: string | null,
+): Promise<{
+  listing_id: string;
+  from: string;
+  to: string;
+  is_blocked: boolean;
+  nights: number;
+}> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(`/stays/host/listings/${id}/availability-blocks`, body, { headers })
     .catch(handleError);
   return unwrap(res);
 }
@@ -668,6 +688,7 @@ export const staysApi = {
   updateHostListing,
   pauseHostListing,
   resumeHostListing,
+  setHostAvailabilityBlock,
   createHostListing,
   uploadListingPhoto,
   uploadListingWalkthrough,

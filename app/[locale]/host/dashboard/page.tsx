@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus } from "@/lib/stays-api";
+import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock } from "@/lib/stays-api";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
 import { HostKpiSection } from "@/components/host/HostKpiSection";
@@ -26,6 +26,7 @@ import {
   Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
 
 function listingStatusClass(status: string): string {
   if (status === "LIVE" || status === "APPROVED") return "text-green-600";
@@ -44,7 +45,7 @@ function listingCanPause(status: string): boolean {
 
 function HostDashboardContent() {
   const { token } = useAuth();
-  const { t, localePath } = useLanguage();
+  const { t, tf, localePath } = useLanguage();
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
   const [listings, setListings] = useState<HostListingSummary[]>([]);
   const [listingsLoading, setListingsLoading] = useState(false);
@@ -56,9 +57,16 @@ function HostDashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [listingActionId, setListingActionId] = useState<string | null>(null);
   const [listingActionError, setListingActionError] = useState<string | null>(null);
+  const [blockListingId, setBlockListingId] = useState("");
+  const [blockFrom, setBlockFrom] = useState("");
+  const [blockTo, setBlockTo] = useState("");
+  const [blockAction, setBlockAction] = useState<"block" | "unblock">("block");
+  const [blockSubmitting, setBlockSubmitting] = useState(false);
+  const [blockMessage, setBlockMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
+    trackEvent("host_dashboard_viewed");
     setLoading(true);
     setError(null);
     getHostVerification(token)
@@ -157,6 +165,39 @@ function HostDashboardContent() {
       );
     } finally {
       setListingActionId(null);
+    }
+  };
+
+  const handleAvailabilityBlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !blockListingId || !blockFrom || !blockTo) return;
+    setBlockSubmitting(true);
+    setListingActionError(null);
+    setBlockMessage(null);
+    try {
+      const result = await setHostAvailabilityBlock(
+        blockListingId,
+        { from: blockFrom, to: blockTo, is_blocked: blockAction === "block" },
+        token,
+      );
+      setBlockMessage(
+        blockAction === "block"
+          ? tf("hostDashboard.blockedNights", { count: result.nights })
+          : tf("hostDashboard.unblockedNights", { count: result.nights }),
+      );
+      trackEvent("host_calendar_updated", {
+        listing_id: blockListingId,
+        from: blockFrom,
+        to: blockTo,
+        action: blockAction,
+        nights: result.nights,
+      });
+    } catch (err) {
+      setListingActionError(
+        err instanceof Error ? err.message : t("hostDashboard.availabilityUpdateFailed"),
+      );
+    } finally {
+      setBlockSubmitting(false);
     }
   };
 
@@ -306,6 +347,76 @@ function HostDashboardContent() {
           t={t}
           loading={statsLoading && stats === null}
         />
+      )}
+
+      {status === "APPROVED" && listings.length > 0 && (
+        <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
+          <form onSubmit={handleAvailabilityBlock} className="p-6 sm:p-8">
+            <h2 className="text-lg font-semibold text-nexa-ink mb-2 flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-nexa-primary" />
+              {t("hostDashboard.calendarBlocking")}
+            </h2>
+            <p className="text-sm text-nexa-ink-3 mb-5">
+              {t("hostDashboard.calendarBlockingDesc")}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-3">
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.listing")}</span>
+                <select
+                  value={blockListingId}
+                  onChange={(e) => setBlockListingId(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink"
+                  required
+                >
+                  <option value="">{t("hostDashboard.selectListing")}</option>
+                  {listings.map((listing) => (
+                    <option key={listing.id} value={listing.id}>
+                      {listing.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.fromDate")}</span>
+                <input
+                  type="date"
+                  value={blockFrom}
+                  onChange={(e) => setBlockFrom(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-nexa-line px-3 text-sm text-nexa-ink"
+                  required
+                />
+              </label>
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.toDate")}</span>
+                <input
+                  type="date"
+                  value={blockTo}
+                  min={blockFrom || undefined}
+                  onChange={(e) => setBlockTo(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-nexa-line px-3 text-sm text-nexa-ink"
+                  required
+                />
+              </label>
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.calendarAction")}</span>
+                <select
+                  value={blockAction}
+                  onChange={(e) => setBlockAction(e.target.value === "unblock" ? "unblock" : "block")}
+                  className="h-11 w-full rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink"
+                >
+                  <option value="block">{t("hostDashboard.blockDates")}</option>
+                  <option value="unblock">{t("hostDashboard.unblockDates")}</option>
+                </select>
+              </label>
+              <Button type="submit" disabled={blockSubmitting} className="h-11">
+                {blockSubmitting ? t("common.saving") : t("hostDashboard.updateCalendar")}
+              </Button>
+            </div>
+            {blockMessage && (
+              <p className="mt-3 text-sm text-green-700">{blockMessage}</p>
+            )}
+          </form>
+        </div>
       )}
 
       {/* Your bookings - for approved hosts */}

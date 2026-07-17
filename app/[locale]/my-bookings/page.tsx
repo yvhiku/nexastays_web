@@ -23,6 +23,7 @@ import { BookingTabs } from "@/components/bookings/BookingTabs";
 import { BookingCard } from "@/components/bookings/BookingCard";
 import { BookingFiltersPanel } from "@/components/bookings/BookingFiltersPanel";
 import { BookingListSkeleton } from "@/components/bookings/BookingCardSkeleton";
+import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
 import {
   CalendarCheck,
   AlertCircle,
@@ -45,6 +46,7 @@ function MyBookingsContent() {
   const [appliedFilters, setAppliedFilters] = useState<BookingFilters>(DEFAULT_BOOKING_FILTERS);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<StaysBooking | null>(null);
 
   const fetchBookings = useCallback(() => {
     if (!token) return;
@@ -75,12 +77,13 @@ function MyBookingsContent() {
   const visibleBookings = filteredBookings.slice(0, visibleCount);
   const hasMore = visibleCount < filteredBookings.length;
 
-  const handleCancel = async (id: string) => {
-    if (!token) return;
-    if (!window.confirm(t("myBookings.cancelConfirm"))) return;
+  const handleCancel = async (reason?: string) => {
+    if (!token || !cancelTarget) return;
+    const id = cancelTarget.id;
     setCancellingId(id);
     try {
-      await cancelBooking(id, "guest", undefined, token);
+      await cancelBooking(id, "guest", reason, token);
+      setCancelTarget(null);
       fetchBookings();
     } catch (e) {
       setError(e instanceof Error ? e.message : t("myBookings.cancellationFailed"));
@@ -216,7 +219,7 @@ function MyBookingsContent() {
                     booking={b}
                     localePath={localePath}
                     t={t}
-                    onCancel={handleCancel}
+                    onCancel={() => setCancelTarget(b)}
                     cancelling={cancellingId === b.id}
                   />
                 ))}
@@ -287,6 +290,16 @@ function MyBookingsContent() {
           </div>
         </div>
       )}
+
+      <CancelBookingDialog
+        booking={cancelTarget}
+        role="guest"
+        open={!!cancelTarget}
+        loading={!!cancellingId}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={handleCancel}
+        t={t}
+      />
     </div>
   );
 }

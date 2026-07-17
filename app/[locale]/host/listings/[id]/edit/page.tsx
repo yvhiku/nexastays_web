@@ -14,12 +14,16 @@ import { getHostListingById, updateHostListing } from "@/lib/stays-api";
 import type { HostListingDetail, UpdateHostListingBody } from "@/lib/stays-types";
 import { AMENITY_OPTIONS, normalizeAmenities } from "@/lib/host-listing-constants";
 import { AppLoader } from "@/components/AppLoader";
+import { HostLocationMapPicker } from "@/components/host/listing-wizard/HostLocationMapPicker";
 import { ArrowLeft, Save } from "lucide-react";
 
 interface EditFormState {
   title: string;
   city: string;
+  neighborhood: string;
   address: string;
+  geoLat: number | null;
+  geoLng: number | null;
   description: string;
   basePrice: string;
   weekendPrice: string;
@@ -43,7 +47,10 @@ function listingToForm(l: HostListingDetail): EditFormState {
   return {
     title: l.title ?? "",
     city: l.city ?? "",
+    neighborhood: l.neighborhood ?? "",
     address: l.address ?? "",
+    geoLat: l.geo_lat != null ? Number(l.geo_lat) : null,
+    geoLng: l.geo_lng != null ? Number(l.geo_lng) : null,
     description: l.description ?? "",
     basePrice: l.rate_plan?.base_price != null ? String(l.rate_plan.base_price) : "",
     weekendPrice:
@@ -113,6 +120,8 @@ function HostListingEditContent() {
     if (!form.title.trim()) return t("hostListingEdit.titleRequired");
     if (!form.city.trim()) return t("hostListingEdit.cityRequired");
     if (!form.address.trim()) return t("hostListingEdit.addressRequired");
+    if (form.geoLat == null || form.geoLng == null)
+      return t("hostListingEdit.mapPinRequired");
     if (form.description.trim().length < 20)
       return t("hostListingEdit.descriptionMin");
     const price = Number(form.basePrice);
@@ -129,7 +138,10 @@ function HostListingEditContent() {
     return {
       title: form.title.trim(),
       city: form.city.trim(),
+      neighborhood: form.neighborhood.trim() || undefined,
       address: form.address.trim(),
+      geo_lat: form.geoLat ?? undefined,
+      geo_lng: form.geoLng ?? undefined,
       description: form.description.trim(),
       checkin_time: form.checkinTime,
       checkout_time: form.checkoutTime,
@@ -238,10 +250,29 @@ function HostListingEditContent() {
             </div>
             <div>
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
+                {t("hostListingEdit.fieldNeighborhood")}
+              </label>
+              <Input
+                value={form.neighborhood}
+                onChange={(e) => patch({ neighborhood: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldAddress")}
               </label>
               <Input value={form.address} onChange={(e) => patch({ address: e.target.value })} />
             </div>
+            <HostLocationMapPicker
+              city={form.city}
+              neighborhood={form.neighborhood}
+              address={form.address}
+              latitude={form.geoLat}
+              longitude={form.geoLng}
+              onCoordinatesChange={({ lat, lng }) =>
+                patch({ geoLat: lat, geoLng: lng })
+              }
+            />
             <div>
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldDescription")}

@@ -14,6 +14,7 @@ import {
   canReviewBooking,
   getPaymentExpiresAt,
 } from "@/lib/booking-lifecycle";
+import { formatLocalDateOnly } from "@/lib/booking-dates";
 import {
   ChevronRight,
   MapPin,
@@ -35,6 +36,10 @@ const PLACEHOLDER =
   "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
 
 function formatDate(value: string): string {
+  // Stay nights are YYYY-MM-DD; created_at is a full timestamp.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return formatLocalDateOnly(value);
+  }
   return new Date(value).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -94,6 +99,7 @@ function BookingCardComponent({
   const listingHref = booking.listing
     ? localePath(`/listings/${booking.listing.id}`)
     : localePath("/listings");
+  const contactHref = localePath(`/contact?booking=${booking.id}`);
 
   const price = booking.total_paid ?? booking.total_subtotal;
   const expiresAt =
@@ -187,6 +193,7 @@ function BookingCardComponent({
               booking={booking}
               detailHref={detailHref}
               listingHref={listingHref}
+              contactHref={contactHref}
               t={t}
               onCancel={onCancel}
               cancelling={cancelling}
@@ -203,6 +210,7 @@ function BookingCardComponent({
             booking={booking}
             detailHref={detailHref}
             listingHref={listingHref}
+            contactHref={contactHref}
             t={t}
             onCancel={onCancel}
             cancelling={cancelling}
@@ -235,6 +243,7 @@ interface BookingCardActionsProps {
   booking: StaysBooking;
   detailHref: string;
   listingHref: string;
+  contactHref: string;
   t: (key: string) => string;
   onCancel?: (id: string) => void;
   cancelling?: boolean;
@@ -247,6 +256,7 @@ function BookingCardActions({
   booking,
   detailHref,
   listingHref,
+  contactHref,
   t,
   onCancel,
   cancelling,
@@ -293,6 +303,13 @@ function BookingCardActions({
     );
   };
 
+  const reportIssue =
+    canComplainBooking(booking) &&
+    outline(t("myBookings.reportIssue"), {
+      href: contactHref,
+      icon: <MessageCircle className="h-3 w-3" />,
+    });
+
   return (
     <div className={wrap}>
       {lifecycle === "UPCOMING" && (
@@ -304,11 +321,7 @@ function BookingCardActions({
               className: "text-red-600 border-red-200 hover:bg-red-50",
               icon: <XCircle className="h-3 w-3" />,
             })}
-          {canComplainBooking(booking) &&
-            outline(t("myBookings.reportIssue"), {
-              href: `/contact?booking=${booking.id}`,
-              icon: <MessageCircle className="h-3 w-3" />,
-            })}
+          {reportIssue}
         </>
       )}
 
@@ -323,6 +336,7 @@ function BookingCardActions({
             href: detailHref,
             icon: <Phone className="h-3 w-3" />,
           })}
+          {reportIssue}
         </>
       )}
 
@@ -349,6 +363,7 @@ function BookingCardActions({
               href: `${detailHref}/review`,
               icon: <Star className="h-3 w-3" />,
             })}
+          {reportIssue}
           {primary(t("myBookings.bookAgain"), listingHref, <RotateCcw className="h-3 w-3" />)}
         </>
       )}

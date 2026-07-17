@@ -3,12 +3,14 @@
 import React from "react";
 import { MapPin, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ListingDetailMap } from "@/components/listing/ListingDetailMap";
 import type { StaysListing } from "@/lib/stays-types";
 import {
+  getFullMapsSearchQuery,
   getListingLocationText,
   getMapsSearchUrl,
-  getStaticMapUrl,
   hasListingLocationInfo,
+  hasMapCoordinates,
 } from "@/lib/listing-location";
 
 export interface ListingLocationSectionProps {
@@ -27,8 +29,9 @@ export function ListingLocationSection({
   if (!hasListingLocationInfo(listing)) return null;
 
   const locationText = getListingLocationText(listing);
-  const mapUrl = getStaticMapUrl(listing);
   const mapsSearchUrl = getMapsSearchUrl(listing);
+  const showMap =
+    hasMapCoordinates(listing) || Boolean(getFullMapsSearchQuery(listing));
 
   return (
     <section>
@@ -38,20 +41,15 @@ export function ListingLocationSection({
         <p className="text-base font-medium text-nexa-ink leading-relaxed">{locationText}</p>
       </div>
 
-      <div className="rounded-2xl overflow-hidden border border-nexa-line/40 bg-nexa-bg-2 mb-4">
-        {mapUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={mapUrl}
-            alt=""
-            className="w-full h-[180px] md:h-[220px] object-cover"
+      {showMap && (
+        <div className="rounded-2xl overflow-hidden border border-nexa-line/40 mb-4">
+          <ListingDetailMap
+            geoLat={listing.geo_lat}
+            geoLng={listing.geo_lng}
+            searchQuery={getFullMapsSearchQuery(listing)}
           />
-        ) : (
-          <div className="w-full h-[180px] md:h-[220px] flex items-center justify-center bg-nexa-bg-2">
-            <Map className="w-10 h-10 text-nexa-ink-4" />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {mapsSearchUrl && (
         <Button

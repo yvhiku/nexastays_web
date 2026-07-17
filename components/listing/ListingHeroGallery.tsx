@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import Image from "next/image";
 import { Grid3X3, BadgeCheck, Zap } from "lucide-react";
 import { getListingMediaUrl } from "@/lib/stays-api";
 
@@ -73,13 +74,15 @@ export function ListingHeroGallery({
           <button
             type="button"
             onClick={() => openImage(main.asset_id)}
-            className="block w-full h-full focus:outline-none"
+            className="relative block w-full h-full focus:outline-none"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={getSrc(main.asset_id)}
               alt={alt}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              fill
+              priority
+              sizes="(min-width: 768px) 66vw, 100vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
               onError={() => handleError(main.asset_id)}
             />
           </button>
@@ -107,13 +110,14 @@ export function ListingHeroGallery({
                 <button
                   type="button"
                   onClick={() => openImage(photo.asset_id)}
-                  className="block w-full h-full focus:outline-none"
+                  className="relative block w-full h-full focus:outline-none"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={getSrc(photo.asset_id)}
                     alt={`${alt} — ${i + 2}`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    fill
+                    sizes="(min-width: 768px) 17vw, 50vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={() => handleError(photo.asset_id)}
                   />
                 </button>

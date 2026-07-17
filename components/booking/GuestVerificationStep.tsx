@@ -10,8 +10,7 @@ import {
 } from "@/lib/booking-verification-validators";
 import type { GuestIdentityFormData } from "@/lib/booking-verification-types";
 import type { CreateBookingOccupantDto } from "@/lib/stays-types";
-import { Shield, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Shield, X, BadgeCheck } from "lucide-react";
 
 interface GuestVerificationStepProps {
   open: boolean;
@@ -47,11 +46,12 @@ export function GuestVerificationStep({
   t,
   getToken,
 }: GuestVerificationStepProps) {
-  const [useProfileSync, setUseProfileSync] = useState(!!userProfile?.full_name);
   const [acknowledgeName, setAcknowledgeName] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-
   const [guests, setGuests] = useState<GuestIdentityFormData[]>([]);
+
+  const hasVerifiedProfile = !!(userProfile?.full_name && userProfile.full_name.trim().length >= 2);
+  const skipIdForVerifiedPrimary = hasVerifiedProfile;
 
   const initGuests = useCallback(() => {
     const primary: GuestIdentityFormData = {
@@ -73,33 +73,10 @@ export function GuestVerificationStep({
   useEffect(() => {
     if (open) {
       setGuests(initGuests());
-      setUseProfileSync(!!userProfile?.full_name);
       setAcknowledgeName(false);
       setValidationError(null);
     }
   }, [open, guestCount, userProfile, initGuests]);
-
-  const syncFromProfile = useCallback(() => {
-    if (!userProfile) return;
-    setGuests((prev) => {
-      const next = [...prev];
-      if (next[0]) {
-        next[0] = {
-          ...next[0],
-          full_name: userProfile.full_name ?? next[0].full_name,
-          phone: userProfile.phone_number ?? next[0].phone,
-          email: userProfile.email ?? next[0].email,
-        };
-      }
-      return next;
-    });
-  }, [userProfile]);
-
-  const handleSyncToggle = () => {
-    const next = !useProfileSync;
-    setUseProfileSync(next);
-    if (next) syncFromProfile();
-  };
 
   const updateGuest = (index: number, data: GuestIdentityFormData) => {
     setGuests((prev) => {
@@ -125,9 +102,10 @@ export function GuestVerificationStep({
       return;
     }
 
+    const opts = { skipIdForVerifiedPrimary };
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
-      const v = validateGuestIdentity(g, i);
+      const v = validateGuestIdentity(g, i, opts);
       if (!v.valid) {
         setValidationError(v.error ?? "Invalid guest data");
         scrollToError();
@@ -135,7 +113,7 @@ export function GuestVerificationStep({
       }
     }
 
-    const idErr = validateIdDocumentUploaded(guests);
+    const idErr = validateIdDocumentUploaded(guests, opts);
     if (!idErr.valid) {
       setValidationError(idErr.error ?? "ID document upload required");
       scrollToError();
@@ -153,6 +131,8 @@ export function GuestVerificationStep({
   };
 
   if (!open) return null;
+
+  const additionalGuests = guests.slice(1);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -178,42 +158,60 @@ export function GuestVerificationStep({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <p className="text-nexa-ink-3 text-sm">{t("bookingVerification.subtitle")}</p>
-
-          <div className="rounded-xl bg-nexa-primary-soft border border-nexa-primary/20 p-4">
-            <h3 className="font-semibold text-nexa-ink mb-1">{t("bookingVerification.whyTitle")}</h3>
-            <p className="text-sm text-nexa-ink-3">{t("bookingVerification.whyDesc")}</p>
-          </div>
-
-          {userProfile?.full_name && (
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useProfileSync}
-                onChange={handleSyncToggle}
-                className="mt-1 rounded border-nexa-line"
-              />
-              <span className="text-sm">
-                <strong>{t("bookingVerification.syncProfile")}</strong>
-                <br />
-                <span className="text-nexa-ink-4">{t("bookingVerification.syncProfileDesc")}</span>
-              </span>
-            </label>
-          )}
+          <p className="text-nexa-ink-3 text-sm">
+            {hasVerifiedProfile && guestCount > 1
+              ? t("bookingVerification.subtitleAdditionalOnly")
+              : t("bookingVerification.subtitle")}
+          </p>
 
           <div className="space-y-4">
-            <p className="text-sm font-medium text-nexa-ink-2">
-              {guestCount === 1
-                ? t("bookingVerification.primaryGuest")
-                : t("bookingVerification.allGuestsRequired").replace("{count}", String(guestCount))}
-            </p>
-            {guests.map((g, i) => (
+            {hasVerifiedProfile && guests[0] && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                <h4 className="font-semibold text-nexa-ink mb-2 flex items-center gap-2">
+                  <BadgeCheck className="h-4 w-4 text-emerald-600" />
+                  {t("bookingVerification.verifiedPrimary")}
+                </h4>
+                <p className="font-medium text-nexa-ink">{guests[0].full_name}</p>
+                {guests[0].phone && (
+                  <p className="text-sm text-nexa-ink-3 mt-1">{guests[0].phone}</p>
+                )}
+                {guests[0].email && (
+                  <p className="text-sm text-nexa-ink-3">{guests[0].email}</p>
+                )}
+                <p className="text-xs text-emerald-700 mt-2">
+                  {t("bookingVerification.verifiedPrimaryHint")}
+                </p>
+              </div>
+            )}
+
+            {!hasVerifiedProfile && guests[0] && (
               <GuestIdentityForm
-                key={i}
+                guest={guests[0]}
+                onChange={(data) => updateGuest(0, data)}
+                index={0}
+                isPrimary
+                guestCount={guestCount}
+                getToken={getToken}
+                t={t}
+              />
+            )}
+
+            {additionalGuests.length > 0 && (
+              <p className="text-sm font-medium text-nexa-ink-2">
+                {t("bookingVerification.additionalGuestsRequired").replace(
+                  "{count}",
+                  String(additionalGuests.length),
+                )}
+              </p>
+            )}
+
+            {additionalGuests.map((g, i) => (
+              <GuestIdentityForm
+                key={i + 1}
                 guest={g}
-                onChange={(data) => updateGuest(i, data)}
-                index={i}
-                isPrimary={i === 0}
+                onChange={(data) => updateGuest(i + 1, data)}
+                index={i + 1}
+                isPrimary={false}
                 guestCount={guestCount}
                 getToken={getToken}
                 t={t}

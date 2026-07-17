@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem(JWT_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem(OTP_SESSION_KEY);
     }
     setToken(null);
     setTokenType("none");
@@ -189,6 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.setItem(OTP_SESSION_KEY, otpSessionToken);
       localStorage.removeItem(JWT_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
     }
     setToken(otpSessionToken);
     setTokenType("otp_session");

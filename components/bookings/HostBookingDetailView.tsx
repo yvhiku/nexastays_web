@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ListingHeroGallery } from "@/components/listing/ListingHeroGallery";
 import { bookingNights } from "@/lib/booking-dates";
 import {
+  canCancelBooking,
   lifecycleBadgeClasses,
   resolveBookingLifecycle,
 } from "@/lib/booking-lifecycle";
@@ -63,6 +64,8 @@ interface HostBookingDetailViewProps {
   t: (key: string) => string;
   tf: (key: string, vars: Record<string, string | number>) => string;
   localePath: (path: string) => string;
+  onCancel?: () => void;
+  cancelling?: boolean;
 }
 
 export function HostBookingDetailView({
@@ -70,6 +73,8 @@ export function HostBookingDetailView({
   t,
   tf,
   localePath,
+  onCancel,
+  cancelling = false,
 }: HostBookingDetailViewProps) {
   const lifecycle = resolveBookingLifecycle(booking);
   const lifecycleKey = `myBookings.lifecycle.${lifecycle}`;
@@ -348,6 +353,17 @@ export function HostBookingDetailView({
               )}
             </div>
             <div className="space-y-3">
+              {canCancelBooking(booking) && onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-2xl border-red-200 text-red-600 hover:bg-red-50"
+                  disabled={cancelling}
+                  onClick={onCancel}
+                >
+                  {cancelling ? t("myBookings.cancelling") : t("myBookings.cancelBooking")}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full rounded-2xl gap-2"

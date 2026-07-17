@@ -80,6 +80,8 @@ export interface ListingWizardFormState {
   buildingName: string;
   postalCode: string;
   landmark: string;
+  geoLat: number | null;
+  geoLng: number | null;
   description: string;
   maxGuests: number;
   bedrooms: BedroomConfig[];

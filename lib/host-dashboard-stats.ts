@@ -1,4 +1,5 @@
 import type { HostBooking, HostDashboardStats, HostListingSummary } from "./stays-types";
+import { parseLocalDateOnly } from "./booking-dates";
 
 const EARNING_STATUSES = new Set(["CONFIRMED", "CHECKED_IN", "COMPLETED"]);
 const PENDING_STATUSES = new Set(["INITIATED", "PAYMENT_PENDING"]);
@@ -24,7 +25,7 @@ export function computeHostDashboardStats(
     if (!EARNING_STATUSES.has(b.status)) continue;
     const payout = hostPayout(b);
     totalEarnings += payout;
-    const checkin = new Date(b.checkin_date);
+    const checkin = parseLocalDateOnly(b.checkin_date);
     if (
       checkin.getFullYear() === now.getFullYear() &&
       checkin.getMonth() === now.getMonth()

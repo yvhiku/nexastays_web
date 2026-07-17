@@ -5,8 +5,10 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
-import { getBooking } from "@/lib/stays-api";
+import { cancelBooking, createPaymentIntent, getBooking } from "@/lib/stays-api";
+import { formatLocalDateOnly } from "@/lib/booking-dates";
 import { getCurrentConsents, acceptMandatoryConsents } from "@/lib/consent-api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -17,13 +19,16 @@ import { ListingHeroGallery } from "@/components/listing/ListingHeroGallery";
 import {
   resolveBookingLifecycle,
   lifecycleBadgeClasses,
+  canCancelBooking,
   canReviewBooking,
 } from "@/lib/booking-lifecycle";
 import { StarRatingDisplay } from "@/components/reviews/StarRatingSelector";
 import { HostBookingDetailView } from "@/components/bookings/HostBookingDetailView";
+import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
 import { getBookingReview } from "@/lib/stays-api";
 import type { StaysReviewDetail } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
 import {
   ArrowLeft,
   Download,
@@ -34,6 +39,9 @@ import {
 } from "lucide-react";
 
 function formatDate(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return formatLocalDateOnly(value);
+  }
   return new Date(value).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -60,7 +68,7 @@ function Section({
   );
 }
 
-export default function BookingDetailPage() {
+function BookingDetailPageInner() {
   const params = useParams();
   const { token } = useAuth();
   const { t, tf, localePath } = useLanguage();
@@ -74,13 +82,22 @@ export default function BookingDetailPage() {
   const [consentAccepted, setConsentAccepted] = useState<boolean | null>(null);
   const [consentChecked, setConsentChecked] = useState(false);
   const [acceptingConsent, setAcceptingConsent] = useState(false);
+  const [creatingPayment, setCreatingPayment] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [existingReview, setExistingReview] = useState<StaysReviewDetail | null>(null);
 
-  useEffect(() => {
+  const reloadBooking = () => {
+    setLoading(true);
     getBooking(id, token)
       .then(setBooking)
       .catch((err) => setError(err instanceof Error ? err.message : t("bookings.failedLoad")))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    reloadBooking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, token, t]);
 
   useEffect(() => {
@@ -130,6 +147,67 @@ export default function BookingDetailPage() {
   const lifecycleLabel = t(lifecycleKey) !== lifecycleKey ? t(lifecycleKey) : lifecycle;
   const paid = ["CONFIRMED", "CHECKED_IN", "COMPLETED"].includes(booking.status);
   const isHostView = booking.viewer_role === "HOST";
+  const canStartPayment = booking.status === "PAYMENT_PENDING" && consentAccepted === true;
+
+  const handleCardPayment = async () => {
+    if (!token) return;
+    if (consentAccepted !== true) {
+      setPaymentError(t("bookings.termsFirst"));
+      return;
+    }
+    setCreatingPayment(true);
+    setPaymentError(null);
+    try {
+      trackEvent("payment_intent_started", {
+        booking_id: booking.id,
+        amount: booking.total_paid,
+        currency: booking.currency,
+      });
+      const intent = await createPaymentIntent(
+        booking.id,
+        token,
+        `web-card-${booking.id}`,
+      );
+      if (!intent.redirect_url) {
+        throw new Error(t("bookings.cardIntegrationPending"));
+      }
+      window.location.assign(intent.redirect_url);
+    } catch (err) {
+      setPaymentError(err instanceof Error ? err.message : t("bookings.cardFailed"));
+    } finally {
+      setCreatingPayment(false);
+    }
+  };
+
+  const handleCancelBooking = async (reason?: string) => {
+    if (!token || !booking) return;
+    setCancelling(true);
+    setPaymentError(null);
+    try {
+      await cancelBooking(booking.id, "guest", reason, token);
+      setCancelDialogOpen(false);
+      reloadBooking();
+    } catch (err) {
+      setPaymentError(err instanceof Error ? err.message : t("myBookings.cancellationFailed"));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleHostCancelBooking = async (reason?: string) => {
+    if (!token || !booking) return;
+    setCancelling(true);
+    setPaymentError(null);
+    try {
+      await cancelBooking(booking.id, "host", reason, token);
+      setCancelDialogOpen(false);
+      reloadBooking();
+    } catch (err) {
+      setPaymentError(err instanceof Error ? err.message : t("myBookings.cancellationFailed"));
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (isHostView) {
     return (
@@ -141,9 +219,20 @@ export default function BookingDetailPage() {
             t={t}
             tf={tf}
             localePath={localePath}
+            onCancel={() => setCancelDialogOpen(true)}
+            cancelling={cancelling}
           />
         </main>
         <Footer />
+        <CancelBookingDialog
+          booking={booking}
+          role="host"
+          open={cancelDialogOpen}
+          loading={cancelling}
+          onClose={() => setCancelDialogOpen(false)}
+          onConfirm={handleHostCancelBooking}
+          t={t}
+        />
       </>
     );
   }
@@ -367,12 +456,16 @@ export default function BookingDetailPage() {
                   )}
                   <h4 className="text-sm font-semibold text-nexa-ink mb-3">{t("bookings.payNow")}</h4>
                   <div className="mb-4 p-4 bg-nexa-bg-2 border border-nexa-line rounded-xl">
-                    <p className="text-sm text-nexa-ink-3">{t("bookings.paymentNotAvailable")}</p>
+                    <p className="text-sm text-nexa-ink-3">{t("bookings.cardIntegrationPending")}</p>
                   </div>
                   {paymentError && <p className="text-sm text-red-600 mb-3">{paymentError}</p>}
                   <div className="flex flex-col gap-3">
-                    <Button disabled className="w-full justify-center opacity-60 cursor-not-allowed">
-                      {t("bookings.payWithCard")}
+                    <Button
+                      onClick={handleCardPayment}
+                      disabled={!canStartPayment || creatingPayment}
+                      className="w-full justify-center"
+                    >
+                      {creatingPayment ? t("bookings.processing") : t("bookings.payWithCard")}
                     </Button>
                     <Button
                       variant="outline"
@@ -391,6 +484,16 @@ export default function BookingDetailPage() {
 
             <Section title={t("bookings.cancellationPolicy")}>
               <p className="text-sm text-nexa-ink-3">{t("bookings.standardCancellation")}</p>
+              {canCancelBooking(booking) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4 border-red-200 text-red-600 hover:bg-red-50"
+                  onClick={() => setCancelDialogOpen(true)}
+                >
+                  {t("myBookings.cancelBooking")}
+                </Button>
+              )}
             </Section>
 
             {booking.listing?.address && (
@@ -469,6 +572,23 @@ export default function BookingDetailPage() {
         </div>
       </main>
       <Footer />
+      <CancelBookingDialog
+        booking={booking}
+        role="guest"
+        open={cancelDialogOpen}
+        loading={cancelling}
+        onClose={() => setCancelDialogOpen(false)}
+        onConfirm={handleCancelBooking}
+        t={t}
+      />
     </>
+  );
+}
+
+export default function BookingDetailPage() {
+  return (
+    <ProtectedRoute>
+      <BookingDetailPageInner />
+    </ProtectedRoute>
   );
 }
