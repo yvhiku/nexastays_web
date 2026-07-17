@@ -8,6 +8,7 @@ import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/PhoneInput";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { sendOtp, verifyOtp } from "@/lib/auth-api";
@@ -57,7 +58,9 @@ export default function LoginPage() {
       setStep("otp");
     } catch (err: unknown) {
       const apiErr = normalizeError(err);
-      setError(apiErr.message);
+      setError(
+        apiErr.title ? `${apiErr.title}. ${apiErr.message}` : apiErr.message,
+      );
     } finally {
       setLoading(false);
     }
@@ -117,7 +120,9 @@ export default function LoginPage() {
         );
         return;
       }
-      setError(apiErr.message);
+      setError(
+        apiErr.title ? `${apiErr.title}. ${apiErr.message}` : apiErr.message,
+      );
     } finally {
       setLoading(false);
     }
@@ -190,9 +195,12 @@ export default function LoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-red-600 text-sm mb-4" role="alert">
-                    {error}
-                  </p>
+                  <ErrorAlert
+                    error={error}
+                    className="mb-4"
+                    compact
+                    onDismiss={() => setError("")}
+                  />
                 )}
                 <Button
                   type="submit"
@@ -224,9 +232,12 @@ export default function LoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-red-600 text-sm mb-4" role="alert">
-                    {error}
-                  </p>
+                  <ErrorAlert
+                    error={error}
+                    className="mb-4"
+                    compact
+                    onDismiss={() => setError("")}
+                  />
                 )}
                 <Button
                   type="submit"

@@ -5,11 +5,13 @@ import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
+import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { updateProfile, uploadProfilePhoto } from "@/lib/kyc-api";
+import { formatUserError } from "@/lib/errors";
 import { ChangePhoneModal } from "@/components/ChangePhoneModal";
 import { Camera, User, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,7 +57,7 @@ function ProfilePageContent() {
     } catch (err) {
       setMessage({
         type: "error",
-        text: err instanceof Error ? err.message : t("profile.updateFailed"),
+        text: formatUserError(err) || t("profile.updateFailed"),
       });
     } finally {
       setSaving(false);
@@ -74,7 +76,7 @@ function ProfilePageContent() {
     } catch (err) {
       setMessage({
         type: "error",
-        text: err instanceof Error ? err.message : t("profile.photoFailed"),
+        text: formatUserError(err) || t("profile.photoFailed"),
       });
     } finally {
       setUploading(false);
@@ -126,18 +128,21 @@ function ProfilePageContent() {
                 </p>
               </div>
 
-              {message && (
-                <div
-                  className={cn(
-                    "mb-6 p-4 rounded-xl text-sm",
-                    message.type === "success"
-                      ? "bg-green-50 border border-green-200 text-green-800"
-                      : "bg-red-50 border border-red-200 text-red-800"
-                  )}
-                >
-                  {message.text}
-                </div>
-              )}
+              {message &&
+                (message.type === "success" ? (
+                  <Alert
+                    variant="success"
+                    title={message.text}
+                    className="mb-6"
+                    onDismiss={() => setMessage(null)}
+                  />
+                ) : (
+                  <ErrorAlert
+                    error={message.text}
+                    className="mb-6"
+                    onDismiss={() => setMessage(null)}
+                  />
+                ))}
 
               {/* Profile form - full name and date of birth locked; email, city editable */}
               <form onSubmit={handleSaveProfile} className="space-y-6">

@@ -3,8 +3,10 @@
 import React, { useCallback, useRef, useState } from "react";
 import { X, ImagePlus, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { StarRatingSelector } from "./StarRatingSelector";
 import { cn } from "@/lib/utils";
+import { formatUserError } from "@/lib/errors";
 import {
   createReview,
   updateReview,
@@ -72,7 +74,7 @@ export function ReviewModal({
         setAssetIds(nextIds);
         setPreviews(nextPreviews);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Upload failed");
+        setError(formatUserError(err) || "Upload failed");
       } finally {
         setUploading(false);
         if (fileRef.current) fileRef.current.value = "";
@@ -109,7 +111,7 @@ export function ReviewModal({
       setSuccess(true);
       setTimeout(() => onSuccess(result), 800);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit review");
+      setError(formatUserError(err) || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }
@@ -242,9 +244,7 @@ export function ReviewModal({
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 dark:bg-red-950/30 rounded-lg px-3 py-2">
-                  {error}
-                </p>
+                <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
               )}
 
               <Button

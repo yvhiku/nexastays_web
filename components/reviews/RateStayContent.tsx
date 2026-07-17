@@ -12,6 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatUserError } from "@/lib/errors";
 import {
   createReview,
   updateReview,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/stays-api";
 import type { StaysBooking, StaysReviewDetail } from "@/lib/stays-types";
 import { StarRatingDisplay } from "./StarRatingSelector";
+import { ErrorAlert } from "@/components/ui/Alert";
 
 const MAX_COMMENT = 1000;
 const MAX_PHOTOS = 5;
@@ -176,7 +178,7 @@ export function RateStayContent({
         setAssetIds(nextIds);
         setPreviews(nextPreviews);
       } catch (err) {
-        setError(err instanceof Error ? err.message : t("rateStay.uploadFailed"));
+        setError(formatUserError(err) || t("rateStay.uploadFailed"));
       } finally {
         setUploading(false);
         if (fileRef.current) fileRef.current.value = "";
@@ -216,7 +218,7 @@ export function RateStayContent({
       setSuccess(true);
       setTimeout(() => onSuccess(result), 900);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("rateStay.submitFailed"));
+      setError(formatUserError(err) || t("rateStay.submitFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -442,9 +444,11 @@ export function RateStayContent({
               </div>
 
               {error && (
-                <p className="mt-6 text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 border border-red-100">
-                  {error}
-                </p>
+                <ErrorAlert
+                  error={error}
+                  className="mt-6"
+                  onDismiss={() => setError(null)}
+                />
               )}
 
               <div className="mt-10 pt-8 border-t border-nexa-line/30 flex flex-col sm:flex-row justify-between items-center gap-6">

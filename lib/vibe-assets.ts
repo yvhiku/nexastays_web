@@ -1,7 +1,7 @@
 /**
  * Listing page “vibe” chips — local art in `images/assets/`, served from `public/images/assets/`.
  * `objectPosition` tunes crop for the 140×80px horizontal cards.
- * `filters` map a tap to listings search query params.
+ * `filters` map a tap to listings search query params (replaced, not stacked).
  */
 export const VIBE_CARDS = [
   {
@@ -47,3 +47,40 @@ export const VIBE_CARDS = [
     filters: { guests: 4 },
   },
 ] as const;
+
+export type VibeId = (typeof VIBE_CARDS)[number]["id"];
+
+export function getVibeById(id: string | null | undefined) {
+  if (!id) return null;
+  return VIBE_CARDS.find((v) => v.id === id) ?? null;
+}
+
+/** True when current search filters exactly match a vibe's filter set. */
+export function vibeMatchesFilters(
+  vibe: (typeof VIBE_CARDS)[number],
+  opts: { city: string; guests?: number; selectedType: string },
+): boolean {
+  const f = vibe.filters as {
+    city?: string;
+    guests?: number;
+    listing_type?: string;
+  };
+  const expectedCity = (f.city ?? "").toLowerCase();
+  const expectedType = f.listing_type ?? "all";
+  const cityOk = (opts.city || "").toLowerCase() === expectedCity;
+  const typeOk = opts.selectedType === expectedType;
+  const guestsOk =
+    f.guests == null
+      ? opts.guests == null || opts.guests === 0
+      : opts.guests === f.guests;
+  return cityOk && typeOk && guestsOk;
+}
+
+export function findMatchingVibeId(opts: {
+  city: string;
+  guests?: number;
+  selectedType: string;
+}): VibeId | null {
+  const match = VIBE_CARDS.find((vibe) => vibeMatchesFilters(vibe, opts));
+  return match?.id ?? null;
+}

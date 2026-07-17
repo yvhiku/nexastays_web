@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/PhoneInput";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { sendOtp } from "@/lib/auth-api";
 import { changePhone } from "@/lib/kyc-api";
+import { formatUserError } from "@/lib/errors";
 import { normalizeMoroccanPhone, getLocalPhonePart } from "@/lib/validators";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +41,7 @@ export function ChangePhoneModal({
       await sendOtp(currentPhone);
       setStep("current_otp");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send OTP");
+      setError(formatUserError(err) || "Failed to send OTP");
     } finally {
       setSendingOtp(false);
     }
@@ -58,7 +60,7 @@ export function ChangePhoneModal({
       setNewPhone(normalized);
       setStep("new_otp");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send OTP");
+      setError(formatUserError(err) || "Failed to send OTP");
     } finally {
       setSendingOtp(false);
     }
@@ -94,7 +96,7 @@ export function ChangePhoneModal({
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to change phone");
+      setError(formatUserError(err) || "Failed to change phone");
     } finally {
       setSubmitting(false);
     }
@@ -117,9 +119,11 @@ export function ChangePhoneModal({
 
         <div className="p-6 space-y-6">
           {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
-              {error}
-            </div>
+            <ErrorAlert
+              error={error}
+              compact
+              onDismiss={() => setError(null)}
+            />
           )}
 
           {step === "current_otp" && (

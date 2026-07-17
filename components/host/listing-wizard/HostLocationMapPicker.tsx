@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { LocateFixed } from "lucide-react";
 import { createNexaMapPinIcon } from "@/lib/map-pin";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 
+/** Last resort when geolocation is denied / unavailable. */
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
 
 export interface HostLocationMapPickerProps {
@@ -38,6 +41,20 @@ async function geocodeWithNominatim(
   };
 }
 
+function readUserLocation(): Promise<{ lat: number; lng: number } | null> {
+  if (typeof window === "undefined" || !navigator.geolocation) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
+    );
+  });
+}
+
 export function HostLocationMapPicker({
   city,
   neighborhood = "",
@@ -49,11 +66,19 @@ export function HostLocationMapPicker({
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const markerRef = useRef<import("leaflet").Marker | null>(null);
+  const userDotRef = useRef<import("leaflet").CircleMarker | null>(null);
+
   const [ready, setReady] = useState(false);
+  const [locating, setLocating] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userCenter, setUserCenter] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(
-    latitude != null && longitude != null ? { lat: latitude, lng: longitude } : null,
+    latitude != null && longitude != null
+      ? { lat: latitude, lng: longitude }
+      : null,
   );
 
   const query = useMemo(
@@ -71,7 +96,22 @@ export function HostLocationMapPicker({
     }
   }, [latitude, longitude]);
 
+  // Resolve device location before (or while) creating the map.
   useEffect(() => {
+    let cancelled = false;
+    setLocating(true);
+    void readUserLocation().then((coords) => {
+      if (cancelled) return;
+      if (coords) setUserCenter(coords);
+      setLocating(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (locating) return;
     let cancelled = false;
 
     async function initMap() {
@@ -80,10 +120,10 @@ export function HostLocationMapPicker({
       const pinIcon = await createNexaMapPinIcon();
       if (cancelled || !mapEl.current) return;
 
-      const start = pin ?? FALLBACK;
+      const start = pin ?? userCenter ?? FALLBACK;
       const map = L.map(mapEl.current, {
         center: [start.lat, start.lng],
-        zoom: pin ? 15 : 11,
+        zoom: pin ? 15 : userCenter ? 14 : 11,
       });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
@@ -112,14 +152,46 @@ export function HostLocationMapPicker({
       mapRef.current?.remove();
       mapRef.current = null;
       markerRef.current = null;
+      userDotRef.current = null;
+      setReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [locating]);
+
+  // Blue "you are here" dot (not the listing pin).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !userCenter) return;
+    let cancelled = false;
+
+    async function syncUserDot() {
+      const L = (await import("leaflet")).default;
+      if (cancelled || !mapRef.current) return;
+      if (userDotRef.current) {
+        userDotRef.current.setLatLng([userCenter!.lat, userCenter!.lng]);
+        return;
+      }
+      userDotRef.current = L.circleMarker([userCenter!.lat, userCenter!.lng], {
+        radius: 8,
+        color: "#ffffff",
+        weight: 3,
+        fillColor: "#2563eb",
+        fillOpacity: 1,
+      })
+        .bindTooltip("You are here", { direction: "top", offset: [0, -6] })
+        .addTo(mapRef.current);
+    }
+
+    void syncUserDot();
+    return () => {
+      cancelled = true;
+    };
+  }, [userCenter, ready]);
 
   useEffect(() => {
     async function syncMarker() {
       const map = mapRef.current;
-      if (!map || !pin) return;
+      if (!map || !pin || !ready) return;
       const L = (await import("leaflet")).default;
       const pinIcon =
         (map as unknown as { __nexaPinIcon?: import("leaflet").Icon })
@@ -144,7 +216,7 @@ export function HostLocationMapPicker({
       map.setView([pin.lat, pin.lng], Math.max(map.getZoom(), 15));
     }
     void syncMarker();
-  }, [pin, onCoordinatesChange]);
+  }, [pin, onCoordinatesChange, ready]);
 
   const findOnMap = async () => {
     if (!query.replace(/[,\s]/g, "")) {
@@ -168,6 +240,24 @@ export function HostLocationMapPicker({
     }
   };
 
+  const useMyLocation = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const coords = userCenter ?? (await readUserLocation());
+      if (!coords) {
+        setError("Could not get your location. Allow location access and try again.");
+        return;
+      }
+      setUserCenter(coords);
+      setPin(coords);
+      onCoordinatesChange(coords);
+      mapRef.current?.setView([coords.lat, coords.lng], 15, { animate: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div>
@@ -177,21 +267,33 @@ export function HostLocationMapPicker({
         </p>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        disabled={busy}
-        onClick={findOnMap}
-        className="w-full border-nexa-primary text-nexa-primary hover:bg-nexa-primary-soft"
-      >
-        {busy ? "Finding…" : pin ? "Update pin from address" : "Find address on map"}
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={findOnMap}
+          className="flex-1 border-nexa-primary text-nexa-primary hover:bg-nexa-primary-soft"
+        >
+          {busy ? "Finding…" : pin ? "Update pin from address" : "Find address on map"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy || locating}
+          onClick={() => void useMyLocation()}
+          className="sm:w-auto inline-flex items-center gap-1.5"
+        >
+          <LocateFixed className="h-4 w-4" aria-hidden />
+          Use my location
+        </Button>
+      </div>
 
       <div className="relative h-[240px] overflow-hidden rounded-xl border border-nexa-line">
-        <div ref={mapEl} className="h-full w-full" />
-        {!ready && (
-          <div className="absolute inset-0 flex items-center justify-center bg-nexa-bg-2 text-sm text-nexa-ink-4">
-            Loading map…
+        <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
+        {(locating || !ready) && (
+          <div className="absolute inset-0 z-[400] flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
+            {locating ? "Finding your location…" : "Loading map…"}
           </div>
         )}
       </div>
@@ -203,10 +305,12 @@ export function HostLocationMapPicker({
       >
         {pin
           ? `Pinned · ${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}`
-          : "No pin yet — find the address or tap the map."}
+          : "No pin yet — find the address, use your location, or tap the map."}
       </p>
 
-      {error && <p className="text-xs text-red-700">{error}</p>}
+      {error && (
+        <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
+      )}
     </div>
   );
 }

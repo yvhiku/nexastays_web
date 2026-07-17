@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { completeRegistration } from "@/lib/auth-api";
 import {
@@ -221,7 +222,11 @@ export default function RegistrationPage() {
       setStep(2);
     } catch (err: unknown) {
       const apiErr = normalizeError(err);
-      setError(apiErr.message || "Could not save your information");
+      setError(
+        apiErr.title
+          ? `${apiErr.title}. ${apiErr.message}`
+          : apiErr.message || "Could not save your information",
+      );
     } finally {
       setStep1Submitting(false);
     }
@@ -238,7 +243,11 @@ export default function RegistrationPage() {
       await exchangeOtpSessionForJwt();
     } catch (e: unknown) {
       const apiErr = normalizeError(e);
-      setError(apiErr.message || "Could not complete registration");
+      setError(
+        apiErr.title
+          ? `${apiErr.title}. ${apiErr.message}`
+          : apiErr.message || "Could not complete registration",
+      );
     }
     setFinalOutcome(status);
     setAwaitingDecision(false);
@@ -501,9 +510,12 @@ export default function RegistrationPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-red-600 text-sm mb-4" role="alert">
-                    {error}
-                  </p>
+                  <ErrorAlert
+                    error={error}
+                    className="mb-4"
+                    compact
+                    onDismiss={() => setError("")}
+                  />
                 )}
                 <Button
                   className="w-full justify-center"
@@ -528,9 +540,12 @@ export default function RegistrationPage() {
                   Follow the secure Sumsub steps to verify your identity.
                 </p>
                 {error && (
-                  <p className="text-red-600 text-sm mb-4" role="alert">
-                    {error}
-                  </p>
+                  <ErrorAlert
+                    error={error}
+                    className="mb-4"
+                    compact
+                    onDismiss={() => setError("")}
+                  />
                 )}
                 <SumsubWebVerification
                   getToken={() => token}
@@ -570,9 +585,12 @@ export default function RegistrationPage() {
                   Checking status every few seconds…
                 </p>
                 {error && (
-                  <p className="text-amber-700 text-sm mb-4" role="alert">
-                    {error}
-                  </p>
+                  <ErrorAlert
+                    error={error}
+                    className="mb-4"
+                    compact
+                    onDismiss={() => setError("")}
+                  />
                 )}
                 <Button className="w-full justify-center" asChild>
                   <Link href={redirectTarget}>Browse Stays →</Link>

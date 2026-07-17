@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
 import {
   getHostVerification,
@@ -19,6 +20,7 @@ import {
 import type { HostVerificationStatus } from "@/lib/stays-types";
 import { sendOtp, verifyOtp } from "@/lib/auth-api";
 import { validateEmail } from "@/lib/validators";
+import { formatUserError } from "@/lib/errors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Menu, XCircle } from "lucide-react";
@@ -64,6 +66,7 @@ function HostVerificationStep({
   onSubmitUseExistingKyc,
   onBack,
   onLoginRedirect,
+  onDismissError,
 }: {
   token: string | null;
   isAuthenticated: boolean;
@@ -90,6 +93,7 @@ function HostVerificationStep({
   onSubmitUseExistingKyc: () => Promise<void>;
   onBack: () => void;
   onLoginRedirect: () => void;
+  onDismissError: () => void;
 }) {
   useEffect(() => {
     if (isAuthenticated && token) onLoadStatus();
@@ -143,7 +147,11 @@ function HostVerificationStep({
             </div>
           )}
           {hostError && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-800 text-sm">{hostError}</div>
+            <ErrorAlert
+              error={hostError}
+              className="mb-6"
+              onDismiss={onDismissError}
+            />
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
             <div>
@@ -555,8 +563,8 @@ export default function HostPage() {
 
             {statusChecked && isRejected && (
               <div className="py-4">
-                <div className="flex flex-col items-start gap-4 rounded-2xl border border-red-200 bg-red-50/80 p-6 sm:p-8">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-700">
+                <div className="flex flex-col items-start gap-4 rounded-2xl border border-nexa-line bg-white p-6 sm:p-8 shadow-nexa-sm">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-white">
                     <XCircle className="h-7 w-7" />
                   </div>
                   <div className="w-full">
@@ -566,14 +574,13 @@ export default function HostPage() {
                     <p className="mt-2 text-nexa-ink-3">
                       {t("hostApply.rejectedDesc")}
                     </p>
-                    <div className="mt-4 rounded-xl border border-red-200 bg-white p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
-                        {t("hostApply.rejectionReasonLabel")}
-                      </p>
-                      <p className="mt-1 text-sm text-nexa-ink whitespace-pre-wrap">
-                        {normalizedHostStatus?.rejection_reason?.trim() ||
-                          t("hostDashboard.reapplyMessage")}
-                      </p>
+                    <div className="mt-4">
+                      <Alert variant="warning" title={t("hostApply.rejectionReasonLabel")}>
+                        <span className="whitespace-pre-wrap">
+                          {normalizedHostStatus?.rejection_reason?.trim() ||
+                            t("hostDashboard.reapplyMessage")}
+                        </span>
+                      </Alert>
                     </div>
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <Button
@@ -844,7 +851,7 @@ export default function HostPage() {
                     const res = await uploadHostDocumentFront(file, token);
                     setDocFrontAssetId(res.asset_id);
                   } catch (e) {
-                    setHostError(e instanceof Error ? e.message : "Upload failed");
+                    setHostError(formatUserError(e) || "Upload failed");
                   } finally {
                     setDocFrontLoading(false);
                   }
@@ -855,7 +862,7 @@ export default function HostPage() {
                     const res = await uploadHostDocumentBack(file, token);
                     setDocBackAssetId(res.asset_id);
                   } catch (e) {
-                    setHostError(e instanceof Error ? e.message : "Upload failed");
+                    setHostError(formatUserError(e) || "Upload failed");
                   } finally {
                     setDocBackLoading(false);
                   }
@@ -866,7 +873,7 @@ export default function HostPage() {
                     const res = await uploadHostSelfie(file, token);
                     setSelfieAssetId(res.asset_id);
                   } catch (e) {
-                    setHostError(e instanceof Error ? e.message : "Upload failed");
+                    setHostError(formatUserError(e) || "Upload failed");
                   } finally {
                     setSelfieLoading(false);
                   }
@@ -876,7 +883,7 @@ export default function HostPage() {
                   setHostError(null);
                   getHostVerification(token)
                     .then(setHostStatus)
-                    .catch((e) => setHostError(e instanceof Error ? e.message : "Failed to load"))
+                    .catch((e) => setHostError(formatUserError(e) || "Failed to load"))
                     .finally(() => setHostLoading(false));
                 }}
                 onSubmitUseExistingKyc={async () => {
@@ -895,7 +902,7 @@ export default function HostPage() {
                       setReapplying(false);
                     }
                   } catch (e) {
-                    setHostError(e instanceof Error ? e.message : "Application failed");
+                    setHostError(formatUserError(e) || "Application failed");
                   } finally {
                     setHostSubmitLoading(false);
                   }
@@ -920,7 +927,7 @@ export default function HostPage() {
                       setReapplying(false);
                     }
                   } catch (e) {
-                    setHostError(e instanceof Error ? e.message : "Submission failed");
+                    setHostError(formatUserError(e) || "Submission failed");
                   } finally {
                     setHostSubmitLoading(false);
                   }
@@ -931,6 +938,7 @@ export default function HostPage() {
                     `${localePath("/login")}?redirect=${encodeURIComponent(localePath("/host"))}`,
                   )
                 }
+                onDismissError={() => setHostError(null)}
               />
             )}
           </div>

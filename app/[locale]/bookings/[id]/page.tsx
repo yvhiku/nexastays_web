@@ -7,7 +7,9 @@ import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { cancelBooking, createPaymentIntent, getBooking } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import { formatLocalDateOnly } from "@/lib/booking-dates";
 import { getCurrentConsents, acceptMandatoryConsents } from "@/lib/consent-api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,7 +93,7 @@ function BookingDetailPageInner() {
     setLoading(true);
     getBooking(id, token)
       .then(setBooking)
-      .catch((err) => setError(err instanceof Error ? err.message : t("bookings.failedLoad")))
+      .catch((err) => setError(formatUserError(err) || t("bookings.failedLoad")))
       .finally(() => setLoading(false));
   };
 
@@ -132,8 +134,10 @@ function BookingDetailPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4 bg-nexa-bg-1">
-          <p className="text-nexa-ink-3">{error || t("bookings.bookingNotFound")}</p>
+        <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4 bg-nexa-bg-1 px-4">
+          <div className="w-full max-w-md">
+            <ErrorAlert error={error || t("bookings.bookingNotFound")} />
+          </div>
           <Button asChild>
             <Link href={localePath("/listings")}>{t("common.browseStays")}</Link>
           </Button>
@@ -173,7 +177,7 @@ function BookingDetailPageInner() {
       }
       window.location.assign(intent.redirect_url);
     } catch (err) {
-      setPaymentError(err instanceof Error ? err.message : t("bookings.cardFailed"));
+      setPaymentError(formatUserError(err) || t("bookings.cardFailed"));
     } finally {
       setCreatingPayment(false);
     }
@@ -188,7 +192,7 @@ function BookingDetailPageInner() {
       setCancelDialogOpen(false);
       reloadBooking();
     } catch (err) {
-      setPaymentError(err instanceof Error ? err.message : t("myBookings.cancellationFailed"));
+      setPaymentError(formatUserError(err) || t("myBookings.cancellationFailed"));
     } finally {
       setCancelling(false);
     }
@@ -203,7 +207,7 @@ function BookingDetailPageInner() {
       setCancelDialogOpen(false);
       reloadBooking();
     } catch (err) {
-      setPaymentError(err instanceof Error ? err.message : t("myBookings.cancellationFailed"));
+      setPaymentError(formatUserError(err) || t("myBookings.cancellationFailed"));
     } finally {
       setCancelling(false);
     }
@@ -458,7 +462,14 @@ function BookingDetailPageInner() {
                   <div className="mb-4 p-4 bg-nexa-bg-2 border border-nexa-line rounded-xl">
                     <p className="text-sm text-nexa-ink-3">{t("bookings.cardIntegrationPending")}</p>
                   </div>
-                  {paymentError && <p className="text-sm text-red-600 mb-3">{paymentError}</p>}
+                  {paymentError && (
+                    <ErrorAlert
+                      error={paymentError}
+                      className="mb-3"
+                      compact
+                      onDismiss={() => setPaymentError(null)}
+                    />
+                  )}
                   <div className="flex flex-col gap-3">
                     <Button
                       onClick={handleCardPayment}

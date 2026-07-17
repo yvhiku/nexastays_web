@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -14,6 +15,7 @@ import {
   uploadListingWalkthrough,
   normalizeHostVerificationStatus,
 } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import { ListingWizardShell } from "@/components/host/listing-wizard/ListingWizardShell";
 import { WizardStepBody } from "@/components/host/listing-wizard/WizardStepBody";
 import {
@@ -269,7 +271,7 @@ function ListingWizardContent() {
       if (draftKey) localStorage.removeItem(draftKey);
       setSubmitted(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("host.failedSubmit"));
+      setError(formatUserError(e) || t("host.failedSubmit"));
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -357,9 +359,11 @@ function ListingWizardContent() {
       }}
     >
       {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {error}
-        </div>
+        <ErrorAlert
+          error={error}
+          className="mb-4"
+          onDismiss={() => setError(null)}
+        />
       )}
       {uploadProgress && (
         <div className="mb-4 rounded-xl border border-nexa-line bg-white p-3 text-sm text-nexa-ink-2">

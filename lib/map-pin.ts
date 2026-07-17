@@ -43,6 +43,18 @@ export async function createPriceBubbleIcon(
   });
 }
 
+/** Count bubble used when nearby stays are clustered at lower zoom. */
+export async function createClusterCountIcon(count: number): Promise<DivIcon> {
+  const L = (await import("leaflet")).default;
+  const size = count < 10 ? 42 : count < 50 ? 50 : 58;
+  return L.divIcon({
+    className: "nexa-cluster",
+    html: `<div class="nexa-cluster__body">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 export function formatListingPriceLabel(listing: {
   rate_plan?: { base_price?: number | null; currency?: string | null } | null;
   title?: string;

@@ -9,6 +9,7 @@ import {
   notifyTokenRefreshed,
   notifyAuthLogout,
 } from "./auth-api";
+import { toAppError } from "./errors";
 import type {
   SearchListingsParams,
   StaysListing,
@@ -119,23 +120,28 @@ function unwrap<T>(res: { data?: unknown }): T {
 
 function handleError(err: unknown): never {
   if (axios.isAxiosError(err)) {
-    const e = err as AxiosError<{ message?: string; error?: string }>;
-    if (e.response?.status === 429) {
-      throw new Error("Please wait a moment and try again.");
-    }
-    const msg = e.response?.data?.message ?? e.response?.data?.error ?? e.message ?? "Request failed";
-    if (msg === "ReviewNotAllowed") {
+    const e = err as AxiosError<{
+      message?: string | string[];
+      error?: string;
+    }>;
+    const raw = e.response?.data?.message ?? e.response?.data?.error;
+    const code = Array.isArray(raw) ? raw[0] : raw;
+    if (code === "ReviewNotAllowed") {
       throw new Error("You can only review after your stay is completed.");
     }
-    if (msg === "ReviewOwnListingNotAllowed") {
+    if (code === "ReviewOwnListingNotAllowed") {
       throw new Error("You cannot review a stay at your own property.");
     }
-    if (msg === "ReviewAlreadyExists") {
+    if (code === "ReviewAlreadyExists") {
       throw new Error("You have already reviewed this stay.");
     }
-    throw new Error(msg);
   }
-  throw err;
+  const app = toAppError(err);
+  const e = new Error(
+    app.title ? `${app.title}. ${app.message}` : app.message,
+  ) as Error & { appError: ReturnType<typeof toAppError> };
+  e.appError = app;
+  throw e;
 }
 
 /** Search listings (public) */

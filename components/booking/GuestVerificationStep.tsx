@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { GuestIdentityForm } from "./GuestIdentityForm";
 import {
   validateGuestIdentity,
@@ -230,12 +231,8 @@ export function GuestVerificationStep({
           </label>
 
           {validationError && (
-            <div
-              ref={errorRef}
-              className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-800"
-              role="alert"
-            >
-              {validationError}
+            <div ref={errorRef}>
+              <ErrorAlert error={validationError} />
             </div>
           )}
 

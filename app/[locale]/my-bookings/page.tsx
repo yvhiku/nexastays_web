@@ -6,10 +6,12 @@ import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getGuestBookings, cancelBooking } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import type { StaysBooking } from "@/lib/stays-types";
 import {
   DEFAULT_BOOKING_FILTERS,
@@ -26,7 +28,6 @@ import { BookingListSkeleton } from "@/components/bookings/BookingCardSkeleton";
 import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
 import {
   CalendarCheck,
-  AlertCircle,
   Search,
   SlidersHorizontal,
   X,
@@ -54,7 +55,7 @@ function MyBookingsContent() {
     setError(null);
     getGuestBookings(token)
       .then(setBookings)
-      .catch((e) => setError(e instanceof Error ? e.message : t("myBookings.failedLoad")))
+      .catch((e) => setError(formatUserError(e) || t("myBookings.failedLoad")))
       .finally(() => setLoading(false));
   }, [token, t]);
 
@@ -86,7 +87,7 @@ function MyBookingsContent() {
       setCancelTarget(null);
       fetchBookings();
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("myBookings.cancellationFailed"));
+      setError(formatUserError(e) || t("myBookings.cancellationFailed"));
     } finally {
       setCancellingId(null);
     }
@@ -120,19 +121,11 @@ function MyBookingsContent() {
       </header>
 
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" aria-hidden />
-          <div>
-            <p className="text-sm text-red-800">{error}</p>
-            <button
-              type="button"
-              onClick={() => setError(null)}
-              className="text-sm text-red-600 underline mt-1"
-            >
-              {t("myBookings.dismiss")}
-            </button>
-          </div>
-        </div>
+        <ErrorAlert
+          error={error}
+          className="mb-6"
+          onDismiss={() => setError(null)}
+        />
       )}
 
       <div className="mb-6 flex flex-col sm:flex-row gap-3">

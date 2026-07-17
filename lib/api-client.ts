@@ -1,32 +1,29 @@
 /**
  * Centralized axios client with interceptors.
  * - Attaches JWT only when tokenType is jwt
- * - Normalizes errors into structured format
+ * - Normalizes errors into structured, user-friendly format
  */
 
 import axios, { type AxiosError } from "axios";
 import { getIdentityApiBaseUrl } from "./env";
+import { toAppError, type AppError } from "./errors";
 
 export interface ApiError {
   status: number;
   message: string;
+  title?: string;
+  kind?: AppError["kind"];
   details?: unknown;
 }
 
 export function normalizeError(err: unknown): ApiError {
-  if (axios.isAxiosError(err)) {
-    const e = err as AxiosError<{ message?: string; error?: string }>;
-    const status = e.response?.status ?? 0;
-    const msg =
-      e.response?.data?.message ??
-      e.response?.data?.error ??
-      e.message ??
-      "Request failed";
-    return { status, message: msg, details: e.response?.data };
-  }
+  const app = toAppError(err);
   return {
-    status: 0,
-    message: err instanceof Error ? err.message : "Request failed",
+    status: app.status ?? 0,
+    message: app.message,
+    title: app.title,
+    kind: app.kind,
+    details: app.details,
   };
 }
 
@@ -63,10 +60,15 @@ export function createApiClient(getToken?: TokenProvider) {
     (res) => res,
     (err: AxiosError) => {
       const normalized = normalizeError(err);
-      const apiErr = new Error(normalized.message) as Error & { apiError?: ApiError };
+      const apiErr = new Error(
+        normalized.title
+          ? `${normalized.title}. ${normalized.message}`
+          : normalized.message,
+      ) as Error & { apiError?: ApiError; appError?: AppError };
       apiErr.apiError = normalized;
+      apiErr.appError = toAppError(err);
       return Promise.reject(apiErr);
-    }
+    },
   );
 
   return client;

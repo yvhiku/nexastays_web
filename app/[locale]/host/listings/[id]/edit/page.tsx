@@ -6,7 +6,9 @@ import { useParams, useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
+import { formatUserError } from "@/lib/errors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -41,6 +43,13 @@ interface EditFormState {
   accessInstructions: string;
 }
 
+function normalizeTime(value: string): string {
+  const trimmed = (value || "").trim();
+  const match = trimmed.match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return trimmed;
+  return `${match[1]}:${match[2]}`;
+}
+
 function listingToForm(l: HostListingDetail): EditFormState {
   const rules = l.rules ?? {};
   const contact = l.check_in_contact ?? null;
@@ -57,8 +66,8 @@ function listingToForm(l: HostListingDetail): EditFormState {
       l.rate_plan?.weekend_price != null ? String(l.rate_plan.weekend_price) : "",
     cleaningFee:
       l.rate_plan?.cleaning_fee != null ? String(l.rate_plan.cleaning_fee) : "0",
-    checkinTime: l.checkin_time ?? "14:00",
-    checkoutTime: l.checkout_time ?? "11:00",
+    checkinTime: normalizeTime(l.checkin_time ?? "14:00"),
+    checkoutTime: normalizeTime(l.checkout_time ?? "11:00"),
     maxGuests: rules.max_guests ?? 2,
     petsPolicy: (rules.pets_policy as EditFormState["petsPolicy"]) ?? "NO",
     smokingPolicy:
@@ -85,6 +94,8 @@ function HostListingEditContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const feedbackRef = React.useRef<HTMLDivElement | null>(null);
 
   const patch = useCallback(
     (partial: Partial<EditFormState>) =>
@@ -102,10 +113,23 @@ function HostListingEditContent() {
         setForm(listingToForm(data));
       })
       .catch((e) =>
-        setError(e instanceof Error ? e.message : t("hostListingEdit.failedLoad")),
+        setError(formatUserError(e) || t("hostListingEdit.failedLoad")),
       )
       .finally(() => setLoading(false));
   }, [token, listingId, t]);
+
+  const showFeedback = (kind: "error" | "success", message: string) => {
+    if (kind === "error") {
+      setSuccess(null);
+      setError(message);
+    } else {
+      setError(null);
+      setSuccess(message);
+    }
+    requestAnimationFrame(() => {
+      feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
 
   const toggleAmenity = (tag: string) => {
     if (!form) return;
@@ -143,12 +167,14 @@ function HostListingEditContent() {
       geo_lat: form.geoLat ?? undefined,
       geo_lng: form.geoLng ?? undefined,
       description: form.description.trim(),
-      checkin_time: form.checkinTime,
-      checkout_time: form.checkoutTime,
+      checkin_time: normalizeTime(form.checkinTime),
+      checkout_time: normalizeTime(form.checkoutTime),
       rate_plan: {
         currency: listing?.rate_plan?.currency ?? "MAD",
         base_price: Number(form.basePrice),
-        weekend_price: form.weekendPrice ? Number(form.weekendPrice) : null,
+        ...(form.weekendPrice.trim()
+          ? { weekend_price: Number(form.weekendPrice) }
+          : {}),
         cleaning_fee: Number(form.cleaningFee) || 0,
       },
       rules: {
@@ -170,18 +196,23 @@ function HostListingEditContent() {
   const handleSave = async () => {
     const err = validate();
     if (err) {
-      setError(err);
+      showFeedback("error", err);
       return;
     }
     if (!token || !listingId) return;
 
     setSaving(true);
     setError(null);
+    setSuccess(null);
     try {
       await updateHostListing(listingId, buildPayload(), token);
-      router.push(localePath("/host/dashboard"));
+      showFeedback("success", t("hostListingEdit.saved"));
+      router.push(localePath("/host/dashboard?saved=1"));
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("hostListingEdit.saveFailed"));
+      showFeedback(
+        "error",
+        formatUserError(e) || t("hostListingEdit.saveFailed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -225,9 +256,11 @@ function HostListingEditContent() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-800 text-sm mb-6">
-          {error}
-        </div>
+        <ErrorAlert
+          error={error}
+          className="mb-6"
+          onDismiss={() => setError(null)}
+        />
       )}
 
       <div className="space-y-8">
@@ -478,18 +511,38 @@ function HostListingEditContent() {
 
         <p className="text-xs text-nexa-ink-4">{t("hostListingEdit.mediaNote")}</p>
 
-        <div className="flex flex-col sm:flex-row gap-3 pb-8">
-          <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2">
-            <Save className="h-4 w-4" />
-            {saving ? t("hostListingEdit.saving") : t("hostListingEdit.save")}
-          </Button>
-          {(listing.status === "LIVE" || listing.status === "APPROVED") && (
-            <Button variant="outline" asChild>
-              <Link href={localePath(`/listings/${listing.id}`)}>
-                {t("hostDashboard.view")} →
-              </Link>
-            </Button>
+        <div ref={feedbackRef} className="space-y-3 pb-8">
+          {error && (
+            <ErrorAlert error={error} onDismiss={() => setError(null)} />
           )}
+          {success && (
+            <Alert
+              variant="success"
+              title={t("hostListingEdit.saved")}
+              onDismiss={() => setSuccess(null)}
+            />
+          )}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={handleSave}
+              disabled={saving || Boolean(success)}
+              className="flex items-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {saving
+                ? t("hostListingEdit.saving")
+                : success
+                  ? t("hostListingEdit.saved")
+                  : t("hostListingEdit.save")}
+            </Button>
+            {(listing.status === "LIVE" || listing.status === "APPROVED") && (
+              <Button variant="outline" asChild>
+                <Link href={localePath(`/listings/${listing.id}`)}>
+                  {t("hostDashboard.view")} →
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

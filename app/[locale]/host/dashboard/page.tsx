@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
+import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
 import { HostKpiSection } from "@/components/host/HostKpiSection";
@@ -46,6 +49,8 @@ function listingCanPause(status: string): boolean {
 function HostDashboardContent() {
   const { token } = useAuth();
   const { t, tf, localePath } = useLanguage();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
   const [listings, setListings] = useState<HostListingSummary[]>([]);
   const [listingsLoading, setListingsLoading] = useState(false);
@@ -57,6 +62,9 @@ function HostDashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [listingActionId, setListingActionId] = useState<string | null>(null);
   const [listingActionError, setListingActionError] = useState<string | null>(null);
+  const [savedNotice, setSavedNotice] = useState(
+    () => searchParams.get("saved") === "1",
+  );
   const [blockListingId, setBlockListingId] = useState("");
   const [blockFrom, setBlockFrom] = useState("");
   const [blockTo, setBlockTo] = useState("");
@@ -71,9 +79,15 @@ function HostDashboardContent() {
     setError(null);
     getHostVerification(token)
       .then((s) => setHostStatus(normalizeHostVerificationStatus(s)))
-      .catch((e) => setError(e instanceof Error ? e.message : t("hostDashboard.failedLoad")))
+      .catch((e) => setError(formatUserError(e) || t("hostDashboard.failedLoad")))
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (searchParams.get("saved") !== "1") return;
+    setSavedNotice(true);
+    router.replace(localePath("/host/dashboard"), { scroll: false });
+  }, [searchParams, router, localePath]);
 
   useEffect(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
@@ -145,7 +159,7 @@ function HostDashboardContent() {
       refreshListings();
     } catch (e) {
       setListingActionError(
-        e instanceof Error ? e.message : t("hostDashboard.pauseFailed"),
+        formatUserError(e) || t("hostDashboard.pauseFailed"),
       );
     } finally {
       setListingActionId(null);
@@ -161,7 +175,7 @@ function HostDashboardContent() {
       refreshListings();
     } catch (e) {
       setListingActionError(
-        e instanceof Error ? e.message : t("hostDashboard.resumeFailed"),
+        formatUserError(e) || t("hostDashboard.resumeFailed"),
       );
     } finally {
       setListingActionId(null);
@@ -194,7 +208,7 @@ function HostDashboardContent() {
       });
     } catch (err) {
       setListingActionError(
-        err instanceof Error ? err.message : t("hostDashboard.availabilityUpdateFailed"),
+        formatUserError(err) || t("hostDashboard.availabilityUpdateFailed"),
       );
     } finally {
       setBlockSubmitting(false);
@@ -240,10 +254,21 @@ function HostDashboardContent() {
         </div>
       </div>
 
+      {savedNotice && (
+        <Alert
+          variant="success"
+          title={t("hostListingEdit.saved")}
+          className="mb-6"
+          onDismiss={() => setSavedNotice(false)}
+        />
+      )}
+
       {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-red-800 text-sm mb-6">
-          {error}
-        </div>
+        <ErrorAlert
+          error={error}
+          className="mb-6"
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {/* Status card */}
@@ -302,14 +327,16 @@ function HostDashboardContent() {
                 <p className="text-nexa-ink-3 text-sm mt-1">
                   {t("hostDashboard.reapplyMessage")}
                 </p>
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50/70 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
-                    {t("hostDashboard.rejectionReasonLabel")}
-                  </p>
-                  <p className="mt-1 text-sm text-nexa-ink whitespace-pre-wrap">
-                    {hostStatus?.rejection_reason?.trim() ||
-                      t("hostDashboard.reapplyMessage")}
-                  </p>
+                <div className="mt-4">
+                  <Alert
+                    variant="warning"
+                    title={t("hostDashboard.rejectionReasonLabel")}
+                  >
+                    <span className="whitespace-pre-wrap">
+                      {hostStatus?.rejection_reason?.trim() ||
+                        t("hostDashboard.reapplyMessage")}
+                    </span>
+                  </Alert>
                 </div>
                 <Button className="mt-4" asChild>
                   <Link href={localePath("/host")}>{t("hostDashboard.applyAgain")}</Link>
@@ -471,9 +498,12 @@ function HostDashboardContent() {
           <div className="p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-nexa-ink mb-4">{t("hostDashboard.yourListings")}</h2>
             {listingActionError && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-red-800 text-sm mb-4">
-                {listingActionError}
-              </div>
+              <ErrorAlert
+                error={listingActionError}
+                className="mb-4"
+                compact
+                onDismiss={() => setListingActionError(null)}
+              />
             )}
             {listingsLoading ? (
               <div className="py-12 text-center text-nexa-ink-4">{t("hostDashboard.loadingListings")}</div>

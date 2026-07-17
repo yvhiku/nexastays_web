@@ -6,11 +6,13 @@ import { Heart } from "lucide-react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getListing } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import { getSavedListingIds } from "@/lib/saved-listings";
 import type { StaysListing } from "@/lib/stays-types";
 
@@ -36,7 +38,7 @@ function SavedListingsContent() {
       );
       setListings(results.filter((l): l is StaysListing => l != null));
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("savedListings.failedLoad"));
+      setError(formatUserError(e) || t("savedListings.failedLoad"));
     } finally {
       setLoading(false);
     }
@@ -67,9 +69,11 @@ function SavedListingsContent() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
-              {error}
-            </div>
+            <ErrorAlert
+              error={error}
+              className="mb-6"
+              onDismiss={() => setError(null)}
+            />
           )}
 
           {loading ? (

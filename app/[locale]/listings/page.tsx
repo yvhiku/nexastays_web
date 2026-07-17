@@ -8,15 +8,17 @@ import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { GuestSelect } from "@/components/ui/GuestSelect";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { SlidersHorizontal, X, List, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { searchListings } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { ExploreMap } from "@/components/explore/ExploreMap";
 import type { StaysListing } from "@/lib/stays-types";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
-import { VIBE_CARDS } from "@/lib/vibe-assets";
+import { VIBE_CARDS, getVibeById, findMatchingVibeId, type VibeId } from "@/lib/vibe-assets";
 import { addDaysToDateString } from "@/lib/booking-dates";
 import { sanitizeCityInput, sanitizeDateInput, sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
@@ -58,7 +60,12 @@ function applyClientFilters(
     list = list.filter((l) => l.media?.some((m) => m.kind === "WALKTHROUGH"));
   }
   if (opts.guests != null && opts.guests > 0) {
-    list = list.filter((l) => (l.rules?.max_guests ?? 0) >= opts.guests!);
+    list = list.filter((l) => {
+      const max = l.rules?.max_guests;
+      // Missing capacity data: don't hide the stay on the client pass.
+      if (max == null) return true;
+      return max >= opts.guests!;
+    });
   }
   if (opts.city.trim()) {
     const q = opts.city.trim().toLowerCase();
@@ -86,6 +93,9 @@ export default function ListingsPage() {
   )
     ? listingTypeParam
     : "all";
+  const activeVibe: VibeId | null =
+    getVibeById(searchParams.get("vibe"))?.id ??
+    findMatchingVibeId({ city, guests, selectedType });
 
   const [draftCity, setDraftCity] = useState(city);
   const [draftCheckin, setDraftCheckin] = useState(checkin);
@@ -123,7 +133,7 @@ export default function ListingsPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : t("listings.failedLoad"));
+          setError(formatUserError(err) || t("listings.failedLoad"));
           setListings([]);
         }
       })
@@ -142,6 +152,7 @@ export default function ListingsPage() {
     verified?: boolean;
     instant?: boolean;
     listingType?: string;
+    vibe?: string | null;
   }) => {
     const params = new URLSearchParams();
     const nextCity = overrides?.city ?? draftCity;
@@ -151,6 +162,8 @@ export default function ListingsPage() {
     const v = overrides?.verified ?? verifiedOnly;
     const i = overrides?.instant ?? instantOnly;
     const type = overrides?.listingType ?? selectedType;
+    const nextVibe =
+      overrides && "vibe" in overrides ? overrides.vibe : activeVibe;
     if (nextCity.trim()) params.set("city", sanitizeCityInput(nextCity));
     if (nextCheckin) {
       const d = sanitizeDateInput(nextCheckin);
@@ -167,6 +180,7 @@ export default function ListingsPage() {
     if (v) params.set("verified_walkthrough_only", "true");
     if (i) params.set("instant_booking_only", "true");
     if (type && type !== "all") params.set("listing_type", type);
+    if (nextVibe) params.set("vibe", nextVibe);
     return params;
   };
 
@@ -184,17 +198,18 @@ export default function ListingsPage() {
   };
 
   const setPropertyType = (type: string) => {
-    navigateWithParams(buildListingsParams({ listingType: type }));
+    // Manual type chip overrides the vibe type association.
+    navigateWithParams(buildListingsParams({ listingType: type, vibe: null }));
   };
 
   const updateCity = (next: string) => {
     setDraftCity(next);
-    navigateWithParams(buildListingsParams({ city: next }));
+    navigateWithParams(buildListingsParams({ city: next, vibe: null }));
   };
 
   const updateGuests = (next: string) => {
     setDraftGuests(next);
-    navigateWithParams(buildListingsParams({ guests: next }));
+    navigateWithParams(buildListingsParams({ guests: next, vibe: null }));
   };
 
   const updateCheckin = (next: string) => {
@@ -239,20 +254,44 @@ export default function ListingsPage() {
     navigateWithParams(new URLSearchParams());
   };
 
-  const applyVibe = (filters: {
-    city?: string;
-    listing_type?: string;
-    guests?: number;
-  }) => {
-    if (filters.city != null) setDraftCity(filters.city);
-    if (filters.guests != null) setDraftGuests(String(filters.guests));
+  const applyVibe = (vibeId: VibeId) => {
+    const vibe = getVibeById(vibeId);
+    if (!vibe) return;
+
+    // Tap again to clear the vibe and its filters.
+    if (activeVibe === vibeId) {
+      setDraftCity("");
+      setDraftGuests("");
+      navigateWithParams(
+        buildListingsParams({
+          city: "",
+          guests: "",
+          listingType: "all",
+          vibe: null,
+        }),
+      );
+      return;
+    }
+
+    const filters = vibe.filters;
+    const nextCity = "city" in filters && filters.city ? filters.city : "";
+    const nextGuests =
+      "guests" in filters && filters.guests != null
+        ? String(filters.guests)
+        : "";
+    const nextType =
+      "listing_type" in filters && filters.listing_type
+        ? filters.listing_type
+        : "all";
+
+    setDraftCity(nextCity);
+    setDraftGuests(nextGuests);
     navigateWithParams(
       buildListingsParams({
-        ...(filters.city != null ? { city: filters.city } : {}),
-        ...(filters.guests != null ? { guests: String(filters.guests) } : {}),
-        ...(filters.listing_type != null
-          ? { listingType: filters.listing_type }
-          : {}),
+        city: nextCity,
+        guests: nextGuests,
+        listingType: nextType,
+        vibe: vibeId,
       }),
     );
   };
@@ -481,46 +520,70 @@ export default function ListingsPage() {
                 </p>
               </div>
 
-              <div className="mb-2 min-w-0">
-                <h3 className="text-base font-semibold mb-1">{t("listings.chooseVibe")}</h3>
-                <p className="text-[0.8rem] text-nexa-ink-4">
-                  {t("listings.tapVibe")}
-                </p>
+              <div className="mb-2 min-w-0 flex items-end justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold mb-1">{t("listings.chooseVibe")}</h3>
+                  <p className="text-[0.8rem] text-nexa-ink-4">
+                    {t("listings.tapVibe")}
+                  </p>
+                </div>
+                {activeVibe && (
+                  <button
+                    type="button"
+                    onClick={() => applyVibe(activeVibe)}
+                    className="shrink-0 text-xs font-semibold text-nexa-primary hover:text-nexa-primary-dark"
+                  >
+                    {t("listings.clearVibe")}
+                  </button>
+                )}
               </div>
               {/* w-0 min-w-full forces this block to respect the grid column width so cards never spill off-screen */}
               <div className="mb-7 w-0 min-w-full max-w-full">
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                  {VIBE_CARDS.map((vibe) => (
-                    <button
-                      type="button"
-                      key={vibe.id}
-                      onClick={() => applyVibe(vibe.filters)}
-                      className="group relative w-full h-[80px] sm:h-[88px] rounded-xl overflow-hidden cursor-pointer shadow-sm text-left transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40"
-                    >
-                      <Image
-                        src={vibe.src}
-                        alt={t(vibe.labelKey)}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 160px"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        style={{ objectPosition: vibe.objectPosition }}
-                      />
-                      <div
-                        className="absolute inset-0 bg-gradient-to-t from-nexa-ink/75 via-nexa-ink/25 to-transparent"
-                        aria-hidden
-                      />
-                      <span className="absolute bottom-2 left-2 right-2 text-white text-[0.72rem] sm:text-[0.78rem] font-bold leading-tight drop-shadow-md line-clamp-2">
-                        {t(vibe.labelKey)}
-                      </span>
-                    </button>
-                  ))}
+                  {VIBE_CARDS.map((vibe) => {
+                    const selected = activeVibe === vibe.id;
+                    return (
+                      <button
+                        type="button"
+                        key={vibe.id}
+                        aria-pressed={selected}
+                        onClick={() => applyVibe(vibe.id)}
+                        className={cn(
+                          "group relative w-full h-[80px] sm:h-[88px] rounded-xl overflow-hidden cursor-pointer shadow-sm text-left transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40",
+                          selected &&
+                            "ring-2 ring-nexa-primary ring-offset-2 ring-offset-nexa-bg",
+                        )}
+                      >
+                        <Image
+                          src={vibe.src}
+                          alt={t(vibe.labelKey)}
+                          fill
+                          sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 160px"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          style={{ objectPosition: vibe.objectPosition }}
+                        />
+                        <div
+                          className={cn(
+                            "absolute inset-0 bg-gradient-to-t from-nexa-ink/75 via-nexa-ink/25 to-transparent",
+                            selected && "from-nexa-primary/70 via-nexa-ink/30",
+                          )}
+                          aria-hidden
+                        />
+                        <span className="absolute bottom-2 left-2 right-2 text-white text-[0.72rem] sm:text-[0.78rem] font-bold leading-tight drop-shadow-md line-clamp-2">
+                          {t(vibe.labelKey)}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
-                  {error}
-                </div>
+                <ErrorAlert
+                  error={error}
+                  className="mb-6"
+                  onDismiss={() => setError(null)}
+                />
               )}
 
               {isLoading ? (
@@ -536,6 +599,7 @@ export default function ListingsPage() {
                   {(verifiedOnly ||
                     instantOnly ||
                     selectedType !== "all" ||
+                    Boolean(activeVibe) ||
                     Boolean(city) ||
                     Boolean(guests) ||
                     Boolean(checkin) ||
@@ -558,6 +622,7 @@ export default function ListingsPage() {
                     checkin={checkin || undefined}
                     checkout={checkout || undefined}
                     guests={guests}
+                    preferListingsCenter={Boolean(city)}
                     emptyTitle={t("listings.mapEmptyTitle")}
                     emptyMessage={t("listings.mapEmptyMessage")}
                     viewStayLabel={t("listings.viewStay")}

@@ -24,7 +24,9 @@ import {
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { getListing, createBooking, getListingMediaUrl, searchListings, getListingAvailability } from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import { ListingHeroGallery } from "@/components/listing/ListingHeroGallery";
 import { ListingBookingCard } from "@/components/listing/ListingBookingCard";
 import { ListingLocationSection } from "@/components/listing/ListingLocationSection";
@@ -147,7 +149,7 @@ export default function ListingDetailPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load");
+          setError(formatUserError(err) || "Failed to load");
           setListing(null);
         }
       })
@@ -336,8 +338,10 @@ export default function ListingDetailPage() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4">
-          <p className="text-nexa-ink-3">{error || "Listing not found"}</p>
+        <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4 px-4">
+          <div className="w-full max-w-md">
+            <ErrorAlert error={error || "Listing not found"} />
+          </div>
           <Button asChild>
             <Link href={localePath("/listings")}>Back to Listings</Link>
           </Button>
