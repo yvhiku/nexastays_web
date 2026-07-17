@@ -391,7 +391,7 @@ export function ExploreMap({
     : "#";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-nexa-line">
+    <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-nexa-line">
       <div className="relative h-[min(70vh,560px)] w-full">
         <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
         {(locating || !ready) && (

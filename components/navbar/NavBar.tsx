@@ -244,7 +244,7 @@ export const NavBar = () => {
       {/* Mobile / tablet menu overlay */}
     <div
       className={cn(
-        "fixed inset-0 z-[60] xl:hidden transition-opacity duration-300",
+        "fixed inset-0 z-[1100] xl:hidden transition-opacity duration-300",
         mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
       aria-hidden={!mobileMenuOpen}
