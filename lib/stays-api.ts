@@ -222,7 +222,7 @@ export async function exploreListings(
       pagination: { next_cursor: null, has_more: false },
       meta: {
         query_ms: 0,
-        sort: params.sort === "rating" ? "rating" : "newest",
+        sort: params.sort ?? "newest",
         cache: "miss",
         total_estimate: null,
       },

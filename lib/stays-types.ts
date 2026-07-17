@@ -10,7 +10,7 @@ export interface SearchListingsParams {
   listing_type?: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
   limit?: number;
   cursor?: string;
-  sort?: "newest" | "rating";
+  sort?: "newest" | "rating" | "price_asc" | "price_desc";
   north?: number;
   south?: number;
   east?: number;
@@ -40,7 +40,7 @@ export interface ExploreListEnvelope {
   pagination: { next_cursor: string | null; has_more: boolean };
   meta: {
     query_ms: number;
-    sort: "newest" | "rating";
+    sort: "newest" | "rating" | "price_asc" | "price_desc";
     cache: "hit" | "miss" | "bypass";
     total_estimate: null;
   };

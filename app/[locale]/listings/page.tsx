@@ -40,6 +40,8 @@ const filterFieldClass =
   "relative flex-1 min-w-0 h-11 rounded-xl border border-nexa-line bg-white px-3 flex items-center focus-within:border-nexa-primary focus-within:ring-2 focus-within:ring-nexa-primary/20 transition-colors";
 
 const LISTING_TYPES = ["APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"] as const;
+const SORT_OPTIONS = ["newest", "rating", "price_desc", "price_asc"] as const;
+type SortOption = (typeof SORT_OPTIONS)[number];
 
 export default function ListingsPage() {
   const router = useRouter();
@@ -67,6 +69,12 @@ export default function ListingsPage() {
   )
     ? listingTypeParam
     : "all";
+  const sortParam = (searchParams.get("sort") || "newest").toLowerCase();
+  const selectedSort: SortOption = SORT_OPTIONS.includes(
+    sortParam as SortOption,
+  )
+    ? (sortParam as SortOption)
+    : "newest";
   const activeVibe: VibeId | null =
     getVibeById(searchParams.get("vibe"))?.id ??
     findMatchingVibeId({ city, guests, selectedType });
@@ -98,8 +106,9 @@ export default function ListingsPage() {
           ? undefined
           : (selectedType as "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL"),
       limit: 24,
+      sort: selectedSort,
     };
-  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, selectedType]);
+  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, selectedType, selectedSort]);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,6 +213,7 @@ export default function ListingsPage() {
     verified?: boolean;
     instant?: boolean;
     listingType?: string;
+    sort?: SortOption;
     vibe?: string | null;
   }) => {
     const params = new URLSearchParams();
@@ -214,6 +224,7 @@ export default function ListingsPage() {
     const v = overrides?.verified ?? verifiedOnly;
     const i = overrides?.instant ?? instantOnly;
     const type = overrides?.listingType ?? selectedType;
+    const sort = overrides?.sort ?? selectedSort;
     const nextVibe =
       overrides && "vibe" in overrides ? overrides.vibe : activeVibe;
     if (nextCity.trim()) params.set("city", sanitizeCityInput(nextCity));
@@ -232,6 +243,7 @@ export default function ListingsPage() {
     if (v) params.set("verified_walkthrough_only", "true");
     if (i) params.set("instant_booking_only", "true");
     if (type && type !== "all") params.set("listing_type", type);
+    if (sort && sort !== "newest") params.set("sort", sort);
     if (nextVibe) params.set("vibe", nextVibe);
     return params;
   };
@@ -522,6 +534,29 @@ export default function ListingsPage() {
                             count: displayListings.length,
                           })}
                   </span>
+                  <label className="inline-flex items-center gap-2 text-[0.8rem] text-nexa-ink-3">
+                    <span className="hidden sm:inline whitespace-nowrap">
+                      {t("listings.sortBy")}
+                    </span>
+                    <select
+                      value={selectedSort}
+                      aria-label={t("listings.sortBy")}
+                      onChange={(e) => {
+                        const next = e.target.value as SortOption;
+                        navigateWithParams(
+                          buildListingsParams({
+                            sort: SORT_OPTIONS.includes(next) ? next : "newest",
+                          }),
+                        );
+                      }}
+                      className="h-9 max-w-[11.5rem] rounded-full border border-nexa-line bg-white px-3 text-xs font-semibold text-nexa-ink focus:border-nexa-primary focus:outline-none focus:ring-2 focus:ring-nexa-primary/20"
+                    >
+                      <option value="newest">{t("listings.sortNewest")}</option>
+                      <option value="rating">{t("listings.sortTopRated")}</option>
+                      <option value="price_desc">{t("listings.sortMostExpensive")}</option>
+                      <option value="price_asc">{t("listings.sortCheapest")}</option>
+                    </select>
+                  </label>
                   <div
                     className="inline-flex rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto"
                     role="group"
@@ -697,6 +732,7 @@ export default function ListingsPage() {
                         instantBookingOnly={instantOnly}
                         listingType={selectedType}
                         t={t}
+                        tf={tf}
                         localePath={localePath}
                       />
                     ))}

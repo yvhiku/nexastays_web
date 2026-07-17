@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Heart, Lock, Zap } from "lucide-react";
+import { BadgeCheck, Heart, Lock, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LISTING_TYPES } from "@/lib/host-listing-constants";
 import { getShortLocationLabel } from "@/lib/listing-location";
@@ -39,6 +39,7 @@ export interface ListingCardProps {
   instantBookingOnly?: boolean;
   listingType?: string;
   t: (key: string) => string;
+  tf?: (key: string, vars: Record<string, string | number>) => string;
   localePath: (path: string) => string;
 }
 
@@ -52,6 +53,7 @@ export function ListingCard({
   instantBookingOnly,
   listingType,
   t,
+  tf,
   localePath,
 }: ListingCardProps) {
   const router = useRouter();
@@ -89,6 +91,11 @@ export function ListingCard({
   const description =
     listing.description?.trim() ||
     `${listingTypeLabel(listing.listing_type)} in ${listing.city}`;
+  const avgRating =
+    listing.avg_rating != null && Number.isFinite(Number(listing.avg_rating))
+      ? Number(listing.avg_rating)
+      : 0;
+  const reviewCount = Math.max(0, Number(listing.review_count ?? 0));
 
   return (
     <article className="group bg-white rounded-2xl overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5 min-w-0 w-full">
@@ -168,9 +175,28 @@ export function ListingCard({
       </div>
 
       <div className="p-4 sm:p-5 font-sans">
-        <p className="text-xs font-medium text-nexa-ink-4 uppercase tracking-wider mb-1">
-          {getShortLocationLabel(listing)}
-        </p>
+        <div className="mb-1 flex items-start justify-between gap-3">
+          <p className="text-xs font-medium text-nexa-ink-4 uppercase tracking-wider">
+            {getShortLocationLabel(listing)}
+          </p>
+          <div
+            className="shrink-0 text-right"
+            aria-label={`${avgRating.toFixed(1)} out of 5, ${reviewCount} reviews`}
+          >
+            <p className="inline-flex items-center gap-1 text-sm font-semibold tabular-nums text-nexa-ink">
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
+              {avgRating.toFixed(1)}
+            </p>
+            <p className="text-[0.65rem] leading-tight text-nexa-ink-4 tabular-nums">
+              {tf
+                ? tf("listings.reviewCount", { count: reviewCount })
+                : t("listings.reviewCount").replace(
+                    "{count}",
+                    String(reviewCount),
+                  )}
+            </p>
+          </div>
+        </div>
         <Link href={linkHref} className="block hover:text-nexa-primary transition-colors">
           <h3 className="font-display font-semibold text-base text-nexa-ink mb-1.5 line-clamp-1">
             {title}

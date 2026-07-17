@@ -488,23 +488,36 @@ export function ExploreMap({
                 </button>
               </div>
 
-              {rating != null && rating > 0 ? (
-                <p className="mt-1 flex items-center gap-1 text-[0.72rem] text-nexa-ink-3">
-                  <Star
-                    className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                    aria-hidden
-                  />
-                  <span className="font-semibold tabular-nums text-nexa-ink">
-                    {rating.toFixed(1)}
-                  </span>
-                  {reviewCount > 0 && (
-                    <span className="text-nexa-ink-4">
-                      ({reviewCount} review{reviewCount === 1 ? "" : "s"})
+              {rating != null ? (
+                <div className="mt-1">
+                  <p className="flex items-center gap-1 text-[0.72rem] text-nexa-ink-3">
+                    <Star
+                      className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                      aria-hidden
+                    />
+                    <span className="font-semibold tabular-nums text-nexa-ink">
+                      {Number(rating).toFixed(1)}
                     </span>
-                  )}
-                </p>
+                  </p>
+                  <p className="text-[0.65rem] text-nexa-ink-4 tabular-nums">
+                    {reviewCount} review{reviewCount === 1 ? "" : "s"}
+                  </p>
+                </div>
               ) : (
-                <p className="mt-1 text-[0.72rem] text-nexa-ink-4">New listing</p>
+                <div className="mt-1">
+                  <p className="flex items-center gap-1 text-[0.72rem] text-nexa-ink-3">
+                    <Star
+                      className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                      aria-hidden
+                    />
+                    <span className="font-semibold tabular-nums text-nexa-ink">
+                      0.0
+                    </span>
+                  </p>
+                  <p className="text-[0.65rem] text-nexa-ink-4 tabular-nums">
+                    0 reviews
+                  </p>
+                </div>
               )}
 
               {metaLine ? (
