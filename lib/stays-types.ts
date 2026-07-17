@@ -49,9 +49,19 @@ export interface ExploreListEnvelope {
 export interface ExploreMapPin {
   id: string;
   title: string;
+  city?: string;
+  neighborhood?: string | null;
   geo_lat: number;
   geo_lng: number;
+  avg_rating?: number | null;
+  review_count?: number;
+  bedrooms?: number | null;
+  max_guests?: number | null;
+  has_wifi?: boolean;
+  has_walkthrough?: boolean;
+  instant_booking?: boolean;
   price: { base_price: number; currency: string } | null;
+  cover?: { asset_id: string; kind: "PHOTO" } | null;
 }
 
 export interface ExploreMapEnvelope {
@@ -102,6 +112,7 @@ export interface StaysListing {
   media?: { asset_id: string; kind: "PHOTO" | "VIDEO" | "WALKTHROUGH"; sort_order?: number }[];
   avg_rating?: number | null;
   review_count?: number;
+  property_details?: Record<string, unknown>;
 }
 
 export interface ListingReviewMedia {

@@ -261,13 +261,14 @@ export function mapPinToListing(pin: ExploreMapPin): StaysListing {
     id: pin.id,
     title: pin.title,
     listing_type: "APARTMENT",
-    city: "",
+    city: pin.city || "",
+    neighborhood: pin.neighborhood ?? null,
     geo_lat: pin.geo_lat,
     geo_lng: pin.geo_lng,
     status: "LIVE",
     checkin_time: "14:00",
     checkout_time: "11:00",
-    instant_booking: false,
+    instant_booking: Boolean(pin.instant_booking),
     rate_plan: pin.price
       ? {
           base_price: pin.price.base_price,
@@ -275,6 +276,22 @@ export function mapPinToListing(pin: ExploreMapPin): StaysListing {
           currency: pin.price.currency || "MAD",
         }
       : null,
+    rules: {
+      max_guests: pin.max_guests ?? null,
+      amenities: pin.has_wifi ? ["wifi"] : [],
+    },
+    media: [
+      ...(pin.cover
+        ? [{ asset_id: pin.cover.asset_id, kind: "PHOTO" as const }]
+        : []),
+      ...(pin.has_walkthrough
+        ? [{ asset_id: "walkthrough", kind: "WALKTHROUGH" as const }]
+        : []),
+    ],
+    avg_rating: pin.avg_rating ?? null,
+    review_count: pin.review_count ?? 0,
+    property_details:
+      pin.bedrooms != null ? { bedroom_count: pin.bedrooms } : undefined,
   };
 }
 

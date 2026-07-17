@@ -678,7 +678,7 @@ export default function ListingsPage() {
                     preferListingsCenter={Boolean(city)}
                     emptyTitle={t("listings.mapEmptyTitle")}
                     emptyMessage={t("listings.mapEmptyMessage")}
-                    viewStayLabel={t("listings.viewStay")}
+                    viewStayLabel={t("listings.viewDetails")}
                     onBoundsChange={handleMapBounds}
                   />
                 </div>
