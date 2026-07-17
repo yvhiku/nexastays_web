@@ -1,18 +1,32 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { LocateFixed, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  BadgeCheck,
+  Heart,
+  LocateFixed,
+  MapPin,
+  Star,
+} from "lucide-react";
 import { hasMapCoordinates } from "@/lib/listing-location";
 import {
   createPriceBubbleIcon,
   formatListingPriceLabel,
 } from "@/lib/map-pin";
+import { getListingMediaUrl } from "@/lib/stays-api";
+import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 import type { MapBounds, StaysListing } from "@/lib/stays-types";
 
 /** Last-resort center when geolocation is denied / unavailable. */
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
 const BOUNDS_DEBOUNCE_MS = 350;
+const PLACEHOLDER_IMG =
+  "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
 
 export interface ExploreMapProps {
   listings: StaysListing[];
@@ -78,6 +92,36 @@ function boundsFromMap(map: import("leaflet").Map): MapBounds {
   };
 }
 
+function bedroomCount(listing: StaysListing): number | null {
+  const pd = listing.property_details;
+  if (!pd) return null;
+  if (typeof pd.bedroom_count === "number") return pd.bedroom_count;
+  if (Array.isArray(pd.bedrooms) && pd.bedrooms.length > 0) {
+    return pd.bedrooms.length;
+  }
+  if (typeof pd.bedrooms === "number") return pd.bedrooms;
+  return null;
+}
+
+function mapMetaLine(listing: StaysListing): string {
+  const parts: string[] = [];
+  const beds = bedroomCount(listing);
+  if (beds != null && beds > 0) {
+    parts.push(`${beds} Bedroom${beds === 1 ? "" : "s"}`);
+  }
+  const maxGuests = listing.rules?.max_guests;
+  if (maxGuests != null && maxGuests > 0) {
+    parts.push(`${maxGuests} Guest${maxGuests === 1 ? "" : "s"}`);
+  }
+  const amenities = (listing.rules?.amenities ?? []).map((a) =>
+    String(a).toLowerCase(),
+  );
+  if (amenities.some((a) => a.includes("wifi") || a.includes("wi-fi"))) {
+    parts.push("WiFi");
+  }
+  return parts.join(" · ");
+}
+
 type MarkerClusterGroup = import("leaflet").MarkerClusterGroup;
 
 export function ExploreMap({
@@ -89,9 +133,11 @@ export function ExploreMap({
   preferListingsCenter = false,
   emptyTitle = "No stays nearby on the map yet",
   emptyMessage = "Move the map or clear filters to explore other areas.",
-  viewStayLabel = "View stay",
+  viewStayLabel = "View Details",
   onBoundsChange,
 }: ExploreMapProps) {
+  const router = useRouter();
+  const { userId, isAuthenticated } = useAuth();
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const clusterRef = useRef<MarkerClusterGroup | null>(null);
@@ -108,12 +154,26 @@ export function ExploreMap({
     null,
   );
   const [locating, setLocating] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [coverError, setCoverError] = useState(false);
 
   const mappable = useMemo(
     () => listings.filter(hasMapCoordinates),
     [listings],
   );
   const selected = mappable.find((listing) => listing.id === selectedId) ?? null;
+
+  useEffect(() => {
+    setCoverError(false);
+    if (!selected) {
+      setSaved(false);
+      return;
+    }
+    setSaved(isListingSaved(selected.id, userId));
+    const onChange = () => setSaved(isListingSaved(selected.id, userId));
+    window.addEventListener("nexa-saved-listings-changed", onChange);
+    return () => window.removeEventListener("nexa-saved-listings-changed", onChange);
+  }, [selected?.id, userId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,6 +375,21 @@ export function ExploreMap({
     mapRef.current?.setView([coords.lat, coords.lng], 13, { animate: true });
   };
 
+  const coverPhoto = selected?.media?.find((m) => m.kind === "PHOTO");
+  const coverSrc =
+    coverPhoto && !coverError
+      ? getListingMediaUrl(selected!.id, coverPhoto.asset_id)
+      : PLACEHOLDER_IMG;
+  const metaLine = selected ? mapMetaLine(selected) : "";
+  const rating = selected?.avg_rating != null ? Number(selected.avg_rating) : null;
+  const reviewCount = selected?.review_count ?? 0;
+  const hasWalkthrough = selected?.media?.some((m) => m.kind === "WALKTHROUGH");
+  const price = selected?.rate_plan?.base_price;
+  const currency = selected?.rate_plan?.currency || "MAD";
+  const detailHref = selected
+    ? listingHref(selected, localePath, checkin, checkout, guests)
+    : "#";
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-nexa-line">
       <div className="relative h-[min(70vh,560px)] w-full">
@@ -351,37 +426,115 @@ export function ExploreMap({
       </div>
 
       {selected && (
-        <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md rounded-2xl border border-nexa-line bg-white p-4 shadow-lg">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-nexa-ink">
-                {selected.title}
-              </p>
-              <p className="mt-0.5 text-xs text-nexa-ink-4">
-                {selected.neighborhood
-                  ? `${selected.neighborhood} · ${selected.city}`
-                  : selected.city}
-              </p>
-              {selected.rate_plan?.base_price != null && (
-                <p className="mt-2 text-sm font-bold text-nexa-primary">
-                  {Math.round(Number(selected.rate_plan.base_price))}{" "}
-                  {selected.rate_plan.currency || "MAD"}
-                  <span className="font-normal text-nexa-ink-4"> / night</span>
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setSelectedId(null)}
-              className="shrink-0 rounded-lg px-2 py-1 text-xs text-nexa-ink-4 hover:bg-nexa-bg-2"
-              aria-label="Close"
+        <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-lg rounded-2xl border border-nexa-line bg-white p-3 shadow-xl sm:p-3.5">
+          <div className="flex gap-3">
+            <Link
+              href={detailHref}
+              className="relative h-[118px] w-[118px] shrink-0 overflow-hidden rounded-xl bg-nexa-bg-2 sm:h-[128px] sm:w-[132px]"
             >
-              ✕
-            </button>
+              <Image
+                src={coverSrc}
+                alt={selected.title}
+                fill
+                sizes="132px"
+                className="object-cover"
+                unoptimized={Boolean(coverPhoto) && !coverError}
+                onError={() => setCoverError(true)}
+              />
+            </Link>
+
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div className="flex items-start gap-2">
+                <Link href={detailHref} className="min-w-0 flex-1">
+                  <h3 className="truncate text-[0.95rem] font-semibold leading-snug text-nexa-ink">
+                    {selected.title}
+                  </h3>
+                </Link>
+                <button
+                  type="button"
+                  className={cn(
+                    "shrink-0 rounded-full p-1.5 transition-colors",
+                    saved
+                      ? "text-nexa-primary"
+                      : "text-nexa-ink-4 hover:text-nexa-primary",
+                  )}
+                  aria-label="Save stay"
+                  aria-pressed={saved}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isAuthenticated || !userId) {
+                      const returnTo =
+                        typeof window !== "undefined"
+                          ? `${window.location.pathname}${window.location.search}`
+                          : detailHref;
+                      router.push(
+                        `${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`,
+                      );
+                      return;
+                    }
+                    setSaved(toggleSavedListing(selected.id, userId));
+                  }}
+                >
+                  <Heart className={cn("h-4 w-4", saved && "fill-nexa-primary")} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(null)}
+                  className="shrink-0 rounded-lg px-1.5 py-1 text-xs text-nexa-ink-4 hover:bg-nexa-bg-2"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {rating != null && rating > 0 ? (
+                <p className="mt-1 flex items-center gap-1 text-[0.72rem] text-nexa-ink-3">
+                  <Star
+                    className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                    aria-hidden
+                  />
+                  <span className="font-semibold tabular-nums text-nexa-ink">
+                    {rating.toFixed(1)}
+                  </span>
+                  {reviewCount > 0 && (
+                    <span className="text-nexa-ink-4">
+                      ({reviewCount} review{reviewCount === 1 ? "" : "s"})
+                    </span>
+                  )}
+                </p>
+              ) : (
+                <p className="mt-1 text-[0.72rem] text-nexa-ink-4">New listing</p>
+              )}
+
+              {metaLine ? (
+                <p className="mt-1 truncate text-[0.72rem] text-nexa-ink-4">
+                  {metaLine}
+                </p>
+              ) : null}
+
+              <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+                {price != null ? (
+                  <p className="min-w-0 text-sm font-bold tabular-nums text-nexa-primary">
+                    {Math.round(Number(price))} {currency}
+                    <span className="font-normal text-nexa-ink-4"> / night</span>
+                  </p>
+                ) : (
+                  <span />
+                )}
+                {(hasWalkthrough || selected.instant_booking) && (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-nexa-bg-2 px-2 py-0.5 text-[0.65rem] font-semibold text-nexa-ink">
+                    <BadgeCheck className="h-3 w-3 text-green-700" aria-hidden />
+                    Verified
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+
           <Link
-            href={listingHref(selected, localePath, checkin, checkout, guests)}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-nexa-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
+            href={detailHref}
+            className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-nexa-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
           >
             {viewStayLabel}
           </Link>
