@@ -199,6 +199,7 @@
     "staysFound": "{count} stays found",
     "showingMatches": "Showing {count} matches",
     "endOfResults": "You've reached the end",
+    "loadMore": "Load more",
     "guestsCount": "{count} guests",
     "verifiedWalkthrough": "Verified walkthrough video",
     "verifiedIdentity": "Verified identity",

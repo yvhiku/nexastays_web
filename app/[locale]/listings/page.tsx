@@ -703,9 +703,21 @@ export default function ListingsPage() {
                   </div>
                   <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
                   {isLoadingMore && (
-                    <p className="mb-9 text-center text-sm text-nexa-ink-4">
+                    <p className="mb-4 text-center text-sm text-nexa-ink-4">
                       {t("common.loading")}
                     </p>
+                  )}
+                  {hasMore && (
+                    <div className="mb-9 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => void loadMore()}
+                        disabled={isLoadingMore}
+                        className="rounded-xl border border-nexa-line bg-white px-5 py-2.5 text-sm font-semibold text-nexa-ink-2 transition hover:border-nexa-primary/40 hover:text-nexa-primary disabled:opacity-50"
+                      >
+                        {t("listings.loadMore")}
+                      </button>
+                    </div>
                   )}
                   {!hasMore && displayListings.length > 0 && (
                     <p className="mb-9 text-center text-sm text-nexa-ink-4">
