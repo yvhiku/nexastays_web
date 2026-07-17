@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { NavBar } from "@/components/navbar/NavBar";
@@ -12,11 +12,16 @@ import { ErrorAlert } from "@/components/ui/Alert";
 import { SlidersHorizontal, X, List, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { searchListings } from "@/lib/stays-api";
+import {
+  exploreCardToListing,
+  exploreListings,
+  exploreMapPins,
+  mapPinToListing,
+} from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { ExploreMap } from "@/components/explore/ExploreMap";
-import type { StaysListing } from "@/lib/stays-types";
+import type { MapBounds, SearchListingsParams, StaysListing } from "@/lib/stays-types";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
 import { VIBE_CARDS, getVibeById, findMatchingVibeId, type VibeId } from "@/lib/vibe-assets";
 import { addDaysToDateString } from "@/lib/booking-dates";
@@ -36,51 +41,20 @@ const filterFieldClass =
 
 const LISTING_TYPES = ["APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"] as const;
 
-/** Extra client-side pass so chips always match what the user selected. */
-function applyClientFilters(
-  items: StaysListing[],
-  opts: {
-    city: string;
-    guests?: number;
-    verifiedOnly: boolean;
-    instantOnly: boolean;
-    selectedType: string;
-  },
-): StaysListing[] {
-  let list = items;
-  if (opts.selectedType !== "all") {
-    list = list.filter(
-      (l) => (l.listing_type || "").toUpperCase() === opts.selectedType,
-    );
-  }
-  if (opts.instantOnly) {
-    list = list.filter((l) => Boolean(l.instant_booking));
-  }
-  if (opts.verifiedOnly) {
-    list = list.filter((l) => l.media?.some((m) => m.kind === "WALKTHROUGH"));
-  }
-  if (opts.guests != null && opts.guests > 0) {
-    list = list.filter((l) => {
-      const max = l.rules?.max_guests;
-      // Missing capacity data: don't hide the stay on the client pass.
-      if (max == null) return true;
-      return max >= opts.guests!;
-    });
-  }
-  if (opts.city.trim()) {
-    const q = opts.city.trim().toLowerCase();
-    list = list.filter((l) => (l.city || "").toLowerCase().includes(q));
-  }
-  return list;
-}
-
 export default function ListingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, tf, locale, localePath } = useLanguage();
   const [listings, setListings] = useState<StaysListing[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mapPins, setMapPins] = useState<StaysListing[]>([]);
+  const [mapLoading, setMapLoading] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadingMoreLock = useRef(false);
   const city = sanitizeCityInput(searchParams.get("city") || "");
   const checkin = sanitizeDateInput(searchParams.get("checkin_date") || "");
   const checkout = sanitizeDateInput(searchParams.get("checkout_date") || "");
@@ -111,12 +85,8 @@ export default function ListingsPage() {
     setDraftGuests(guests ? String(guests) : "");
   }, [city, checkin, checkout, guests]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setError(null);
-    setIsLoading(true);
-
-    searchListings({
+  const exploreParams = useMemo((): SearchListingsParams => {
+    return {
       city: city || undefined,
       checkin_date: checkin || undefined,
       checkout_date: checkout || undefined,
@@ -127,22 +97,104 @@ export default function ListingsPage() {
         selectedType === "all"
           ? undefined
           : (selectedType as "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL"),
-    })
-      .then((data) => {
-        if (!cancelled) setListings(data);
+      limit: 24,
+    };
+  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, selectedType]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setError(null);
+    setIsLoading(true);
+    setNextCursor(null);
+    setHasMore(false);
+
+    exploreListings(exploreParams)
+      .then((envelope) => {
+        if (cancelled) return;
+        setListings(envelope.items.map(exploreCardToListing));
+        setNextCursor(envelope.pagination.next_cursor);
+        setHasMore(envelope.pagination.has_more);
       })
       .catch((err) => {
         if (!cancelled) {
           setError(formatUserError(err) || t("listings.failedLoad"));
           setListings([]);
+          setNextCursor(null);
+          setHasMore(false);
         }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
 
-    return () => { cancelled = true; };
-  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, selectedType, t]);
+    return () => {
+      cancelled = true;
+    };
+  }, [exploreParams, t]);
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || !nextCursor || loadingMoreLock.current || isLoadingMore) return;
+    loadingMoreLock.current = true;
+    setIsLoadingMore(true);
+    try {
+      const envelope = await exploreListings({
+        ...exploreParams,
+        cursor: nextCursor,
+      });
+      setListings((prev) => {
+        const seen = new Set(prev.map((l) => l.id));
+        const appended = envelope.items
+          .map(exploreCardToListing)
+          .filter((l) => !seen.has(l.id));
+        return [...prev, ...appended];
+      });
+      setNextCursor(envelope.pagination.next_cursor);
+      setHasMore(envelope.pagination.has_more);
+    } catch (err) {
+      setError(formatUserError(err) || t("listings.failedLoad"));
+    } finally {
+      setIsLoadingMore(false);
+      loadingMoreLock.current = false;
+    }
+  }, [exploreParams, hasMore, nextCursor, isLoadingMore, t]);
+
+  useEffect(() => {
+    if (viewMode !== "list" || !hasMore) return;
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          void loadMore();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [viewMode, hasMore, loadMore, listings.length]);
+
+  const handleMapBounds = useCallback(
+    async (bounds: MapBounds) => {
+      setMapLoading(true);
+      try {
+        const envelope = await exploreMapPins({
+          ...exploreParams,
+          ...bounds,
+        });
+        setMapPins(envelope.items.map(mapPinToListing));
+      } catch {
+        // Keep previous pins on transient map errors.
+      } finally {
+        setMapLoading(false);
+      }
+    },
+    [exploreParams],
+  );
+
+  useEffect(() => {
+    setMapPins([]);
+  }, [exploreParams]);
 
   const buildListingsParams = (overrides?: {
     city?: string;
@@ -297,17 +349,7 @@ export default function ListingsPage() {
   };
 
   const minCheckin = todayISO();
-  const displayListings = useMemo(
-    () =>
-      applyClientFilters(listings, {
-        city,
-        guests,
-        verifiedOnly,
-        instantOnly,
-        selectedType,
-      }),
-    [listings, city, guests, verifiedOnly, instantOnly, selectedType],
-  );
+  const displayListings = listings;
 
   return (
     <>
@@ -472,7 +514,13 @@ export default function ListingsPage() {
                     {t("listings.filters")}
                   </button>
                   <span className="text-[0.8rem] text-nexa-ink-4 whitespace-nowrap">
-                    {isLoading ? t("common.loading") : tf("listings.staysFound", { count: displayListings.length })}
+                    {isLoading
+                      ? t("common.loading")
+                      : displayListings.length === 0
+                        ? t("listings.noStaysFound")
+                        : tf("listings.showingMatches", {
+                            count: displayListings.length,
+                          })}
                   </span>
                   <div
                     className="inline-flex rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto"
@@ -615,9 +663,14 @@ export default function ListingsPage() {
                   )}
                 </div>
               ) : viewMode === "map" ? (
-                <div className="mb-9 min-w-0">
+                <div className="mb-9 min-w-0 relative">
+                  {mapLoading && (
+                    <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm">
+                      {t("common.loading")}
+                    </p>
+                  )}
                   <ExploreMap
-                    listings={displayListings}
+                    listings={mapPins.length > 0 ? mapPins : displayListings}
                     localePath={localePath}
                     checkin={checkin || undefined}
                     checkout={checkout || undefined}
@@ -626,26 +679,40 @@ export default function ListingsPage() {
                     emptyTitle={t("listings.mapEmptyTitle")}
                     emptyMessage={t("listings.mapEmptyMessage")}
                     viewStayLabel={t("listings.viewStay")}
+                    onBoundsChange={handleMapBounds}
                   />
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-9">
-                  {displayListings.map((l) => (
-                    <ListingCard
-                      key={l.id}
-                      listing={l}
-                      checkin={checkin || undefined}
-                      checkout={checkout || undefined}
-                      guests={guests}
-                      city={city || undefined}
-                      verifiedWalkthroughOnly={verifiedOnly}
-                      instantBookingOnly={instantOnly}
-                      listingType={selectedType}
-                      t={t}
-                      localePath={localePath}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    {displayListings.map((l) => (
+                      <ListingCard
+                        key={l.id}
+                        listing={l}
+                        checkin={checkin || undefined}
+                        checkout={checkout || undefined}
+                        guests={guests}
+                        city={city || undefined}
+                        verifiedWalkthroughOnly={verifiedOnly}
+                        instantBookingOnly={instantOnly}
+                        listingType={selectedType}
+                        t={t}
+                        localePath={localePath}
+                      />
+                    ))}
+                  </div>
+                  <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
+                  {isLoadingMore && (
+                    <p className="mb-9 text-center text-sm text-nexa-ink-4">
+                      {t("common.loading")}
+                    </p>
+                  )}
+                  {!hasMore && displayListings.length > 0 && (
+                    <p className="mb-9 text-center text-sm text-nexa-ink-4">
+                      {t("listings.endOfResults")}
+                    </p>
+                  )}
+                </>
               )}
 
               <div className="bg-nexa-primary-soft/80 border border-nexa-primary/15 rounded-2xl p-5 sm:p-6 md:p-7 min-w-0">

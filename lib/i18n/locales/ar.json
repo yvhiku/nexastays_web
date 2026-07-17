@@ -196,6 +196,8 @@
     "noSurprises": "يُشارك العنوان الدقيق وتفاصيل الوصول الخاصة فقط عند تأكيد حجزك رسمياً.",
     "applyFilters": "تطبيق الفلاتر",
     "staysFound": "{count} إقامات",
+    "showingMatches": "عرض {count} نتيجة",
+    "endOfResults": "وصلت إلى النهاية",
     "guestsCount": "{count} ضيوف",
     "verifiedWalkthrough": "فيديو جولة موثقة",
     "verifiedIdentity": "هوية موثقة",

@@ -8,6 +8,64 @@ export interface SearchListingsParams {
   verified_walkthrough_only?: boolean;
   instant_booking_only?: boolean;
   listing_type?: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
+  limit?: number;
+  cursor?: string;
+  sort?: "newest" | "rating";
+  north?: number;
+  south?: number;
+  east?: number;
+  west?: number;
+}
+
+/** Lightweight Explore card (GET /stays/explore). */
+export interface ExploreCard {
+  id: string;
+  title: string;
+  city: string;
+  neighborhood: string | null;
+  listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL" | string;
+  geo_lat: number | null;
+  geo_lng: number | null;
+  avg_rating: number | null;
+  review_count: number;
+  instant_booking: boolean;
+  has_walkthrough: boolean;
+  placement: "organic" | "sponsored";
+  price: { base_price: number; currency: string } | null;
+  cover: { asset_id: string; kind: "PHOTO" } | null;
+}
+
+export interface ExploreListEnvelope {
+  items: ExploreCard[];
+  pagination: { next_cursor: string | null; has_more: boolean };
+  meta: {
+    query_ms: number;
+    sort: "newest" | "rating";
+    cache: "hit" | "miss" | "bypass";
+    total_estimate: null;
+  };
+}
+
+export interface ExploreMapPin {
+  id: string;
+  title: string;
+  geo_lat: number;
+  geo_lng: number;
+  price: { base_price: number; currency: string } | null;
+}
+
+export interface ExploreMapEnvelope {
+  items: ExploreMapPin[];
+  bounds: { north: number; south: number; east: number; west: number };
+  truncated: boolean;
+  meta: { query_ms: number; cache: "hit" | "miss" | "bypass" };
+}
+
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
 }
 
 export interface StaysListing {

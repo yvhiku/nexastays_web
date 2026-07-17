@@ -196,6 +196,8 @@
     "noSurprises": "The exact address and private arrival details are shared only when your booking is officially confirmed.",
     "applyFilters": "Apply Filters",
     "staysFound": "{count} stays found",
+    "showingMatches": "Showing {count} matches",
+    "endOfResults": "You've reached the end",
     "guestsCount": "{count} guests",
     "verifiedWalkthrough": "Verified walkthrough video",
     "verifiedIdentity": "Verified identity",

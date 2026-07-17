@@ -13,6 +13,11 @@ import { toAppError } from "./errors";
 import type {
   SearchListingsParams,
   StaysListing,
+  ExploreCard,
+  ExploreListEnvelope,
+  ExploreMapEnvelope,
+  ExploreMapPin,
+  MapBounds,
   CreateBookingDto,
   StaysBooking,
   HostVerificationStatus,
@@ -144,10 +149,7 @@ function handleError(err: unknown): never {
   throw e;
 }
 
-/** Search listings (public) */
-export async function searchListings(
-  params: SearchListingsParams
-): Promise<StaysListing[]> {
+function buildExploreQuery(params: SearchListingsParams): URLSearchParams {
   const q = new URLSearchParams();
   const city = params.city ? sanitizeCityInput(params.city) : "";
   const checkin = params.checkin_date ? sanitizeDateInput(params.checkin_date) : "";
@@ -162,12 +164,126 @@ export async function searchListings(
   if (params.instant_booking_only != null)
     q.set("instant_booking_only", String(params.instant_booking_only));
   if (params.listing_type) q.set("listing_type", params.listing_type);
+  if (params.limit != null) q.set("limit", String(params.limit));
+  if (params.cursor) q.set("cursor", params.cursor);
+  if (params.sort) q.set("sort", params.sort);
+  if (params.north != null) q.set("north", String(params.north));
+  if (params.south != null) q.set("south", String(params.south));
+  if (params.east != null) q.set("east", String(params.east));
+  if (params.west != null) q.set("west", String(params.west));
+  return q;
+}
 
+/** Map Explore card → StaysListing shape used by cards / legacy callers. */
+export function exploreCardToListing(card: ExploreCard): StaysListing {
+  return {
+    id: card.id,
+    title: card.title,
+    listing_type: (card.listing_type as StaysListing["listing_type"]) || "APARTMENT",
+    city: card.city,
+    neighborhood: card.neighborhood,
+    geo_lat: card.geo_lat,
+    geo_lng: card.geo_lng,
+    status: "LIVE",
+    checkin_time: "14:00",
+    checkout_time: "11:00",
+    description: null,
+    instant_booking: Boolean(card.instant_booking),
+    rate_plan: card.price
+      ? {
+          base_price: card.price.base_price,
+          cleaning_fee: 0,
+          currency: card.price.currency || "MAD",
+        }
+      : null,
+    media: [
+      ...(card.cover
+        ? [{ asset_id: card.cover.asset_id, kind: "PHOTO" as const }]
+        : []),
+      ...(card.has_walkthrough
+        ? [{ asset_id: "walkthrough", kind: "WALKTHROUGH" as const }]
+        : []),
+    ],
+    avg_rating: card.avg_rating,
+    review_count: card.review_count,
+  };
+}
+
+/** Explore list with opaque cursor pagination (canonical). */
+export async function exploreListings(
+  params: SearchListingsParams = {},
+): Promise<ExploreListEnvelope> {
+  const q = buildExploreQuery(params);
+  const res = await client.get(`/stays/explore?${q.toString()}`).catch(handleError);
+  const data = unwrap<ExploreListEnvelope>(res);
+  if (!data || !Array.isArray(data.items)) {
+    return {
+      items: [],
+      pagination: { next_cursor: null, has_more: false },
+      meta: {
+        query_ms: 0,
+        sort: params.sort === "rating" ? "rating" : "newest",
+        cache: "miss",
+        total_estimate: null,
+      },
+    };
+  }
+  return data;
+}
+
+/** Viewport map pins (requires bounds). */
+export async function exploreMapPins(
+  params: SearchListingsParams & MapBounds,
+): Promise<ExploreMapEnvelope> {
+  const q = buildExploreQuery(params);
   const res = await client
-    .get(`/stays/listings/search?${q.toString()}`)
+    .get(`/stays/explore/map?${q.toString()}`)
     .catch(handleError);
-  const data = unwrap<StaysListing[]>(res);
-  return Array.isArray(data) ? data : [];
+  const data = unwrap<ExploreMapEnvelope>(res);
+  if (!data || !Array.isArray(data.items)) {
+    return {
+      items: [],
+      bounds: {
+        north: params.north,
+        south: params.south,
+        east: params.east,
+        west: params.west,
+      },
+      truncated: false,
+      meta: { query_ms: 0, cache: "miss" },
+    };
+  }
+  return data;
+}
+
+export function mapPinToListing(pin: ExploreMapPin): StaysListing {
+  return {
+    id: pin.id,
+    title: pin.title,
+    listing_type: "APARTMENT",
+    city: "",
+    geo_lat: pin.geo_lat,
+    geo_lng: pin.geo_lng,
+    status: "LIVE",
+    checkin_time: "14:00",
+    checkout_time: "11:00",
+    instant_booking: false,
+    rate_plan: pin.price
+      ? {
+          base_price: pin.price.base_price,
+          cleaning_fee: 0,
+          currency: pin.price.currency || "MAD",
+        }
+      : null,
+  };
+}
+
+/** Search listings (public) — shim → Explore envelope, returns legacy array. */
+export async function searchListings(
+  params: SearchListingsParams,
+): Promise<StaysListing[]> {
+  const envelope = await exploreListings(params);
+  return envelope.items.map(exploreCardToListing);
 }
 
 /** Get listing by ID (public; includes address and map coordinates for browsing) */
@@ -681,6 +797,8 @@ export async function uploadReviewPhoto(
 
 export const staysApi = {
   searchListings,
+  exploreListings,
+  exploreMapPins,
   getListing,
   getListingAvailability,
   createBooking,

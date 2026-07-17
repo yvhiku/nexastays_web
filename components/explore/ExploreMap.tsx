@@ -8,10 +8,11 @@ import {
   createPriceBubbleIcon,
   formatListingPriceLabel,
 } from "@/lib/map-pin";
-import type { StaysListing } from "@/lib/stays-types";
+import type { MapBounds, StaysListing } from "@/lib/stays-types";
 
 /** Last-resort center when geolocation is denied / unavailable. */
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
+const BOUNDS_DEBOUNCE_MS = 350;
 
 export interface ExploreMapProps {
   listings: StaysListing[];
@@ -24,6 +25,8 @@ export interface ExploreMapProps {
   emptyTitle?: string;
   emptyMessage?: string;
   viewStayLabel?: string;
+  /** Debounced viewport bounds → parent refetches /explore/map */
+  onBoundsChange?: (bounds: MapBounds) => void;
 }
 
 function listingHref(
@@ -65,6 +68,16 @@ function readUserLocation(): Promise<{ lat: number; lng: number } | null> {
   });
 }
 
+function boundsFromMap(map: import("leaflet").Map): MapBounds {
+  const b = map.getBounds();
+  return {
+    north: b.getNorth(),
+    south: b.getSouth(),
+    east: b.getEast(),
+    west: b.getWest(),
+  };
+}
+
 type MarkerClusterGroup = import("leaflet").MarkerClusterGroup;
 
 export function ExploreMap({
@@ -77,6 +90,7 @@ export function ExploreMap({
   emptyTitle = "No stays nearby on the map yet",
   emptyMessage = "Move the map or clear filters to explore other areas.",
   viewStayLabel = "View stay",
+  onBoundsChange,
 }: ExploreMapProps) {
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
@@ -84,6 +98,9 @@ export function ExploreMap({
   const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
   const userMarkerRef = useRef<import("leaflet").CircleMarker | null>(null);
   const didInitialFrame = useRef(false);
+  const boundsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  onBoundsChangeRef.current = onBoundsChange;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -151,7 +168,6 @@ export function ExploreMap({
         },
         iconCreateFunction: (clusterGroup) => {
           const count = clusterGroup.getChildCount();
-          // Sync create — leaflet.markercluster expects a DivIcon immediately.
           const size = count < 10 ? 42 : count < 50 ? 50 : 58;
           return L.divIcon({
             className: "nexa-cluster",
@@ -163,16 +179,32 @@ export function ExploreMap({
       });
       cluster.addTo(map);
 
+      const emitBounds = () => {
+        if (boundsTimer.current) clearTimeout(boundsTimer.current);
+        boundsTimer.current = setTimeout(() => {
+          const cb = onBoundsChangeRef.current;
+          if (!cb || !mapRef.current) return;
+          cb(boundsFromMap(mapRef.current));
+        }, BOUNDS_DEBOUNCE_MS);
+      };
+
+      map.on("moveend", emitBounds);
+      map.on("zoomend", emitBounds);
+
       mapRef.current = map;
       clusterRef.current = cluster;
       didInitialFrame.current = true;
       setReady(true);
-      setTimeout(() => map.invalidateSize(), 50);
+      setTimeout(() => {
+        map.invalidateSize();
+        emitBounds();
+      }, 50);
     }
 
     void init();
     return () => {
       cancelled = true;
+      if (boundsTimer.current) clearTimeout(boundsTimer.current);
       clusterRef.current?.clearLayers();
       clusterRef.current = null;
       mapRef.current?.remove();

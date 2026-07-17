@@ -196,6 +196,8 @@
     "noSurprises": "L'adresse exacte et les détails privés d'arrivée ne sont partagés que lorsque votre réservation est officiellement confirmée.",
     "applyFilters": "Appliquer les filtres",
     "staysFound": "{count} séjours trouvés",
+    "showingMatches": "{count} correspondances affichées",
+    "endOfResults": "Fin des résultats",
     "guestsCount": "{count} voyageurs",
     "verifiedWalkthrough": "Vidéo de visite vérifiée",
     "verifiedIdentity": "Identité vérifiée",

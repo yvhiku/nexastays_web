@@ -2,18 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, Heart, Lock, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ListingImageGallery } from "@/components/listing/ListingImageGallery";
 import { LISTING_TYPES } from "@/lib/host-listing-constants";
 import { getShortLocationLabel } from "@/lib/listing-location";
+import { getListingMediaUrl } from "@/lib/stays-api";
 import type { StaysListing } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
 
-const placeholderImg = "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
+const placeholderImg =
+  "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
 
 function listingTypeLabel(type: string): string {
   return LISTING_TYPES.find((t) => t.id === type)?.label ?? type;
@@ -56,11 +58,13 @@ export function ListingCard({
   const { userId, isAuthenticated } = useAuth();
   const price = listing.rate_plan?.base_price ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
-  const photoCount = listing.media?.filter((m) => m.kind === "PHOTO").length ?? 0;
+  const cover = listing.media?.find((m) => m.kind === "PHOTO");
   const hasWalkthrough = listing.media?.some((m) => m.kind === "WALKTHROUGH");
-  const hasMultiplePhotos = photoCount > 1;
-  const [photoIndex, setPhotoIndex] = useState(0);
+  const coverSrc = cover
+    ? getListingMediaUrl(listing.id, cover.asset_id)
+    : placeholderImg;
   const [saved, setSaved] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     setSaved(isListingSaved(listing.id, userId));
@@ -89,64 +93,58 @@ export function ListingCard({
   return (
     <article className="group bg-white rounded-2xl overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5 min-w-0 w-full">
       <div className="relative block">
-        <ListingImageGallery
-          listingId={listing.id}
-          media={listing.media ?? []}
-          alt={title}
-          placeholder={placeholderImg}
-          aspectRatio="4/3"
-          roundedClass="rounded-t-2xl rounded-b-none"
-          showArrows={hasMultiplePhotos}
-          showDots={hasMultiplePhotos}
-          showCounter={false}
-          arrowsOnHover
-          onIndexChange={setPhotoIndex}
-          onImageClick={() => router.push(linkHref)}
-        />
+        <button
+          type="button"
+          className="relative block w-full aspect-[4/3] overflow-hidden rounded-t-2xl bg-nexa-bg-2"
+          onClick={() => router.push(linkHref)}
+          aria-label={title}
+        >
+          <Image
+            src={imgError ? placeholderImg : coverSrc}
+            alt={title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            loading="lazy"
+            unoptimized={Boolean(cover) && !imgError}
+            onError={() => setImgError(true)}
+          />
+        </button>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 pointer-events-none rounded-t-2xl" />
 
-        {/* Top bar */}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 z-10">
           <span className="inline-flex px-2.5 py-1 rounded-full text-[0.65rem] font-semibold uppercase tracking-wide bg-white/95 text-nexa-ink shadow-sm font-sans">
             {listingTypeLabel(listing.listing_type)}
           </span>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {hasMultiplePhotos && (
-              <span className="px-2 py-0.5 rounded-full bg-black/55 text-white text-[0.65rem] font-medium tabular-nums font-sans">
-                {photoIndex + 1} / {photoCount}
-              </span>
+          <button
+            type="button"
+            className={cn(
+              "w-8 h-8 rounded-full bg-white/95 flex items-center justify-center hover:bg-white shadow-sm transition-colors relative z-20",
+              saved ? "text-nexa-primary" : "text-nexa-ink-4 hover:text-nexa-primary",
             )}
-            <button
-              type="button"
-              className={cn(
-                "w-8 h-8 rounded-full bg-white/95 flex items-center justify-center hover:bg-white shadow-sm transition-colors relative z-20",
-                saved ? "text-nexa-primary" : "text-nexa-ink-4 hover:text-nexa-primary",
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isAuthenticated || !userId) {
-                  const returnTo =
-                    typeof window !== "undefined"
-                      ? `${window.location.pathname}${window.location.search}`
-                      : linkHref;
-                  router.push(
-                    `${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`,
-                  );
-                  return;
-                }
-                setSaved(toggleSavedListing(listing.id, userId));
-              }}
-              aria-label={t("common.save")}
-              aria-pressed={saved}
-            >
-              <Heart className={cn("w-4 h-4", saved && "fill-nexa-primary")} />
-            </button>
-          </div>
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!isAuthenticated || !userId) {
+                const returnTo =
+                  typeof window !== "undefined"
+                    ? `${window.location.pathname}${window.location.search}`
+                    : linkHref;
+                router.push(
+                  `${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`,
+                );
+                return;
+              }
+              setSaved(toggleSavedListing(listing.id, userId));
+            }}
+            aria-label={t("common.save")}
+            aria-pressed={saved}
+          >
+            <Heart className={cn("w-4 h-4", saved && "fill-nexa-primary")} />
+          </button>
         </div>
 
-        {/* Bottom badges */}
         <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 z-10 pointer-events-none">
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.65rem] font-semibold bg-white/95 text-nexa-ink shadow-sm font-sans">
             {listing.instant_booking ? (
@@ -166,13 +164,6 @@ export function ListingCard({
               </>
             )}
           </span>
-          {(photoCount > 0 || hasWalkthrough) && (
-            <span className="text-[0.65rem] text-white/90 drop-shadow-sm font-sans">
-              {photoCount > 0 && `${photoCount} photo${photoCount !== 1 ? "s" : ""}`}
-              {photoCount > 0 && hasWalkthrough && " · "}
-              {hasWalkthrough && "Video"}
-            </span>
-          )}
         </div>
       </div>
 
