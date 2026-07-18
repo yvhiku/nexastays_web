@@ -1,5 +1,6 @@
 import type { ListingWizardFormState, WizardStepId } from "./form-types";
 import { isMultiUnitFlow } from "./step-config";
+import { SUBMIT_MIN_PHOTOS } from "./completion";
 
 export function validateStep(
   stepId: WizardStepId,
@@ -13,7 +14,6 @@ export function validateStep(
     case "location":
       if (!form.city.trim()) return "City is required.";
       if (!form.address.trim()) return "Street address is required.";
-      if (!form.title.trim()) return "Listing title is required.";
       if (!/^[A-Za-z]{2}$/.test(form.country.trim())) {
         return "Country must be a 2-letter code (e.g. MA).";
       }
@@ -22,6 +22,10 @@ export function validateStep(
       }
       return null;
     case "details":
+    case "about":
+      if (!form.title.trim() || form.title.trim() === "Untitled listing") {
+        return "Add a listing title.";
+      }
       if (!form.description.trim() || form.description.trim().length < 20) {
         return "Add a description of at least 20 characters.";
       }
@@ -41,11 +45,6 @@ export function validateStep(
     case "amenities":
       return null;
     case "policies":
-      if (!form.contactName.trim()) return "Check-in contact name is required.";
-      if (!form.contactPhone.trim()) return "Check-in contact phone is required.";
-      if (!/^[+\d\s\-()]+$/.test(form.contactPhone.trim())) {
-        return "Check-in contact phone may only include digits, spaces, +, -, and parentheses.";
-      }
       return null;
     case "pricing": {
       if (isMultiUnitFlow(form.listingType, form.bookingModel)) {
@@ -64,22 +63,13 @@ export function validateStep(
       return null;
     }
     case "media": {
-      const photos = form.photos;
-      if (photos.length < 12) {
-        return "Add at least 12 photos before submitting.";
-      }
-      const hasExterior = photos.some(
-        (p) => p.category === "EXTERIOR" || p.category === "ENTRANCE",
-      );
-      if (!hasExterior) {
-        return "Add at least one exterior or entrance photo.";
-      }
-      if (!form.walkthrough) {
-        return "A walkthrough video is required.";
+      if (form.photos.length < SUBMIT_MIN_PHOTOS) {
+        return `Add at least ${SUBMIT_MIN_PHOTOS} photos to continue.`;
       }
       return null;
     }
     case "review":
+    case "submit":
       return null;
     default:
       return null;

@@ -31,6 +31,9 @@ import type {
   HostBooking,
   HostDashboardStats,
   CreateHostListingBody,
+  CreateDraftListingBody,
+  ReplaceListingMediaBody,
+  ReplaceListingUnitTypesBody,
   ListingReviewsResponse,
   StaysReviewDetail,
   ReviewSort,
@@ -548,9 +551,9 @@ export async function setHostAvailabilityBlock(
   return unwrap(res);
 }
 
-/** Create listing (requires JWT, approved host) */
+/** Create DRAFT listing from property type (requires JWT, approved host) */
 export async function createHostListing(
-  body: CreateHostListingBody,
+  body: CreateDraftListingBody | CreateHostListingBody,
   token?: string | null
 ): Promise<{ id: string; status: string; message: string }> {
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
@@ -558,6 +561,44 @@ export async function createHostListing(
     .post("/stays/host/listings", body, { headers })
     .catch(handleError);
   return unwrap<{ id: string; status: string; message: string }>(res);
+}
+
+/** Submit DRAFT / REJECTED listing for admin review */
+export async function submitHostListing(
+  id: string,
+  token?: string | null
+): Promise<{ id: string; status: string; message: string }> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(`/stays/host/listings/${id}/submit`, {}, { headers })
+    .catch(handleError);
+  return unwrap<{ id: string; status: string; message: string }>(res);
+}
+
+/** Replace all media on a draft/editable listing */
+export async function replaceListingMedia(
+  id: string,
+  body: ReplaceListingMediaBody,
+  token?: string | null
+): Promise<HostListingDetail> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .put(`/stays/host/listings/${id}/media`, body, { headers })
+    .catch(handleError);
+  return unwrap<HostListingDetail>(res);
+}
+
+/** Replace unit types (hotel/hostel rooms) */
+export async function replaceListingUnitTypes(
+  id: string,
+  body: ReplaceListingUnitTypesBody,
+  token?: string | null
+): Promise<HostListingDetail> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .put(`/stays/host/listings/${id}/unit-types`, body, { headers })
+    .catch(handleError);
+  return unwrap<HostListingDetail>(res);
 }
 
 /** Upload listing photo (returns asset_id) */
@@ -831,6 +872,9 @@ export const staysApi = {
   resumeHostListing,
   setHostAvailabilityBlock,
   createHostListing,
+  submitHostListing,
+  replaceListingMedia,
+  replaceListingUnitTypes,
   uploadListingPhoto,
   uploadListingWalkthrough,
   submitHostVerification,

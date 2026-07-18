@@ -342,12 +342,35 @@ export interface HostDashboardStats {
   total_reviews: number;
 }
 
+export interface ListingCompletionFlags {
+  location_complete: boolean;
+  about_complete: boolean;
+  pricing_complete: boolean;
+  photos_complete: boolean;
+  photos_quality_complete: boolean;
+  rooms_complete: boolean;
+  walkthrough_complete: boolean;
+  amenities_complete: boolean;
+  house_rules_complete: boolean;
+}
+
+export interface ListingMissingItem {
+  key: string;
+  label: string;
+  required: boolean;
+}
+
 export interface HostListingSummary {
   id: string;
   title: string;
   listing_type: string;
+  booking_model?: string | null;
   city: string;
+  country?: string;
   neighborhood?: string | null;
+  postal_code?: string | null;
+  building_name?: string | null;
+  landmark?: string | null;
   geo_lat?: number | null;
   geo_lng?: number | null;
   status: string;
@@ -356,6 +379,13 @@ export interface HostListingSummary {
   checkin_time?: string | null;
   checkout_time?: string | null;
   instant_booking?: boolean;
+  property_details?: Record<string, unknown>;
+  policies?: Record<string, unknown>;
+  last_edited_at?: string | null;
+  archived_at?: string | null;
+  completion_flags?: ListingCompletionFlags;
+  completion_percentage?: number;
+  missing?: ListingMissingItem[];
   rate_plan?: {
     base_price: number;
     weekend_price?: number | null;
@@ -368,8 +398,32 @@ export interface HostListingSummary {
     smoking_policy?: string | null;
     amenities?: string[] | null;
     cancellation_policy?: string | null;
+    quiet_hours?: boolean;
+    couples_welcome?: boolean;
   } | null;
-  media?: { asset_id: string; kind: string; sort_order?: number }[];
+  media?: {
+    asset_id: string;
+    kind: string;
+    sort_order?: number;
+    category?: string | null;
+    is_cover?: boolean;
+  }[];
+  unit_types?: {
+    id: string;
+    kind: string;
+    name: string;
+    quantity: number;
+    max_guests: number;
+    bed_config?: unknown[];
+    size_sqm?: number | null;
+    amenities?: string[];
+    pricing_unit?: string;
+    base_price: number;
+    currency?: string;
+    details?: Record<string, unknown>;
+    sort_order?: number;
+    is_active?: boolean;
+  }[];
   created_at: string;
 }
 
@@ -384,6 +438,7 @@ export interface HostListingDetail extends HostListingSummary {
 
 export interface UpdateHostListingBody {
   title?: string;
+  listing_type?: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
   city?: string;
   neighborhood?: string;
   address?: string;
@@ -393,6 +448,8 @@ export interface UpdateHostListingBody {
   checkin_time?: string;
   checkout_time?: string;
   instant_booking?: boolean;
+  property_details?: Record<string, unknown>;
+  policies?: Record<string, unknown>;
   rate_plan?: {
     base_price?: number;
     weekend_price?: number | null;
@@ -412,6 +469,39 @@ export interface UpdateHostListingBody {
     role?: "OWNER" | "CO_HOST" | "AGENT";
     access_instructions?: string;
   };
+}
+
+/** Type-first DRAFT create (Phase 1). */
+export interface CreateDraftListingBody {
+  listing_type: "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL";
+  guest_house?: boolean;
+  property_details?: Record<string, unknown>;
+}
+
+export interface ReplaceListingMediaBody {
+  media: Array<{
+    asset_id: string;
+    kind: "PHOTO" | "WALKTHROUGH";
+    sort_order?: number;
+    category?: string;
+    is_cover?: boolean;
+  }>;
+}
+
+export interface ReplaceListingUnitTypesBody {
+  unit_types: Array<{
+    kind: string;
+    name: string;
+    quantity?: number;
+    max_guests?: number;
+    base_price: number;
+    currency?: string;
+    pricing_unit?: string;
+    amenities?: string[];
+    details?: Record<string, unknown>;
+    sort_order?: number;
+    is_active?: boolean;
+  }>;
 }
 
 export interface CreateHostListingBody {

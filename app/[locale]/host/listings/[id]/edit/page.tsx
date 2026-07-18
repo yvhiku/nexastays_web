@@ -139,13 +139,19 @@ function HostListingEditContent() {
     patch({ amenities });
   };
 
+  const locationLocked = ["LIVE", "APPROVED", "PAUSED"].includes(
+    listing?.status ?? "",
+  );
+
   const validate = (): string | null => {
     if (!form) return t("hostListingEdit.failedLoad");
     if (!form.title.trim()) return t("hostListingEdit.titleRequired");
-    if (!form.city.trim()) return t("hostListingEdit.cityRequired");
-    if (!form.address.trim()) return t("hostListingEdit.addressRequired");
-    if (form.geoLat == null || form.geoLng == null)
-      return t("hostListingEdit.mapPinRequired");
+    if (!locationLocked) {
+      if (!form.city.trim()) return t("hostListingEdit.cityRequired");
+      if (!form.address.trim()) return t("hostListingEdit.addressRequired");
+      if (form.geoLat == null || form.geoLng == null)
+        return t("hostListingEdit.mapPinRequired");
+    }
     if (form.description.trim().length < 20)
       return t("hostListingEdit.descriptionMin");
     const price = Number(form.basePrice);
@@ -159,13 +165,8 @@ function HostListingEditContent() {
 
   const buildPayload = (): UpdateHostListingBody => {
     if (!form) return {};
-    return {
+    const payload: UpdateHostListingBody = {
       title: form.title.trim(),
-      city: form.city.trim(),
-      neighborhood: form.neighborhood.trim() || undefined,
-      address: form.address.trim(),
-      geo_lat: form.geoLat ?? undefined,
-      geo_lng: form.geoLng ?? undefined,
       description: form.description.trim(),
       checkin_time: normalizeTime(form.checkinTime),
       checkout_time: normalizeTime(form.checkoutTime),
@@ -191,6 +192,14 @@ function HostListingEditContent() {
         access_instructions: form.accessInstructions.trim() || undefined,
       },
     };
+    if (!locationLocked) {
+      payload.city = form.city.trim();
+      payload.neighborhood = form.neighborhood.trim() || undefined;
+      payload.address = form.address.trim();
+      payload.geo_lat = form.geoLat ?? undefined;
+      payload.geo_lng = form.geoLng ?? undefined;
+    }
+    return payload;
   };
 
   const handleSave = async () => {
@@ -251,8 +260,16 @@ function HostListingEditContent() {
         </h1>
         <p className="text-nexa-ink-3 mt-1">{listing.title}</p>
         <p className="text-xs text-nexa-ink-4 mt-1">
-          {t("hostListingEdit.status")}: {listing.status}
+          {t("hostListingEdit.status")}:{" "}
+          {listing.status === "REJECTED" ? "Needs Changes" : listing.status}
+          {listing.listing_type ? ` · ${listing.listing_type}` : ""}
         </p>
+        {["LIVE", "APPROVED", "PAUSED"].includes(listing.status) && (
+          <p className="mt-2 text-sm text-amber-800 rounded-lg bg-amber-50 px-3 py-2">
+            Location cannot be changed on live listings yet. Description, price,
+            amenities, and house rules update immediately. Property type cannot be changed.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -279,7 +296,11 @@ function HostListingEditContent() {
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldCity")}
               </label>
-              <Input value={form.city} onChange={(e) => patch({ city: e.target.value })} />
+              <Input
+                value={form.city}
+                disabled={["LIVE", "APPROVED", "PAUSED"].includes(listing.status)}
+                onChange={(e) => patch({ city: e.target.value })}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
@@ -287,6 +308,7 @@ function HostListingEditContent() {
               </label>
               <Input
                 value={form.neighborhood}
+                disabled={["LIVE", "APPROVED", "PAUSED"].includes(listing.status)}
                 onChange={(e) => patch({ neighborhood: e.target.value })}
               />
             </div>
@@ -294,18 +316,28 @@ function HostListingEditContent() {
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldAddress")}
               </label>
-              <Input value={form.address} onChange={(e) => patch({ address: e.target.value })} />
+              <Input
+                value={form.address}
+                disabled={["LIVE", "APPROVED", "PAUSED"].includes(listing.status)}
+                onChange={(e) => patch({ address: e.target.value })}
+              />
             </div>
-            <HostLocationMapPicker
-              city={form.city}
-              neighborhood={form.neighborhood}
-              address={form.address}
-              latitude={form.geoLat}
-              longitude={form.geoLng}
-              onCoordinatesChange={({ lat, lng }) =>
-                patch({ geoLat: lat, geoLng: lng })
-              }
-            />
+            {!["LIVE", "APPROVED", "PAUSED"].includes(listing.status) ? (
+              <HostLocationMapPicker
+                city={form.city}
+                neighborhood={form.neighborhood}
+                address={form.address}
+                latitude={form.geoLat}
+                longitude={form.geoLng}
+                onCoordinatesChange={({ lat, lng }) =>
+                  patch({ geoLat: lat, geoLng: lng })
+                }
+              />
+            ) : (
+              <p className="text-sm text-nexa-ink-4">
+                Map pin is locked while the listing is live.
+              </p>
+            )}
             <div>
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldDescription")}

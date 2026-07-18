@@ -35,7 +35,26 @@ function listingStatusClass(status: string): string {
   if (status === "LIVE" || status === "APPROVED") return "text-green-600";
   if (status === "PAUSED") return "text-orange-600";
   if (status === "SUBMITTED") return "text-amber-600";
+  if (status === "DRAFT") return "text-nexa-primary";
+  if (status === "REJECTED") return "text-red-600";
   return "text-nexa-ink-4";
+}
+
+function hostFacingStatus(status: string): string {
+  if (status === "REJECTED") return "Needs Changes";
+  if (status === "SUBMITTED") return "In review";
+  if (status === "DRAFT") return "Draft";
+  return status;
+}
+
+function listingHref(
+  listing: HostListingSummary,
+  localePath: (path: string) => string,
+): string {
+  if (listing.status === "DRAFT" || listing.status === "REJECTED") {
+    return localePath(`/host/listings/new?draft=${listing.id}`);
+  }
+  return localePath(`/host/listings/${listing.id}/edit`);
 }
 
 function listingIsPublic(status: string): boolean {
@@ -509,78 +528,143 @@ function HostDashboardContent() {
               <div className="py-12 text-center text-nexa-ink-4">{t("hostDashboard.loadingListings")}</div>
             ) : listings.length > 0 ? (
               <div className="space-y-4">
-                {listings.map((l) => (
-                  <div
-                    key={l.id}
-                    className={cn(
-                      "flex flex-col sm:flex-row sm:items-start gap-4 p-4 rounded-xl border border-nexa-line",
-                      listingIsPublic(l.status) && "hover:border-nexa-primary/30 hover:bg-nexa-primary-soft/30"
-                    )}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-nexa-ink truncate">{l.title}</p>
-                      <p className="text-sm text-nexa-ink-3">
-                        {l.address?.trim() || l.city} · {l.listing_type}
-                      </p>
-                      <p className="text-xs text-nexa-ink-4 mt-1">
-                        {t("hostDashboard.status")}:{" "}
-                        <span className={listingStatusClass(l.status)}>{l.status}</span>
-                        {l.rate_plan && ` · ${l.rate_plan.base_price} ${l.rate_plan.currency}/night`}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link
-                          href={localePath(`/host/listings/${l.id}/edit`)}
-                          className="flex items-center gap-1.5"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          {t("hostDashboard.edit")}
-                        </Link>
-                      </Button>
-                      {listingCanPause(l.status) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={listingActionId === l.id}
-                          onClick={() => handlePauseListing(l.id)}
-                          className="flex items-center gap-1.5"
-                        >
-                          <Pause className="h-3.5 w-3.5" />
-                          {listingActionId === l.id
-                            ? t("hostDashboard.pausing")
-                            : t("hostDashboard.pause")}
-                        </Button>
+                {listings.map((l) => {
+                  const href = listingHref(l, localePath);
+                  const pct = l.completion_percentage ?? 0;
+                  const missingRequired = (l.missing ?? []).filter((m) => m.required);
+                  return (
+                    <div
+                      key={l.id}
+                      role="link"
+                      tabIndex={0}
+                      onClick={() => router.push(href)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push(href);
+                        }
+                      }}
+                      className={cn(
+                        "cursor-pointer rounded-xl border border-nexa-line p-4 transition-colors",
+                        "hover:border-nexa-primary/40 hover:bg-nexa-primary-soft/20",
                       )}
-                      {l.status === "PAUSED" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={listingActionId === l.id}
-                          onClick={() => handleResumeListing(l.id)}
-                          className="flex items-center gap-1.5"
+                    >
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-nexa-ink">
+                            {l.title === "Untitled listing"
+                              ? "Untitled draft"
+                              : l.title}
+                          </p>
+                          <p className="text-sm text-nexa-ink-3">
+                            {l.city?.trim() || "Location pending"} · {l.listing_type}
+                          </p>
+                          <p className="mt-1 text-xs text-nexa-ink-4">
+                            {t("hostDashboard.status")}:{" "}
+                            <span className={listingStatusClass(l.status)}>
+                              {hostFacingStatus(l.status)}
+                            </span>
+                            {l.rate_plan &&
+                              l.rate_plan.base_price > 0 &&
+                              ` · ${l.rate_plan.base_price} ${l.rate_plan.currency}/night`}
+                          </p>
+                          {(l.status === "DRAFT" || l.status === "REJECTED") && (
+                            <div className="mt-3">
+                              <div className="mb-1 flex items-center justify-between text-xs text-nexa-ink-4">
+                                <span>Listing complete</span>
+                                <span className="tabular-nums font-semibold text-nexa-ink-2">
+                                  {pct}%
+                                </span>
+                              </div>
+                              <div className="h-1.5 overflow-hidden rounded-full bg-nexa-line">
+                                <div
+                                  className="h-full rounded-full bg-nexa-primary transition-all"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                              {missingRequired.length > 0 && (
+                                <p className="mt-2 text-xs text-nexa-ink-4">
+                                  Still needed:{" "}
+                                  {missingRequired.map((m) => m.label).join(", ")}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {l.status === "SUBMITTED" && (
+                            <p className="mt-2 text-xs text-amber-700">
+                              Review usually takes 1–2 business days.
+                            </p>
+                          )}
+                          {l.status === "REJECTED" && (
+                            <p className="mt-2 text-xs text-red-700">
+                              Fix the items below and resubmit for review.
+                            </p>
+                          )}
+                        </div>
+                        <div
+                          className="flex shrink-0 flex-wrap items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Play className="h-3.5 w-3.5" />
-                          {listingActionId === l.id
-                            ? t("hostDashboard.resuming")
-                            : t("hostDashboard.resume")}
-                        </Button>
-                      )}
-                      {listingIsPublic(l.status) ? (
-                        <Link
-                          href={localePath(`/listings/${l.id}`)}
-                          className="text-sm text-nexa-primary font-medium hover:underline px-1"
-                        >
-                          {t("hostDashboard.view")} →
-                        </Link>
-                      ) : l.status === "SUBMITTED" ? (
-                        <span className="text-sm text-nexa-ink-4 px-1">
-                          {t("hostDashboard.pendingReview")}
-                        </span>
-                      ) : null}
+                          {(l.status === "DRAFT" || l.status === "REJECTED") && (
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={href} className="flex items-center gap-1.5">
+                                <Pencil className="h-3.5 w-3.5" />
+                                {l.status === "REJECTED" ? "Fix & Resubmit" : "Continue"}
+                              </Link>
+                            </Button>
+                          )}
+                          {l.status !== "DRAFT" && l.status !== "REJECTED" && (
+                            <Button variant="outline" size="sm" asChild>
+                              <Link
+                                href={localePath(`/host/listings/${l.id}/edit`)}
+                                className="flex items-center gap-1.5"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                {t("hostDashboard.edit")}
+                              </Link>
+                            </Button>
+                          )}
+                          {listingCanPause(l.status) && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={listingActionId === l.id}
+                              onClick={() => handlePauseListing(l.id)}
+                              className="flex items-center gap-1.5"
+                            >
+                              <Pause className="h-3.5 w-3.5" />
+                              {listingActionId === l.id
+                                ? t("hostDashboard.pausing")
+                                : t("hostDashboard.pause")}
+                            </Button>
+                          )}
+                          {l.status === "PAUSED" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={listingActionId === l.id}
+                              onClick={() => handleResumeListing(l.id)}
+                              className="flex items-center gap-1.5"
+                            >
+                              <Play className="h-3.5 w-3.5" />
+                              {listingActionId === l.id
+                                ? t("hostDashboard.resuming")
+                                : t("hostDashboard.resume")}
+                            </Button>
+                          )}
+                          {listingIsPublic(l.status) ? (
+                            <Link
+                              href={localePath(`/listings/${l.id}`)}
+                              className="px-1 text-sm font-medium text-nexa-primary hover:underline"
+                            >
+                              {t("hostDashboard.view")} →
+                            </Link>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <Button variant="outline" className="mt-2" asChild>
                   <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
                     <PlusCircle className="h-4 w-4" />

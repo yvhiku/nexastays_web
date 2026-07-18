@@ -63,7 +63,9 @@ export interface UnitTypeDraft {
 
 export interface WizardPhoto {
   id: string;
-  file: File;
+  /** Local file pending upload; null when already saved on the server. */
+  file: File | null;
+  assetId?: string;
   preview: string;
   category: MediaCategory;
   isCover: boolean;
@@ -72,6 +74,8 @@ export interface WizardPhoto {
 export interface ListingWizardFormState {
   listingType: ListingType | null;
   bookingModel: BookingModel | null;
+  /** UI Guest House → APARTMENT + property_details.guest_house */
+  guestHouse: boolean;
   title: string;
   country: string;
   city: string;
@@ -114,6 +118,7 @@ export interface ListingWizardFormState {
   photos: WizardPhoto[];
   walkthrough: File | null;
   walkthroughPreview: string | null;
+  walkthroughAssetId?: string | null;
 }
 
 export type WizardStepId =
@@ -121,12 +126,14 @@ export type WizardStepId =
   | "bookingModel"
   | "location"
   | "details"
+  | "about"
   | "unitTypes"
   | "amenities"
   | "policies"
   | "pricing"
   | "media"
-  | "review";
+  | "review"
+  | "submit";
 
 export interface WizardStepDef {
   id: WizardStepId;

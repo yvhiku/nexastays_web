@@ -38,6 +38,7 @@ export function defaultWizardForm(): ListingWizardFormState {
   return {
     listingType: null,
     bookingModel: null,
+    guestHouse: false,
     title: "",
     country: "MA",
     city: "",
@@ -87,7 +88,9 @@ export function defaultWizardForm(): ListingWizardFormState {
     photos: [],
     walkthrough: null,
     walkthroughPreview: null,
+    walkthroughAssetId: null,
   };
 }
 
+/** @deprecated LocalStorage is no longer the source of truth for drafts. */
 export const DRAFT_STORAGE_PREFIX = "nexa_listing_wizard_draft_";

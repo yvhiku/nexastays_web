@@ -237,25 +237,9 @@ export function WizardStepBody({
         <StepHeader
           eyebrow="Location"
           title="Where will guests stay?"
-          description="Add a clear title and address. Guests only see the exact street address after a booking is confirmed."
+          description="Add the address and place a pin on the map. Guests only see the exact street address after a booking is confirmed."
           tip="Public pages show city and neighborhood. Exact address stays private until reservation is confirmed."
         />
-        <SectionCard
-          title="Listing title"
-          description="This is the name guests see in search — keep it short and inviting."
-        >
-          <Field
-            label="Title"
-            required
-            hint="Example: Sunny loft near the medina · 2BR with rooftop"
-          >
-            <Input
-              value={form.title}
-              onChange={(e) => patch({ title: e.target.value })}
-              placeholder="Sunny loft near the medina"
-            />
-          </Field>
-        </SectionCard>
 
         <SectionCard
           title="Address"
@@ -340,7 +324,7 @@ export function WizardStepBody({
     );
   }
 
-  if (stepId === "details") {
+  if (stepId === "details" || stepId === "about") {
     const copy = detailsCopy(form.listingType);
     const multi = isMultiUnitFlow(form.listingType, form.bookingModel);
     return (
@@ -348,29 +332,49 @@ export function WizardStepBody({
         <StepHeader
           eyebrow={copy.eyebrow}
           title={copy.title}
-          description={copy.description}
+          description="Basics for search, then property details guests need to plan their stay."
         />
 
         <SectionCard
-          title="About the property"
-          description="Write like you’re talking to a guest — what they’ll notice first, and why they’ll love staying."
+          title="Basics"
+          description="Title and description guests see first."
         >
           <Field
-            label="Description"
+            label="Listing title"
             required
-            hint="At least 20 characters. Mention light, views, quiet, or location highlights."
+            hint="Example: Sunny loft near the medina · 2BR with rooftop"
           >
-            <textarea
-              value={form.description}
-              onChange={(e) => patch({ description: e.target.value })}
-              rows={5}
-              className={textareaClassName}
-              placeholder="Describe the space, highlights, and what guests will love…"
+            <Input
+              value={form.title}
+              onChange={(e) => patch({ title: e.target.value })}
+              placeholder="Sunny loft near the medina"
             />
           </Field>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-4">
+            <Field
+              label="Description"
+              required
+              hint="At least 20 characters. Mention light, views, quiet, or location highlights."
+            >
+              <textarea
+                value={form.description}
+                onChange={(e) => patch({ description: e.target.value })}
+                rows={5}
+                className={textareaClassName}
+                placeholder="Describe the space, highlights, and what guests will love…"
+              />
+            </Field>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Property details"
+          description="Capacity and space — helps guests know if it fits."
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field
               label="Maximum guests"
+              required
               hint={
                 multi
                   ? "Overall property capacity. Each room type also has its own guest limit."
@@ -1019,11 +1023,11 @@ export function WizardStepBody({
     return (
       <div className="space-y-6">
         <StepHeader
-          eyebrow="Pricing"
-          title={multi ? "Fees for this property" : "Set your nightly price"}
+          eyebrow={multi ? "Room pricing" : "Nightly pricing"}
+          title={multi ? "Room pricing & fees" : "Set your nightly price"}
           description={
             multi
-              ? "Room and dorm prices were set on each type. Here you only set property-level fees like cleaning."
+              ? "Confirm room and dorm rates, then add property-level fees like cleaning."
               : "Enter what you want to earn per night. We’ll show what guests pay after the Nexa Stays service fee."
           }
           tip="Prices are in MAD. You can adjust later after the listing is approved."
@@ -1116,23 +1120,24 @@ export function WizardStepBody({
   }
 
   if (stepId === "media") {
-    const recommended = 15;
-    const minRequired = 12;
-    const hasExterior = form.photos.some(
-      (p) => p.category === "EXTERIOR" || p.category === "ENTRANCE",
+    const recommended = 12;
+    const minRequired = 5;
+    const qualityStars = Math.min(
+      5,
+      Math.max(1, Math.round((form.photos.length / recommended) * 5)),
     );
     return (
       <div className="space-y-6">
         <StepHeader
-          eyebrow="Photos & video"
-          title="Show the real place"
-          description="Upload clear photos and one continuous walkthrough video. Label each photo so guests know what they’re looking at."
-          tip={`Required to submit: at least ${minRequired} photos (including exterior or entrance) + one walkthrough video. Aim for ${recommended} photos.`}
+          eyebrow="Photos"
+          title="Photo workspace"
+          description="Upload clear photos that help guests understand the space. Categories guide what a strong listing looks like."
+          tip={`Required to submit: at least ${minRequired} photos. Aim for ${recommended}. Walkthrough video is optional and boosts approval chances.`}
         />
 
         <SectionCard
-          title="Photo checklist"
-          description="Progress toward a complete gallery."
+          title="Listing quality"
+          description={`${"★".repeat(qualityStars)}${"☆".repeat(5 - qualityStars)} · ${form.photos.length} / ${recommended} uploaded`}
         >
           <div className="mb-4 h-2 overflow-hidden rounded-full bg-nexa-bg-2">
             <div
@@ -1142,18 +1147,87 @@ export function WizardStepBody({
               }}
             />
           </div>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-nexa-ink-4">
+            Recommended categories
+          </p>
+          <ul className="mb-4 flex flex-wrap gap-2 text-sm text-nexa-ink-2">
+            {["Bedroom", "Kitchen", "Bathroom", "Living Room", "Exterior"].map((c) => (
+              <li
+                key={c}
+                className="rounded-full border border-nexa-line bg-white px-3 py-1 text-xs font-medium"
+              >
+                {c}
+              </li>
+            ))}
+          </ul>
           <ul className="space-y-1.5 text-sm text-nexa-ink-2">
             <li className={cn(form.photos.length >= minRequired && "text-nexa-primary")}>
               {form.photos.length >= minRequired ? "✓" : "○"} {form.photos.length} /{" "}
-              {minRequired} photos minimum ({recommended} recommended)
+              {minRequired} photos minimum
             </li>
-            <li className={cn(hasExterior && "text-nexa-primary")}>
-              {hasExterior ? "✓" : "○"} At least one exterior or entrance photo
-            </li>
-            <li className={cn(form.walkthrough && "text-nexa-primary")}>
-              {form.walkthrough ? "✓" : "○"} Walkthrough video
+            <li className={cn(form.photos.length >= recommended && "text-nexa-primary")}>
+              {form.photos.length >= recommended ? "✓" : "○"} {recommended} photos recommended
             </li>
           </ul>
+        </SectionCard>
+
+        <SectionCard
+          title="Boost your approval chances"
+          description="Listings with walkthrough videos help guests understand the space better."
+        >
+          {!form.walkthrough ? (
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-nexa-primary/40 bg-nexa-primary-soft/50 px-4 py-6 text-center">
+              <span className="font-sans text-sm font-semibold text-nexa-primary">
+                Upload video
+              </span>
+              <span className="mt-1 text-xs text-nexa-ink-4">Optional · MP4 / MOV / WebM</span>
+              <input
+                type="file"
+                accept="video/*"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (form.walkthroughPreview?.startsWith("blob:")) {
+                    URL.revokeObjectURL(form.walkthroughPreview);
+                  }
+                  patch({
+                    walkthrough: file,
+                    walkthroughPreview: URL.createObjectURL(file),
+                    walkthroughAssetId: null,
+                  });
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          ) : (
+            <div className="space-y-2">
+              {form.walkthroughPreview && (
+                <video
+                  src={form.walkthroughPreview}
+                  controls
+                  className="max-h-48 w-full rounded-xl bg-nexa-ink"
+                />
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (form.walkthroughPreview?.startsWith("blob:")) {
+                    URL.revokeObjectURL(form.walkthroughPreview);
+                  }
+                  patch({
+                    walkthrough: null,
+                    walkthroughPreview: null,
+                    walkthroughAssetId: null,
+                  });
+                }}
+              >
+                Remove video
+              </Button>
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard
@@ -1162,7 +1236,7 @@ export function WizardStepBody({
         >
           <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-nexa-primary/40 bg-nexa-primary-soft/50 px-4 py-8 text-center transition-colors hover:border-nexa-primary hover:bg-nexa-primary-soft">
             <span className="font-sans text-sm font-semibold text-nexa-primary">
-              Choose photos
+              Upload more
             </span>
             <span className="mt-1 text-xs text-nexa-ink-4">JPG or PNG · multiple files OK</span>
             <input
@@ -1232,7 +1306,9 @@ export function WizardStepBody({
                         type="button"
                         className="text-xs font-medium text-red-600"
                         onClick={() => {
-                          URL.revokeObjectURL(p.preview);
+                          if (p.preview.startsWith("blob:")) {
+                            URL.revokeObjectURL(p.preview);
+                          }
                           patch({
                             photos: form.photos.filter((x) => x.id !== p.id),
                           });
@@ -1247,97 +1323,91 @@ export function WizardStepBody({
             </div>
           )}
         </SectionCard>
-
-        <SectionCard
-          title="Walkthrough video"
-          description="One continuous clip from the entrance through the main rooms. No IDs, faces of strangers, or sensitive documents."
-        >
-          <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-nexa-line bg-nexa-bg px-4 py-8 text-center transition-colors hover:border-nexa-primary/50">
-            <span className="font-sans text-sm font-semibold text-nexa-ink">
-              {form.walkthrough ? "Replace video" : "Upload walkthrough video"}
-            </span>
-            <span className="mt-1 text-xs text-nexa-ink-4">MP4 or similar · required</span>
-            <input
-              type="file"
-              accept="video/*"
-              className="sr-only"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                if (form.walkthroughPreview) URL.revokeObjectURL(form.walkthroughPreview);
-                patch({
-                  walkthrough: file,
-                  walkthroughPreview: file ? URL.createObjectURL(file) : null,
-                });
-              }}
-            />
-          </label>
-          {form.walkthrough && (
-            <p className="mt-3 rounded-lg bg-nexa-primary-soft px-3 py-2 text-sm text-nexa-ink-2">
-              ✓ {form.walkthrough.name}
-            </p>
-          )}
-        </SectionCard>
       </div>
     );
   }
 
-  if (stepId === "review") {
+  if (stepId === "review" || stepId === "submit") {
     const typeLabel = form.listingType
       ? PROPERTY_TYPE_COPY[form.listingType].label
       : "—";
-    const modelLabel = form.bookingModel
-      ? BOOKING_MODEL_LABEL[form.bookingModel] ?? form.bookingModel
-      : "—";
+    const missingRequired: string[] = [];
+    const missingOptional: string[] = [];
+    if (!form.city.trim() || !form.address.trim() || form.geoLat == null) {
+      missingRequired.push("Location");
+    } else {
+      /* ok */
+    }
+    if (
+      !form.title.trim() ||
+      form.title === "Untitled listing" ||
+      form.description.trim().length < 20 ||
+      form.maxGuests < 1
+    ) {
+      missingRequired.push("About");
+    }
+    if (isMultiUnitFlow(form.listingType, form.bookingModel)) {
+      if (
+        form.unitTypes.length < 1 ||
+        form.unitTypes.some((u) => Number(u.basePrice) <= 0)
+      ) {
+        missingRequired.push("Room configuration / pricing");
+      }
+    } else if (!form.basePrice.trim() || Number(form.basePrice) <= 0) {
+      missingRequired.push("Price");
+    }
+    if (form.photos.length < 5) missingRequired.push("5 photos");
+    if (!form.walkthrough) missingOptional.push("Walkthrough (boost approval chances)");
+    if (form.photos.length < 12) missingOptional.push("More photos (recommended)");
+
+    const ready = [
+      form.city.trim() && form.address.trim() && form.geoLat != null ? "Location" : null,
+      form.photos.length >= 5 ? "Photos" : null,
+      Number(form.basePrice) > 0 ||
+      form.unitTypes.some((u) => Number(u.basePrice) > 0)
+        ? "Price"
+        : null,
+    ].filter(Boolean) as string[];
+
     return (
       <div className="space-y-6">
         <StepHeader
-          eyebrow="Almost done"
-          title="Review and submit for Nexa review"
-          description="We’ll check your details, photos, and walkthrough before the listing goes live. You can edit after approval."
-          tip="Make sure the title, city, photos, and pricing look right — those are what guests see first."
+          eyebrow="Submit"
+          title="Ready to submit?"
+          description="Our team will review your listing within 1–2 business days before it goes live."
+          tip={`${typeLabel} · Complete the checklist below, then submit for review.`}
         />
-        <SectionCard title="Listing summary">
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[
-              ["Property type", typeLabel],
-              ["How guests book", modelLabel],
-              ["Title", form.title || "—"],
-              ["City", form.city || "—"],
-              ["Photos", String(form.photos.length)],
-              [
-                "Rooms / beds",
-                form.unitTypes.length
-                  ? `${form.unitTypes.length} type(s)`
-                  : "Single place",
-              ],
-              [
-                "Nightly from",
-                (() => {
-                  if (form.unitTypes.length) {
-                    const prices = form.unitTypes
-                      .map((u) => Number(u.basePrice) || 0)
-                      .filter((n) => n > 0);
-                    return prices.length ? `MAD ${Math.min(...prices)}` : "—";
-                  }
-                  return form.basePrice ? `MAD ${form.basePrice}` : "—";
-                })(),
-              ],
-              ["Walkthrough", form.walkthrough ? "Added" : "Missing"],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="rounded-xl border border-nexa-line bg-nexa-bg px-3 py-3"
-              >
-                <dt className="text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
-                  {label}
-                </dt>
-                <dd className="mt-1 font-sans text-sm font-semibold text-nexa-ink">
-                  {value}
-                </dd>
-              </div>
+        <SectionCard title="Complete">
+          <ul className="space-y-2 text-sm text-nexa-ink-2">
+            {ready.map((item) => (
+              <li key={item} className="flex items-center gap-2 text-nexa-primary">
+                <span>✓</span> {item}
+              </li>
             ))}
-          </dl>
+          </ul>
         </SectionCard>
+        {missingRequired.length > 0 && (
+          <SectionCard title="Required before submit">
+            <ul className="space-y-2 text-sm text-nexa-ink-2">
+              {missingRequired.map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span>□</span> {item}
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
+        {missingOptional.length > 0 && (
+          <SectionCard title="Recommended">
+            <ul className="space-y-2 text-sm text-nexa-ink-2">
+              {missingOptional.map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span>□</span> {item}
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
       </div>
     );
   }

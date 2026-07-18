@@ -12,6 +12,7 @@ export function ListingWizardShell({
   brandTitle,
   steps,
   stepIndex,
+  completionPercentage,
   savedLabel,
   canContinue,
   continuing,
@@ -27,6 +28,8 @@ export function ListingWizardShell({
   brandTitle: string;
   steps: WizardStepDef[];
   stepIndex: number;
+  /** Weighted Listing Complete % from flags (primary progress). */
+  completionPercentage?: number;
   savedLabel: string | null;
   canContinue: boolean;
   continuing?: boolean;
@@ -48,14 +51,17 @@ export function ListingWizardShell({
 }) {
   const total = Math.max(steps.length, 1);
   const current = steps[stepIndex];
-  const progress = ((stepIndex + 1) / total) * 100;
+  const completePct =
+    completionPercentage != null
+      ? Math.min(100, Math.max(0, completionPercentage))
+      : ((stepIndex + 1) / total) * 100;
   const backLabel = labels?.back ?? "Back";
   const saveLabel = labels?.saveDraft ?? "Save draft";
   const continueLabel =
     stepIndex === total - 1
       ? labels?.submit ?? "Submit for review"
       : labels?.continue ?? "Continue";
-  const progressTitle = labels?.progress ?? "Progress";
+  const progressTitle = labels?.progress ?? "Listing complete";
   const stepOfLabel = (labels?.stepOf ?? "Step {step} of {total}")
     .replace("{step}", String(stepIndex + 1))
     .replace("{total}", String(total));
@@ -72,13 +78,14 @@ export function ListingWizardShell({
         <span className="font-sans text-lg font-semibold text-white">{brandTitle}</span>
       </Link>
       <div className="mb-6">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">
-          {progressTitle}
+        <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-white/40">
+          <span>{progressTitle}</span>
+          <span className="tabular-nums text-white/70">{Math.round(completePct)}%</span>
         </div>
         <div className="h-1 rounded-sm bg-white/15">
           <div
             className="h-full rounded-sm bg-gradient-to-r from-nexa-primary to-nexa-primary-light transition-all"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${completePct}%` }}
           />
         </div>
         <p className="mt-3 text-sm text-white/70">
