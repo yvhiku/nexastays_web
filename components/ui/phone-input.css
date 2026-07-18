@@ -1,0 +1,79 @@
+/* Nexa overrides for react-phone-number-input — critical chrome only */
+
+.PhoneInput--nexa {
+  --PhoneInput-color--focus: #e8507a;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid #ede0e5;
+  border-radius: 0.5rem;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.PhoneInput--nexa:focus-within {
+  border-color: #e8507a;
+  box-shadow: 0 0 0 2px rgba(232, 80, 122, 0.28);
+}
+
+.PhoneInput--nexa .PhoneInputCountry {
+  margin: 0;
+  padding: 0 0.65rem;
+  background: #faf7f8;
+  border-right: 1px solid #ede0e5;
+  align-self: stretch;
+}
+
+.PhoneInput--nexa .PhoneInputCountryIcon {
+  width: 1.35rem;
+  height: 1rem;
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+}
+
+.PhoneInput--nexa .PhoneInputCountryIcon--border {
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.PhoneInput--nexa .PhoneInputCountrySelectArrow {
+  color: #9e8a93;
+  opacity: 1;
+  margin-left: 0.35rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-color: currentColor;
+}
+
+.PhoneInput--nexa .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #1a1118;
+}
+
+.PhoneInput--nexa .PhoneInputInput::placeholder {
+  color: #9e8a93;
+}
+
+.PhoneInput--nexa .PhoneInputInput:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.PhoneInput--nexa .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon--border {
+  box-shadow: none;
+}

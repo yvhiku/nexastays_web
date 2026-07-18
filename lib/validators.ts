@@ -2,8 +2,10 @@
  * Shared validators for search, booking, and forms
  */
 
-/** E.164: + and 8–15 digits total after country indicator */
-const E164_REGEX = /^\+[1-9]\d{7,14}$/;
+import {
+  isValidPhoneNumber,
+  parsePhoneNumber,
+} from "libphonenumber-js";
 
 /** Email: standard format */
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -110,19 +112,24 @@ export function normalizeMoroccanPhone(value: string): string {
 
 /**
  * Normalize to E.164.
- * - Already `+…` → pass through (strip non-digits; fix MA trunk 0).
+ * - Prefer parsePhoneNumber when possible.
+ * - Already `+…` / `00…` → international.
  * - Bare / `0…` / `212…` → Morocco default (local hosts & legacy forms).
  */
 export function normalizePhone(value: string): string {
   const s = value.trim();
   if (!s) return "";
 
+  try {
+    const parsed = parsePhoneNumber(s, "MA");
+    if (parsed) return parsed.format("E.164");
+  } catch {
+    // fall through
+  }
+
   if (s.startsWith("+") || s.startsWith("00")) {
     let digits = s.replace(/\D/g, "");
-    if (s.startsWith("00")) {
-      // 00 already stripped by \D? No — 00 are digits. Keep as international prefix → drop 00
-      if (digits.startsWith("00")) digits = digits.slice(2);
-    }
+    if (digits.startsWith("00")) digits = digits.slice(2);
     // Morocco: +2120XXXXXXXXX → +212XXXXXXXXX
     if (digits.startsWith("2120") && digits.length >= 13) {
       digits = `212${digits.slice(4, 13)}`;
@@ -137,10 +144,29 @@ export function normalizePhone(value: string): string {
 /** Validate phone (international E.164 or MA national forms) */
 export function validatePhone(value: string): ValidationResult {
   const normalized = value.trim() ? normalizePhone(value) : "";
-  if (!normalized || !E164_REGEX.test(normalized)) {
+  if (!normalized) {
+    return { valid: false, error: "Enter a valid phone number" };
+  }
+  try {
+    const parsed = parsePhoneNumber(normalized);
+    if (!parsed || !isValidPhoneNumber(normalized)) {
+      return { valid: false, error: "Enter a valid phone number" };
+    }
+  } catch {
     return { valid: false, error: "Enter a valid phone number" };
   }
   return { valid: true };
+}
+
+/** Parsed phone helpers for display / analytics (null if unparseable) */
+export function parsePhone(value: string) {
+  try {
+    const normalized = normalizePhone(value);
+    if (!normalized) return null;
+    return parsePhoneNumber(normalized);
+  } catch {
+    return null;
+  }
 }
 
 /** Validate email */
