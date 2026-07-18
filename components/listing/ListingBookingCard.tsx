@@ -114,8 +114,8 @@ export function ListingBookingCard({
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 border border-nexa-line rounded-xl overflow-hidden">
-          <div className="relative p-3 border-b sm:border-b-0 sm:border-r border-nexa-line">
+        <div className="grid grid-cols-1 sm:grid-cols-2 border border-nexa-line rounded-xl">
+          <div className="relative p-3 border-b sm:border-b-0 sm:border-r border-nexa-line sm:rounded-tl-xl">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               Check-in
             </label>
@@ -130,7 +130,7 @@ export function ListingBookingCard({
               locale={locale}
             />
           </div>
-          <div className="relative p-3">
+          <div className="relative p-3 border-b sm:border-b-0 border-nexa-line sm:rounded-tr-xl">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               Check-out
             </label>
@@ -145,7 +145,7 @@ export function ListingBookingCard({
               locale={locale}
             />
           </div>
-          <div className="relative p-3 border-t border-nexa-line col-span-2">
+          <div className="relative p-3 border-t border-nexa-line col-span-2 rounded-b-xl">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               Guests
             </label>
