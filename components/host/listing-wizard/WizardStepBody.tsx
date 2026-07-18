@@ -962,7 +962,7 @@ export function WizardStepBody({
 
         <SectionCard
           title="Arrival contact"
-          description="Who guests call or message for check-in. Shared after booking is confirmed."
+          description="Prefills from your verified host profile. Shared with guests only after booking is confirmed."
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Check-in time">

@@ -122,7 +122,12 @@ function ListingWizardContent() {
           router.replace(localePath(`/host/listings/${detail.id}/edit`));
           return;
         }
-        setForm(hydrateWizardFromListing(detail));
+        setForm(
+          hydrateWizardFromListing(detail, {
+            name: user?.full_name,
+            phone: user?.phone_number,
+          }),
+        );
         setListingId(detail.id);
         setPhase("wizard");
         skipAutosave.current = true;
@@ -133,7 +138,7 @@ function ListingWizardContent() {
         setListingId(null);
       })
       .finally(() => setHydrating(false));
-  }, [token, draftParam, router, localePath]);
+  }, [token, draftParam, router, localePath, user?.full_name, user?.phone_number]);
 
   useEffect(() => {
     if (user) {
@@ -253,9 +258,10 @@ function ListingWizardContent() {
       );
       const detail = await getHostListingById(created.id, token);
       setForm({
-        ...hydrateWizardFromListing(detail),
-        contactName: user?.full_name?.trim() || "",
-        contactPhone: user?.phone_number?.trim() || "",
+        ...hydrateWizardFromListing(detail, {
+          name: user?.full_name,
+          phone: user?.phone_number,
+        }),
         guestHouse,
         listingType: type,
         bookingModel: defaultBookingModel(type),

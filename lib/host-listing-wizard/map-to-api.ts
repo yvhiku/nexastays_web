@@ -246,6 +246,7 @@ export function buildReplaceMediaBody(
 
 export function hydrateWizardFromListing(
   listing: HostListingDetail,
+  hostDefaults?: { name?: string; phone?: string },
 ): ListingWizardFormState {
   const base = defaultWizardForm();
   const listingType = (listing.listing_type as ListingType) || null;
@@ -349,8 +350,14 @@ export function hydrateWizardFromListing(
     checkinMethod:
       (details.checkin_method as ListingWizardFormState["checkinMethod"]) ??
       "IN_PERSON",
-    contactName: listing.check_in_contact?.full_name ?? "",
-    contactPhone: listing.check_in_contact?.phone ?? "",
+    contactName:
+      listing.check_in_contact?.full_name?.trim() ||
+      hostDefaults?.name?.trim() ||
+      "",
+    contactPhone:
+      listing.check_in_contact?.phone?.trim() ||
+      hostDefaults?.phone?.trim() ||
+      "",
     contactRole:
       (listing.check_in_contact?.role as ListingWizardFormState["contactRole"]) ??
       "OWNER",

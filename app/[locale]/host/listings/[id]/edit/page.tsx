@@ -50,9 +50,16 @@ function normalizeTime(value: string): string {
   return `${match[1]}:${match[2]}`;
 }
 
-function listingToForm(l: HostListingDetail): EditFormState {
+function listingToForm(
+  l: HostListingDetail,
+  hostDefaults?: { name?: string; phone?: string },
+): EditFormState {
   const rules = l.rules ?? {};
   const contact = l.check_in_contact ?? null;
+  const contactName =
+    contact?.full_name?.trim() || hostDefaults?.name?.trim() || "";
+  const contactPhone =
+    contact?.phone?.trim() || hostDefaults?.phone?.trim() || "";
   return {
     title: l.title ?? "",
     city: l.city ?? "",
@@ -75,8 +82,8 @@ function listingToForm(l: HostListingDetail): EditFormState {
     cancellationPolicy:
       (rules.cancellation_policy as EditFormState["cancellationPolicy"]) ?? "MODERATE",
     amenities: normalizeAmenities(rules.amenities),
-    contactName: contact?.full_name ?? "",
-    contactPhone: contact?.phone ?? "",
+    contactName,
+    contactPhone,
     contactRole: (contact?.role as EditFormState["contactRole"]) ?? "OWNER",
     accessInstructions: contact?.access_instructions ?? "",
   };
@@ -86,7 +93,7 @@ function HostListingEditContent() {
   const params = useParams();
   const router = useRouter();
   const listingId = typeof params.id === "string" ? params.id : "";
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { t, localePath } = useLanguage();
 
   const [listing, setListing] = useState<HostListingDetail | null>(null);
@@ -110,13 +117,18 @@ function HostListingEditContent() {
     getHostListingById(listingId, token)
       .then((data) => {
         setListing(data);
-        setForm(listingToForm(data));
+        setForm(
+          listingToForm(data, {
+            name: user?.full_name,
+            phone: user?.phone_number,
+          }),
+        );
       })
       .catch((e) =>
         setError(formatUserError(e) || t("hostListingEdit.failedLoad")),
       )
       .finally(() => setLoading(false));
-  }, [token, listingId, t]);
+  }, [token, listingId, t, user?.full_name, user?.phone_number]);
 
   const showFeedback = (kind: "error" | "success", message: string) => {
     if (kind === "error") {
@@ -507,6 +519,9 @@ function HostListingEditContent() {
           <h2 className="text-lg font-semibold text-nexa-ink mb-4">
             {t("hostListingEdit.sectionContact")}
           </h2>
+          <p className="mb-4 text-sm text-nexa-ink-3">
+            Prefills from your verified host profile. Change only if a co-host handles check-in.
+          </p>
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
