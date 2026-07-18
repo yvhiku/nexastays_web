@@ -4,6 +4,8 @@
 **Scope:** Phase 1 “create early, refine over time” (web + `backend/stays`).  
 **Related:** [`NEXA_STAYS_WEB_DESIGN.md`](./NEXA_STAYS_WEB_DESIGN.md) · [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 
+**Status:** Phase 1 specification **frozen**. Next meaningful changes should come from usability testing and production usage, not further design iterations.
+
 ---
 
 ## 1. One-sentence summary
