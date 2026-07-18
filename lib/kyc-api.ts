@@ -7,7 +7,7 @@ import axios from "axios";
 import { getIdentityApiBaseUrl } from "./env";
 import { unwrapResponse } from "./api-client";
 import { normalizeError } from "./api-client";
-import { normalizeMoroccanPhone, validateImageFile } from "./validators";
+import { normalizePhone, validateImageFile } from "./validators";
 import {
   notifyAuthLogout,
   notifyTokenRefreshed,
@@ -149,7 +149,7 @@ export async function submitKyc(
 ): Promise<unknown> {
   const res = await jsonClient.post(
     "/kyc/submit",
-    { ...data, phone_number: normalizeMoroccanPhone(data.phone_number) },
+    { ...data, phone_number: normalizePhone(data.phone_number) },
     {
       headers: {
         ...getAuthHeaders(getToken),
@@ -261,7 +261,7 @@ export async function changePhone(
   data: { current_otp: string; new_phone_number: string; new_otp: string },
   getJwt: () => string | null
 ): Promise<{ phone_number: string }> {
-  const newPhone = normalizeMoroccanPhone(data.new_phone_number);
+  const newPhone = normalizePhone(data.new_phone_number);
   const res = await jsonClient.post(
     "/users/me/change-phone",
     { ...data, new_phone_number: newPhone },

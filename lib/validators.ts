@@ -2,8 +2,8 @@
  * Shared validators for search, booking, and forms
  */
 
-/** Phone: E.164 or similar, 10–15 digits */
-const PHONE_REGEX = /^\+?[0-9]{10,15}$/;
+/** E.164: + and 8–15 digits total after country indicator */
+const E164_REGEX = /^\+[1-9]\d{7,14}$/;
 
 /** Email: standard format */
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,16 +66,20 @@ export function validateDates(
   return { valid: true };
 }
 
-/** Morocco country code */
+/** Morocco country code (default for bare national numbers) */
 export const MOROCCO_PREFIX = "+212";
 
-/** Get local part (612345677) from full (+212612345677) or return as-is */
+/**
+ * Get national digits from a stored phone (MA-oriented helper).
+ * Prefer storing/passing full E.164 with PhoneInput.
+ */
 export function getLocalPhonePart(value: string): string {
   const s = value.replace(/\s/g, "");
   if (s.startsWith("+212")) return s.slice(4);
-  if (s.startsWith("212")) return s.slice(3);
-  if (s.startsWith("0")) return s.slice(1);
-  return s;
+  if (s.startsWith("212") && !s.startsWith("+")) return s.slice(3);
+  if (s.startsWith("0") && !s.startsWith("+")) return s.slice(1);
+  if (s.startsWith("+")) return s.replace(/\D/g, "").replace(/^\d{1,3}/, "");
+  return s.replace(/\D/g, "");
 }
 
 /**
@@ -104,14 +108,37 @@ export function normalizeMoroccanPhone(value: string): string {
   return out;
 }
 
-/** Validate phone number (accepts 06..., 6..., 212..., +212..., normalizes before check) */
-export function validatePhone(value: string): ValidationResult {
-  const normalized = value.trim() ? normalizeMoroccanPhone(value) : "";
-  if (!normalized || normalized.length < 12) {
-    return { valid: false, error: "Enter a valid phone number (e.g. 0612345677)" };
+/**
+ * Normalize to E.164.
+ * - Already `+…` → pass through (strip non-digits; fix MA trunk 0).
+ * - Bare / `0…` / `212…` → Morocco default (local hosts & legacy forms).
+ */
+export function normalizePhone(value: string): string {
+  const s = value.trim();
+  if (!s) return "";
+
+  if (s.startsWith("+") || s.startsWith("00")) {
+    let digits = s.replace(/\D/g, "");
+    if (s.startsWith("00")) {
+      // 00 already stripped by \D? No — 00 are digits. Keep as international prefix → drop 00
+      if (digits.startsWith("00")) digits = digits.slice(2);
+    }
+    // Morocco: +2120XXXXXXXXX → +212XXXXXXXXX
+    if (digits.startsWith("2120") && digits.length >= 13) {
+      digits = `212${digits.slice(4, 13)}`;
+    }
+    if (!digits || !/^[1-9]\d{7,14}$/.test(digits)) return "";
+    return `+${digits}`;
   }
-  if (!PHONE_REGEX.test(normalized)) {
-    return { valid: false, error: "Phone number format is invalid" };
+
+  return normalizeMoroccanPhone(s);
+}
+
+/** Validate phone (international E.164 or MA national forms) */
+export function validatePhone(value: string): ValidationResult {
+  const normalized = value.trim() ? normalizePhone(value) : "";
+  if (!normalized || !E164_REGEX.test(normalized)) {
+    return { valid: false, error: "Enter a valid phone number" };
   }
   return { valid: true };
 }

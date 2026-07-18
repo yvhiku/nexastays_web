@@ -12,7 +12,7 @@ import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { sendOtp, verifyOtp } from "@/lib/auth-api";
-import { validatePhone, normalizeMoroccanPhone, getLocalPhonePart } from "@/lib/validators";
+import { validatePhone, normalizePhone } from "@/lib/validators";
 import { normalizeError } from "@/lib/api-client";
 import { resolveLocalizedPath } from "@/lib/locale-path";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
@@ -45,7 +45,7 @@ export default function LoginPage() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const normalized = normalizeMoroccanPhone(phone);
+    const normalized = normalizePhone(phone);
     const vr = validatePhone(phone);
     if (!vr.valid) {
       setError(vr.error ?? t("login.enterValidPhone"));
@@ -188,9 +188,8 @@ export default function LoginPage() {
                 </p>
                 <div className="mb-5">
                   <PhoneInput
-                    value={getLocalPhonePart(phone)}
-                    onChange={(v) => setPhone(v)}
-                    placeholder="6 XX XX XX XX"
+                    value={phone}
+                    onChange={setPhone}
                     autoFocus
                   />
                 </div>

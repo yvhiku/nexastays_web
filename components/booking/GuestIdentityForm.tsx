@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Button } from "@/components/ui/button";
-import { validateImageFile, getLocalPhonePart } from "@/lib/validators";
+import { validateImageFile } from "@/lib/validators";
 import { uploadOccupantIdDocument } from "@/lib/stays-api";
 import { uploadDocument as uploadKycDocument } from "@/lib/kyc-api";
 import type { GuestIdentityFormData, GuestGender } from "@/lib/booking-verification-types";
@@ -115,8 +115,8 @@ export function GuestIdentityForm({
                 {t("bookingVerification.phone")} <span className="text-nexa-primary">*</span>
               </label>
               <PhoneInput
-                value={guest.phone ? getLocalPhonePart(guest.phone) : ""}
-                onChange={(v) => onChange({ ...guest, phone: v ? `+212${v}` : "" })}
+                value={guest.phone ?? ""}
+                onChange={(v) => onChange({ ...guest, phone: v })}
               />
             </div>
             <div>

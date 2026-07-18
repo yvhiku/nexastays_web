@@ -155,7 +155,7 @@
   },
   "login": {
     "title": "Entrez votre numéro",
-    "subtitle": "Nous enverrons un code à 6 chiffres pour vérifier votre numéro.",
+    "subtitle": "Nous enverrons un code à 6 chiffres sur votre mobile — Maroc ou international.",
     "step1": "Entrez votre numéro de téléphone",
     "step2": "Recevez un code à usage unique",
     "step3": "Confirmez et connectez-vous",
@@ -166,7 +166,7 @@
     "verify": "Se connecter",
     "verifying": "Vérification…",
     "useDifferent": "Utiliser un autre numéro",
-    "enterValidPhone": "Entrez un numéro de téléphone valide",
+    "enterValidPhone": "Entrez un numéro de téléphone valide avec indicatif pays",
     "enterCode": "Entrez le code envoyé",
     "couldNotComplete": "Connexion impossible"
   },
@@ -995,7 +995,7 @@
     "fullNameRequired": "Nom complet *",
     "fullNamePlaceholder": "Votre nom complet",
     "phoneRequired": "Téléphone *",
-    "phonePlaceholder": "+212 6 XX XX XX XX",
+    "phonePlaceholder": "+33 6 XX XX XX XX",
     "emailRequired": "E-mail *",
     "emailPlaceholder": "vous@exemple.com",
     "city": "Ville",

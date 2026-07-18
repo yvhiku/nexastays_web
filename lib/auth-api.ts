@@ -5,7 +5,7 @@
 
 import axios, { type InternalAxiosRequestConfig } from "axios";
 import { getIdentityApiBaseUrl } from "./env";
-import { normalizeMoroccanPhone } from "./validators";
+import { normalizePhone } from "./validators";
 
 type RequestConfigWithRetry = InternalAxiosRequestConfig & { __retryCount?: number };
 
@@ -38,8 +38,9 @@ client.interceptors.response.use(
   }
 );
 
+/** Pass through E.164; bare national digits still default to +212 */
 function apiPhone(phone_number: string): string {
-  return normalizeMoroccanPhone(phone_number);
+  return normalizePhone(phone_number);
 }
 
 /** Send OTP to phone */

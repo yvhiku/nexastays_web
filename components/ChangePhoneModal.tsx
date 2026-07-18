@@ -8,7 +8,7 @@ import { ErrorAlert } from "@/components/ui/Alert";
 import { sendOtp } from "@/lib/auth-api";
 import { changePhone } from "@/lib/kyc-api";
 import { formatUserError } from "@/lib/errors";
-import { normalizeMoroccanPhone, getLocalPhonePart } from "@/lib/validators";
+import { normalizePhone } from "@/lib/validators";
 import { cn } from "@/lib/utils";
 
 type Step = "current_otp" | "new_phone" | "new_otp" | "done";
@@ -52,7 +52,7 @@ export function ChangePhoneModal({
       setError("Enter new phone number");
       return;
     }
-    const normalized = normalizeMoroccanPhone(newPhone);
+    const normalized = normalizePhone(newPhone);
     setError(null);
     setSendingOtp(true);
     try {
@@ -80,7 +80,7 @@ export function ChangePhoneModal({
       setError("Fill all fields");
       return;
     }
-    const normalizedNew = normalizeMoroccanPhone(newPhone);
+    const normalizedNew = normalizePhone(newPhone);
     setError(null);
     setSubmitting(true);
     try {
@@ -168,9 +168,8 @@ export function ChangePhoneModal({
               <div>
                 <label className="block text-sm font-medium text-nexa-ink mb-2">New phone number</label>
                 <PhoneInput
-                  value={getLocalPhonePart(newPhone)}
-                  onChange={(v) => setNewPhone(v)}
-                  placeholder="6 XX XX XX XX"
+                  value={newPhone}
+                  onChange={setNewPhone}
                 />
               </div>
               <div className="flex gap-3">
@@ -198,7 +197,7 @@ export function ChangePhoneModal({
             <>
               <div>
                 <p className="text-sm text-nexa-ink-3 mb-2">Enter the code sent to:</p>
-                <p className="font-medium text-nexa-ink">{normalizeMoroccanPhone(newPhone) || newPhone}</p>
+                <p className="font-medium text-nexa-ink">{normalizePhone(newPhone) || newPhone}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-nexa-ink mb-2">OTP code</label>

@@ -155,7 +155,7 @@
   },
   "login": {
     "title": "Enter your phone",
-    "subtitle": "We'll send a 6-digit code to verify your number.",
+    "subtitle": "We'll send a 6-digit code to your mobile — Morocco or international.",
     "step1": "Enter your phone number",
     "step2": "Receive a one-time code",
     "step3": "Confirm and sign in",
@@ -166,7 +166,7 @@
     "verify": "Sign in",
     "verifying": "Verifying…",
     "useDifferent": "Use a different number",
-    "enterValidPhone": "Enter a valid phone number",
+    "enterValidPhone": "Enter a valid phone number with country code",
     "enterCode": "Enter the code we sent",
     "couldNotComplete": "Could not complete sign in"
   },
@@ -1046,7 +1046,7 @@
     "fullNameRequired": "Full Name *",
     "fullNamePlaceholder": "Your full name",
     "phoneRequired": "Phone *",
-    "phonePlaceholder": "+212 6 XX XX XX XX",
+    "phonePlaceholder": "+33 6 XX XX XX XX",
     "emailRequired": "Email *",
     "emailPlaceholder": "you@example.com",
     "city": "City",

@@ -155,7 +155,7 @@
   },
   "login": {
     "title": "أدخل رقم هاتفك",
-    "subtitle": "سنرسل رمزًا من 6 أرقام للتحقق من رقمك.",
+    "subtitle": "سنرسل رمزًا من 6 أرقام إلى هاتفك — المغرب أو دولي.",
     "step1": "أدخل رقم هاتفك",
     "step2": "استلم رمزًا لمرة واحدة",
     "step3": "أكد وسجّل الدخول",
@@ -166,7 +166,7 @@
     "verify": "تسجيل الدخول",
     "verifying": "جاري التحقق…",
     "useDifferent": "استخدام رقم مختلف",
-    "enterValidPhone": "أدخل رقم هاتف صحيح",
+    "enterValidPhone": "أدخل رقم هاتف صحيح مع رمز الدولة",
     "enterCode": "أدخل الرمز المُرسل",
     "couldNotComplete": "تعذّر إتمام تسجيل الدخول"
   },
@@ -995,7 +995,7 @@
     "fullNameRequired": "الاسم الكامل *",
     "fullNamePlaceholder": "الاسم الكامل",
     "phoneRequired": "الهاتف *",
-    "phonePlaceholder": "+212 6 XX XX XX XX",
+    "phonePlaceholder": "+33 6 XX XX XX XX",
     "emailRequired": "البريد الإلكتروني *",
     "emailPlaceholder": "you@example.com",
     "city": "المدينة",
