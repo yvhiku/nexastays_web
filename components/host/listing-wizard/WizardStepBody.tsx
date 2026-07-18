@@ -17,6 +17,11 @@ import type {
 } from "@/lib/host-listing-wizard/form-types";
 import { isMultiUnitFlow } from "@/lib/host-listing-wizard/step-config";
 import {
+  computeCompletionFlags,
+  listMissing,
+} from "@/lib/host-listing-wizard/completion";
+import { completionInputFromForm } from "@/lib/host-listing-wizard/map-to-api";
+import {
   DEFAULT_FEE_RATES,
   calculateBookingFees,
   type StaysFeeRates,
@@ -1331,41 +1336,20 @@ export function WizardStepBody({
     const typeLabel = form.listingType
       ? PROPERTY_TYPE_COPY[form.listingType].label
       : "—";
-    const missingRequired: string[] = [];
-    const missingOptional: string[] = [];
-    if (!form.city.trim() || !form.address.trim() || form.geoLat == null) {
-      missingRequired.push("Location");
-    } else {
-      /* ok */
-    }
-    if (
-      !form.title.trim() ||
-      form.title === "Untitled listing" ||
-      form.description.trim().length < 20 ||
-      form.maxGuests < 1
-    ) {
-      missingRequired.push("About");
-    }
-    if (isMultiUnitFlow(form.listingType, form.bookingModel)) {
-      if (
-        form.unitTypes.length < 1 ||
-        form.unitTypes.some((u) => Number(u.basePrice) <= 0)
-      ) {
-        missingRequired.push("Room configuration / pricing");
-      }
-    } else if (!form.basePrice.trim() || Number(form.basePrice) <= 0) {
-      missingRequired.push("Price");
-    }
-    if (form.photos.length < 5) missingRequired.push("5 photos");
-    if (!form.walkthrough) missingOptional.push("Walkthrough (boost approval chances)");
-    if (form.photos.length < 12) missingOptional.push("More photos (recommended)");
 
+    // Use same flags as submit so checklist never contradicts the gate.
+    const flags = computeCompletionFlags(completionInputFromForm(form));
+    const missing = listMissing(flags);
+    const missingRequired = missing.filter((m) => m.required).map((m) => m.label);
+    const missingOptional = missing.filter((m) => !m.required).map((m) => m.label);
     const ready = [
-      form.city.trim() && form.address.trim() && form.geoLat != null ? "Location" : null,
-      form.photos.length >= 5 ? "Photos" : null,
-      Number(form.basePrice) > 0 ||
-      form.unitTypes.some((u) => Number(u.basePrice) > 0)
-        ? "Price"
+      flags.location_complete ? "Location" : null,
+      flags.about_complete ? "About" : null,
+      flags.photos_complete ? "Photos" : null,
+      flags.pricing_complete ? "Price" : null,
+      flags.rooms_complete &&
+      (form.listingType === "HOTEL" || form.listingType === "HOSTEL")
+        ? "Rooms"
         : null,
     ].filter(Boolean) as string[];
 
@@ -1377,15 +1361,17 @@ export function WizardStepBody({
           description="Our team will review your listing within 1–2 business days before it goes live."
           tip={`${typeLabel} · Complete the checklist below, then submit for review.`}
         />
-        <SectionCard title="Complete">
-          <ul className="space-y-2 text-sm text-nexa-ink-2">
-            {ready.map((item) => (
-              <li key={item} className="flex items-center gap-2 text-nexa-primary">
-                <span>✓</span> {item}
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
+        {ready.length > 0 && (
+          <SectionCard title="Complete">
+            <ul className="space-y-2 text-sm text-nexa-ink-2">
+              {ready.map((item) => (
+                <li key={item} className="flex items-center gap-2 text-nexa-primary">
+                  <span>✓</span> {item}
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
         {missingRequired.length > 0 && (
           <SectionCard title="Required before submit">
             <ul className="space-y-2 text-sm text-nexa-ink-2">
