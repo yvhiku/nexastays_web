@@ -27,7 +27,8 @@ import {
   type SearchBarValue,
 } from "@/components/search";
 import { findDestinationById, findDestinationByCity } from "@/lib/search-destinations";
-import { ExploreMap } from "@/components/explore/ExploreMap";
+import { ExploreMap, type ExploreMapHandle } from "@/components/explore/ExploreMap";
+import { ExploreMapCanvas } from "@/components/explore/ExploreMapCanvas";
 import { DestinationContext } from "@/components/explore/DestinationContext";
 import { ExploreCollections } from "@/components/explore/ExploreCollections";
 import { QuickFilters } from "@/components/explore/QuickFilters";
@@ -62,6 +63,8 @@ export default function ListingsPage() {
   const [mapLoading, setMapLoading] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const loadingMoreLock = useRef(false);
+  const exploreMapRef = useRef<ExploreMapHandle | null>(null);
+  const lastMapBoundsRef = useRef<MapBounds | null>(null);
   const city = sanitizeCityInput(searchParams.get("city") || "");
   const checkin = sanitizeDateInput(searchParams.get("checkin_date") || "");
   const checkout = sanitizeDateInput(searchParams.get("checkout_date") || "");
@@ -190,6 +193,7 @@ export default function ListingsPage() {
 
   const handleMapBounds = useCallback(
     async (bounds: MapBounds) => {
+      lastMapBoundsRef.current = bounds;
       setMapLoading(true);
       try {
         const envelope = await exploreMapPins({
@@ -209,6 +213,13 @@ export default function ListingsPage() {
   useEffect(() => {
     setMapPins([]);
   }, [exploreParams]);
+
+  useEffect(() => {
+    if (layout !== "map" && layout !== "split") return;
+    const bounds = lastMapBoundsRef.current;
+    if (!bounds) return;
+    void handleMapBounds(bounds);
+  }, [exploreParams, layout, handleMapBounds]);
 
   const buildListingsParams = (overrides?: {
     search?: Partial<SearchBarValue>;
@@ -592,25 +603,29 @@ export default function ListingsPage() {
             </div>
 
             <div className="p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8 min-w-0 w-full max-w-full">
-              <DestinationContext
-                city={city}
-                neighborhood={neighborhoodDisplay || undefined}
-                resultNeighborhoods={resultNeighborhoods}
-                neighborhoodCount={resultNeighborhoods.length}
-                matchCount={
-                  isInitialLoading ? undefined : displayListings.length
-                }
-                onSelectNeighborhood={onSelectNeighborhood}
-                onSelectCity={onSelectCity}
-                t={t}
-                tf={tf}
-              />
+              {layout !== "map" && layout !== "split" && (
+                <DestinationContext
+                  city={city}
+                  neighborhood={neighborhoodDisplay || undefined}
+                  resultNeighborhoods={resultNeighborhoods}
+                  neighborhoodCount={resultNeighborhoods.length}
+                  matchCount={
+                    isInitialLoading ? undefined : displayListings.length
+                  }
+                  onSelectNeighborhood={onSelectNeighborhood}
+                  onSelectCity={onSelectCity}
+                  t={t}
+                  tf={tf}
+                />
+              )}
 
-              <ExploreCollections
-                activeId={activeCollection?.id ?? null}
-                onSelect={applyCollection}
-                t={t}
-              />
+              {layout !== "map" && layout !== "split" && (
+                <ExploreCollections
+                  activeId={activeCollection?.id ?? null}
+                  onSelect={applyCollection}
+                  t={t}
+                />
+              )}
 
               {error && (
                 <ErrorAlert
@@ -659,18 +674,42 @@ export default function ListingsPage() {
                       {t("common.loading")}
                     </p>
                   )}
-                  <ExploreMap
+                  <ExploreMapCanvas
+                    city={city}
+                    neighborhood={neighborhoodDisplay || undefined}
                     listings={mapPins.length > 0 ? mapPins : displayListings}
-                    localePath={localePath}
-                    checkin={checkin || undefined}
-                    checkout={checkout || undefined}
-                    guests={guests}
-                    preferListingsCenter={Boolean(city)}
-                    emptyTitle={t("listings.mapEmptyTitle")}
-                    emptyMessage={t("listings.mapEmptyMessage")}
-                    viewStayLabel={t("listings.viewDetails")}
-                    onBoundsChange={handleMapBounds}
-                  />
+                    onSelectNeighborhood={onSelectNeighborhood}
+                    onSelectCity={onSelectCity}
+                    t={t}
+                    tf={tf}
+                  >
+                    <ExploreMap
+                      ref={exploreMapRef}
+                      listings={mapPins.length > 0 ? mapPins : displayListings}
+                      localePath={localePath}
+                      checkin={checkin || undefined}
+                      checkout={checkout || undefined}
+                      guests={guests}
+                      city={city}
+                      preferListingsCenter={Boolean(city)}
+                      emptyTitle={t("explore.mapEmptyTitle")}
+                      emptyMessage={t("explore.mapEmptyMessage")}
+                      viewStayLabel={t("listings.viewDetails")}
+                      exploreThisAreaLabel={t("explore.exploreThisArea")}
+                      myLocationLabel={t("explore.myLocation")}
+                      resetViewLabel={t("explore.resetView")}
+                      zoomOutLabel={t("explore.zoomOut")}
+                      currentlyExploringLabel={t("explore.currentlyExploring")}
+                      staysWord={t("explore.staysWord")}
+                      exploreCityLabel={
+                        city
+                          ? tf("explore.exploreCityCta", { city })
+                          : t("explore.discoverMorocco")
+                      }
+                      onBoundsChange={handleMapBounds}
+                      onSelectCity={onSelectCity}
+                    />
+                  </ExploreMapCanvas>
                 </div>
               ) : (
                 <>

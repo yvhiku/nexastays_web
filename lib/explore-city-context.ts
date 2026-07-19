@@ -1,10 +1,18 @@
+export type ExploreNeighborhood = {
+  name: string;
+  /** i18n key for short descriptor (Shopping, Beach, …) */
+  descriptorKey: string;
+};
+
 export type ExploreCityContext = {
   slug: string;
   /** Display city name matching explore API `city` */
   city: string;
   titleKey: string;
   subtitleKey: string;
-  neighborhoods: string[];
+  /** One-line Morocco identity tagline for map canvas */
+  taglineKey: string;
+  neighborhoods: ExploreNeighborhood[];
 };
 
 export const EXPLORE_CITY_CONTEXTS: ExploreCityContext[] = [
@@ -13,13 +21,14 @@ export const EXPLORE_CITY_CONTEXTS: ExploreCityContext[] = [
     city: "Casablanca",
     titleKey: "explore.cityCasablancaTitle",
     subtitleKey: "explore.cityCasablancaSubtitle",
+    taglineKey: "explore.taglineCasablanca",
     neighborhoods: [
-      "Maarif",
-      "Anfa",
-      "Ain Diab",
-      "Old Medina",
-      "Sidi Maarouf",
-      "Gauthier",
+      { name: "Maarif", descriptorKey: "explore.descShopping" },
+      { name: "Anfa", descriptorKey: "explore.descResidential" },
+      { name: "Ain Diab", descriptorKey: "explore.descBeach" },
+      { name: "Old Medina", descriptorKey: "explore.descHistoric" },
+      { name: "Sidi Maarouf", descriptorKey: "explore.descBusiness" },
+      { name: "Gauthier", descriptorKey: "explore.descUrban" },
     ],
   },
   {
@@ -27,13 +36,14 @@ export const EXPLORE_CITY_CONTEXTS: ExploreCityContext[] = [
     city: "Marrakech",
     titleKey: "explore.cityMarrakechTitle",
     subtitleKey: "explore.cityMarrakechSubtitle",
+    taglineKey: "explore.taglineMarrakech",
     neighborhoods: [
-      "Medina",
-      "Gueliz",
-      "Hivernage",
-      "Palmeraie",
-      "Agafay",
-      "Ourika",
+      { name: "Medina", descriptorKey: "explore.descHistoric" },
+      { name: "Gueliz", descriptorKey: "explore.descUrban" },
+      { name: "Hivernage", descriptorKey: "explore.descLuxury" },
+      { name: "Palmeraie", descriptorKey: "explore.descNature" },
+      { name: "Agafay", descriptorKey: "explore.descNature" },
+      { name: "Ourika", descriptorKey: "explore.descNature" },
     ],
   },
   {
@@ -41,35 +51,85 @@ export const EXPLORE_CITY_CONTEXTS: ExploreCityContext[] = [
     city: "Agadir",
     titleKey: "explore.cityAgadirTitle",
     subtitleKey: "explore.cityAgadirSubtitle",
-    neighborhoods: ["Marina", "Talborjt", "Founty", "Taghazout"],
+    taglineKey: "explore.taglineAgadir",
+    neighborhoods: [
+      { name: "Marina", descriptorKey: "explore.descBeach" },
+      { name: "Talborjt", descriptorKey: "explore.descUrban" },
+      { name: "Founty", descriptorKey: "explore.descBeach" },
+      { name: "Taghazout", descriptorKey: "explore.descBeach" },
+    ],
   },
   {
     slug: "tangier",
     city: "Tangier",
     titleKey: "explore.cityTangierTitle",
     subtitleKey: "explore.cityTangierSubtitle",
-    neighborhoods: ["Kasbah", "Malabata", "Marshan", "Iberia"],
+    taglineKey: "explore.taglineTangier",
+    neighborhoods: [
+      { name: "Kasbah", descriptorKey: "explore.descHistoric" },
+      { name: "Malabata", descriptorKey: "explore.descBeach" },
+      { name: "Marshan", descriptorKey: "explore.descResidential" },
+      { name: "Iberia", descriptorKey: "explore.descUrban" },
+    ],
   },
   {
     slug: "essaouira",
     city: "Essaouira",
     titleKey: "explore.cityEssaouiraTitle",
     subtitleKey: "explore.cityEssaouiraSubtitle",
-    neighborhoods: ["Medina", "Beachfront", "Diabat"],
+    taglineKey: "explore.taglineEssaouira",
+    neighborhoods: [
+      { name: "Medina", descriptorKey: "explore.descHistoric" },
+      { name: "Beachfront", descriptorKey: "explore.descBeach" },
+      { name: "Diabat", descriptorKey: "explore.descNature" },
+    ],
   },
   {
     slug: "fes",
     city: "Fes",
     titleKey: "explore.cityFesTitle",
     subtitleKey: "explore.cityFesSubtitle",
-    neighborhoods: ["Fes el-Bali", "Ville Nouvelle", "Mellah"],
+    taglineKey: "explore.taglineFes",
+    neighborhoods: [
+      { name: "Fes el-Bali", descriptorKey: "explore.descHistoric" },
+      { name: "Ville Nouvelle", descriptorKey: "explore.descUrban" },
+      { name: "Mellah", descriptorKey: "explore.descHistoric" },
+    ],
   },
   {
     slug: "rabat",
     city: "Rabat",
     titleKey: "explore.cityRabatTitle",
     subtitleKey: "explore.cityRabatSubtitle",
-    neighborhoods: ["Agdal", "Hassan", "Souissi", "Medina"],
+    taglineKey: "explore.taglineRabat",
+    neighborhoods: [
+      { name: "Agdal", descriptorKey: "explore.descUrban" },
+      { name: "Hassan", descriptorKey: "explore.descHistoric" },
+      { name: "Souissi", descriptorKey: "explore.descResidential" },
+      { name: "Medina", descriptorKey: "explore.descHistoric" },
+    ],
+  },
+  {
+    slug: "chefchaouen",
+    city: "Chefchaouen",
+    titleKey: "explore.cityChefchaouenTitle",
+    subtitleKey: "explore.cityChefchaouenSubtitle",
+    taglineKey: "explore.taglineChefchaouen",
+    neighborhoods: [
+      { name: "Medina", descriptorKey: "explore.descHistoric" },
+      { name: "Ras El Ma", descriptorKey: "explore.descNature" },
+    ],
+  },
+  {
+    slug: "tetouan",
+    city: "Tetouan",
+    titleKey: "explore.cityTetouanTitle",
+    subtitleKey: "explore.cityTetouanSubtitle",
+    taglineKey: "explore.taglineTetouan",
+    neighborhoods: [
+      { name: "Medina", descriptorKey: "explore.descHistoric" },
+      { name: "Ensanche", descriptorKey: "explore.descUrban" },
+    ],
   },
 ];
 
@@ -104,4 +164,33 @@ export function slugifyNeighborhood(name: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+/** Match a free-text neighborhood against curated catalog names. */
+export function matchCuratedNeighborhood(
+  city: string,
+  candidate: string,
+): ExploreNeighborhood | null {
+  const ctx = getCityContextByCity(city);
+  if (!ctx || !candidate.trim()) return null;
+  const slug = slugifyNeighborhood(candidate);
+  return (
+    ctx.neighborhoods.find((n) => slugifyNeighborhood(n.name) === slug) ?? null
+  );
+}
+
+export function viewportAvgPrice(
+  listings: { rate_plan?: { base_price?: number | null; currency?: string | null } | null }[],
+): { avg: number; currency: string } | null {
+  const priced = listings
+    .map((l) => Number(l.rate_plan?.base_price))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  if (priced.length === 0) return null;
+  const avg = Math.round(
+    priced.reduce((a, b) => a + b, 0) / priced.length,
+  );
+  const currency =
+    listings.find((l) => l.rate_plan?.currency)?.rate_plan?.currency?.toUpperCase() ||
+    "MAD";
+  return { avg, currency };
 }

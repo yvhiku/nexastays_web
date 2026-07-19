@@ -19,7 +19,7 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' ${isProd ? "" : "'unsafe-eval'"} 'unsafe-inline'`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.tile.openstreetmap.org https://staticmap.openstreetmap.de" +
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.tile.openstreetmap.org https://staticmap.openstreetmap.de https://*.basemaps.cartocdn.com" +
     (staysOrigin ? ` ${staysOrigin}` : ""),
   "font-src 'self' data:",
   "media-src 'self'" + (staysOrigin ? ` ${staysOrigin}` : ""),

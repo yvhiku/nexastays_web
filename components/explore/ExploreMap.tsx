@@ -1,32 +1,57 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   Heart,
+  Home,
   LocateFixed,
-  MapPin,
+  Minus,
+  Plus,
   Star,
 } from "lucide-react";
-import { hasMapCoordinates } from "@/lib/listing-location";
+import {
+  hasMapCoordinates,
+  parseNeighborhood,
+} from "@/lib/listing-location";
 import {
   createPriceBubbleIcon,
   formatListingPriceLabel,
 } from "@/lib/map-pin";
+import {
+  NEXA_EXPLORE_TILE_OPTIONS,
+  NEXA_EXPLORE_TILE_URL,
+} from "@/lib/explore-map-tiles";
+import { matchCuratedNeighborhood } from "@/lib/explore-city-context";
 import { getListingMediaUrl } from "@/lib/stays-api";
 import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import type { MapBounds, StaysListing } from "@/lib/stays-types";
 
-/** Last-resort center when geolocation is denied / unavailable. */
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
-const BOUNDS_DEBOUNCE_MS = 350;
 const PLACEHOLDER_IMG =
   "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
+
+const GLASS =
+  "bg-white/[0.88] backdrop-blur-[12px] border border-nexa-line/80 shadow-sm";
+
+export type ExploreMapHandle = {
+  zoomOut: () => void;
+  resetView: () => void;
+  getBounds: () => MapBounds | null;
+};
 
 export interface ExploreMapProps {
   listings: StaysListing[];
@@ -34,13 +59,21 @@ export interface ExploreMapProps {
   checkin?: string;
   checkout?: string;
   guests?: number;
-  /** When true (e.g. city filter), frame the map around listing pins instead of the user. */
+  city?: string;
   preferListingsCenter?: boolean;
   emptyTitle?: string;
   emptyMessage?: string;
   viewStayLabel?: string;
-  /** Debounced viewport bounds → parent refetches /explore/map */
+  exploreThisAreaLabel?: string;
+  myLocationLabel?: string;
+  resetViewLabel?: string;
+  zoomOutLabel?: string;
+  currentlyExploringLabel?: string;
+  staysWord?: string;
+  exploreCityLabel?: string;
+  /** Called when user explores (initial, CTA, or programmatic). */
   onBoundsChange?: (bounds: MapBounds) => void;
+  onSelectCity?: (city: string) => void;
 }
 
 function listingHref(
@@ -92,368 +125,618 @@ function boundsFromMap(map: import("leaflet").Map): MapBounds {
   };
 }
 
-function bedroomCount(listing: StaysListing): number | null {
-  const pd = listing.property_details;
-  if (!pd) return null;
-  if (typeof pd.bedroom_count === "number") return pd.bedroom_count;
-  if (Array.isArray(pd.bedrooms) && pd.bedrooms.length > 0) {
-    return pd.bedrooms.length;
-  }
-  if (typeof pd.bedrooms === "number") return pd.bedrooms;
-  return null;
-}
-
-function mapMetaLine(listing: StaysListing): string {
-  const parts: string[] = [];
-  const beds = bedroomCount(listing);
-  if (beds != null && beds > 0) {
-    parts.push(`${beds} Bedroom${beds === 1 ? "" : "s"}`);
-  }
-  const maxGuests = listing.rules?.max_guests;
-  if (maxGuests != null && maxGuests > 0) {
-    parts.push(`${maxGuests} Guest${maxGuests === 1 ? "" : "s"}`);
-  }
-  const amenities = (listing.rules?.amenities ?? []).map((a) =>
-    String(a).toLowerCase(),
-  );
-  if (amenities.some((a) => a.includes("wifi") || a.includes("wi-fi"))) {
-    parts.push("WiFi");
-  }
-  return parts.join(" · ");
-}
-
 type MarkerClusterGroup = import("leaflet").MarkerClusterGroup;
 
-export function ExploreMap({
-  listings,
-  localePath,
-  checkin,
-  checkout,
-  guests,
-  preferListingsCenter = false,
-  emptyTitle = "No stays nearby on the map yet",
-  emptyMessage = "Move the map or clear filters to explore other areas.",
-  viewStayLabel = "View Details",
-  onBoundsChange,
-}: ExploreMapProps) {
-  const router = useRouter();
-  const { userId, isAuthenticated } = useAuth();
-  const mapEl = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<import("leaflet").Map | null>(null);
-  const clusterRef = useRef<MarkerClusterGroup | null>(null);
-  const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
-  const userMarkerRef = useRef<import("leaflet").CircleMarker | null>(null);
-  const didInitialFrame = useRef(false);
-  const boundsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onBoundsChangeRef = useRef(onBoundsChange);
-  onBoundsChangeRef.current = onBoundsChange;
+export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
+  function ExploreMap(
+    {
+      listings,
+      localePath,
+      checkin,
+      checkout,
+      guests,
+      city = "",
+      preferListingsCenter = false,
+      emptyTitle = "No stays found here.",
+      emptyMessage = "Try zooming out or explore another neighborhood.",
+      viewStayLabel = "View Details",
+      exploreThisAreaLabel = "Explore this area",
+      myLocationLabel = "My location",
+      resetViewLabel = "Reset view",
+      zoomOutLabel = "Zoom out",
+      currentlyExploringLabel = "Currently exploring",
+      staysWord = "stays",
+      exploreCityLabel,
+      onBoundsChange,
+      onSelectCity,
+    },
+    ref,
+  ) {
+    const router = useRouter();
+    const { userId, isAuthenticated } = useAuth();
+    const mapEl = useRef<HTMLDivElement | null>(null);
+    const mapRef = useRef<import("leaflet").Map | null>(null);
+    const clusterRef = useRef<MarkerClusterGroup | null>(null);
+    const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
+    const userMarkerRef = useRef<import("leaflet").CircleMarker | null>(null);
+    const didInitialFrame = useRef(false);
+    const skipDirtyOnce = useRef(true);
+    const staysWordRef = useRef(staysWord);
+    staysWordRef.current = staysWord;
+    const onBoundsChangeRef = useRef(onBoundsChange);
+    onBoundsChangeRef.current = onBoundsChange;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
-  const [userCenter, setUserCenter] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
-  const [locating, setLocating] = useState(true);
-  const [saved, setSaved] = useState(false);
-  const [coverError, setCoverError] = useState(false);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [ready, setReady] = useState(false);
+    const [userCenter, setUserCenter] = useState<{
+      lat: number;
+      lng: number;
+    } | null>(null);
+    const [locating, setLocating] = useState(true);
+    const [saved, setSaved] = useState(false);
+    const [coverError, setCoverError] = useState(false);
+    const [areaDirty, setAreaDirty] = useState(false);
+    const [exploringName, setExploringName] = useState<string | null>(null);
+    const [exploringKey, setExploringKey] = useState(0);
+    const [previewEnter, setPreviewEnter] = useState(false);
 
-  const mappable = useMemo(
-    () => listings.filter(hasMapCoordinates),
-    [listings],
-  );
-  const selected = mappable.find((listing) => listing.id === selectedId) ?? null;
+    const mappable = useMemo(
+      () => listings.filter(hasMapCoordinates),
+      [listings],
+    );
+    const mappableRef = useRef(mappable);
+    mappableRef.current = mappable;
+    const cityRef = useRef(city);
+    cityRef.current = city;
+    const startCenterRef = useRef<{ lat: number; lng: number; zoom: number } | null>(
+      null,
+    );
 
-  useEffect(() => {
-    setCoverError(false);
-    if (!selected) {
-      setSaved(false);
-      return;
-    }
-    setSaved(isListingSaved(selected.id, userId));
-    const onChange = () => setSaved(isListingSaved(selected.id, userId));
-    window.addEventListener("nexa-saved-listings-changed", onChange);
-    return () => window.removeEventListener("nexa-saved-listings-changed", onChange);
-  }, [selected?.id, userId]);
+    const selected =
+      mappable.find((listing) => listing.id === selectedId) ?? null;
 
-  useEffect(() => {
-    let cancelled = false;
-    setLocating(true);
-    void readUserLocation().then((coords) => {
-      if (cancelled) return;
-      if (coords) setUserCenter(coords);
-      setLocating(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (locating) return;
-    let cancelled = false;
-
-    async function init() {
-      if (!mapEl.current || mapRef.current) return;
-      const L = (await import("leaflet")).default;
-      await import("leaflet.markercluster");
-      if (cancelled || !mapEl.current) return;
-
-      const start =
-        !preferListingsCenter && userCenter
-          ? userCenter
-          : mappable.length > 0
-            ? averageCenter(mappable)
-            : userCenter ?? FALLBACK;
-
-      const map = L.map(mapEl.current, {
-        center: [start.lat, start.lng],
-        zoom: userCenter && !preferListingsCenter ? 13 : mappable.length === 1 ? 14 : 11,
-      });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(map);
-
-      const cluster = L.markerClusterGroup({
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: true,
-        spiderfyOnMaxZoom: true,
-        disableClusteringAtZoom: 16,
-        maxClusterRadius: (zoom: number) => {
-          if (zoom <= 8) return 80;
-          if (zoom <= 11) return 64;
-          if (zoom <= 13) return 48;
-          return 36;
-        },
-        iconCreateFunction: (clusterGroup) => {
-          const count = clusterGroup.getChildCount();
-          const size = count < 10 ? 42 : count < 50 ? 50 : 58;
-          return L.divIcon({
-            className: "nexa-cluster",
-            html: `<div class="nexa-cluster__body">${count}</div>`,
-            iconSize: [size, size],
-            iconAnchor: [size / 2, size / 2],
-          });
-        },
-      });
-      cluster.addTo(map);
-
-      const emitBounds = () => {
-        if (boundsTimer.current) clearTimeout(boundsTimer.current);
-        boundsTimer.current = setTimeout(() => {
-          const cb = onBoundsChangeRef.current;
-          if (!cb || !mapRef.current) return;
-          cb(boundsFromMap(mapRef.current));
-        }, BOUNDS_DEBOUNCE_MS);
-      };
-
-      map.on("moveend", emitBounds);
-      map.on("zoomend", emitBounds);
-
-      mapRef.current = map;
-      clusterRef.current = cluster;
-      didInitialFrame.current = true;
-      setReady(true);
-      setTimeout(() => {
-        map.invalidateSize();
-        emitBounds();
-      }, 50);
-    }
-
-    void init();
-    return () => {
-      cancelled = true;
-      if (boundsTimer.current) clearTimeout(boundsTimer.current);
-      clusterRef.current?.clearLayers();
-      clusterRef.current = null;
-      mapRef.current?.remove();
-      mapRef.current = null;
-      markersRef.current.clear();
-      userMarkerRef.current = null;
-      didInitialFrame.current = false;
-      setReady(false);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locating, preferListingsCenter]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !userCenter || !ready) return;
-    let cancelled = false;
-
-    async function syncUserMarker() {
-      const L = (await import("leaflet")).default;
-      if (cancelled || !mapRef.current) return;
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setLatLng([userCenter!.lat, userCenter!.lng]);
+    const resolveExploring = useCallback((map: import("leaflet").Map) => {
+      const c = cityRef.current;
+      if (!c) {
+        setExploringName(null);
         return;
       }
-      userMarkerRef.current = L.circleMarker([userCenter!.lat, userCenter!.lng], {
-        radius: 9,
-        color: "#ffffff",
-        weight: 3,
-        fillColor: "#2563eb",
-        fillOpacity: 1,
-      })
-        .bindTooltip("You are here", { direction: "top", offset: [0, -8] })
-        .addTo(mapRef.current);
-    }
+      const center = map.getCenter();
+      let best: { name: string; d: number } | null = null;
+      for (const listing of mappableRef.current) {
+        const n = parseNeighborhood(listing);
+        if (!n) continue;
+        const curated = matchCuratedNeighborhood(c, n);
+        if (!curated) continue;
+        const d =
+          Math.abs(Number(listing.geo_lat) - center.lat) +
+          Math.abs(Number(listing.geo_lng) - center.lng);
+        if (!best || d < best.d) best = { name: curated.name, d };
+      }
+      if (best && best.d < 0.08) {
+        setExploringName((prev) => {
+          if (prev !== best!.name) setExploringKey((k) => k + 1);
+          return best!.name;
+        });
+      } else {
+        setExploringName(null);
+      }
+    }, []);
 
-    void syncUserMarker();
-    return () => {
-      cancelled = true;
-    };
-  }, [userCenter, ready]);
+    const emitBounds = useCallback(() => {
+      const map = mapRef.current;
+      const cb = onBoundsChangeRef.current;
+      if (!map || !cb) return;
+      cb(boundsFromMap(map));
+      setAreaDirty(false);
+    }, []);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    const cluster = clusterRef.current;
-    if (!map || !cluster || !ready) return;
-    let cancelled = false;
+    useImperativeHandle(
+      ref,
+      () => ({
+        zoomOut: () => {
+          mapRef.current?.zoomOut(1);
+        },
+        resetView: () => {
+          const start = startCenterRef.current;
+          const map = mapRef.current;
+          if (!map) return;
+          if (preferListingsCenter && mappable.length > 0) {
+            void import("leaflet").then(({ default: L }) => {
+              const bounds = L.latLngBounds(
+                mappable.map(
+                  (l) =>
+                    [Number(l.geo_lat), Number(l.geo_lng)] as [number, number],
+                ),
+              );
+              map.fitBounds(bounds.pad(0.18), { maxZoom: 14, animate: true });
+            });
+            return;
+          }
+          if (start) {
+            map.setView([start.lat, start.lng], start.zoom, { animate: true });
+          }
+        },
+        getBounds: () =>
+          mapRef.current ? boundsFromMap(mapRef.current) : null,
+      }),
+      [mappable, preferListingsCenter],
+    );
 
-    async function syncMarkers() {
-      const L = (await import("leaflet")).default;
-      if (cancelled || !clusterRef.current) return;
+    useEffect(() => {
+      setCoverError(false);
+      if (!selected) {
+        setSaved(false);
+        setPreviewEnter(false);
+        return;
+      }
+      setPreviewEnter(false);
+      const id = requestAnimationFrame(() => setPreviewEnter(true));
+      setSaved(isListingSaved(selected.id, userId));
+      const onChange = () => setSaved(isListingSaved(selected.id, userId));
+      window.addEventListener("nexa-saved-listings-changed", onChange);
+      return () => {
+        cancelAnimationFrame(id);
+        window.removeEventListener("nexa-saved-listings-changed", onChange);
+      };
+    }, [selected?.id, userId]);
 
-      const keep = new Set(mappable.map((l) => l.id));
-      for (const [id, marker] of markersRef.current) {
-        if (!keep.has(id)) {
-          clusterRef.current.removeLayer(marker);
-          markersRef.current.delete(id);
-        }
+    useEffect(() => {
+      let cancelled = false;
+      setLocating(true);
+      void readUserLocation().then((coords) => {
+        if (cancelled) return;
+        if (coords) setUserCenter(coords);
+        setLocating(false);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    useEffect(() => {
+      if (locating) return;
+      let cancelled = false;
+
+      async function init() {
+        if (!mapEl.current || mapRef.current) return;
+        const L = (await import("leaflet")).default;
+        await import("leaflet.markercluster");
+        if (cancelled || !mapEl.current) return;
+
+        const start =
+          !preferListingsCenter && userCenter
+            ? userCenter
+            : mappable.length > 0
+              ? averageCenter(mappable)
+              : userCenter ?? FALLBACK;
+        const zoom =
+          userCenter && !preferListingsCenter
+            ? 13
+            : mappable.length === 1
+              ? 14
+              : 11;
+        startCenterRef.current = { ...start, zoom };
+
+        const map = L.map(mapEl.current, {
+          center: [start.lat, start.lng],
+          zoom,
+          zoomControl: false,
+        });
+        L.tileLayer(NEXA_EXPLORE_TILE_URL, {
+          ...NEXA_EXPLORE_TILE_OPTIONS,
+        }).addTo(map);
+
+        const cluster = L.markerClusterGroup({
+          showCoverageOnHover: false,
+          zoomToBoundsOnClick: true,
+          spiderfyOnMaxZoom: true,
+          disableClusteringAtZoom: 16,
+          maxClusterRadius: (z: number) => {
+            if (z <= 8) return 80;
+            if (z <= 11) return 64;
+            if (z <= 13) return 48;
+            return 36;
+          },
+          iconCreateFunction: (clusterGroup) => {
+            const count = clusterGroup.getChildCount();
+            // Sync helper result — createClusterCountIcon is async; use sync divIcon here
+            const label = `${count} ${staysWordRef.current}`;
+            const width = Math.max(72, Math.min(120, 36 + label.length * 7));
+            const height = 34;
+            return L.divIcon({
+              className: "nexa-cluster",
+              html: `<div class="nexa-cluster__body">${label.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div>`,
+              iconSize: [width, height],
+              iconAnchor: [width / 2, height / 2],
+            });
+          },
+        });
+        cluster.addTo(map);
+
+        const onMove = () => {
+          if (skipDirtyOnce.current) {
+            skipDirtyOnce.current = false;
+            resolveExploring(map);
+            return;
+          }
+          setAreaDirty(true);
+          resolveExploring(map);
+        };
+
+        map.on("moveend", onMove);
+        map.on("zoomend", onMove);
+
+        mapRef.current = map;
+        clusterRef.current = cluster;
+        didInitialFrame.current = true;
+        setReady(true);
+        setTimeout(() => {
+          map.invalidateSize();
+          skipDirtyOnce.current = true;
+          emitBounds();
+          resolveExploring(map);
+        }, 50);
       }
 
-      for (const listing of mappable) {
-        const lat = Number(listing.geo_lat);
-        const lng = Number(listing.geo_lng);
-        const label = formatListingPriceLabel(listing);
-        const isSelected = listing.id === selectedId;
-        const icon = await createPriceBubbleIcon(label, isSelected);
+      void init();
+      return () => {
+        cancelled = true;
+        clusterRef.current?.clearLayers();
+        clusterRef.current = null;
+        mapRef.current?.remove();
+        mapRef.current = null;
+        markersRef.current.clear();
+        userMarkerRef.current = null;
+        didInitialFrame.current = false;
+        setReady(false);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [locating, preferListingsCenter]);
+
+    useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !userCenter || !ready) return;
+      let cancelled = false;
+
+      async function syncUserMarker() {
+        const L = (await import("leaflet")).default;
+        if (cancelled || !mapRef.current) return;
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setLatLng([userCenter!.lat, userCenter!.lng]);
+          return;
+        }
+        userMarkerRef.current = L.circleMarker(
+          [userCenter!.lat, userCenter!.lng],
+          {
+            radius: 9,
+            color: "#ffffff",
+            weight: 3,
+            fillColor: "#2563eb",
+            fillOpacity: 1,
+          },
+        )
+          .bindTooltip("You are here", { direction: "top", offset: [0, -8] })
+          .addTo(mapRef.current);
+      }
+
+      void syncUserMarker();
+      return () => {
+        cancelled = true;
+      };
+    }, [userCenter, ready]);
+
+    useEffect(() => {
+      const map = mapRef.current;
+      const cluster = clusterRef.current;
+      if (!map || !cluster || !ready) return;
+      let cancelled = false;
+
+      async function syncMarkers() {
+        const L = (await import("leaflet")).default;
         if (cancelled || !clusterRef.current) return;
 
-        const existing = markersRef.current.get(listing.id);
-        if (existing) {
-          existing.setLatLng([lat, lng]);
-          existing.setIcon(icon);
-          existing.setZIndexOffset(isSelected ? 1000 : 0);
-          continue;
+        const keep = new Set(mappable.map((l) => l.id));
+        for (const [id, marker] of markersRef.current) {
+          if (!keep.has(id)) {
+            clusterRef.current.removeLayer(marker);
+            markersRef.current.delete(id);
+          }
         }
 
-        const marker = L.marker([lat, lng], { icon, riseOnHover: true });
-        marker.on("click", () => setSelectedId(listing.id));
-        clusterRef.current.addLayer(marker);
-        markersRef.current.set(listing.id, marker);
+        for (const listing of mappable) {
+          const lat = Number(listing.geo_lat);
+          const lng = Number(listing.geo_lng);
+          const label = formatListingPriceLabel(listing);
+          const isSelected = listing.id === selectedId;
+          const icon = await createPriceBubbleIcon(label, isSelected);
+          if (cancelled || !clusterRef.current) return;
+
+          const existing = markersRef.current.get(listing.id);
+          if (existing) {
+            existing.setLatLng([lat, lng]);
+            existing.setIcon(icon);
+            existing.setZIndexOffset(isSelected ? 1000 : 0);
+            continue;
+          }
+
+          const marker = L.marker([lat, lng], { icon, riseOnHover: true });
+          marker.on("click", () => setSelectedId(listing.id));
+          clusterRef.current.addLayer(marker);
+          markersRef.current.set(listing.id, marker);
+        }
+
+        if (
+          preferListingsCenter &&
+          mappable.length > 0 &&
+          didInitialFrame.current &&
+          mapRef.current
+        ) {
+          const bounds = L.latLngBounds(
+            mappable.map(
+              (l) =>
+                [Number(l.geo_lat), Number(l.geo_lng)] as [number, number],
+            ),
+          );
+          skipDirtyOnce.current = true;
+          mapRef.current.fitBounds(bounds.pad(0.18), {
+            maxZoom: 14,
+            animate: true,
+          });
+          didInitialFrame.current = false;
+        }
       }
 
-      if (
-        preferListingsCenter &&
-        mappable.length > 0 &&
-        didInitialFrame.current &&
-        mapRef.current
-      ) {
-        const bounds = L.latLngBounds(
-          mappable.map(
-            (l) => [Number(l.geo_lat), Number(l.geo_lng)] as [number, number],
-          ),
-        );
-        mapRef.current.fitBounds(bounds.pad(0.18), { maxZoom: 14, animate: true });
-        didInitialFrame.current = false;
-      }
-    }
+      void syncMarkers();
+      return () => {
+        cancelled = true;
+      };
+    }, [mappable, ready, selectedId, preferListingsCenter]);
 
-    void syncMarkers();
-    return () => {
-      cancelled = true;
+    const goToUser = async () => {
+      const coords = userCenter ?? (await readUserLocation());
+      if (!coords) return;
+      setUserCenter(coords);
+      skipDirtyOnce.current = true;
+      mapRef.current?.setView([coords.lat, coords.lng], 13, { animate: true });
+      setAreaDirty(true);
     };
-  }, [mappable, ready, selectedId, preferListingsCenter]);
 
-  const goToUser = async () => {
-    const coords = userCenter ?? (await readUserLocation());
-    if (!coords) return;
-    setUserCenter(coords);
-    mapRef.current?.setView([coords.lat, coords.lng], 13, { animate: true });
-  };
+    const resetView = () => {
+      const start = startCenterRef.current;
+      const map = mapRef.current;
+      if (!map) return;
+      if (preferListingsCenter && mappable.length > 0) {
+        void import("leaflet").then(({ default: L }) => {
+          const bounds = L.latLngBounds(
+            mappable.map(
+              (l) =>
+                [Number(l.geo_lat), Number(l.geo_lng)] as [number, number],
+            ),
+          );
+          skipDirtyOnce.current = true;
+          map.fitBounds(bounds.pad(0.18), { maxZoom: 14, animate: true });
+        });
+        return;
+      }
+      if (start) {
+        skipDirtyOnce.current = true;
+        map.setView([start.lat, start.lng], start.zoom, { animate: true });
+      }
+    };
 
-  const coverPhoto = selected?.media?.find((m) => m.kind === "PHOTO");
-  const coverSrc =
-    coverPhoto && !coverError
-      ? getListingMediaUrl(selected!.id, coverPhoto.asset_id)
-      : PLACEHOLDER_IMG;
-  const metaLine = selected ? mapMetaLine(selected) : "";
-  const rating = selected?.avg_rating != null ? Number(selected.avg_rating) : null;
-  const reviewCount = selected?.review_count ?? 0;
-  const hasWalkthrough = selected?.media?.some((m) => m.kind === "WALKTHROUGH");
-  const price = selected?.rate_plan?.base_price;
-  const currency = selected?.rate_plan?.currency || "MAD";
-  const detailHref = selected
-    ? listingHref(selected, localePath, checkin, checkout, guests)
-    : "#";
+    const coverPhoto = selected?.media?.find((m) => m.kind === "PHOTO");
+    const coverSrc =
+      coverPhoto && !coverError
+        ? getListingMediaUrl(selected!.id, coverPhoto.asset_id)
+        : PLACEHOLDER_IMG;
+    const rating =
+      selected?.avg_rating != null ? Number(selected.avg_rating) : null;
+    const reviewCount = selected?.review_count ?? 0;
+    const hasWalkthrough = selected?.media?.some(
+      (m) => m.kind === "WALKTHROUGH",
+    );
+    const price = selected?.rate_plan?.base_price;
+    const currency = selected?.rate_plan?.currency || "MAD";
+    const neighborhood = selected ? parseNeighborhood(selected) : "";
+    const detailHref = selected
+      ? listingHref(selected, localePath, checkin, checkout, guests)
+      : "#";
 
-  return (
-    <div className="relative z-0 isolate overflow-hidden rounded-2xl border border-nexa-line">
-      <div className="relative h-[min(70vh,560px)] w-full">
-        <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
-        {(locating || !ready) && (
-          <div className="absolute inset-0 z-[400] flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
-            {locating ? "Finding your location…" : "Loading map…"}
-          </div>
+    return (
+      <div
+        className={cn(
+          "nexa-explore-map relative z-0 isolate overflow-hidden rounded-[20px] sm:rounded-3xl border border-nexa-line shadow-lg",
         )}
+      >
+        <div className="relative h-[min(72vh,580px)] w-full">
+          <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
+          {(locating || !ready) && (
+            <div className="absolute inset-0 z-[400] flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
+              {locating ? "Finding your location…" : "Loading map…"}
+            </div>
+          )}
 
-        <button
-          type="button"
-          onClick={() => void goToUser()}
-          className="absolute right-3 top-3 z-[450] inline-flex items-center gap-1.5 rounded-xl border border-nexa-line bg-white px-3 py-2 text-xs font-semibold text-nexa-ink shadow-sm hover:border-nexa-primary/40 hover:text-nexa-primary"
-          aria-label="Center on my location"
-        >
-          <LocateFixed className="h-3.5 w-3.5" aria-hidden />
-          Near me
-        </button>
+          {/* Compass */}
+          <div
+            className={cn(
+              "pointer-events-none absolute left-3 top-3 z-[450] flex h-9 w-9 items-center justify-center rounded-full text-[0.7rem] font-bold text-nexa-ink",
+              GLASS,
+            )}
+            aria-hidden
+          >
+            N
+          </div>
 
-        {ready && mappable.length === 0 && (
-          <div className="pointer-events-none absolute inset-x-0 top-14 z-[450] flex justify-center px-4">
-            <div className="flex max-w-sm items-start gap-2 rounded-xl border border-nexa-line bg-white/95 px-3 py-2.5 text-left shadow-sm">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-nexa-ink-4" aria-hidden />
-              <div>
-                <p className="text-xs font-semibold text-nexa-ink">{emptyTitle}</p>
-                <p className="mt-0.5 text-[0.7rem] leading-snug text-nexa-ink-4">
-                  {emptyMessage}
-                </p>
+          {/* Glass controls */}
+          <div className="absolute right-3 top-3 z-[450] flex flex-col items-center gap-2">
+            <div className={cn("flex flex-col overflow-hidden rounded-full", GLASS)}>
+              <button
+                type="button"
+                onClick={() => mapRef.current?.zoomIn()}
+                className="flex h-9 w-9 items-center justify-center text-nexa-ink hover:bg-white/50"
+                aria-label="Zoom in"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              <div className="h-px w-full bg-nexa-line/60" />
+              <button
+                type="button"
+                onClick={() => mapRef.current?.zoomOut()}
+                className="flex h-9 w-9 items-center justify-center text-nexa-ink hover:bg-white/50"
+                aria-label="Zoom out"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => void goToUser()}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-full text-nexa-ink hover:text-nexa-primary",
+                GLASS,
+              )}
+              aria-label={myLocationLabel}
+              title={myLocationLabel}
+            >
+              <LocateFixed className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={resetView}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-full text-nexa-ink hover:text-nexa-primary",
+                GLASS,
+              )}
+              aria-label={resetViewLabel}
+              title={resetViewLabel}
+            >
+              <Home className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Explore this area */}
+          {areaDirty && (
+            <div className="absolute inset-x-0 top-3 z-[460] flex justify-center px-14 pointer-events-none">
+              <button
+                type="button"
+                onClick={() => emitBounds()}
+                className={cn(
+                  "pointer-events-auto rounded-full px-4 py-2 text-xs font-semibold text-nexa-ink hover:text-nexa-primary transition-colors",
+                  GLASS,
+                )}
+              >
+                {exploreThisAreaLabel}
+              </button>
+            </div>
+          )}
+
+          {/* Currently exploring chip */}
+          {exploringName && (
+            <div className="absolute inset-x-0 top-14 z-[450] flex justify-center px-4 pointer-events-none">
+              <div
+                key={exploringKey}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-xs text-nexa-ink animate-[nexaExploreSlide_150ms_ease-out]",
+                  GLASS,
+                )}
+              >
+                <span className="text-nexa-ink-4">{currentlyExploringLabel}</span>{" "}
+                <span className="font-semibold">{exploringName}</span>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {selected && (
-        <div className="absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-lg rounded-2xl border border-nexa-line bg-white p-3 shadow-xl sm:p-3.5">
-          <div className="flex gap-3">
+          {/* Empty state */}
+          {ready && mappable.length === 0 && (
+            <div className="absolute inset-x-0 top-1/2 z-[450] flex -translate-y-1/2 justify-center px-4">
+              <div
+                className={cn(
+                  "max-w-sm rounded-3xl px-5 py-4 text-center shadow-md",
+                  GLASS,
+                )}
+              >
+                <p className="text-sm font-semibold text-nexa-ink">{emptyTitle}</p>
+                <p className="mt-1 text-[0.75rem] leading-snug text-nexa-ink-4">
+                  {emptyMessage}
+                </p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => mapRef.current?.zoomOut(1)}
+                    className="rounded-full border border-nexa-line bg-white px-3 py-1.5 text-xs font-semibold text-nexa-ink hover:border-nexa-primary"
+                  >
+                    {zoomOutLabel}
+                  </button>
+                  {city && onSelectCity && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectCity(city)}
+                      className="rounded-full bg-nexa-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-nexa-primary-dark"
+                    >
+                      {exploreCityLabel || city}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Preview — Apple Maps style mini travel card */}
+        {selected && (
+          <div
+            className={cn(
+              "absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.88] p-0 shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
+              previewEnter
+                ? "translate-y-0 opacity-100"
+                : "translate-y-3 opacity-0",
+            )}
+          >
             <Link
               href={detailHref}
-              className="relative h-[118px] w-[118px] shrink-0 overflow-hidden rounded-xl bg-nexa-bg-2 sm:h-[128px] sm:w-[132px]"
+              className="relative block h-40 w-full overflow-hidden bg-nexa-bg-2 sm:h-44"
             >
               <Image
                 src={coverSrc}
                 alt={selected.title}
                 fill
-                sizes="132px"
+                sizes="400px"
                 className="object-cover"
                 unoptimized={Boolean(coverPhoto) && !coverError}
                 onError={() => setCoverError(true)}
               />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelectedId(null);
+                }}
+                className="absolute right-3 top-3 rounded-full bg-black/40 px-2 py-1 text-xs text-white"
+                aria-label="Close"
+              >
+                ✕
+              </button>
             </Link>
 
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="p-4 sm:p-5">
               <div className="flex items-start gap-2">
-                <Link href={detailHref} className="min-w-0 flex-1">
-                  <h3 className="truncate text-[0.95rem] font-semibold leading-snug text-nexa-ink">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display text-lg font-semibold leading-snug text-nexa-ink line-clamp-2">
                     {selected.title}
                   </h3>
-                </Link>
+                  {neighborhood && (
+                    <p className="mt-1 text-xs text-nexa-ink-4">
+                      {neighborhood}
+                      {selected.city ? ` · ${selected.city}` : ""}
+                    </p>
+                  )}
+                </div>
                 <button
                   type="button"
                   className={cn(
-                    "shrink-0 rounded-full p-1.5 transition-colors",
+                    "shrink-0 rounded-full p-2 transition-colors",
                     saved
                       ? "text-nexa-primary"
                       : "text-nexa-ink-4 hover:text-nexa-primary",
@@ -476,83 +759,53 @@ export function ExploreMap({
                     setSaved(toggleSavedListing(selected.id, userId));
                   }}
                 >
-                  <Heart className={cn("h-4 w-4", saved && "fill-nexa-primary")} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(null)}
-                  className="shrink-0 rounded-lg px-1.5 py-1 text-xs text-nexa-ink-4 hover:bg-nexa-bg-2"
-                  aria-label="Close"
-                >
-                  ✕
+                  <Heart
+                    className={cn("h-4 w-4", saved && "fill-nexa-primary")}
+                  />
                 </button>
               </div>
 
-              {rating != null ? (
-                <div className="mt-1">
-                  <p className="flex items-center gap-1 text-[0.72rem] text-nexa-ink-3">
-                    <Star
-                      className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                      aria-hidden
-                    />
-                    <span className="font-semibold tabular-nums text-nexa-ink">
-                      {Number(rating).toFixed(1)}
-                    </span>
-                  </p>
-                  <p className="text-[0.65rem] text-nexa-ink-4 tabular-nums">
-                    {reviewCount} review{reviewCount === 1 ? "" : "s"}
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-1">
-                  <p className="flex items-center gap-1 text-[0.72rem] text-nexa-ink-3">
-                    <Star
-                      className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                      aria-hidden
-                    />
-                    <span className="font-semibold tabular-nums text-nexa-ink">
-                      0.0
-                    </span>
-                  </p>
-                  <p className="text-[0.65rem] text-nexa-ink-4 tabular-nums">
-                    0 reviews
-                  </p>
-                </div>
-              )}
-
-              {metaLine ? (
-                <p className="mt-1 truncate text-[0.72rem] text-nexa-ink-4">
-                  {metaLine}
-                </p>
-              ) : null}
-
-              <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-                {price != null ? (
-                  <p className="min-w-0 text-sm font-bold tabular-nums text-nexa-primary">
-                    {Math.round(Number(price))} {currency}
-                    <span className="font-normal text-nexa-ink-4"> / night</span>
-                  </p>
-                ) : (
-                  <span />
-                )}
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-nexa-ink-3">
+                <span className="inline-flex items-center gap-1">
+                  <Star
+                    className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                    aria-hidden
+                  />
+                  <span className="font-semibold tabular-nums text-nexa-ink">
+                    {rating != null ? Number(rating).toFixed(1) : "0.0"}
+                  </span>
+                  <span className="text-nexa-ink-4">
+                    ({reviewCount})
+                  </span>
+                </span>
                 {(hasWalkthrough || selected.instant_booking) && (
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-nexa-bg-2 px-2 py-0.5 text-[0.65rem] font-semibold text-nexa-ink">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-nexa-bg-2 px-2 py-0.5 text-[0.65rem] font-semibold text-nexa-ink">
                     <BadgeCheck className="h-3 w-3 text-green-700" aria-hidden />
                     Verified
                   </span>
                 )}
               </div>
+
+              {price != null && (
+                <p className="mt-2 text-base font-bold tabular-nums text-nexa-ink">
+                  {Math.round(Number(price))} {currency}
+                  <span className="font-normal text-nexa-ink-4 text-sm">
+                    {" "}
+                    / night
+                  </span>
+                </p>
+              )}
+
+              <Link
+                href={detailHref}
+                className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-nexa-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
+              >
+                {viewStayLabel}
+              </Link>
             </div>
           </div>
-
-          <Link
-            href={detailHref}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-nexa-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
-          >
-            {viewStayLabel}
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-}
+        )}
+      </div>
+    );
+  },
+);

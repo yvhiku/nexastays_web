@@ -170,13 +170,22 @@ Variants: `error` | `success` | `warning` | `info` — soft gradient panels with
 - Mobile: full-screen drawer **`z-[1100]`** (must sit above Leaflet panes ~400–1000)
 - Menu CTA: primary filled pill / rounded-xl
 
-### Map (Explore)
+### Map (Explore) — discovery canvas (Phase 1 freeze)
 
-- Price bubbles: `#E8507A` pill + triangle tip (`.nexa-price-bubble`)
-- Selected: dark `#1A1A2E`
-- Clusters: primary fill + white ring
-- Preview card: image, heart, rating, meta, Verified, primary **View Details**
-- Map wrapper: `isolate` / contained stacking so overlays don’t punch through chrome
+- Basemap: Carto Positron (`light_all`); tile pane `brightness(0.97) contrast(0.97)` only — no grayscale
+- Framing: **Discover Morocco** (no city) → **Explore** + city name with gradient underline + static tagline
+- Meta: stay count + **viewport avg only** (`Avg in this area`) from map-pin response — never list pagination avg
+- Destination chips: name + descriptor (Shopping / Beach / Historic…); `city` + `neighborhood` URL
+- Reserved hidden **Recommended** slot in header for Phase 2
+- Price capsules: white + thin primary border; **selected = solid Nexa primary** (no gradient on markers)
+- Clusters: `N stays` white pills
+- Bounds: initial + filter change + **Explore this area** (not auto on every pan)
+- Controls: circular glass (`bg-white/88`, blur 12px) — zoom, My location, Reset view; decorative `N` compass
+- Currently exploring chip with ~8px slide on neighborhood change
+- Preview: larger Apple Maps–style glass travel card
+- Components: `ExploreMapCanvas`, `ExploreMap`; tiles in `lib/explore-map-tiles.ts`
+
+**Deferred:** trust heatmap, neighborhood polygons, list↔map sync, `layout=split`, Recommended contents
 
 ### Icons
 
@@ -207,7 +216,9 @@ Keep motion purposeful and light:
 - Card hover: translate + shadow (~300ms)
 - Button hover: `-translate-y-px` / shadow deepen (~200ms)
 - Rating stars: `.rating-star` scale `1.12` on hover
-- Price bubble: scale `1.04` on hover
+- Price bubble: scale `1.08` on hover (≤150ms)
+- Exploring chip: `nexaExploreSlide` 8px / 150ms
+- Preview card: translateY + opacity 150ms
 - Infinite scroll / Load more: no flashy loaders; quiet `text-nexa-ink-4` loading copy
 - Prefer `transition-colors` / `transition-all duration-200|300` over long loops
 
@@ -318,12 +329,12 @@ nexastays_web/
     search/             # SearchBar (Where / When / Guests)
     listing/            # ListingCard, galleries
     explore/            # DestinationContext, ExploreCollections, QuickFilters,
-                        # ResultsHeader, TrustStrip, ExploreMap
+                        # ResultsHeader, TrustStrip, ExploreMap, ExploreMapCanvas
     navbar/             # NavBar + mobile drawer
     host/               # listing wizard
   lib/
     brand-assets.ts
-    explore-*.ts        # city context, collections, quick filters, trust, layout
+    explore-*.ts        # city context, collections, quick filters, trust, layout, map tiles
     i18n/locales/
   tailwind.config.ts
 ```

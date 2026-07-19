@@ -19,7 +19,7 @@ export async function createNexaMapPinIcon(
   });
 }
 
-/** Airbnb-style price bubble for Explore markers. */
+/** Calm white price capsule for Explore markers. */
 export async function createPriceBubbleIcon(
   label: string,
   selected = false,
@@ -31,27 +31,37 @@ export async function createPriceBubbleIcon(
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-  // Approximate width from label length so the tip stays centered.
-  const width = Math.max(64, Math.min(140, 28 + safe.length * 8));
-  const height = 34;
+  const width = Math.max(68, Math.min(148, 30 + safe.length * 7.5));
+  const height = 32;
 
   return L.divIcon({
     className: `nexa-price-bubble${selected ? " is-selected" : ""}`,
-    html: `<div class="nexa-price-bubble__body">${safe}</div><div class="nexa-price-bubble__tip" aria-hidden="true"></div>`,
-    iconSize: [width, height + 8],
-    iconAnchor: [width / 2, height + 8],
+    html: `<div class="nexa-price-bubble__body">${safe}</div>`,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height / 2],
   });
 }
 
-/** Count bubble used when nearby stays are clustered at lower zoom. */
-export async function createClusterCountIcon(count: number): Promise<DivIcon> {
+/** Friendly cluster pill — e.g. "7 stays". */
+export async function createClusterCountIcon(
+  count: number,
+  staysLabel: string,
+): Promise<DivIcon> {
   const L = (await import("leaflet")).default;
-  const size = count < 10 ? 42 : count < 50 ? 50 : 58;
+  const label = `${count} ${staysLabel}`;
+  const safe = label
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+  const width = Math.max(72, Math.min(120, 36 + safe.length * 7));
+  const height = 34;
+
   return L.divIcon({
     className: "nexa-cluster",
-    html: `<div class="nexa-cluster__body">${count}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<div class="nexa-cluster__body">${safe}</div>`,
+    iconSize: [width, height],
+    iconAnchor: [width / 2, height / 2],
   });
 }
 

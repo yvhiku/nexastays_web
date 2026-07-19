@@ -38,7 +38,7 @@ export function DestinationContext({
   const chips = React.useMemo(() => {
     if (!ctx) return [];
     const set = new Set<string>([
-      ...ctx.neighborhoods,
+      ...ctx.neighborhoods.map((n) => n.name),
       ...resultNeighborhoods.filter(Boolean),
     ]);
     return Array.from(set);
