@@ -3,11 +3,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   dismissInstallPrompt,
+  getInstallPromptContext,
   isIosSafari,
   isPwaMarkedInstalled,
   isStandaloneDisplay,
   markPwaInstalled,
   shouldShowInstallPrompt,
+  type InstallPromptContext,
 } from "@/lib/pwa-engagement";
 import {
   bindBeforeInstallPromptCapture,
@@ -18,17 +20,11 @@ import {
 import { cn } from "@/lib/utils";
 import { InstallAppSheet, InstallSuccessToast } from "@/components/pwa/InstallAppSheet";
 
-/**
- * Floating install prompt:
- * - standalone / installed → nothing
- * - iOS Safari (+ eligible) → Share → Add to Home Screen
- * - beforeinstallprompt (+ eligible) → Android Install App
- * - else → nothing
- */
 export function InstallAppPrompt() {
   const [, setDeferredTick] = useState(0);
   const [visible, setVisible] = useState(false);
   const [variant, setVariant] = useState<"ios" | "android" | null>(null);
+  const [context, setContext] = useState<InstallPromptContext>("default");
   const [success, setSuccess] = useState(false);
 
   const evaluate = useCallback(() => {
@@ -42,6 +38,7 @@ export function InstallAppPrompt() {
       setVariant(null);
       return;
     }
+    setContext(getInstallPromptContext());
     if (isIosSafari()) {
       setVariant("ios");
       setVisible(true);
@@ -62,6 +59,7 @@ export function InstallAppPrompt() {
       setDeferredTick((n) => n + 1);
       evaluate();
     });
+    const onEngagement = () => evaluate();
     const onInstalled = () => {
       markPwaInstalled();
       clearDeferredInstallPrompt();
@@ -70,10 +68,12 @@ export function InstallAppPrompt() {
       setSuccess(true);
     };
     window.addEventListener("appinstalled", onInstalled);
+    window.addEventListener("nexa-pwa-engagement-changed", onEngagement);
     return () => {
       unbind();
       unsub();
       window.removeEventListener("appinstalled", onInstalled);
+      window.removeEventListener("nexa-pwa-engagement-changed", onEngagement);
     };
   }, [evaluate]);
 
@@ -92,6 +92,7 @@ export function InstallAppPrompt() {
   useEffect(() => {
     const onForce = () => {
       if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;
+      setContext(getInstallPromptContext());
       if (isIosSafari()) {
         setVariant("ios");
         setVisible(true);
@@ -146,6 +147,7 @@ export function InstallAppPrompt() {
       <div className="mx-auto max-w-md">
         <InstallAppSheet
           variant={variant}
+          context={context}
           onInstall={variant === "android" ? onInstall : undefined}
           onDismiss={onDismiss}
         />

@@ -1,27 +1,91 @@
 "use client";
 
-import React from "react";
-import { Check, Download, Share2, X } from "lucide-react";
+import React, { useState } from "react";
+import { Check, Download, Share2, X, Home } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { InstallPromptContext } from "@/lib/pwa-engagement";
 import { cn } from "@/lib/utils";
 
 type SheetProps = {
   variant: "ios" | "android";
+  context?: InstallPromptContext;
   onInstall?: () => void;
   onDismiss?: () => void;
   showDismiss?: boolean;
   className?: string;
 };
 
+function contextTitleKey(ctx: InstallPromptContext): string {
+  switch (ctx) {
+    case "browse":
+      return "pwa.ctxBrowseTitle";
+    case "wishlist":
+      return "pwa.ctxWishlistTitle";
+    case "booking":
+      return "pwa.ctxBookingTitle";
+    case "host_submit":
+      return "pwa.ctxHostSubmitTitle";
+    case "host_approved":
+    case "host_dashboard":
+      return "pwa.ctxHostManageTitle";
+    default:
+      return "pwa.installTitle";
+  }
+}
+
+function contextBodyKey(ctx: InstallPromptContext): string {
+  switch (ctx) {
+    case "browse":
+      return "pwa.ctxBrowseBody";
+    case "wishlist":
+      return "pwa.ctxWishlistBody";
+    case "booking":
+      return "pwa.ctxBookingBody";
+    case "host_submit":
+      return "pwa.ctxHostSubmitBody";
+    case "host_approved":
+    case "host_dashboard":
+      return "pwa.ctxHostManageBody";
+    default:
+      return "";
+  }
+}
+
+function IosHowIllustration() {
+  return (
+    <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-nexa-bg-2 px-3 py-4">
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+          <Share2 className="h-5 w-5 text-nexa-primary" aria-hidden />
+        </div>
+        <span className="text-[0.65rem] font-medium text-nexa-ink-3">Share</span>
+      </div>
+      <span className="text-nexa-ink-4 text-lg" aria-hidden>
+        →
+      </span>
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+          <Home className="h-5 w-5 text-nexa-primary" aria-hidden />
+        </div>
+        <span className="text-[0.65rem] font-medium text-nexa-ink-3">Home</span>
+      </div>
+    </div>
+  );
+}
+
 /** Shared branded install UI for floating prompt and Profile. */
 export function InstallAppSheet({
   variant,
+  context = "default",
   onInstall,
   onDismiss,
   showDismiss = true,
   className,
 }: SheetProps) {
   const { t } = useLanguage();
+  const [showHow, setShowHow] = useState(false);
+  const bodyKey = contextBodyKey(context);
+  const hasContext = context !== "default" && bodyKey;
 
   return (
     <div
@@ -30,36 +94,48 @@ export function InstallAppSheet({
         className,
       )}
       role="dialog"
-      aria-label={t("pwa.installTitle")}
+      aria-label={t(contextTitleKey(context))}
     >
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexa-primary to-nexa-primary-dark text-lg font-bold text-white">
           N
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-nexa-ink">{t("pwa.installTitle")}</p>
+          <p className="text-sm font-semibold text-nexa-ink">{t(contextTitleKey(context))}</p>
+          {hasContext ? (
+            <p className="mt-1 text-xs text-nexa-ink-3">{t(bodyKey)}</p>
+          ) : null}
 
           {variant === "ios" ? (
             <>
-              <p className="mt-1 text-xs text-nexa-ink-3">{t("pwa.installIosSubtitle")}</p>
+              {!hasContext ? (
+                <p className="mt-1 text-xs text-nexa-ink-3">{t("pwa.installIosSubtitle")}</p>
+              ) : null}
               <ol className="mt-3 space-y-1.5 text-xs font-medium text-nexa-ink-2">
                 <li>1. {t("pwa.installIosStep1")}</li>
                 <li>2. {t("pwa.installIosStep2")}</li>
               </ol>
-              <div className="mt-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-nexa-bg-2 text-nexa-ink-2">
-                <Share2 className="h-5 w-5" aria-hidden />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowHow((v) => !v)}
+                className="mt-3 inline-flex h-10 items-center rounded-xl bg-nexa-bg-2 px-3 text-xs font-semibold text-nexa-ink"
+              >
+                {t("pwa.showMeHow")}
+              </button>
+              {showHow ? <IosHowIllustration /> : null}
             </>
           ) : (
             <>
-              <p className="mt-1 text-xs text-nexa-ink-3">{t("pwa.installAndroidLead")}</p>
+              {!hasContext ? (
+                <p className="mt-1 text-xs text-nexa-ink-3">{t("pwa.installAndroidLead")}</p>
+              ) : null}
               <ul className="mt-3 space-y-1.5 text-xs text-nexa-ink-2">
                 {(
                   [
-                    "installBenefitNative",
-                    "installBenefitFast",
+                    "installBenefitTap",
                     "installBenefitOffline",
-                    "installBenefitFullscreen",
+                    "installBenefitFast",
+                    "installBenefitNative",
                   ] as const
                 ).map((key) => (
                   <li key={key} className="flex items-start gap-2">
@@ -87,7 +163,7 @@ export function InstallAppSheet({
               onClick={onDismiss}
               className="mt-3 inline-flex h-10 items-center rounded-xl px-1 text-sm font-medium text-nexa-ink-3"
             >
-              {t("pwa.installLater")}
+              {t("pwa.installNotNow")}
             </button>
           ) : null}
         </div>

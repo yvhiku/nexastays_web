@@ -46,32 +46,36 @@ export function SwUpdateBanner() {
 
   if (!waiting) return null;
 
-  const onUpdate = () => {
-    waiting.postMessage({ type: "SKIP_WAITING" });
-  };
-
   return (
     <div
       className="fixed inset-x-0 top-[calc(72px+env(safe-area-inset-top))] z-[70] flex justify-center px-3"
       role="status"
     >
-      <div className="flex w-full max-w-lg items-center justify-between gap-3 rounded-2xl border border-nexa-line bg-nexa-ink px-4 py-3 text-white shadow-nexa-md">
-        <p className="text-sm font-medium">{t("pwa.updateAvailable")}</p>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            className="rounded-lg bg-white/15 px-3 py-1.5 text-xs font-semibold"
-            onClick={() => setWaiting(null)}
-          >
-            {t("pwa.updateLater")}
-          </button>
-          <button
-            type="button"
-            className="rounded-lg bg-nexa-primary px-3 py-1.5 text-xs font-semibold"
-            onClick={onUpdate}
-          >
-            {t("pwa.updateNow")}
-          </button>
+      <div className="w-full max-w-md rounded-2xl border border-nexa-line bg-white p-4 shadow-nexa-lg">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexa-primary to-nexa-primary-dark text-sm font-bold text-white">
+            N
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-nexa-ink">{t("pwa.updateTitle")}</p>
+            <p className="mt-0.5 text-xs text-nexa-ink-3">{t("pwa.updateBody")}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-xl bg-nexa-primary px-4 py-2 text-xs font-semibold text-white"
+                onClick={() => waiting.postMessage({ type: "SKIP_WAITING" })}
+              >
+                {t("pwa.updateNow")}
+              </button>
+              <button
+                type="button"
+                className="rounded-xl px-3 py-2 text-xs font-medium text-nexa-ink-3"
+                onClick={() => setWaiting(null)}
+              >
+                {t("pwa.updateDismiss")}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -156,6 +156,11 @@ function ListingWizardContent() {
     }
   }, [steps.length, stepIndex]);
 
+  useEffect(() => {
+    if (phase !== "celebrate") return;
+    void import("@/lib/pwa-engagement").then((m) => m.markPwaListingSubmitted());
+  }, [phase]);
+
   const patch = useCallback((partial: Partial<ListingWizardFormState>) => {
     setForm((prev) => ({ ...prev, ...partial }));
   }, []);

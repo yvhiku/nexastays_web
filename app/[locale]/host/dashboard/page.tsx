@@ -108,10 +108,17 @@ function HostDashboardContent() {
   useEffect(() => {
     if (!token) return;
     trackEvent("host_dashboard_viewed");
+    void import("@/lib/pwa-engagement").then((m) => m.markPwaHostDashboardOpen());
     setLoading(true);
     setError(null);
     getHostVerification(token)
-      .then((s) => setHostStatus(normalizeHostVerificationStatus(s)))
+      .then((s) => {
+        const normalized = normalizeHostVerificationStatus(s);
+        setHostStatus(normalized);
+        if (normalized.status === "APPROVED") {
+          void import("@/lib/pwa-engagement").then((m) => m.markPwaHostApproved());
+        }
+      })
       .catch((e) => setError(formatUserError(e) || t("hostDashboard.failedLoad")))
       .finally(() => setLoading(false));
   }, [token]);

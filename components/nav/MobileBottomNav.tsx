@@ -15,7 +15,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { trackPwaPageView, markPwaHostDashboard } from "@/lib/pwa-engagement";
+import { trackPwaPageView } from "@/lib/pwa-engagement";
 
 type Tab = {
   id: string;
@@ -36,7 +36,6 @@ export function MobileBottomNav() {
 
   useEffect(() => {
     trackPwaPageView(pathname);
-    if (pathname.includes("/host/dashboard")) markPwaHostDashboard();
   }, [pathname]);
 
   const guestTabs: Tab[] = useMemo(

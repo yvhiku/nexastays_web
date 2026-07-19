@@ -4,30 +4,36 @@ import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 export default function manifest(): MetadataRoute.Manifest {
   const screenshots = [
     {
-      src: "/pwa/screenshots/narrow.png",
+      src: "/pwa/screenshots/explore.png",
       sizes: "390x844",
       type: "image/png",
       form_factor: "narrow" as const,
-      label: "Explore verified stays in Morocco",
+      label: "Find your next stay in Morocco",
     },
     {
-      src: "/pwa/screenshots/wide.png",
-      sizes: "1280x720",
+      src: "/pwa/screenshots/listing.png",
+      sizes: "390x844",
       type: "image/png",
-      form_factor: "wide" as const,
-      label: "Nexa Stays desktop browse",
+      form_factor: "narrow" as const,
+      label: "Listing gallery, calendar, and reserve",
+    },
+    {
+      src: "/pwa/screenshots/host.png",
+      sizes: "390x844",
+      type: "image/png",
+      form_factor: "narrow" as const,
+      label: "Host dashboard with revenue and calendar sync",
     },
   ];
 
   return {
     name: "Nexa Stays",
     short_name: "Nexa Stays",
-    description:
-      "Verified stays in Morocco — book safer, transparent guest and host experiences.",
+    description: "Book unique stays across Morocco with Nexa Stays.",
     start_url: "/",
     scope: "/",
     display: "standalone",
-    orientation: "portrait-primary",
+    orientation: "portrait",
     background_color: NEXA_PWA_THEME,
     theme_color: NEXA_PWA_THEME,
     categories: ["travel", "lifestyle"],
@@ -52,11 +58,17 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         purpose: "maskable",
       },
+      {
+        src: "/icons/icon-monochrome-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "monochrome",
+      },
     ],
     shortcuts: [
       {
-        name: "Explore",
-        short_name: "Explore",
+        name: "Search stays",
+        short_name: "Search",
         description: "Search verified stays in Morocco",
         url: "/en/listings",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
@@ -80,7 +92,6 @@ export default function manifest(): MetadataRoute.Manifest {
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
       },
     ],
-    // Next's Manifest type lags Web App Manifest screenshot fields (form_factor / label).
     screenshots: screenshots as MetadataRoute.Manifest["screenshots"],
   };
 }
