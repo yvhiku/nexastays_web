@@ -101,7 +101,10 @@
     "descUrban": "Urban",
     "descResidential": "Residential",
     "descNature": "Nature",
-    "descLuxury": "Luxury"
+    "descLuxury": "Luxury",
+    "allInCity": "All {city}",
+    "allAreas": "Entire city",
+    "clearCity": "Discover Morocco"
   },
   "searchBar": {
     "where": "Where",
@@ -109,6 +112,7 @@
     "who": "Guests",
     "search": "Search",
     "searchDestinations": "Search destinations",
+    "clearWhere": "Clear destination",
     "searchMorocco": "Search Morocco",
     "addDates": "Add dates",
     "addGuests": "Add guests",

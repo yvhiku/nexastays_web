@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getCityContextByCity,
@@ -16,6 +17,7 @@ export type DestinationContextProps = {
   matchCount?: number;
   onSelectNeighborhood: (neighborhood: string | null) => void;
   onSelectCity: (city: string) => void;
+  onClearCity: () => void;
   t: (key: string) => string;
   tf?: (key: string, vars?: Record<string, string | number>) => string;
   className?: string;
@@ -29,6 +31,7 @@ export function DestinationContext({
   matchCount,
   onSelectNeighborhood,
   onSelectCity,
+  onClearCity,
   t,
   tf,
   className,
@@ -75,12 +78,22 @@ export function DestinationContext({
       ? tf("explore.cityGenericTitle", { city })
       : t("explore.cityGenericTitle").replace("{city}", city);
   const subtitle = ctx ? t(ctx.subtitleKey) : t("explore.cityGenericSubtitle");
+  const allAreasSelected = !neighborhood;
 
   return (
     <section className={cn("mb-6 sm:mb-7 min-w-0", className)}>
-      <h1 className="font-display text-xl sm:text-2xl font-semibold text-nexa-ink mb-1">
-        {title}
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+        <h1 className="font-display text-xl sm:text-2xl font-semibold text-nexa-ink">
+          {title}
+        </h1>
+        <button
+          type="button"
+          onClick={onClearCity}
+          className="shrink-0 text-xs font-semibold text-nexa-ink-4 hover:text-nexa-primary transition-colors underline-offset-2 hover:underline mt-1"
+        >
+          {t("explore.clearCity")}
+        </button>
+      </div>
       <p className="text-sm text-nexa-ink-3 mb-3 max-w-2xl">{subtitle}</p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-nexa-ink-4 mb-4">
         {matchCount != null && (
@@ -94,8 +107,23 @@ export function DestinationContext({
           </span>
         )}
       </div>
-      {chips.length > 0 && (
+      {(chips.length > 0 || ctx) && (
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            aria-pressed={allAreasSelected}
+            onClick={() => onSelectNeighborhood(null)}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+              allAreasSelected
+                ? "border-nexa-primary bg-nexa-primary-soft text-nexa-primary"
+                : "border-nexa-line bg-white text-nexa-ink-2 hover:border-nexa-primary hover:text-nexa-primary",
+            )}
+          >
+            {tf
+              ? tf("explore.allInCity", { city })
+              : t("explore.allInCity").replace("{city}", city)}
+          </button>
           {chips.map((n) => {
             const selected =
               neighborhood &&
@@ -105,17 +133,16 @@ export function DestinationContext({
                 type="button"
                 key={n}
                 aria-pressed={Boolean(selected)}
-                onClick={() =>
-                  onSelectNeighborhood(selected ? null : n)
-                }
+                onClick={() => onSelectNeighborhood(selected ? null : n)}
                 className={cn(
-                  "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                  "inline-flex items-center gap-1 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                   selected
                     ? "border-nexa-primary bg-nexa-primary-soft text-nexa-primary"
                     : "border-nexa-line bg-white text-nexa-ink-2 hover:border-nexa-primary hover:text-nexa-primary",
                 )}
               >
                 {n}
+                {selected && <X className="h-3 w-3" aria-hidden />}
               </button>
             );
           })}

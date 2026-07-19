@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getCityContextByCity,
@@ -17,6 +18,7 @@ export type ExploreMapCanvasHeaderProps = {
   listings: StaysListing[];
   onSelectNeighborhood: (neighborhood: string | null) => void;
   onSelectCity: (city: string) => void;
+  onClearCity: () => void;
   t: (key: string) => string;
   tf: (key: string, vars?: Record<string, string | number>) => string;
   className?: string;
@@ -58,6 +60,9 @@ function DestinationChip({
       <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-nexa-ink">
         <span aria-hidden>{descriptorIcon(neighborhood.descriptorKey)}</span>
         {neighborhood.name}
+        {selected && (
+          <X className="h-3 w-3 text-nexa-primary ms-0.5" aria-hidden />
+        )}
       </span>
       <span className="text-[0.65rem] text-nexa-ink-4 ps-5">
         {t(neighborhood.descriptorKey)}
@@ -73,12 +78,14 @@ export function ExploreMapCanvasHeader({
   listings,
   onSelectNeighborhood,
   onSelectCity,
+  onClearCity,
   t,
   tf,
   className,
 }: ExploreMapCanvasHeaderProps) {
   const ctx = getCityContextByCity(city);
   const avg = useMemo(() => viewportAvgPrice(listings), [listings]);
+  const allAreasSelected = !neighborhood;
 
   if (!city) {
     return (
@@ -108,21 +115,32 @@ export function ExploreMapCanvasHeader({
 
   return (
     <header className={cn("mb-5 min-w-0", className)}>
-      <p className="text-xs font-semibold uppercase tracking-wider text-nexa-ink-4 mb-1">
-        {t("explore.exploreLabel")}
-      </p>
-      <h2 className="font-display text-2xl sm:text-3xl font-semibold text-nexa-ink tracking-tight inline-block">
-        <span className="relative inline-block pb-1">
-          {city}
-          <span
-            className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-nexa-primary to-nexa-primary/40"
-            aria-hidden
-          />
-        </span>
-      </h2>
-      {ctx?.taglineKey && (
-        <p className="mt-2 text-sm text-nexa-ink-3">{t(ctx.taglineKey)}</p>
-      )}
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wider text-nexa-ink-4 mb-1">
+            {t("explore.exploreLabel")}
+          </p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-nexa-ink tracking-tight inline-block">
+            <span className="relative inline-block pb-1">
+              {city}
+              <span
+                className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-gradient-to-r from-nexa-primary to-nexa-primary/40"
+                aria-hidden
+              />
+            </span>
+          </h2>
+          {ctx?.taglineKey && (
+            <p className="mt-2 text-sm text-nexa-ink-3">{t(ctx.taglineKey)}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onClearCity}
+          className="shrink-0 text-xs font-semibold text-nexa-ink-4 hover:text-nexa-primary transition-colors underline-offset-2 hover:underline"
+        >
+          {t("explore.clearCity")}
+        </button>
+      </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-nexa-ink-3">
         <span className="inline-flex items-center gap-1.5 font-medium text-nexa-ink">
@@ -148,6 +166,24 @@ export function ExploreMapCanvasHeader({
             {t("explore.popularAreas")}
           </p>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              aria-pressed={allAreasSelected}
+              onClick={() => onSelectNeighborhood(null)}
+              className={cn(
+                "inline-flex flex-col items-start gap-0.5 rounded-2xl border px-3.5 py-2 text-left transition-colors",
+                allAreasSelected
+                  ? "border-nexa-primary bg-nexa-primary-soft"
+                  : "border-nexa-line bg-white hover:border-nexa-primary/50",
+              )}
+            >
+              <span className="text-xs font-semibold text-nexa-ink">
+                {tf("explore.allInCity", { city })}
+              </span>
+              <span className="text-[0.65rem] text-nexa-ink-4">
+                {t("explore.allAreas")}
+              </span>
+            </button>
             {ctx.neighborhoods.map((n) => {
               const selected =
                 Boolean(neighborhood) &&

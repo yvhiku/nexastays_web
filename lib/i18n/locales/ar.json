@@ -101,7 +101,10 @@
     "descUrban": "حضري",
     "descResidential": "سكني",
     "descNature": "طبيعة",
-    "descLuxury": "فاخر"
+    "descLuxury": "فاخر",
+    "allInCity": "كل {city}",
+    "allAreas": "المدينة كلها",
+    "clearCity": "اكتشف المغرب"
   },
   "searchBar": {
     "where": "الوجهة",
@@ -109,6 +112,7 @@
     "who": "الضيوف",
     "search": "بحث",
     "searchDestinations": "ابحث عن وجهة",
+    "clearWhere": "مسح الوجهة",
     "searchMorocco": "ابحث في المغرب",
     "addDates": "أضف التواريخ",
     "addGuests": "أضف الضيوف",

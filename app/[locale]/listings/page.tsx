@@ -383,12 +383,26 @@ export default function ListingsPage() {
     };
     setSearchDraft(next);
     navigateWithParams(
-      searchBarValueToParams(next, {
-        verified: verifiedOnly,
-        instant: instantOnly,
-        sort: selectedSort,
-        collection: null,
+      buildListingsParams({
+        search: next,
         neighborhood: null,
+        collection: null,
+      }),
+    );
+  };
+
+  const onClearCity = () => {
+    const next: SearchBarValue = {
+      ...searchDraft,
+      city: "",
+      destinationId: null,
+    };
+    setSearchDraft(next);
+    navigateWithParams(
+      buildListingsParams({
+        search: next,
+        neighborhood: null,
+        collection: null,
       }),
     );
   };
@@ -614,6 +628,7 @@ export default function ListingsPage() {
                   }
                   onSelectNeighborhood={onSelectNeighborhood}
                   onSelectCity={onSelectCity}
+                  onClearCity={onClearCity}
                   t={t}
                   tf={tf}
                 />
@@ -680,6 +695,7 @@ export default function ListingsPage() {
                     listings={mapPins.length > 0 ? mapPins : displayListings}
                     onSelectNeighborhood={onSelectNeighborhood}
                     onSelectCity={onSelectCity}
+                    onClearCity={onClearCity}
                     t={t}
                     tf={tf}
                   >

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SearchDestination } from "@/lib/search-destinations";
 import { findDestinationById } from "@/lib/search-destinations";
@@ -167,6 +167,21 @@ export function SearchBar({
                 {stayChip}
               </span>
             ) : null,
+          )}
+          {whereHasValue && (
+            <button
+              type="button"
+              aria-label={t("searchBar.clearWhere")}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                patch({ city: "", destinationId: null });
+                setDestQuery("");
+              }}
+              className="absolute end-2 top-1/2 -translate-y-1/2 z-20 rounded-full p-1.5 text-nexa-ink-4 hover:bg-nexa-bg-2 hover:text-nexa-ink"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
           )}
           {open === "where" && (
             <div
