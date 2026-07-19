@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import type { MapBounds, StaysListing } from "@/lib/stays-types";
 
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
+const BOUNDS_DEBOUNCE_MS = 350;
 const PLACEHOLDER_IMG =
   "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
 
@@ -140,7 +141,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       emptyTitle = "No stays found here.",
       emptyMessage = "Try zooming out or explore another neighborhood.",
       viewStayLabel = "View Details",
-      exploreThisAreaLabel = "Explore this area",
+      exploreThisAreaLabel: _exploreThisAreaLabel = "Explore this area",
       myLocationLabel = "My location",
       resetViewLabel = "Reset view",
       zoomOutLabel = "Zoom out",
@@ -161,6 +162,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     const userMarkerRef = useRef<import("leaflet").CircleMarker | null>(null);
     const didInitialFrame = useRef(false);
     const skipDirtyOnce = useRef(true);
+    const boundsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const staysWordRef = useRef(staysWord);
     staysWordRef.current = staysWord;
     const onBoundsChangeRef = useRef(onBoundsChange);
@@ -175,7 +177,6 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     const [locating, setLocating] = useState(true);
     const [saved, setSaved] = useState(false);
     const [coverError, setCoverError] = useState(false);
-    const [areaDirty, setAreaDirty] = useState(false);
     const [exploringName, setExploringName] = useState<string | null>(null);
     const [exploringKey, setExploringKey] = useState(0);
     const [previewEnter, setPreviewEnter] = useState(false);
@@ -228,8 +229,14 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       const cb = onBoundsChangeRef.current;
       if (!map || !cb) return;
       cb(boundsFromMap(map));
-      setAreaDirty(false);
     }, []);
+
+    const scheduleEmitBounds = useCallback(() => {
+      if (boundsTimer.current) clearTimeout(boundsTimer.current);
+      boundsTimer.current = setTimeout(() => {
+        emitBounds();
+      }, BOUNDS_DEBOUNCE_MS);
+    }, [emitBounds]);
 
     useImperativeHandle(
       ref,
@@ -360,7 +367,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
             resolveExploring(map);
             return;
           }
-          setAreaDirty(true);
+          scheduleEmitBounds();
           resolveExploring(map);
         };
 
@@ -382,6 +389,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       void init();
       return () => {
         cancelled = true;
+        if (boundsTimer.current) clearTimeout(boundsTimer.current);
         clusterRef.current?.clearLayers();
         clusterRef.current = null;
         mapRef.current?.remove();
@@ -499,7 +507,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       setUserCenter(coords);
       skipDirtyOnce.current = true;
       mapRef.current?.setView([coords.lat, coords.lng], 13, { animate: true });
-      setAreaDirty(true);
+      scheduleEmitBounds();
     };
 
     const resetView = () => {
@@ -615,25 +623,9 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
             </button>
           </div>
 
-          {/* Explore this area */}
-          {areaDirty && (
-            <div className="absolute inset-x-0 top-3 z-[460] flex justify-center px-14 pointer-events-none">
-              <button
-                type="button"
-                onClick={() => emitBounds()}
-                className={cn(
-                  "pointer-events-auto rounded-full px-4 py-2 text-xs font-semibold text-nexa-ink hover:text-nexa-primary transition-colors",
-                  GLASS,
-                )}
-              >
-                {exploreThisAreaLabel}
-              </button>
-            </div>
-          )}
-
           {/* Currently exploring chip */}
           {exploringName && (
-            <div className="absolute inset-x-0 top-14 z-[450] flex justify-center px-4 pointer-events-none">
+            <div className="absolute inset-x-0 top-3 z-[450] flex justify-center px-4 pointer-events-none">
               <div
                 key={exploringKey}
                 className={cn(

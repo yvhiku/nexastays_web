@@ -63,11 +63,6 @@
   border: none !important;
 }
 
-/* Explore map — quiet Carto tiles (no grayscale) */
-.nexa-explore-map .leaflet-tile-pane {
-  filter: brightness(0.97) contrast(0.97);
-}
-
 /* Explore price capsules — calm white; solid primary when selected */
 .leaflet-marker-icon.nexa-price-bubble {
   background: transparent !important;

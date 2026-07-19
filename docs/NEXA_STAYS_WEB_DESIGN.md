@@ -172,14 +172,14 @@ Variants: `error` | `success` | `warning` | `info` — soft gradient panels with
 
 ### Map (Explore) — discovery canvas (Phase 1 freeze)
 
-- Basemap: Carto Positron (`light_all`); tile pane `brightness(0.97) contrast(0.97)` only — no grayscale
+- Basemap: Carto Voyager (`rastertiles/voyager`) — soft color, no tile-pane desaturation
 - Framing: **Discover Morocco** (no city) → **Explore** + city name with gradient underline + static tagline
 - Meta: stay count + **viewport avg only** (`Avg in this area`) from map-pin response — never list pagination avg
 - Destination chips: name + descriptor (Shopping / Beach / Historic…); `city` + `neighborhood` URL
 - Reserved hidden **Recommended** slot in header for Phase 2
 - Price capsules: white + thin primary border; **selected = solid Nexa primary** (no gradient on markers)
 - Clusters: `N stays` white pills
-- Bounds: initial + filter change + **Explore this area** (not auto on every pan)
+- Bounds: **auto** on pan/zoom (debounced ~350ms) + initial + filter change
 - Controls: circular glass (`bg-white/88`, blur 12px) — zoom, My location, Reset view; decorative `N` compass
 - Currently exploring chip with ~8px slide on neighborhood change
 - Preview: larger Apple Maps–style glass travel card
