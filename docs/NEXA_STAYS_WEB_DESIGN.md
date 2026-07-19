@@ -219,15 +219,26 @@ Ship **2–3 intentional motions** on visually led pages (hero, cards, map), not
 
 ### Explore / listings (`/listings`)
 
-1. Filters + search row  
-2. Match count + **Sort by** (newest / top rated / cheapest / most expensive) + list|map toggle  
-3. Dark title band  
-4. Vibe tiles (one job: quick filter presets)  
-5. Grid of listing cards **or** map  
-6. Infinite scroll sentinel + **Load more** fallback  
-7. Trust strip  
+**Nexa Explore spine (production freeze):** one responsibility per section — trust + Morocco exploration, not a second homepage.
 
-First viewport should stay one composition: brand/nav, search, and results — avoid dashboard clutter.
+```
+Navbar → SearchBar → QuickFilters → DestinationContext → ExploreCollections
+→ Filter bar (Property + Verified, API-backed) → ResultsHeader → list|map → TrustStrip
+```
+
+1. **SearchBar** + **QuickFilters** (Instant / Verified / type chips that map to URL flags)  
+2. **DestinationContext** — city catalog title + neighborhood chips (`city` + `neighborhood` URL; never neighborhood alone). No city → Morocco + popular destinations.  
+3. **ExploreCollections** — data-driven tiles (`lib/explore-collections.ts` → filter payload); tap again to clear.  
+4. Sidebar / drawer: Property + Verified only (no amenity-only until backend).  
+5. **ResultsHeader** — match count + “Updated just now” + Sort (`NexaSelect`) + layout `list` | `map` (`split` reserved Phase 2). **No** avg nightly from the loaded page.  
+6. Listing cards — emphasize **Neighborhood · City**; badge slot reserved for ranking badges later (Verified / Instant / Listed render today).  
+7. **TrustStrip** — config from `lib/explore-trust.ts` + Learn more → safety.  
+
+**Removed from listings:** marketing hero banner; large static trust mega-panel; vibe-tile grid (replaced by collections). Those stay on home.
+
+Components live under `components/explore/`; city/collections/quick/trust data under `lib/explore-*.ts` (swap for API in Phase 2 without UI rewrite).
+
+First viewport should stay one composition: brand/nav, search, and explore context — avoid dashboard clutter.
 
 ### Listing detail (`/listings/[id]`)
 
@@ -306,11 +317,13 @@ nexastays_web/
     ui/                 # Button, Input, Alert, DatePicker, skeleton/
     search/             # SearchBar (Where / When / Guests)
     listing/            # ListingCard, galleries
-    explore/            # ExploreMap
+    explore/            # DestinationContext, ExploreCollections, QuickFilters,
+                        # ResultsHeader, TrustStrip, ExploreMap
     navbar/             # NavBar + mobile drawer
     host/               # listing wizard
   lib/
     brand-assets.ts
+    explore-*.ts        # city context, collections, quick filters, trust, layout
     i18n/locales/
   tailwind.config.ts
 ```

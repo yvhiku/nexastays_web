@@ -181,30 +181,33 @@ export function ListingCard({
         </div>
 
         <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 z-10 pointer-events-none">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.65rem] font-semibold bg-white/95 text-nexa-ink shadow-sm font-sans">
-            {listing.instant_booking ? (
-              <>
-                <Zap className="w-3 h-3 text-nexa-primary fill-nexa-primary" />
-                Instant
-              </>
-            ) : hasWalkthrough ? (
-              <>
-                <BadgeCheck className="w-3 h-3 text-green-700" />
-                Verified
-              </>
-            ) : (
-              <>
-                <BadgeCheck className="w-3 h-3 text-nexa-ink-4" />
-                Listed
-              </>
-            )}
-          </span>
+          {/* Ranking badges reserved (Recommended / Best Value / …) — Phase 2 */}
+          <div className="flex flex-wrap items-center gap-1.5 min-h-[1.5rem]">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.65rem] font-semibold bg-white/95 text-nexa-ink shadow-sm font-sans">
+              {listing.instant_booking ? (
+                <>
+                  <Zap className="w-3 h-3 text-nexa-primary fill-nexa-primary" />
+                  Instant
+                </>
+              ) : hasWalkthrough ? (
+                <>
+                  <BadgeCheck className="w-3 h-3 text-green-700" />
+                  Verified
+                </>
+              ) : (
+                <>
+                  <BadgeCheck className="w-3 h-3 text-nexa-ink-4" />
+                  Listed
+                </>
+              )}
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="p-4 sm:p-5 font-sans">
         <div className="mb-1 flex items-start justify-between gap-3">
-          <p className="text-xs font-medium text-nexa-ink-4 uppercase tracking-wider">
+        <p className="text-xs font-medium text-nexa-ink-4 tracking-wider">
             {getShortLocationLabel(listing)}
           </p>
           <div
@@ -231,7 +234,9 @@ export function ListingCard({
           </h3>
         </Link>
         <p className="text-sm text-nexa-ink-3 line-clamp-2 mb-4 min-h-[2.5rem] leading-relaxed">
-          {description}
+          {listing.description?.trim()
+            ? description
+            : getShortLocationLabel(listing)}
         </p>
 
         <div className="flex items-center justify-between gap-3 pt-3 border-t border-nexa-line/60">

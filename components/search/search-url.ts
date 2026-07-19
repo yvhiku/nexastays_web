@@ -26,6 +26,8 @@ export function searchBarValueToParams(
     instant?: boolean;
     sort?: string;
     vibe?: string | null;
+    collection?: string | null;
+    neighborhood?: string | null;
   },
 ): URLSearchParams {
   const params = new URLSearchParams();
@@ -53,6 +55,10 @@ export function searchBarValueToParams(
   if (extras?.instant) params.set("instant_booking_only", "true");
   if (extras?.sort && extras.sort !== "newest") params.set("sort", extras.sort);
   if (extras?.vibe) params.set("vibe", extras.vibe);
+  if (extras?.collection) params.set("collection", extras.collection);
+  if (extras?.neighborhood && city) {
+    params.set("neighborhood", extras.neighborhood);
+  }
 
   return params;
 }

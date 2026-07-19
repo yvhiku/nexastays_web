@@ -2,13 +2,11 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
-import { NexaSelect } from "@/components/ui/NexaSelect";
-import { SlidersHorizontal, X, List, Map as MapIcon } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -28,10 +26,21 @@ import {
   searchBarValueToParams,
   type SearchBarValue,
 } from "@/components/search";
-import { findDestinationById } from "@/lib/search-destinations";
+import { findDestinationById, findDestinationByCity } from "@/lib/search-destinations";
 import { ExploreMap } from "@/components/explore/ExploreMap";
+import { DestinationContext } from "@/components/explore/DestinationContext";
+import { ExploreCollections } from "@/components/explore/ExploreCollections";
+import { QuickFilters } from "@/components/explore/QuickFilters";
+import { ResultsHeader } from "@/components/explore/ResultsHeader";
+import { TrustStrip } from "@/components/explore/TrustStrip";
 import type { MapBounds, SearchListingsParams, StaysListing } from "@/lib/stays-types";
-import { VIBE_CARDS, getVibeById, findMatchingVibeId, type VibeId } from "@/lib/vibe-assets";
+import {
+  getCollectionById,
+  type ExploreCollection,
+} from "@/lib/explore-collections";
+import { slugifyNeighborhood } from "@/lib/explore-city-context";
+import { parseExploreLayout, type ExploreLayout } from "@/lib/explore-layout";
+import { parseNeighborhood } from "@/lib/listing-location";
 import { sanitizeCityInput, sanitizeDateInput, sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
 
@@ -71,9 +80,10 @@ export default function ListingsPage() {
   )
     ? (sortParam as SortOption)
     : "newest";
-  const activeVibe: VibeId | null =
-    getVibeById(searchParams.get("vibe"))?.id ??
-    findMatchingVibeId({ city, guests, selectedType });
+  const neighborhoodParam = (searchParams.get("neighborhood") || "").trim();
+  const collectionId = searchParams.get("collection");
+  const activeCollection = getCollectionById(collectionId);
+  const layout = parseExploreLayout(searchParams.get("layout"));
 
   const urlSearch = useMemo(
     () => searchBarValueFromSearchParams(searchParams),
@@ -81,7 +91,7 @@ export default function ListingsPage() {
   );
   const [searchDraft, setSearchDraft] = useState<SearchBarValue>(urlSearch);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null);
 
   useEffect(() => {
     setSearchDraft(urlSearch);
@@ -117,6 +127,7 @@ export default function ListingsPage() {
         setListings(envelope.items.map(exploreCardToListing));
         setNextCursor(envelope.pagination.next_cursor);
         setHasMore(envelope.pagination.has_more);
+        setFetchedAt(Date.now());
       })
       .catch((err) => {
         if (!cancelled) {
@@ -162,7 +173,7 @@ export default function ListingsPage() {
   }, [exploreParams, hasMore, nextCursor, isLoadingMore, t]);
 
   useEffect(() => {
-    if (viewMode !== "list" || !hasMore) return;
+    if (layout !== "list" || !hasMore) return;
     const el = loadMoreRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
@@ -175,7 +186,7 @@ export default function ListingsPage() {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [viewMode, hasMore, loadMore, listings.length]);
+  }, [layout, hasMore, loadMore, listings.length]);
 
   const handleMapBounds = useCallback(
     async (bounds: MapBounds) => {
@@ -205,7 +216,9 @@ export default function ListingsPage() {
     instant?: boolean;
     listingType?: string;
     sort?: SortOption;
-    vibe?: string | null;
+    collection?: string | null;
+    neighborhood?: string | null;
+    layout?: ExploreLayout;
   }) => {
     const next: SearchBarValue = {
       ...searchDraft,
@@ -214,14 +227,26 @@ export default function ListingsPage() {
     if (overrides?.listingType != null) {
       next.listingType = overrides.listingType;
     }
-    const nextVibe =
-      overrides && "vibe" in overrides ? overrides.vibe : activeVibe;
-    return searchBarValueToParams(next, {
+    const nextCollection =
+      overrides && "collection" in overrides
+        ? overrides.collection
+        : collectionId;
+    const nextNeighborhood =
+      overrides && "neighborhood" in overrides
+        ? overrides.neighborhood
+        : neighborhoodParam || null;
+    const params = searchBarValueToParams(next, {
       verified: overrides?.verified ?? verifiedOnly,
       instant: overrides?.instant ?? instantOnly,
       sort: overrides?.sort ?? selectedSort,
-      vibe: nextVibe,
+      collection: nextCollection,
+      neighborhood: nextNeighborhood,
     });
+    const nextLayout = overrides?.layout ?? layout;
+    if (nextLayout === "map" || nextLayout === "split") {
+      params.set("layout", nextLayout);
+    }
+    return params;
   };
 
   const navigateWithParams = (params: URLSearchParams) => {
@@ -241,11 +266,9 @@ export default function ListingsPage() {
     const next = { ...searchDraft, listingType: type };
     setSearchDraft(next);
     navigateWithParams(
-      searchBarValueToParams(next, {
-        verified: verifiedOnly,
-        instant: instantOnly,
-        sort: selectedSort,
-        vibe: null,
+      buildListingsParams({
+        search: next,
+        listingType: type,
       }),
     );
   };
@@ -271,7 +294,8 @@ export default function ListingsPage() {
         verified: verifiedOnly,
         instant: instantOnly,
         sort: selectedSort,
-        vibe: activeVibe,
+        collection: null,
+        neighborhood: null,
       }),
     );
   };
@@ -281,11 +305,12 @@ export default function ListingsPage() {
     navigateWithParams(new URLSearchParams());
   };
 
-  const applyVibe = (vibeId: VibeId) => {
-    const vibe = getVibeById(vibeId);
-    if (!vibe) return;
-
-    if (activeVibe === vibeId) {
+  const applyCollection = (col: ExploreCollection | null) => {
+    if (!col) {
+      navigateWithParams(buildListingsParams({ collection: null }));
+      return;
+    }
+    if (activeCollection?.id === col.id) {
       const cleared: SearchBarValue = {
         ...searchDraft,
         city: "",
@@ -300,33 +325,50 @@ export default function ListingsPage() {
           verified: verifiedOnly,
           instant: instantOnly,
           sort: selectedSort,
-          vibe: null,
+          collection: null,
+          neighborhood: null,
         }),
       );
       return;
     }
-
-    const filters = vibe.filters;
-    const nextCity = "city" in filters && filters.city ? filters.city : "";
-    const nextGuests =
-      "guests" in filters && filters.guests != null ? Number(filters.guests) : 1;
-    const nextType =
-      "listing_type" in filters && filters.listing_type
-        ? filters.listing_type
-        : "all";
-    const fromCity = nextCity
-      ? searchBarValueFromSearchParams(
-          new URLSearchParams(`city=${encodeURIComponent(nextCity)}`),
-        )
-      : null;
-
+    const f = col.filters;
+    const nextCity = f.city ?? "";
+    const fromCity = nextCity ? findDestinationByCity(nextCity) : null;
     const next: SearchBarValue = {
       ...searchDraft,
       city: nextCity,
-      destinationId: fromCity?.destinationId ?? null,
-      adults: nextGuests > 0 ? nextGuests : 1,
-      children: 0,
-      listingType: nextType,
+      destinationId: fromCity?.id ?? null,
+      adults: f.guests != null && f.guests > 0 ? f.guests : searchDraft.adults,
+      children: f.guests != null ? 0 : searchDraft.children,
+      listingType: f.listing_type ?? "all",
+    };
+    setSearchDraft(next);
+    navigateWithParams(
+      searchBarValueToParams(next, {
+        verified: f.verified_walkthrough_only ?? verifiedOnly,
+        instant: f.instant_booking_only ?? instantOnly,
+        sort: selectedSort,
+        collection: col.id,
+        neighborhood: null,
+      }),
+    );
+  };
+
+  const onSelectNeighborhood = (n: string | null) => {
+    if (!city) return;
+    navigateWithParams(
+      buildListingsParams({
+        neighborhood: n ? slugifyNeighborhood(n) : null,
+      }),
+    );
+  };
+
+  const onSelectCity = (c: string) => {
+    const dest = findDestinationByCity(c);
+    const next: SearchBarValue = {
+      ...searchDraft,
+      city: c,
+      destinationId: dest?.id ?? null,
     };
     setSearchDraft(next);
     navigateWithParams(
@@ -334,14 +376,71 @@ export default function ListingsPage() {
         verified: verifiedOnly,
         instant: instantOnly,
         sort: selectedSort,
-        vibe: vibeId,
+        collection: null,
+        neighborhood: null,
       }),
     );
   };
 
-  const displayListings = listings;
-  const isInitialLoading = isLoading && displayListings.length === 0;
-  const isRevalidating = isLoading && displayListings.length > 0;
+  const onQuickFilterToggle = (id: string) => {
+    if (id === "instant") {
+      setInstantOnly(!instantOnly);
+      return;
+    }
+    if (id === "verified") {
+      setVerifiedOnly(!verifiedOnly);
+      return;
+    }
+    if (id === "riads") {
+      setPropertyType(selectedType === "RIAD" ? "all" : "RIAD");
+      return;
+    }
+    if (id === "apartments") {
+      setPropertyType(selectedType === "APARTMENT" ? "all" : "APARTMENT");
+      return;
+    }
+    if (id === "villas") {
+      setPropertyType(selectedType === "VILLA" ? "all" : "VILLA");
+    }
+  };
+
+  const setLayout = (next: ExploreLayout) => {
+    navigateWithParams(buildListingsParams({ layout: next === "list" ? "list" : next }));
+  };
+
+  const resultNeighborhoods = useMemo(() => {
+    const set = new Set<string>();
+    for (const l of listings) {
+      const n = parseNeighborhood(l);
+      if (n) set.add(n);
+    }
+    return Array.from(set);
+  }, [listings]);
+
+  const displayListings = useMemo(() => {
+    if (!neighborhoodParam || !city) return listings;
+    return listings.filter(
+      (l) =>
+        slugifyNeighborhood(parseNeighborhood(l)) ===
+        slugifyNeighborhood(neighborhoodParam),
+    );
+  }, [listings, neighborhoodParam, city]);
+
+  const isInitialLoading = isLoading && listings.length === 0;
+  const isRevalidating = isLoading && listings.length > 0;
+
+  const updatedLabel =
+    fetchedAt != null
+      ? t("explore.updatedJustNow")
+      : "";
+
+  // Resolve neighborhood display name for chips
+  const neighborhoodDisplay =
+    neighborhoodParam &&
+    (resultNeighborhoods.find(
+      (n) => slugifyNeighborhood(n) === slugifyNeighborhood(neighborhoodParam),
+    ) ??
+      neighborhoodParam);
 
   return (
     <>
@@ -352,7 +451,7 @@ export default function ListingsPage() {
             <h3 className="mb-5">{t("listings.filters")}</h3>
             <div className="mb-7">
               <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">
-                {t("listings.trust")}
+                {t("explore.filterVerified")}
               </h4>
               <button
                 type="button"
@@ -405,7 +504,7 @@ export default function ListingsPage() {
             </div>
             <div className="mb-7">
               <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">
-                {t("listings.propertyType")}
+                {t("explore.filterProperty")}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {["all", ...LISTING_TYPES].map((type) => (
@@ -441,166 +540,77 @@ export default function ListingsPage() {
                   locale={locale}
                   variant="listings"
                 />
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
-                  <button
-                    onClick={() => setMobileFiltersOpen(true)}
-                    className="xl:hidden flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full border border-nexa-line hover:border-nexa-primary text-sm font-medium"
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                    {t("listings.filters")}
-                  </button>
-                  <span className="text-[0.8rem] text-nexa-ink-4 whitespace-nowrap inline-flex items-center gap-2">
-                    {isInitialLoading
-                      ? t("common.loading")
-                      : isRevalidating
-                        ? (
-                          <>
-                            <span
-                              className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
-                              aria-hidden
-                            />
-                            {tf("listings.showingMatches", {
-                              count: displayListings.length,
-                            })}
-                          </>
-                        )
-                        : displayListings.length === 0
-                          ? t("listings.noStaysFound")
-                          : tf("listings.showingMatches", {
-                              count: displayListings.length,
-                            })}
-                  </span>
-                  <label className="inline-flex items-center gap-2 text-[0.8rem] text-nexa-ink-3">
-                    <span className="hidden sm:inline whitespace-nowrap">
-                      {t("listings.sortBy")}
-                    </span>
-                    <NexaSelect
-                      variant="pill"
-                      value={selectedSort}
-                      aria-label={t("listings.sortBy")}
-                      onChange={(next) => {
-                        const sort = SORT_OPTIONS.includes(next as SortOption)
-                          ? (next as SortOption)
-                          : "newest";
-                        navigateWithParams(buildListingsParams({ sort }));
-                      }}
-                      options={[
-                        { value: "newest", label: t("listings.sortNewest") },
-                        { value: "rating", label: t("listings.sortTopRated") },
-                        {
-                          value: "price_desc",
-                          label: t("listings.sortMostExpensive"),
-                        },
-                        {
-                          value: "price_asc",
-                          label: t("listings.sortCheapest"),
-                        },
-                      ]}
-                    />
-                  </label>
-                  <div
-                    className="inline-flex rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto"
-                    role="group"
-                    aria-label={t("listings.viewMode")}
-                  >
+                <QuickFilters
+                  state={{
+                    verified: verifiedOnly,
+                    instant: instantOnly,
+                    listingType: selectedType,
+                  }}
+                  onToggle={onQuickFilterToggle}
+                  t={t}
+                />
+                <ResultsHeader
+                  matchCount={displayListings.length}
+                  isLoading={isLoading}
+                  isRevalidating={isRevalidating}
+                  updatedLabel={updatedLabel}
+                  sort={selectedSort}
+                  onSortChange={(next) => {
+                    const sort = SORT_OPTIONS.includes(next as SortOption)
+                      ? (next as SortOption)
+                      : "newest";
+                    navigateWithParams(buildListingsParams({ sort }));
+                  }}
+                  layout={layout}
+                  onLayoutChange={setLayout}
+                  sortOptions={[
+                    { value: "newest", label: t("listings.sortNewest") },
+                    { value: "rating", label: t("listings.sortTopRated") },
+                    {
+                      value: "price_desc",
+                      label: t("listings.sortMostExpensive"),
+                    },
+                    {
+                      value: "price_asc",
+                      label: t("listings.sortCheapest"),
+                    },
+                  ]}
+                  t={t}
+                  tf={tf}
+                  leading={
                     <button
                       type="button"
-                      onClick={() => setViewMode("list")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                        viewMode === "list"
-                          ? "bg-white text-nexa-ink shadow-sm"
-                          : "text-nexa-ink-4 hover:text-nexa-ink",
-                      )}
+                      onClick={() => setMobileFiltersOpen(true)}
+                      className="xl:hidden flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full border border-nexa-line hover:border-nexa-primary text-sm font-medium"
                     >
-                      <List className="h-3.5 w-3.5" aria-hidden />
-                      <span className="hidden sm:inline">{t("listings.listView")}</span>
+                      <SlidersHorizontal className="h-4 w-4" />
+                      {t("listings.filters")}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode("map")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                        viewMode === "map"
-                          ? "bg-white text-nexa-ink shadow-sm"
-                          : "text-nexa-ink-4 hover:text-nexa-ink",
-                      )}
-                    >
-                      <MapIcon className="h-3.5 w-3.5" aria-hidden />
-                      <span className="hidden sm:inline">{t("listings.mapView")}</span>
-                    </button>
-                  </div>
-                </div>
+                  }
+                />
               </div>
             </div>
 
             <div className="p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8 min-w-0 w-full max-w-full">
-              <div className="bg-gradient-to-br from-nexa-ink to-nexa-ink-2 rounded-2xl sm:rounded-[32px] p-5 sm:p-7 md:p-8 mb-6 sm:mb-7 min-w-0">
-                <h1 className="text-white text-xl sm:text-2xl font-semibold mb-2">
-                  {t("listings.staysTitle")}
-                </h1>
-                <p className="text-white/65 text-sm max-w-[500px]">
-                  {t("listings.staysSubtitle")}
-                </p>
-              </div>
+              <DestinationContext
+                city={city}
+                neighborhood={neighborhoodDisplay || undefined}
+                resultNeighborhoods={resultNeighborhoods}
+                neighborhoodCount={resultNeighborhoods.length}
+                matchCount={
+                  isInitialLoading ? undefined : displayListings.length
+                }
+                onSelectNeighborhood={onSelectNeighborhood}
+                onSelectCity={onSelectCity}
+                t={t}
+                tf={tf}
+              />
 
-              <div className="mb-2 min-w-0 flex items-end justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-semibold mb-1">{t("listings.chooseVibe")}</h3>
-                  <p className="text-[0.8rem] text-nexa-ink-4">
-                    {t("listings.tapVibe")}
-                  </p>
-                </div>
-                {activeVibe && (
-                  <button
-                    type="button"
-                    onClick={() => applyVibe(activeVibe)}
-                    className="shrink-0 text-xs font-semibold text-nexa-primary hover:text-nexa-primary-dark"
-                  >
-                    {t("listings.clearVibe")}
-                  </button>
-                )}
-              </div>
-              {/* w-0 min-w-full forces this block to respect the grid column width so cards never spill off-screen */}
-              <div className="mb-7 w-0 min-w-full max-w-full">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-                  {VIBE_CARDS.map((vibe) => {
-                    const selected = activeVibe === vibe.id;
-                    return (
-                      <button
-                        type="button"
-                        key={vibe.id}
-                        aria-pressed={selected}
-                        onClick={() => applyVibe(vibe.id)}
-                        className={cn(
-                          "group relative w-full h-[80px] sm:h-[88px] rounded-xl overflow-hidden cursor-pointer shadow-sm text-left transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40",
-                          selected &&
-                            "ring-2 ring-nexa-primary ring-offset-2 ring-offset-nexa-bg",
-                        )}
-                      >
-                        <Image
-                          src={vibe.src}
-                          alt={t(vibe.labelKey)}
-                          fill
-                          sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 160px"
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          style={{ objectPosition: vibe.objectPosition }}
-                        />
-                        <div
-                          className={cn(
-                            "absolute inset-0 bg-gradient-to-t from-nexa-ink/75 via-nexa-ink/25 to-transparent",
-                            selected && "from-nexa-primary/70 via-nexa-ink/30",
-                          )}
-                          aria-hidden
-                        />
-                        <span className="absolute bottom-2 left-2 right-2 text-white text-[0.72rem] sm:text-[0.78rem] font-bold leading-tight drop-shadow-md line-clamp-2">
-                          {t(vibe.labelKey)}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <ExploreCollections
+                activeId={activeCollection?.id ?? null}
+                onSelect={applyCollection}
+                t={t}
+              />
 
               {error && (
                 <ErrorAlert
@@ -619,7 +629,8 @@ export default function ListingsPage() {
                   {(verifiedOnly ||
                     instantOnly ||
                     selectedType !== "all" ||
-                    Boolean(activeVibe) ||
+                    Boolean(activeCollection) ||
+                    Boolean(neighborhoodParam) ||
                     Boolean(city) ||
                     Boolean(guests) ||
                     Boolean(checkin) ||
@@ -634,7 +645,7 @@ export default function ListingsPage() {
                     </Button>
                   )}
                 </div>
-              ) : viewMode === "map" ? (
+              ) : layout === "map" || layout === "split" ? (
                 <div
                   className="mb-9 min-w-0 relative"
                   aria-busy={isRevalidating || mapLoading}
@@ -714,19 +725,7 @@ export default function ListingsPage() {
                 </>
               )}
 
-              <div className="bg-nexa-primary-soft/80 border border-nexa-primary/15 rounded-2xl p-5 sm:p-6 md:p-7 min-w-0">
-                <p className="font-sans text-sm sm:text-[0.9375rem] leading-relaxed text-nexa-ink-2 max-w-3xl mb-5">
-                  {t("listings.noSurprises")}
-                </p>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-3">
-                  {["listings.verifiedWalkthrough", "listings.verifiedIdentity", "listings.accurateLocation", "listings.clearCheckinContact"].map((key) => (
-                    <li key={key} className="flex items-start gap-2.5 font-sans text-sm text-nexa-ink-2 min-w-0">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-nexa-primary" aria-hidden />
-                      <span className="leading-snug">{t(key)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <TrustStrip localePath={localePath} t={t} className="mt-2" />
             </div>
           </div>
         </div>
@@ -756,7 +755,7 @@ export default function ListingsPage() {
               </button>
             </div>
             <div className="mb-7">
-              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">{t("listings.trust")}</h4>
+              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">{t("explore.filterVerified")}</h4>
               <button
                 type="button"
                 aria-pressed={verifiedOnly}
@@ -795,7 +794,7 @@ export default function ListingsPage() {
               </button>
             </div>
             <div className="mb-6">
-              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">{t("listings.propertyType")}</h4>
+              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">{t("explore.filterProperty")}</h4>
               <div className="flex flex-wrap gap-2">
                 {["all", ...LISTING_TYPES].map((type) => (
                   <button

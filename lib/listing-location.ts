@@ -73,9 +73,9 @@ export function getFullMapsSearchQuery(listing: StaysListing): string {
 export function getShortLocationLabel(listing: StaysListing): string {
   const neighborhood = parseNeighborhood(listing);
   const city = listing.city?.trim() ?? "";
-  if (neighborhood && city) return `${neighborhood}, ${city}`;
+  if (neighborhood && city) return `${neighborhood} · ${city}`;
   if (listing.address?.trim()) return getFullMapsSearchQuery(listing);
-  if (city) return `${city}, Morocco`;
+  if (city) return `${city} · Morocco`;
   return "Morocco";
 }
 
