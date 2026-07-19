@@ -222,7 +222,14 @@
       "medina": "Médina historique",
       "desert": "Évasion désert",
       "valley": "Vallée",
-      "sahara": "Dunes du Sahara"
+      "sahara": "Dunes du Sahara",
+      "surf": "Surf",
+      "mountain": "Montagne",
+      "nature": "Nature",
+      "lake": "Lac",
+      "ski": "Ski",
+      "historic": "Historique",
+      "island": "Île"
     }
   },
   "nav": {

@@ -1,102 +1,60 @@
-import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
+import {
+  DESTINATION_CATALOG,
+  filterCatalog,
+  findCatalogEntryById,
+  popularCatalogEntries,
+  type DestinationEntry,
+} from "@/lib/destinations";
 
 export type SearchDestination = {
   id: string;
   label: string;
   /** i18n key under searchBar.destSubtitles.* or plain fallback */
   subtitleKey: string;
-  /** Explore API city */
+  /** Listings API city filter */
   resolveCity: string;
   popular?: boolean;
 };
 
-const ALIASES: SearchDestination[] = [
-  {
-    id: "medina-marrakech",
-    label: "Medina",
-    subtitleKey: "medina",
-    resolveCity: "Marrakech",
-  },
-  {
-    id: "agafay",
-    label: "Agafay",
-    subtitleKey: "desert",
-    resolveCity: "Marrakech",
-  },
-  {
-    id: "ourika",
-    label: "Ourika",
-    subtitleKey: "valley",
-    resolveCity: "Marrakech",
-  },
-  {
-    id: "merzouga",
-    label: "Merzouga",
-    subtitleKey: "sahara",
-    resolveCity: "Errachidia",
-  },
-];
-
-const POPULAR_ORDER = [
-  "Marrakech",
-  "Agadir",
-  "Tangier",
-  "Essaouira",
-  "Casablanca",
-  "Chefchaouen",
-] as const;
-
-const POPULAR_SUBTITLE: Record<string, string> = {
-  Marrakech: "mostBooked",
-  Agadir: "beach",
-  Tangier: "north",
-  Essaouira: "atlantic",
-  Casablanca: "city",
-  Chefchaouen: "blueCity",
-};
-
-function cityId(city: string): string {
-  return `city-${city.toLowerCase().replace(/\s+/g, "-")}`;
+function toSearchDestination(entry: DestinationEntry, popularIds: Set<string>): SearchDestination {
+  return {
+    id: entry.id,
+    label: entry.label,
+    subtitleKey: entry.subtitleKey ?? entry.categories[0] ?? "city",
+    resolveCity: entry.resolveCity,
+    popular: popularIds.has(entry.id),
+  };
 }
 
-const CITY_DESTINATIONS: SearchDestination[] = MOROCCO_CITIES.map((city) => ({
-  id: cityId(city),
-  label: city,
-  subtitleKey: POPULAR_SUBTITLE[city] ?? "city",
-  resolveCity: city,
-  popular: (POPULAR_ORDER as readonly string[]).includes(city),
-}));
+const POPULAR_ENTRIES = popularCatalogEntries(12);
+const POPULAR_IDS = new Set(POPULAR_ENTRIES.map((e) => e.id));
 
-export const SEARCH_DESTINATIONS: SearchDestination[] = [
-  ...CITY_DESTINATIONS,
-  ...ALIASES,
-];
+export const SEARCH_DESTINATIONS: SearchDestination[] = DESTINATION_CATALOG.map((e) =>
+  toSearchDestination(e, POPULAR_IDS),
+);
 
-export const POPULAR_DESTINATIONS: SearchDestination[] = POPULAR_ORDER.map(
-  (city) => CITY_DESTINATIONS.find((d) => d.resolveCity === city)!,
-).filter(Boolean);
+export const POPULAR_DESTINATIONS: SearchDestination[] = POPULAR_ENTRIES.map((e) =>
+  toSearchDestination(e, POPULAR_IDS),
+);
 
 export function findDestinationById(id: string | null | undefined): SearchDestination | undefined {
-  if (!id) return undefined;
-  return SEARCH_DESTINATIONS.find((d) => d.id === id);
+  const entry = findCatalogEntryById(id);
+  return entry ? toSearchDestination(entry, POPULAR_IDS) : undefined;
 }
 
 export function findDestinationByCity(city: string): SearchDestination | undefined {
   const c = city.trim();
   if (!c) return undefined;
-  return (
-    SEARCH_DESTINATIONS.find(
-      (d) => d.resolveCity.toLowerCase() === c.toLowerCase() && d.id.startsWith("city-"),
-    ) ?? SEARCH_DESTINATIONS.find((d) => d.label.toLowerCase() === c.toLowerCase())
-  );
+  const lower = c.toLowerCase();
+  const entry =
+    DESTINATION_CATALOG.find(
+      (d) => d.kind === "city" && d.resolveCity.toLowerCase() === lower,
+    ) ??
+    DESTINATION_CATALOG.find((d) => d.label.toLowerCase() === lower) ??
+    DESTINATION_CATALOG.find((d) => d.aliases.some((a) => a.toLowerCase() === lower));
+  return entry ? toSearchDestination(entry, POPULAR_IDS) : undefined;
 }
 
 export function filterDestinations(query: string): SearchDestination[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return SEARCH_DESTINATIONS;
-  return SEARCH_DESTINATIONS.filter(
-    (d) =>
-      d.label.toLowerCase().includes(q) ||
-      d.resolveCity.toLowerCase().includes(q),
-  );
+  return filterCatalog(query).map((e) => toSearchDestination(e, POPULAR_IDS));
 }

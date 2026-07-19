@@ -1,41 +1,7 @@
 /**
  * Moroccan cities for listing filters, host onboarding, and profile/registration.
- * Alphabetically sorted for dropdown UX.
+ * Derived from Level-1 destination catalog only (hosts cannot pick tourist spots / landmarks).
  */
-export const MOROCCO_CITIES: readonly string[] = [
-  "Agadir",
-  "Asilah",
-  "Beni Mellal",
-  "Berkane",
-  "Casablanca",
-  "Chefchaouen",
-  "Dakhla",
-  "El Jadida",
-  "Errachidia",
-  "Essaouira",
-  "Fes",
-  "Guelmim",
-  "Ifrane",
-  "Kenitra",
-  "Khemisset",
-  "Khouribga",
-  "Laayoune",
-  "Larache",
-  "Marrakech",
-  "Meknes",
-  "Mohammedia",
-  "Nador",
-  "Ouarzazate",
-  "Oujda",
-  "Rabat",
-  "Safi",
-  "Sale",
-  "Settat",
-  "Taghazout",
-  "Tangier",
-  "Tan-Tan",
-  "Taroudant",
-  "Taza",
-  "Tetouan",
-  "Tiznit",
-].sort((a, b) => a.localeCompare(b, "en"));
+import { listingCitiesFromCatalog } from "@/lib/destinations";
+
+export const MOROCCO_CITIES: readonly string[] = listingCitiesFromCatalog();
