@@ -39,7 +39,7 @@ import {
   getCollectionById,
   type ExploreCollection,
 } from "@/lib/explore-collections";
-import { slugifyNeighborhood } from "@/lib/explore-city-context";
+import { getCityContextByCity, slugifyNeighborhood } from "@/lib/explore-city-context";
 import { parseExploreLayout, type ExploreLayout } from "@/lib/explore-layout";
 import { parseNeighborhood } from "@/lib/listing-location";
 import { sanitizeCityInput, sanitizeDateInput, sanitizeGuestCount } from "@/lib/input-sanitize";
@@ -440,6 +440,11 @@ export default function ListingsPage() {
     navigateWithParams(buildListingsParams({ layout: next === "list" ? "list" : next }));
   };
 
+  const cityContext = useMemo(
+    () => (city ? getCityContextByCity(city) : null),
+    [city],
+  );
+
   const resultNeighborhoods = useMemo(() => {
     const set = new Set<string>();
     for (const l of listings) {
@@ -466,12 +471,15 @@ export default function ListingsPage() {
       ? t("explore.updatedJustNow")
       : "";
 
-  // Resolve neighborhood display name for chips
+  // Resolve neighborhood display name from curated catalog first
   const neighborhoodDisplay =
     neighborhoodParam &&
-    (resultNeighborhoods.find(
-      (n) => slugifyNeighborhood(n) === slugifyNeighborhood(neighborhoodParam),
-    ) ??
+    (cityContext?.neighborhoods.find(
+      (n) => slugifyNeighborhood(n.name) === slugifyNeighborhood(neighborhoodParam),
+    )?.name ??
+      resultNeighborhoods.find(
+        (n) => slugifyNeighborhood(n) === slugifyNeighborhood(neighborhoodParam),
+      ) ??
       neighborhoodParam);
 
   return (
@@ -628,8 +636,7 @@ export default function ListingsPage() {
                 <DestinationContext
                   city={city}
                   neighborhood={neighborhoodDisplay || undefined}
-                  resultNeighborhoods={resultNeighborhoods}
-                  neighborhoodCount={resultNeighborhoods.length}
+                  neighborhoodCount={cityContext?.neighborhoods.length}
                   matchCount={
                     isInitialLoading ? undefined : displayListings.length
                   }

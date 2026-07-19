@@ -12,7 +12,6 @@ import {
 export type DestinationContextProps = {
   city: string;
   neighborhood?: string;
-  resultNeighborhoods?: string[];
   neighborhoodCount?: number;
   matchCount?: number;
   onSelectNeighborhood: (neighborhood: string | null) => void;
@@ -26,7 +25,6 @@ export type DestinationContextProps = {
 export function DestinationContext({
   city,
   neighborhood,
-  resultNeighborhoods = [],
   neighborhoodCount,
   matchCount,
   onSelectNeighborhood,
@@ -38,18 +36,12 @@ export function DestinationContext({
 }: DestinationContextProps) {
   const ctx = getCityContextByCity(city);
 
-  const chips = React.useMemo(() => {
-    if (!ctx) return [];
-    const curated = ctx.neighborhoods.map((n) => n.name);
-    const extras = resultNeighborhoods.filter(
-      (n) =>
-        n &&
-        !curated.some(
-          (c) => slugifyNeighborhood(c) === slugifyNeighborhood(n),
-        ),
-    );
-    return [...curated, ...extras];
-  }, [ctx, resultNeighborhoods]);
+  // Authoritative city catalog only — never merge listing free-text neighborhoods
+  // (those often include other cities' districts).
+  const chips = React.useMemo(
+    () => (ctx ? ctx.neighborhoods.map((n) => n.name) : []),
+    [ctx],
+  );
 
   if (!city) {
     return (
