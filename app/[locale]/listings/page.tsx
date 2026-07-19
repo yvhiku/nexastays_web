@@ -7,6 +7,7 @@ import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { SlidersHorizontal, X, List, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -473,24 +474,29 @@ export default function ListingsPage() {
                     <span className="hidden sm:inline whitespace-nowrap">
                       {t("listings.sortBy")}
                     </span>
-                    <select
+                    <NexaSelect
+                      variant="pill"
                       value={selectedSort}
                       aria-label={t("listings.sortBy")}
-                      onChange={(e) => {
-                        const next = e.target.value as SortOption;
-                        navigateWithParams(
-                          buildListingsParams({
-                            sort: SORT_OPTIONS.includes(next) ? next : "newest",
-                          }),
-                        );
+                      onChange={(next) => {
+                        const sort = SORT_OPTIONS.includes(next as SortOption)
+                          ? (next as SortOption)
+                          : "newest";
+                        navigateWithParams(buildListingsParams({ sort }));
                       }}
-                      className="h-9 max-w-[11.5rem] rounded-full border border-nexa-line bg-white px-3 text-xs font-semibold text-nexa-ink focus:border-nexa-primary focus:outline-none focus:ring-2 focus:ring-nexa-primary/20"
-                    >
-                      <option value="newest">{t("listings.sortNewest")}</option>
-                      <option value="rating">{t("listings.sortTopRated")}</option>
-                      <option value="price_desc">{t("listings.sortMostExpensive")}</option>
-                      <option value="price_asc">{t("listings.sortCheapest")}</option>
-                    </select>
+                      options={[
+                        { value: "newest", label: t("listings.sortNewest") },
+                        { value: "rating", label: t("listings.sortTopRated") },
+                        {
+                          value: "price_desc",
+                          label: t("listings.sortMostExpensive"),
+                        },
+                        {
+                          value: "price_asc",
+                          label: t("listings.sortCheapest"),
+                        },
+                      ]}
+                    />
                   </label>
                   <div
                     className="inline-flex rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto"

@@ -3,6 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import type { BookingFilters } from "@/lib/booking-lifecycle";
 import { Filter, X } from "lucide-react";
 
@@ -59,39 +60,42 @@ export function BookingFiltersPanel({
             <label htmlFor="filter-status" className="text-xs font-medium text-nexa-ink-4 mb-1.5 block">
               {t("myBookings.filterStatus")}
             </label>
-            <select
+            <NexaSelect
               id="filter-status"
+              variant="field"
               value={filters.status}
-              onChange={(e) => onChange({ status: e.target.value })}
-              className="w-full h-10 rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink focus:outline-none focus:ring-2 focus:ring-nexa-primary/30"
-            >
-              <option value="all">{t("myBookings.allStatuses")}</option>
-              <option value="UPCOMING">{t("myBookings.lifecycle.UPCOMING")}</option>
-              <option value="ACTIVE">{t("myBookings.lifecycle.ACTIVE")}</option>
-              <option value="PENDING_PAYMENT">{t("myBookings.lifecycle.PENDING_PAYMENT")}</option>
-              <option value="COMPLETED">{t("myBookings.lifecycle.COMPLETED")}</option>
-              <option value="CANCELLED">{t("myBookings.lifecycle.CANCELLED")}</option>
-              <option value="EXPIRED">{t("myBookings.lifecycle.EXPIRED")}</option>
-            </select>
+              onChange={(status) => onChange({ status })}
+              aria-label={t("myBookings.filterStatus")}
+              options={[
+                { value: "all", label: t("myBookings.allStatuses") },
+                { value: "UPCOMING", label: t("myBookings.lifecycle.UPCOMING") },
+                { value: "ACTIVE", label: t("myBookings.lifecycle.ACTIVE") },
+                {
+                  value: "PENDING_PAYMENT",
+                  label: t("myBookings.lifecycle.PENDING_PAYMENT"),
+                },
+                { value: "COMPLETED", label: t("myBookings.lifecycle.COMPLETED") },
+                { value: "CANCELLED", label: t("myBookings.lifecycle.CANCELLED") },
+                { value: "EXPIRED", label: t("myBookings.lifecycle.EXPIRED") },
+              ]}
+            />
           </div>
 
           <div>
             <label htmlFor="filter-city" className="text-xs font-medium text-nexa-ink-4 mb-1.5 block">
               {t("myBookings.filterCity")}
             </label>
-            <select
+            <NexaSelect
               id="filter-city"
+              variant="field"
               value={filters.city}
-              onChange={(e) => onChange({ city: e.target.value })}
-              className="w-full h-10 rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink focus:outline-none focus:ring-2 focus:ring-nexa-primary/30"
-            >
-              <option value="all">{t("myBookings.allCities")}</option>
-              {cities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
+              onChange={(city) => onChange({ city })}
+              aria-label={t("myBookings.filterCity")}
+              options={[
+                { value: "all", label: t("myBookings.allCities") },
+                ...cities.map((city) => ({ value: city, label: city })),
+              ]}
+            />
           </div>
 
           <div>
@@ -120,18 +124,22 @@ export function BookingFiltersPanel({
             <label htmlFor="filter-sort" className="text-xs font-medium text-nexa-ink-4 mb-1.5 block">
               {t("myBookings.sortBy")}
             </label>
-            <select
+            <NexaSelect
               id="filter-sort"
+              variant="field"
               value={filters.sort}
-              onChange={(e) => onChange({ sort: e.target.value as BookingFilters["sort"] })}
-              className="w-full h-10 rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink focus:outline-none focus:ring-2 focus:ring-nexa-primary/30"
-            >
-              <option value="newest">{t("myBookings.sortNewest")}</option>
-              <option value="oldest">{t("myBookings.sortOldest")}</option>
-              <option value="checkin">{t("myBookings.sortCheckin")}</option>
-              <option value="price">{t("myBookings.sortPrice")}</option>
-              <option value="guests">{t("myBookings.sortGuests")}</option>
-            </select>
+              onChange={(sort) =>
+                onChange({ sort: sort as BookingFilters["sort"] })
+              }
+              aria-label={t("myBookings.sortBy")}
+              options={[
+                { value: "newest", label: t("myBookings.sortNewest") },
+                { value: "oldest", label: t("myBookings.sortOldest") },
+                { value: "checkin", label: t("myBookings.sortCheckin") },
+                { value: "price", label: t("myBookings.sortPrice") },
+                { value: "guests", label: t("myBookings.sortGuests") },
+              ]}
+            />
           </div>
         </div>
 

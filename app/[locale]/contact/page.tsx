@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -21,6 +22,7 @@ function recipientForReason(reason: string): string {
 export default function ContactPage() {
   const { t } = useLanguage();
   const [reason, setReason] = useState("");
+  const [propertyType, setPropertyType] = useState("Apartments");
   const formRef = useRef<HTMLFormElement>(null);
 
   const openMailto = (to: string, subjectLine: string) => {
@@ -43,7 +45,7 @@ export default function ContactPage() {
     const city = String(fd.get("city") ?? "").trim();
     const message = String(fd.get("message") ?? "").trim();
     const units = String(fd.get("partnershipUnits") ?? "").trim();
-    const propertyType = String(fd.get("propertyType") ?? "").trim();
+    const propertyTypeValue = String(fd.get("propertyType") ?? propertyType ?? "").trim();
     const citiesCovered = String(fd.get("partnershipCities") ?? "").trim();
 
     const parts = [
@@ -58,7 +60,7 @@ export default function ContactPage() {
       message || "(none)",
     ];
     if (r === "Partnership (10+ units)") {
-      parts.push("", "Partnership details:", `Units: ${units}`, `Property type: ${propertyType}`, `Cities covered: ${citiesCovered}`);
+      parts.push("", "Partnership details:", `Units: ${units}`, `Property type: ${propertyTypeValue}`, `Cities covered: ${citiesCovered}`);
     }
     const body = encodeURIComponent(parts.join("\n"));
     const subject = encodeURIComponent(`[Nexa Stays] ${r}`);
@@ -175,21 +177,26 @@ export default function ContactPage() {
                       <label className="block text-sm font-semibold text-nexa-ink-2 mb-2">
                         {t("contact.reasonRequired")}
                       </label>
-                      <select
-                        name="reason"
+                      <NexaSelect
+                        variant="field"
                         value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        className="w-full py-3 px-4 border border-nexa-line rounded-xl font-sans text-sm text-nexa-ink bg-white outline-none focus:border-nexa-primary focus:ring-2 focus:ring-nexa-primary/20"
-                        required
-                      >
-                        <option value="">{t("contact.selectReason")}</option>
-                        <option value="Support">{t("contact.support")}</option>
-                        <option value="Partnership (10+ units)">
-                          {t("contact.partnership")}
-                        </option>
-                        <option value="Investments">{t("contact.investments")}</option>
-                        <option value="Other">{t("contact.other")}</option>
-                      </select>
+                        onChange={setReason}
+                        aria-label={t("contact.reasonRequired")}
+                        options={[
+                          { value: "", label: t("contact.selectReason") },
+                          { value: "Support", label: t("contact.support") },
+                          {
+                            value: "Partnership (10+ units)",
+                            label: t("contact.partnership"),
+                          },
+                          {
+                            value: "Investments",
+                            label: t("contact.investments"),
+                          },
+                          { value: "Other", label: t("contact.other") },
+                        ]}
+                      />
+                      <input type="hidden" name="reason" value={reason} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
@@ -281,14 +288,18 @@ export default function ContactPage() {
                           <label className="block text-sm font-semibold mb-2">
                             {t("contact.propertyType")}
                           </label>
-                          <select
-                            name="propertyType"
-                            className="w-full py-3 px-4 border border-nexa-line rounded-xl font-sans text-sm outline-none focus:border-nexa-primary"
-                          >
-                            <option value="Apartments">Apartments</option>
-                            <option value="Hotels">Hotels</option>
-                            <option value="Mixed">Mixed</option>
-                          </select>
+                          <NexaSelect
+                            variant="field"
+                            value={propertyType}
+                            onChange={setPropertyType}
+                            aria-label={t("contact.propertyType")}
+                            options={[
+                              { value: "Apartments", label: "Apartments" },
+                              { value: "Hotels", label: "Hotels" },
+                              { value: "Mixed", label: "Mixed" },
+                            ]}
+                          />
+                          <input type="hidden" name="propertyType" value={propertyType} />
                         </div>
                       </div>
                       <div>

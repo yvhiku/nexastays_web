@@ -5,6 +5,7 @@ import { BadgeCheck, Loader2 } from "lucide-react";
 import { getListingReviews, getReviewMediaUrl } from "@/lib/stays-api";
 import type { ListingReview, ReviewSort } from "@/lib/stays-types";
 import { StarRatingDisplay } from "./StarRatingSelector";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { cn } from "@/lib/utils";
 
 function formatReviewDate(iso: string): string {
@@ -219,16 +220,17 @@ export function ListingReviewsSection({
             </div>
           )}
         </div>
-        <select
+        <NexaSelect
+          variant="pill"
           value={sort}
-          onChange={(e) => setSort(e.target.value as ReviewSort)}
-          className="text-sm border border-nexa-line/60 rounded-lg px-3 py-2 bg-white dark:bg-nexa-ink dark:text-white"
+          onChange={(v) => setSort(v as ReviewSort)}
           aria-label="Sort reviews"
-        >
-          <option value="newest">Newest</option>
-          <option value="highest">Highest rated</option>
-          <option value="lowest">Lowest rated</option>
-        </select>
+          options={[
+            { value: "newest", label: "Newest" },
+            { value: "highest", label: "Highest rated" },
+            { value: "lowest", label: "Lowest rated" },
+          ]}
+        />
       </div>
 
       {total > 0 && Object.keys(distribution).length > 0 && (

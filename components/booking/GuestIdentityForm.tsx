@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Button } from "@/components/ui/button";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { validateImageFile } from "@/lib/validators";
 import { uploadOccupantIdDocument } from "@/lib/stays-api";
 import { uploadDocument as uploadKycDocument } from "@/lib/kyc-api";
@@ -83,16 +84,23 @@ export function GuestIdentityForm({
       {guestCount > 1 && !isPrimary && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-nexa-ink-2 mb-2">Gender (for required fields)</label>
-          <select
+          <NexaSelect
+            variant="field"
             value={guest.gender ?? ""}
-            onChange={(e) => onChange({ ...guest, gender: (e.target.value || undefined) as GuestGender | undefined })}
-            className="w-full h-11 rounded-xl border-2 border-nexa-line px-4 text-sm outline-none focus:border-nexa-primary"
-          >
-            <option value="">Select</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
-          </select>
+            onChange={(v) =>
+              onChange({
+                ...guest,
+                gender: (v || undefined) as GuestGender | undefined,
+              })
+            }
+            aria-label="Gender"
+            options={[
+              { value: "", label: "Select" },
+              { value: "MALE", label: "Male" },
+              { value: "FEMALE", label: "Female" },
+              { value: "PREFER_NOT_TO_SAY", label: "Prefer not to say" },
+            ]}
+          />
         </div>
       )}
 

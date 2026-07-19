@@ -23,6 +23,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { resolveLocalizedPath } from "@/lib/locale-path";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import {
   SumsubWebVerification,
   type SumsubFinalStatus,
@@ -461,32 +462,32 @@ export default function RegistrationPage() {
                   <label className="block text-sm font-semibold text-nexa-ink-2 mb-2">
                     City
                   </label>
-                  <select
-                    className="w-full h-11 rounded-xl border-2 border-nexa-line bg-white px-4 py-3 text-sm font-sans text-nexa-ink outline-none focus:border-nexa-primary"
+                  <NexaSelect
+                    variant="field"
                     value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  >
-                    <option value="">Select city</option>
-                    {MOROCCO_CITIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setCity}
+                    aria-label="City"
+                    options={[
+                      { value: "", label: "Select city" },
+                      ...MOROCCO_CITIES.map((c) => ({ value: c, label: c })),
+                    ]}
+                  />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
                   <div>
                     <label className="block text-sm font-semibold text-nexa-ink-2 mb-2">
                       Nationality
                     </label>
-                    <select
-                      className="w-full h-11 rounded-xl border-2 border-nexa-line bg-white px-4 py-3 text-sm font-sans text-nexa-ink outline-none focus:border-nexa-primary"
+                    <NexaSelect
+                      variant="field"
                       value={nationality}
-                      onChange={(e) => setNationality(e.target.value)}
-                    >
-                      <option value="MA">Morocco</option>
-                      <option value="OTHER">Other</option>
-                    </select>
+                      onChange={setNationality}
+                      aria-label="Nationality"
+                      options={[
+                        { value: "MA", label: "Morocco" },
+                        { value: "OTHER", label: "Other" },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-nexa-ink-2 mb-2">

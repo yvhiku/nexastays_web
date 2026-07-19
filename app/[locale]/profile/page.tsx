@@ -16,6 +16,7 @@ import { ChangePhoneModal } from "@/components/ChangePhoneModal";
 import { Camera, User, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 
 function ProfilePageContent() {
   const { user, token, tokenType, refreshUser } = useAuth();
@@ -231,21 +232,19 @@ function ProfilePageContent() {
                     <MapPin className="h-4 w-4" />
                     {t("profile.city")}
                   </label>
-                  <select
+                  <NexaSelect
+                    variant="field"
                     value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-nexa-line bg-white text-nexa-ink outline-none focus:border-nexa-primary min-h-[44px]"
-                  >
-                    <option value="">Select city</option>
-                    {city && !MOROCCO_CITIES.includes(city) ? (
-                      <option value={city}>{city}</option>
-                    ) : null}
-                    {MOROCCO_CITIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setCity}
+                    aria-label={t("profile.city")}
+                    options={[
+                      { value: "", label: "Select city" },
+                      ...(city && !MOROCCO_CITIES.includes(city)
+                        ? [{ value: city, label: city }]
+                        : []),
+                      ...MOROCCO_CITIES.map((c) => ({ value: c, label: c })),
+                    ]}
+                  />
                   <p className="text-xs text-nexa-ink-4 mt-1">You can change this anytime</p>
                 </div>
 
