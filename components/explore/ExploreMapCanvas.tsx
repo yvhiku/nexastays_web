@@ -169,7 +169,13 @@ export function ExploreMapCanvasHeader({
             <button
               type="button"
               aria-pressed={allAreasSelected}
-              onClick={() => onSelectNeighborhood(null)}
+              onClick={() => {
+                if (allAreasSelected) {
+                  onClearCity();
+                } else {
+                  onSelectNeighborhood(null);
+                }
+              }}
               className={cn(
                 "inline-flex flex-col items-start gap-0.5 rounded-2xl border px-3.5 py-2 text-left transition-colors",
                 allAreasSelected
@@ -177,8 +183,11 @@ export function ExploreMapCanvasHeader({
                   : "border-nexa-line bg-white hover:border-nexa-primary/50",
               )}
             >
-              <span className="text-xs font-semibold text-nexa-ink">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-nexa-ink">
                 {tf("explore.allInCity", { city })}
+                {allAreasSelected && (
+                  <X className="h-3 w-3 text-nexa-primary" aria-hidden />
+                )}
               </span>
               <span className="text-[0.65rem] text-nexa-ink-4">
                 {t("explore.allAreas")}

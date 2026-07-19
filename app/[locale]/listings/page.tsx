@@ -398,13 +398,20 @@ export default function ListingsPage() {
       destinationId: null,
     };
     setSearchDraft(next);
-    navigateWithParams(
-      buildListingsParams({
-        search: next,
-        neighborhood: null,
-        collection: null,
-      }),
-    );
+    const params = searchBarValueToParams(next, {
+      verified: verifiedOnly,
+      instant: instantOnly,
+      sort: selectedSort,
+      collection: null,
+      neighborhood: null,
+    });
+    params.delete("city");
+    params.delete("neighborhood");
+    params.delete("collection");
+    if (layout === "map" || layout === "split") {
+      params.set("layout", layout);
+    }
+    navigateWithParams(params);
   };
 
   const onQuickFilterToggle = (id: string) => {
