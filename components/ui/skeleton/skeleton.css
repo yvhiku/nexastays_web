@@ -1,0 +1,50 @@
+/* Nexa skeleton design system — single shimmer source */
+
+:root {
+  --skeleton-base: #ececec;
+  --skeleton-highlight: #f8f8f8;
+  --skeleton-duration: 1.5s;
+}
+
+.skeleton {
+  background-color: var(--skeleton-base);
+  display: block;
+  flex-shrink: 0;
+}
+
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--skeleton-base) 0%,
+    var(--skeleton-highlight) 45%,
+    var(--skeleton-base) 90%
+  );
+  background-size: 200% 100%;
+  background-color: var(--skeleton-base);
+  animation: skeleton-shimmer var(--skeleton-duration) linear infinite;
+}
+
+.skeleton-rounded {
+  border-radius: 12px;
+}
+
+.skeleton-circle {
+  border-radius: 9999px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background-image: none;
+    background-color: var(--skeleton-base);
+  }
+}

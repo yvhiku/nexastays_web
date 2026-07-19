@@ -257,6 +257,17 @@ First viewport should stay one composition: brand/nav, search, and results — a
 
 ---
 
+## 9b. Skeleton loading
+
+Canonical rules: [`components/ui/skeleton/SKELETON.md`](../components/ui/skeleton/SKELETON.md).
+
+- CSS tokens: `--skeleton-base`, `--skeleton-highlight` in `skeleton.css`
+- Marketplace: `ListingGridSkeleton` on initial explore/saved load; keep content on filter revalidation
+- Route shell: `app/[locale]/loading.tsx` → `LocaleRouteSkeleton` (not `AppLoader`)
+- Shared card dims: `components/listing/listing-card-dims.ts`
+
+---
+
 ## 10. Implementation checklist (new UI)
 
 When adding a surface:
@@ -280,7 +291,7 @@ nexastays_web/
     globals.css         # base + Leaflet/map markers
     [locale]/...        # screens
   components/
-    ui/                 # Button, Input, Alert, DatePicker, …
+    ui/                 # Button, Input, Alert, DatePicker, skeleton/
     listing/            # ListingCard, galleries
     explore/            # ExploreMap
     navbar/             # NavBar + mobile drawer

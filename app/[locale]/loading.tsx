@@ -1,9 +1,5 @@
-import { AppLoader } from "@/components/AppLoader";
+import { LocaleRouteSkeleton } from "@/components/ui/skeleton";
 
 export default function LocaleLoading() {
-  return (
-    <main className="min-h-screen bg-nexa-bg-1 pt-[72px] flex items-center justify-center">
-      <AppLoader />
-    </main>
-  );
+  return <LocaleRouteSkeleton />;
 }

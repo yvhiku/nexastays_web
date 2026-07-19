@@ -13,6 +13,15 @@ import type { StaysListing } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
+import {
+  LISTING_CARD_IMAGE_RATIO,
+  LISTING_CARD_RADIUS,
+} from "@/components/listing/listing-card-dims";
+
+export {
+  LISTING_CARD_IMAGE_RATIO,
+  LISTING_CARD_RADIUS,
+} from "@/components/listing/listing-card-dims";
 
 const placeholderImg =
   "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
@@ -67,6 +76,7 @@ export function ListingCard({
     : placeholderImg;
   const [saved, setSaved] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     setSaved(isListingSaved(listing.id, userId));
@@ -74,6 +84,11 @@ export function ListingCard({
     window.addEventListener("nexa-saved-listings-changed", onChange);
     return () => window.removeEventListener("nexa-saved-listings-changed", onChange);
   }, [listing.id, userId]);
+
+  useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [coverSrc]);
 
   const detailUrl = new URLSearchParams();
   if (checkin) detailUrl.set("checkin_date", checkin);
@@ -98,11 +113,17 @@ export function ListingCard({
   const reviewCount = Math.max(0, Number(listing.review_count ?? 0));
 
   return (
-    <article className="group bg-white rounded-2xl overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5 min-w-0 w-full">
+    <article
+      className={cn(
+        "group bg-white overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5 min-w-0 w-full",
+        LISTING_CARD_RADIUS,
+      )}
+    >
       <div className="relative block">
         <button
           type="button"
-          className="relative block w-full aspect-[4/3] overflow-hidden rounded-t-2xl bg-nexa-bg-2"
+          className="relative block w-full overflow-hidden rounded-t-2xl bg-nexa-bg-2"
+          style={{ aspectRatio: LISTING_CARD_IMAGE_RATIO }}
           onClick={() => router.push(linkHref)}
           aria-label={title}
         >
@@ -111,10 +132,17 @@ export function ListingCard({
             alt={title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className={cn(
+              "object-cover transition-[opacity,transform] duration-300 group-hover:scale-[1.03]",
+              imgLoaded ? "opacity-100" : "opacity-0",
+            )}
             loading="lazy"
             unoptimized={Boolean(cover) && !imgError}
-            onError={() => setImgError(true)}
+            onLoad={() => setImgLoaded(true)}
+            onError={() => {
+              setImgError(true);
+              setImgLoaded(true);
+            }}
           />
         </button>
 

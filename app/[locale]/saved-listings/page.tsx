@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ListingCard } from "@/components/listing/ListingCard";
+import { ListingGridSkeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getListing } from "@/lib/stays-api";
@@ -77,11 +78,7 @@ function SavedListingsContent() {
           )}
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-[320px] bg-gray-200 rounded-[22px] animate-pulse" />
-              ))}
-            </div>
+            <ListingGridSkeleton variant="saved" />
           ) : listings.length === 0 ? (
             <div className="text-center py-16 text-nexa-ink-4">
               <Heart className="h-12 w-12 mx-auto mb-4 text-nexa-primary/40" />

@@ -20,6 +20,7 @@ import {
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { ListingCard } from "@/components/listing/ListingCard";
+import { ListingGridSkeleton } from "@/components/ui/skeleton";
 import { ExploreMap } from "@/components/explore/ExploreMap";
 import type { MapBounds, SearchListingsParams, StaysListing } from "@/lib/stays-types";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
@@ -362,6 +363,8 @@ export default function ListingsPage() {
 
   const minCheckin = todayISO();
   const displayListings = listings;
+  const isInitialLoading = isLoading && displayListings.length === 0;
+  const isRevalidating = isLoading && displayListings.length > 0;
 
   return (
     <>
@@ -525,14 +528,26 @@ export default function ListingsPage() {
                     <SlidersHorizontal className="h-4 w-4" />
                     {t("listings.filters")}
                   </button>
-                  <span className="text-[0.8rem] text-nexa-ink-4 whitespace-nowrap">
-                    {isLoading
+                  <span className="text-[0.8rem] text-nexa-ink-4 whitespace-nowrap inline-flex items-center gap-2">
+                    {isInitialLoading
                       ? t("common.loading")
-                      : displayListings.length === 0
-                        ? t("listings.noStaysFound")
-                        : tf("listings.showingMatches", {
-                            count: displayListings.length,
-                          })}
+                      : isRevalidating
+                        ? (
+                          <>
+                            <span
+                              className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
+                              aria-hidden
+                            />
+                            {tf("listings.showingMatches", {
+                              count: displayListings.length,
+                            })}
+                          </>
+                        )
+                        : displayListings.length === 0
+                          ? t("listings.noStaysFound")
+                          : tf("listings.showingMatches", {
+                              count: displayListings.length,
+                            })}
                   </span>
                   <label className="inline-flex items-center gap-2 text-[0.8rem] text-nexa-ink-3">
                     <span className="hidden sm:inline whitespace-nowrap">
@@ -669,12 +684,8 @@ export default function ListingsPage() {
                 />
               )}
 
-              {isLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-[320px] bg-gray-200 rounded-[22px] animate-pulse" />
-                  ))}
-                </div>
+              {isInitialLoading ? (
+                <ListingGridSkeleton variant="explore" />
               ) : displayListings.length === 0 ? (
                 <div className="text-center py-16 text-nexa-ink-4">
                   <p className="text-lg font-medium mb-2">{t("listings.noStaysFound")}</p>
@@ -698,9 +709,16 @@ export default function ListingsPage() {
                   )}
                 </div>
               ) : viewMode === "map" ? (
-                <div className="mb-9 min-w-0 relative">
-                  {mapLoading && (
-                    <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm">
+                <div
+                  className="mb-9 min-w-0 relative"
+                  aria-busy={isRevalidating || mapLoading}
+                >
+                  {(mapLoading || isRevalidating) && (
+                    <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm inline-flex items-center gap-2">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
+                        aria-hidden
+                      />
                       {t("common.loading")}
                     </p>
                   )}
@@ -719,7 +737,10 @@ export default function ListingsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                  <div
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"
+                    aria-busy={isRevalidating}
+                  >
                     {displayListings.map((l) => (
                       <ListingCard
                         key={l.id}
@@ -739,7 +760,11 @@ export default function ListingsPage() {
                   </div>
                   <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
                   {isLoadingMore && (
-                    <p className="mb-4 text-center text-sm text-nexa-ink-4">
+                    <p className="mb-4 text-center text-sm text-nexa-ink-4 inline-flex w-full items-center justify-center gap-2">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
+                        aria-hidden
+                      />
                       {t("common.loading")}
                     </p>
                   )}
