@@ -268,6 +268,18 @@ Canonical rules: [`components/ui/skeleton/SKELETON.md`](../components/ui/skeleto
 
 ---
 
+## 9c. Search bar (Where / When / Guests)
+
+Canonical implementation: [`components/search/`](../components/search/).
+
+- Controlled `SearchBar` (`value` / `onChange` / `onSearch`) — no router inside
+- Popover FSM: only one open; destination → dates → guests auto-advance
+- `guests` API = adults + children; infants/pets URL-only when &gt; 0
+- Destinations catalog: [`lib/search-destinations.ts`](../lib/search-destinations.ts) (cities + aliases)
+- Recent searches: `localStorage` via `search-recent.ts`
+
+---
+
 ## 10. Implementation checklist (new UI)
 
 When adding a surface:
@@ -292,6 +304,7 @@ nexastays_web/
     [locale]/...        # screens
   components/
     ui/                 # Button, Input, Alert, DatePicker, skeleton/
+    search/             # SearchBar (Where / When / Guests)
     listing/            # ListingCard, galleries
     explore/            # ExploreMap
     navbar/             # NavBar + mobile drawer

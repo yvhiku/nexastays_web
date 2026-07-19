@@ -1,14 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Shield, FileText, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { GuestSelect } from "@/components/ui/GuestSelect";
+import { GuestsPanel } from "@/components/search";
 import type { StaysListing } from "@/lib/stays-types";
 import { addDaysToDateString } from "@/lib/booking-dates";
-import { sanitizeGuestCount } from "@/lib/input-sanitize";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ListingBookingCardProps {
@@ -70,6 +69,23 @@ export function ListingBookingCard({
   onSubmit,
 }: ListingBookingCardProps) {
   const { t, locale } = useLanguage();
+  const [adults, setAdults] = useState(() => Math.max(1, guests));
+  const [childrenCount, setChildrenCount] = useState(0);
+  const [infants, setInfants] = useState(0);
+  const [pets, setPets] = useState(0);
+
+  useEffect(() => {
+    const occ = adults + childrenCount;
+    if (occ >= 1 && occ !== guests) onGuestsChange(occ);
+  }, [adults, childrenCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (guests !== adults + childrenCount) {
+      setAdults(Math.max(1, guests));
+      setChildrenCount(0);
+    }
+  }, [guests]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const kycBlocked =
     isAuthenticated &&
     userProfile &&
@@ -78,8 +94,10 @@ export function ListingBookingCard({
 
   const today = todayISO();
   const checkoutMin = checkin ? addDaysToDateString(checkin, 1) : today;
+  const occupancyOver = adults + childrenCount > maxGuests;
+  const petsPolicy = listing.rules?.pets_policy;
 
-  const checkoutDisabledDates = React.useMemo(() => {
+  const checkoutDisabledDates = useMemo(() => {
     if (!checkin || blockedNights.length === 0) return blockedNights;
     const blocked = new Set(blockedNights);
     const invalid: string[] = [];
@@ -146,22 +164,29 @@ export function ListingBookingCard({
             />
           </div>
           <div className="relative p-3 border-t border-nexa-line col-span-2 rounded-b-xl">
-            <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
-              Guests
-            </label>
-            <GuestSelect
-              value={String(sanitizeGuestCount(guests, Math.max(1, maxGuests)) ?? 1)}
-              onChange={(v) =>
-                onGuestsChange(sanitizeGuestCount(v, Math.max(1, maxGuests)) ?? 1)
+            <GuestsPanel
+              value={{
+                adults,
+                children: childrenCount,
+                infants,
+                pets,
+              }}
+              maxOccupancy={maxGuests}
+              onChange={(patch) => {
+                if (patch.adults != null) setAdults(patch.adults);
+                if (patch.children != null) setChildrenCount(patch.children);
+                if (patch.infants != null) setInfants(patch.infants);
+                if (patch.pets != null) setPets(patch.pets);
+              }}
+              t={t}
+              className="p-0 max-w-none"
+              footer={
+                pets > 0 && petsPolicy === "NO" ? (
+                  <p className="mt-2 text-xs text-amber-800">
+                    {t("searchBar.petsNotAllowed")}
+                  </p>
+                ) : null
               }
-              aria-label="Guests"
-              options={Array.from(
-                { length: Math.max(1, maxGuests) },
-                (_, i) => i + 1,
-              ).map((n) => ({
-                value: String(n),
-                label: `${n} guest${n > 1 ? "s" : ""}`,
-              }))}
             />
           </div>
         </div>
@@ -186,7 +211,14 @@ export function ListingBookingCard({
         <Button
           type="submit"
           className="w-full justify-center py-6 text-base font-bold rounded-xl bg-nexa-primary-soft text-nexa-primary-dark hover:bg-nexa-primary/20 border-0 shadow-md"
-          disabled={booking || !checkin || !checkout || nights < 1 || !!kycBlocked}
+          disabled={
+            booking ||
+            !checkin ||
+            !checkout ||
+            nights < 1 ||
+            !!kycBlocked ||
+            occupancyOver
+          }
         >
           {booking ? "Booking…" : isAuthenticated ? "Request to Book" : "Sign in to Book"}
         </Button>

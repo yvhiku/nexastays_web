@@ -6,8 +6,6 @@ import Image from "next/image";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { GuestSelect } from "@/components/ui/GuestSelect";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { SlidersHorizontal, X, List, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,24 +19,20 @@ import {
 import { formatUserError } from "@/lib/errors";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { ListingGridSkeleton } from "@/components/ui/skeleton";
+import {
+  DEFAULT_SEARCH_BAR_VALUE,
+  SearchBar,
+  pushRecentSearch,
+  searchBarValueFromSearchParams,
+  searchBarValueToParams,
+  type SearchBarValue,
+} from "@/components/search";
+import { findDestinationById } from "@/lib/search-destinations";
 import { ExploreMap } from "@/components/explore/ExploreMap";
 import type { MapBounds, SearchListingsParams, StaysListing } from "@/lib/stays-types";
-import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
 import { VIBE_CARDS, getVibeById, findMatchingVibeId, type VibeId } from "@/lib/vibe-assets";
-import { addDaysToDateString } from "@/lib/booking-dates";
 import { sanitizeCityInput, sanitizeDateInput, sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
-
-function todayISO(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-const filterFieldClass =
-  "relative flex-1 min-w-0 h-11 rounded-xl border border-nexa-line bg-white px-3 flex items-center focus-within:border-nexa-primary focus-within:ring-2 focus-within:ring-nexa-primary/20 transition-colors";
 
 const LISTING_TYPES = ["APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"] as const;
 const SORT_OPTIONS = ["newest", "rating", "price_desc", "price_asc"] as const;
@@ -80,19 +74,17 @@ export default function ListingsPage() {
     getVibeById(searchParams.get("vibe"))?.id ??
     findMatchingVibeId({ city, guests, selectedType });
 
-  const [draftCity, setDraftCity] = useState(city);
-  const [draftCheckin, setDraftCheckin] = useState(checkin);
-  const [draftCheckout, setDraftCheckout] = useState(checkout);
-  const [draftGuests, setDraftGuests] = useState(guests ? String(guests) : "");
+  const urlSearch = useMemo(
+    () => searchBarValueFromSearchParams(searchParams),
+    [searchParams],
+  );
+  const [searchDraft, setSearchDraft] = useState<SearchBarValue>(urlSearch);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   useEffect(() => {
-    setDraftCity(city);
-    setDraftCheckin(checkin);
-    setDraftCheckout(checkout);
-    setDraftGuests(guests ? String(guests) : "");
-  }, [city, checkin, checkout, guests]);
+    setSearchDraft(urlSearch);
+  }, [urlSearch]);
 
   const exploreParams = useMemo((): SearchListingsParams => {
     return {
@@ -207,46 +199,28 @@ export default function ListingsPage() {
   }, [exploreParams]);
 
   const buildListingsParams = (overrides?: {
-    city?: string;
-    checkin?: string;
-    checkout?: string;
-    guests?: string;
+    search?: Partial<SearchBarValue>;
     verified?: boolean;
     instant?: boolean;
     listingType?: string;
     sort?: SortOption;
     vibe?: string | null;
   }) => {
-    const params = new URLSearchParams();
-    const nextCity = overrides?.city ?? draftCity;
-    const nextCheckin = overrides?.checkin ?? draftCheckin;
-    const nextCheckout = overrides?.checkout ?? draftCheckout;
-    const nextGuests = overrides?.guests ?? draftGuests;
-    const v = overrides?.verified ?? verifiedOnly;
-    const i = overrides?.instant ?? instantOnly;
-    const type = overrides?.listingType ?? selectedType;
-    const sort = overrides?.sort ?? selectedSort;
+    const next: SearchBarValue = {
+      ...searchDraft,
+      ...overrides?.search,
+    };
+    if (overrides?.listingType != null) {
+      next.listingType = overrides.listingType;
+    }
     const nextVibe =
       overrides && "vibe" in overrides ? overrides.vibe : activeVibe;
-    if (nextCity.trim()) params.set("city", sanitizeCityInput(nextCity));
-    if (nextCheckin) {
-      const d = sanitizeDateInput(nextCheckin);
-      if (d) params.set("checkin_date", d);
-    }
-    if (nextCheckout) {
-      const d = sanitizeDateInput(nextCheckout);
-      if (d) params.set("checkout_date", d);
-    }
-    if (nextGuests) {
-      const g = sanitizeGuestCount(nextGuests);
-      if (g) params.set("guests", String(g));
-    }
-    if (v) params.set("verified_walkthrough_only", "true");
-    if (i) params.set("instant_booking_only", "true");
-    if (type && type !== "all") params.set("listing_type", type);
-    if (sort && sort !== "newest") params.set("sort", sort);
-    if (nextVibe) params.set("vibe", nextVibe);
-    return params;
+    return searchBarValueToParams(next, {
+      verified: overrides?.verified ?? verifiedOnly,
+      instant: overrides?.instant ?? instantOnly,
+      sort: overrides?.sort ?? selectedSort,
+      vibe: nextVibe,
+    });
   };
 
   const navigateWithParams = (params: URLSearchParams) => {
@@ -263,59 +237,46 @@ export default function ListingsPage() {
   };
 
   const setPropertyType = (type: string) => {
-    // Manual type chip overrides the vibe type association.
-    navigateWithParams(buildListingsParams({ listingType: type, vibe: null }));
-  };
-
-  const updateCity = (next: string) => {
-    setDraftCity(next);
-    navigateWithParams(buildListingsParams({ city: next, vibe: null }));
-  };
-
-  const updateGuests = (next: string) => {
-    setDraftGuests(next);
-    navigateWithParams(buildListingsParams({ guests: next, vibe: null }));
-  };
-
-  const updateCheckin = (next: string) => {
-    let nextCheckout = draftCheckout;
-    if (nextCheckout && next && nextCheckout <= next) {
-      nextCheckout = "";
-      setDraftCheckout("");
-    }
-    setDraftCheckin(next);
+    const next = { ...searchDraft, listingType: type };
+    setSearchDraft(next);
     navigateWithParams(
-      buildListingsParams({ checkin: next, checkout: nextCheckout }),
+      searchBarValueToParams(next, {
+        verified: verifiedOnly,
+        instant: instantOnly,
+        sort: selectedSort,
+        vibe: null,
+      }),
     );
   };
 
-  const updateCheckout = (next: string) => {
-    setDraftCheckout(next);
-    navigateWithParams(buildListingsParams({ checkout: next }));
-  };
-
-  const applySearch = () => {
+  const commitSearch = (next: SearchBarValue) => {
+    setSearchDraft(next);
+    const dest = findDestinationById(next.destinationId);
+    if (dest) {
+      pushRecentSearch({
+        destinationId: dest.id,
+        label: dest.label,
+        city: dest.resolveCity,
+      });
+    }
     trackEvent("search_submitted", {
-      city: draftCity || null,
-      checkin: draftCheckin || null,
-      checkout: draftCheckout || null,
-      guests: draftGuests || null,
+      city: next.city || null,
+      checkin: next.checkin || null,
+      checkout: next.checkout || null,
+      guests: next.adults + next.children || null,
     });
     navigateWithParams(
-      buildListingsParams({
-        city: draftCity,
-        checkin: draftCheckin,
-        checkout: draftCheckout,
-        guests: draftGuests,
+      searchBarValueToParams(next, {
+        verified: verifiedOnly,
+        instant: instantOnly,
+        sort: selectedSort,
+        vibe: activeVibe,
       }),
     );
   };
 
   const clearAllFilters = () => {
-    setDraftCity("");
-    setDraftCheckin("");
-    setDraftCheckout("");
-    setDraftGuests("");
+    setSearchDraft(DEFAULT_SEARCH_BAR_VALUE);
     navigateWithParams(new URLSearchParams());
   };
 
@@ -323,15 +284,21 @@ export default function ListingsPage() {
     const vibe = getVibeById(vibeId);
     if (!vibe) return;
 
-    // Tap again to clear the vibe and its filters.
     if (activeVibe === vibeId) {
-      setDraftCity("");
-      setDraftGuests("");
+      const cleared: SearchBarValue = {
+        ...searchDraft,
+        city: "",
+        destinationId: null,
+        adults: 1,
+        children: 0,
+        listingType: "all",
+      };
+      setSearchDraft(cleared);
       navigateWithParams(
-        buildListingsParams({
-          city: "",
-          guests: "",
-          listingType: "all",
+        searchBarValueToParams(cleared, {
+          verified: verifiedOnly,
+          instant: instantOnly,
+          sort: selectedSort,
           vibe: null,
         }),
       );
@@ -341,27 +308,36 @@ export default function ListingsPage() {
     const filters = vibe.filters;
     const nextCity = "city" in filters && filters.city ? filters.city : "";
     const nextGuests =
-      "guests" in filters && filters.guests != null
-        ? String(filters.guests)
-        : "";
+      "guests" in filters && filters.guests != null ? Number(filters.guests) : 1;
     const nextType =
       "listing_type" in filters && filters.listing_type
         ? filters.listing_type
         : "all";
+    const fromCity = nextCity
+      ? searchBarValueFromSearchParams(
+          new URLSearchParams(`city=${encodeURIComponent(nextCity)}`),
+        )
+      : null;
 
-    setDraftCity(nextCity);
-    setDraftGuests(nextGuests);
+    const next: SearchBarValue = {
+      ...searchDraft,
+      city: nextCity,
+      destinationId: fromCity?.destinationId ?? null,
+      adults: nextGuests > 0 ? nextGuests : 1,
+      children: 0,
+      listingType: nextType,
+    };
+    setSearchDraft(next);
     navigateWithParams(
-      buildListingsParams({
-        city: nextCity,
-        guests: nextGuests,
-        listingType: nextType,
+      searchBarValueToParams(next, {
+        verified: verifiedOnly,
+        instant: instantOnly,
+        sort: selectedSort,
         vibe: vibeId,
       }),
     );
   };
 
-  const minCheckin = todayISO();
   const displayListings = listings;
   const isInitialLoading = isLoading && displayListings.length === 0;
   const isRevalidating = isLoading && displayListings.length > 0;
@@ -455,71 +431,15 @@ export default function ListingsPage() {
           <div className="bg-nexa-bg min-w-0 w-full max-w-full">
             <div className="bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 lg:px-6 xl:px-8 min-w-0 w-full">
               <div className="flex flex-col gap-3 min-w-0 w-full">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    applySearch();
-                  }}
-                  className="w-full min-w-0 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_auto] gap-2"
-                >
-                  <div className={cn(filterFieldClass, "bg-nexa-bg-2 w-full")}>
-                    <GuestSelect
-                      value={draftCity}
-                      onChange={updateCity}
-                      aria-label={t("listings.anyCity")}
-                      className="w-full"
-                      options={[
-                        { value: "", label: t("listings.anyCity") },
-                        ...MOROCCO_CITIES.map((c) => ({ value: c, label: c })),
-                      ]}
-                    />
-                  </div>
-                  <div className={cn(filterFieldClass, "w-full")}>
-                    <DatePicker
-                      value={draftCheckin}
-                      onChange={updateCheckin}
-                      placeholder={t("home.search.addDates")}
-                      clearLabel={t("home.search.clearDate")}
-                      todayLabel={t("home.search.today")}
-                      locale={locale}
-                      min={minCheckin}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className={cn(filterFieldClass, "w-full")}>
-                    <DatePicker
-                      value={draftCheckout}
-                      onChange={updateCheckout}
-                      placeholder={t("home.search.addDates")}
-                      clearLabel={t("home.search.clearDate")}
-                      todayLabel={t("home.search.today")}
-                      locale={locale}
-                      min={draftCheckin ? addDaysToDateString(draftCheckin, 1) : minCheckin}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className={cn(filterFieldClass, "w-full")}>
-                    <GuestSelect
-                      value={draftGuests}
-                      onChange={updateGuests}
-                      aria-label={t("listingDetail.guests")}
-                      className="w-full"
-                      options={[
-                        { value: "", label: t("listingDetail.guests") },
-                        ...[1, 2, 3, 4, 5, 6].map((n) => ({
-                          value: String(n),
-                          label: tf("listings.guestsCount", { count: n }),
-                        })),
-                      ]}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="px-4 py-2.5 min-h-[44px] rounded-xl bg-nexa-primary text-white font-semibold text-sm hover:bg-nexa-primary-dark shadow-[0_4px_16px_rgba(232,80,122,.32)] sm:col-span-2 2xl:col-span-1"
-                  >
-                    🔍 {t("common.search")}
-                  </button>
-                </form>
+                <SearchBar
+                  value={searchDraft}
+                  onChange={setSearchDraft}
+                  onSearch={commitSearch}
+                  t={t}
+                  tf={tf}
+                  locale={locale}
+                  variant="listings"
+                />
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
                   <button
                     onClick={() => setMobileFiltersOpen(true)}
