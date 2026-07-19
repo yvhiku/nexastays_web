@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "audit": "npm audit --audit-level=high",
+    "audit:osv": "npx --yes @google/osv-scanner@latest -r . || npx --yes osv-scanner@latest -r .",
     "validate:explore-catalog": "npx --yes tsx scripts/validate-explore-catalog.ts",
     "import:explore-city": "npx --yes tsx scripts/import-explore-city.ts"
   },
