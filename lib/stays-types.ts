@@ -330,6 +330,12 @@ export interface HostBooking {
 export interface HostDashboardStats {
   total_earnings: number;
   this_month_earnings: number;
+  previous_month_earnings?: number;
+  earnings_mom_pct?: number | null;
+  upcoming_revenue_30d?: number;
+  occupancy_pct_this_month?: number;
+  occupancy_mom_pct?: number | null;
+  avg_nightly_earnings?: number | null;
   currency: string;
   total_bookings: number;
   pending_bookings: number;
@@ -341,6 +347,26 @@ export interface HostDashboardStats {
   total_listings: number;
   avg_rating: number | null;
   total_reviews: number;
+  upcoming_checkins?: number;
+  next_checkin_date?: string | null;
+  next_guest_name?: string | null;
+  current_guests?: number;
+  checkins_today?: number;
+  checkouts_tomorrow?: number;
+  awaiting_guest_payment?: number;
+  pending_payout_amount?: number | null;
+  calendar_status?: {
+    healthy: boolean;
+    listings_needing_attention: number;
+  };
+  revenue_series_30d?: Array<{ date: string; amount: number }>;
+  listing_health?: {
+    verified_live: boolean;
+    calendar_synced: boolean;
+    photos_complete: boolean;
+    avg_completion_pct: number;
+    missing: Array<{ code: string; label: string; count?: number }>;
+  };
 }
 
 export interface ListingCompletionFlags {

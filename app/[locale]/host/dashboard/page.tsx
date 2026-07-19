@@ -16,6 +16,7 @@ import { formatUserError } from "@/lib/errors";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
 import { HostKpiSection } from "@/components/host/HostKpiSection";
+import { HostTodayActionCenter } from "@/components/host/HostTodayActionCenter";
 import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
 import { AppLoader } from "@/components/AppLoader";
 import {
@@ -437,88 +438,19 @@ function HostDashboardContent() {
         />
       )}
 
-      {status === "APPROVED" && listings.length > 0 && (
-        <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
-          <form onSubmit={handleAvailabilityBlock} className="p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-nexa-ink mb-2 flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-nexa-primary" />
-              {t("hostDashboard.calendarBlocking")}
-            </h2>
-            <p className="text-sm text-nexa-ink-3 mb-5">
-              {t("hostDashboard.calendarBlockingDesc")}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-3">
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.listing")}</span>
-                <NexaSelect
-                  variant="field"
-                  value={blockListingId}
-                  onChange={setBlockListingId}
-                  aria-label={t("hostDashboard.listing")}
-                  options={[
-                    { value: "", label: t("hostDashboard.selectListing") },
-                    ...listings.map((listing) => ({
-                      value: listing.id,
-                      label: listing.title,
-                    })),
-                  ]}
-                />
-              </label>
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.fromDate")}</span>
-                <DatePicker
-                  variant="field"
-                  value={blockFrom}
-                  onChange={setBlockFrom}
-                  aria-label={t("hostDashboard.fromDate")}
-                  placeholder={t("hostDashboard.fromDate")}
-                />
-              </label>
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.toDate")}</span>
-                <DatePicker
-                  variant="field"
-                  value={blockTo}
-                  onChange={setBlockTo}
-                  min={blockFrom || undefined}
-                  aria-label={t("hostDashboard.toDate")}
-                  placeholder={t("hostDashboard.toDate")}
-                />
-              </label>
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.calendarAction")}</span>
-                <NexaSelect
-                  variant="field"
-                  value={blockAction}
-                  onChange={(v) => setBlockAction(v === "unblock" ? "unblock" : "block")}
-                  aria-label={t("hostDashboard.calendarAction")}
-                  options={[
-                    { value: "block", label: t("hostDashboard.blockDates") },
-                    { value: "unblock", label: t("hostDashboard.unblockDates") },
-                  ]}
-                />
-              </label>
-              <Button type="submit" disabled={blockSubmitting} className="h-11">
-                {blockSubmitting ? t("common.saving") : t("hostDashboard.updateCalendar")}
-              </Button>
-            </div>
-            {blockMessage && (
-              <p className="mt-3 text-sm text-green-700">{blockMessage}</p>
-            )}
-          </form>
-        </div>
-      )}
-
-      {status === "APPROVED" && listings.length > 0 && token && (
-        <HostCalendarSyncPanel
-          listings={listings.map((l) => ({ id: l.id, title: l.title }))}
-          token={token}
+      {status === "APPROVED" && (
+        <HostTodayActionCenter
+          stats={stats ?? computeHostDashboardStats(bookings, listings)}
+          t={t}
         />
       )}
 
       {/* Your bookings - for approved hosts */}
       {status === "APPROVED" && (
-        <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
+        <div
+          id="host-bookings"
+          className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8 scroll-mt-24"
+        >
           <div className="p-6 sm:p-8">
             <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-start sm:justify-between">
               <h2 className="text-lg font-semibold text-nexa-ink flex items-center gap-2">
@@ -653,9 +585,93 @@ function HostDashboardContent() {
         </div>
       )}
 
+      {status === "APPROVED" && listings.length > 0 && token && (
+        <div id="host-calendar-sync" className="scroll-mt-24">
+          <HostCalendarSyncPanel
+            listings={listings.map((l) => ({ id: l.id, title: l.title }))}
+            token={token}
+          />
+        </div>
+      )}
+
+      {status === "APPROVED" && listings.length > 0 && (
+        <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
+          <form onSubmit={handleAvailabilityBlock} className="p-6 sm:p-8">
+            <h2 className="text-lg font-semibold text-nexa-ink mb-2 flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-nexa-primary" />
+              {t("hostDashboard.calendarBlocking")}
+            </h2>
+            <p className="text-sm text-nexa-ink-3 mb-5">
+              {t("hostDashboard.calendarBlockingDesc")}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-3">
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.listing")}</span>
+                <NexaSelect
+                  variant="field"
+                  value={blockListingId}
+                  onChange={setBlockListingId}
+                  aria-label={t("hostDashboard.listing")}
+                  options={[
+                    { value: "", label: t("hostDashboard.selectListing") },
+                    ...listings.map((listing) => ({
+                      value: listing.id,
+                      label: listing.title,
+                    })),
+                  ]}
+                />
+              </label>
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.fromDate")}</span>
+                <DatePicker
+                  variant="field"
+                  value={blockFrom}
+                  onChange={setBlockFrom}
+                  aria-label={t("hostDashboard.fromDate")}
+                  placeholder={t("hostDashboard.fromDate")}
+                />
+              </label>
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.toDate")}</span>
+                <DatePicker
+                  variant="field"
+                  value={blockTo}
+                  onChange={setBlockTo}
+                  min={blockFrom || undefined}
+                  aria-label={t("hostDashboard.toDate")}
+                  placeholder={t("hostDashboard.toDate")}
+                />
+              </label>
+              <label className="text-sm">
+                <span className="sr-only">{t("hostDashboard.calendarAction")}</span>
+                <NexaSelect
+                  variant="field"
+                  value={blockAction}
+                  onChange={(v) => setBlockAction(v === "unblock" ? "unblock" : "block")}
+                  aria-label={t("hostDashboard.calendarAction")}
+                  options={[
+                    { value: "block", label: t("hostDashboard.blockDates") },
+                    { value: "unblock", label: t("hostDashboard.unblockDates") },
+                  ]}
+                />
+              </label>
+              <Button type="submit" disabled={blockSubmitting} className="h-11">
+                {blockSubmitting ? t("common.saving") : t("hostDashboard.updateCalendar")}
+              </Button>
+            </div>
+            {blockMessage && (
+              <p className="mt-3 text-sm text-green-700">{blockMessage}</p>
+            )}
+          </form>
+        </div>
+      )}
+
       {/* Your listings - only for approved hosts */}
       {status === "APPROVED" && (
-        <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden">
+        <div
+          id="host-listings"
+          className="rounded-2xl border border-nexa-line bg-white overflow-hidden scroll-mt-24"
+        >
           <div className="p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-nexa-ink mb-4">{t("hostDashboard.yourListings")}</h2>
             {listingActionError && (
