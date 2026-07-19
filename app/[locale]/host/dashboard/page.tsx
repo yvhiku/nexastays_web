@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { NexaSelect } from "@/components/ui/NexaSelect";
+import { DatePicker } from "@/components/ui/DatePicker";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -426,23 +427,23 @@ function HostDashboardContent() {
               </label>
               <label className="text-sm">
                 <span className="sr-only">{t("hostDashboard.fromDate")}</span>
-                <input
-                  type="date"
+                <DatePicker
+                  variant="field"
                   value={blockFrom}
-                  onChange={(e) => setBlockFrom(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-nexa-line px-3 text-sm text-nexa-ink"
-                  required
+                  onChange={setBlockFrom}
+                  aria-label={t("hostDashboard.fromDate")}
+                  placeholder={t("hostDashboard.fromDate")}
                 />
               </label>
               <label className="text-sm">
                 <span className="sr-only">{t("hostDashboard.toDate")}</span>
-                <input
-                  type="date"
+                <DatePicker
+                  variant="field"
                   value={blockTo}
+                  onChange={setBlockTo}
                   min={blockFrom || undefined}
-                  onChange={(e) => setBlockTo(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-nexa-line px-3 text-sm text-nexa-ink"
-                  required
+                  aria-label={t("hostDashboard.toDate")}
+                  placeholder={t("hostDashboard.toDate")}
                 />
               </label>
               <label className="text-sm">

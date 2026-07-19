@@ -24,6 +24,7 @@ import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { resolveLocalizedPath } from "@/lib/locale-path";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
 import { NexaSelect } from "@/components/ui/NexaSelect";
+import { DatePicker } from "@/components/ui/DatePicker";
 import {
   SumsubWebVerification,
   type SumsubFinalStatus,
@@ -493,10 +494,13 @@ export default function RegistrationPage() {
                     <label className="block text-sm font-semibold text-nexa-ink-2 mb-2">
                       Date of Birth
                     </label>
-                    <Input
-                      type="date"
+                    <DatePicker
+                      variant="field"
                       value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      onChange={setDateOfBirth}
+                      aria-label="Date of Birth"
+                      placeholder="Date of birth"
+                      max={new Date().toISOString().slice(0, 10)}
                     />
                   </div>
                 </div>

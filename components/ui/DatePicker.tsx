@@ -17,9 +17,25 @@ type DatePickerProps = {
   todayLabel?: string;
   className?: string;
   locale?: string;
+  /** Trigger chrome — plain sits inside a parent field; field is a standalone bordered control. */
+  variant?: "plain" | "field";
+  "aria-label"?: string;
+  id?: string;
+  disabled?: boolean;
 };
 
 type PanelPos = { top: number; left: number; width: number };
+
+const TRIGGER = {
+  plain:
+    "w-full flex items-center gap-2 border-none outline-none bg-transparent font-sans text-sm text-left text-nexa-ink",
+  field: cn(
+    "w-full flex items-center gap-2 h-11 min-h-[44px] rounded-xl border-2 border-nexa-line bg-white px-3.5",
+    "font-sans text-sm text-left text-nexa-ink",
+    "focus-visible:border-nexa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/20",
+    "hover:border-nexa-primary/40 transition-colors",
+  ),
+} as const;
 
 function parseISODate(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -65,6 +81,10 @@ export function DatePicker({
   todayLabel = "Today",
   className,
   locale = "en",
+  variant = "plain",
+  "aria-label": ariaLabel,
+  id,
+  disabled = false,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<PanelPos | null>(null);
@@ -311,16 +331,29 @@ export function DatePicker({
     <div ref={rootRef} className={cn("relative", className)}>
       <button
         type="button"
+        id={id}
+        disabled={disabled}
+        aria-label={ariaLabel}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 border-none outline-none bg-transparent font-sans text-sm text-left text-nexa-ink"
+        onClick={() => !disabled && setOpen((v) => !v)}
+        className={cn(
+          TRIGGER[variant],
+          open && variant === "field" && "border-nexa-primary ring-2 ring-nexa-primary/20",
+          disabled && "opacity-50 cursor-not-allowed",
+        )}
       >
         <span className={cn("flex-1 truncate", !displayValue && "text-nexa-ink-4")}>
           {displayValue || placeholder}
         </span>
-        <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-nexa-ink-4" aria-hidden />
+        <CalendarIcon
+          className={cn(
+            "h-3.5 w-3.5 shrink-0 text-nexa-ink-4",
+            open && "text-nexa-primary",
+          )}
+          aria-hidden
+        />
       </button>
       {panel}
     </div>

@@ -4,6 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NexaSelect } from "@/components/ui/NexaSelect";
+import { DatePicker } from "@/components/ui/DatePicker";
 import type { BookingFilters } from "@/lib/booking-lifecycle";
 import { Filter, X } from "lucide-react";
 
@@ -41,17 +42,20 @@ export function BookingFiltersPanel({
               {t("myBookings.filterDate")}
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="date"
+              <DatePicker
+                variant="field"
                 value={filters.dateFrom}
-                onChange={(e) => onChange({ dateFrom: e.target.value })}
+                onChange={(dateFrom) => onChange({ dateFrom })}
                 aria-label={t("myBookings.dateFrom")}
+                placeholder={t("myBookings.dateFrom")}
               />
-              <Input
-                type="date"
+              <DatePicker
+                variant="field"
                 value={filters.dateTo}
-                onChange={(e) => onChange({ dateTo: e.target.value })}
+                onChange={(dateTo) => onChange({ dateTo })}
+                min={filters.dateFrom || undefined}
                 aria-label={t("myBookings.dateTo")}
+                placeholder={t("myBookings.dateTo")}
               />
             </div>
           </div>
