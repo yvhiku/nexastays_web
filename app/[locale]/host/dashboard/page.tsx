@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -409,19 +410,19 @@ function HostDashboardContent() {
             <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-3">
               <label className="text-sm">
                 <span className="sr-only">{t("hostDashboard.listing")}</span>
-                <select
+                <NexaSelect
+                  variant="field"
                   value={blockListingId}
-                  onChange={(e) => setBlockListingId(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink"
-                  required
-                >
-                  <option value="">{t("hostDashboard.selectListing")}</option>
-                  {listings.map((listing) => (
-                    <option key={listing.id} value={listing.id}>
-                      {listing.title}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setBlockListingId}
+                  aria-label={t("hostDashboard.listing")}
+                  options={[
+                    { value: "", label: t("hostDashboard.selectListing") },
+                    ...listings.map((listing) => ({
+                      value: listing.id,
+                      label: listing.title,
+                    })),
+                  ]}
+                />
               </label>
               <label className="text-sm">
                 <span className="sr-only">{t("hostDashboard.fromDate")}</span>
@@ -446,14 +447,16 @@ function HostDashboardContent() {
               </label>
               <label className="text-sm">
                 <span className="sr-only">{t("hostDashboard.calendarAction")}</span>
-                <select
+                <NexaSelect
+                  variant="field"
                   value={blockAction}
-                  onChange={(e) => setBlockAction(e.target.value === "unblock" ? "unblock" : "block")}
-                  className="h-11 w-full rounded-xl border border-nexa-line bg-white px-3 text-sm text-nexa-ink"
-                >
-                  <option value="block">{t("hostDashboard.blockDates")}</option>
-                  <option value="unblock">{t("hostDashboard.unblockDates")}</option>
-                </select>
+                  onChange={(v) => setBlockAction(v === "unblock" ? "unblock" : "block")}
+                  aria-label={t("hostDashboard.calendarAction")}
+                  options={[
+                    { value: "block", label: t("hostDashboard.blockDates") },
+                    { value: "unblock", label: t("hostDashboard.unblockDates") },
+                  ]}
+                />
               </label>
               <Button type="submit" disabled={blockSubmitting} className="h-11">
                 {blockSubmitting ? t("common.saving") : t("hostDashboard.updateCalendar")}
