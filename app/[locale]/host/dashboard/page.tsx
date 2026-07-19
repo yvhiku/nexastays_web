@@ -11,7 +11,7 @@ import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock } from "@/lib/stays-api";
+import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock, exportHostBookingsCsv } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
@@ -30,6 +30,7 @@ import {
   Pencil,
   Pause,
   Play,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
@@ -93,6 +94,14 @@ function HostDashboardContent() {
   const [blockAction, setBlockAction] = useState<"block" | "unblock">("block");
   const [blockSubmitting, setBlockSubmitting] = useState(false);
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
+  const [exportPeriod, setExportPeriod] = useState<
+    "last_30_days" | "this_year" | "all" | "custom"
+  >("all");
+  const [exportFrom, setExportFrom] = useState("");
+  const [exportTo, setExportTo] = useState("");
+  const [exportListingId, setExportListingId] = useState("");
+  const [exportStatus, setExportStatus] = useState("");
+  const [exportSubmitting, setExportSubmitting] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -234,6 +243,36 @@ function HostDashboardContent() {
       );
     } finally {
       setBlockSubmitting(false);
+    }
+  };
+
+  const handleExportBookingsCsv = async () => {
+    if (!token || exportSubmitting) return;
+    if (exportPeriod === "custom" && (!exportFrom || !exportTo)) {
+      setListingActionError(t("hostDashboard.exportCsvFailed"));
+      return;
+    }
+    setExportSubmitting(true);
+    setListingActionError(null);
+    try {
+      await exportHostBookingsCsv(token, {
+        period: exportPeriod,
+        from: exportPeriod === "custom" ? exportFrom : undefined,
+        to: exportPeriod === "custom" ? exportTo : undefined,
+        listing_id: exportListingId || undefined,
+        status: exportStatus || undefined,
+      });
+      trackEvent("host_bookings_csv_exported", {
+        period: exportPeriod,
+        listing_id: exportListingId || null,
+        status: exportStatus || null,
+      });
+    } catch (err) {
+      setListingActionError(
+        formatUserError(err) || t("hostDashboard.exportCsvFailed"),
+      );
+    } finally {
+      setExportSubmitting(false);
     }
   };
 
@@ -481,10 +520,101 @@ function HostDashboardContent() {
       {status === "APPROVED" && (
         <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
           <div className="p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-nexa-ink mb-4 flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-nexa-primary" />
-              {t("hostDashboard.yourBookings")}
-            </h2>
+            <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-start sm:justify-between">
+              <h2 className="text-lg font-semibold text-nexa-ink flex items-center gap-2">
+                <CalendarCheck className="h-5 w-5 text-nexa-primary" />
+                {t("hostDashboard.yourBookings")}
+              </h2>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 shrink-0"
+                disabled={exportSubmitting}
+                onClick={handleExportBookingsCsv}
+              >
+                <Download className="h-4 w-4" aria-hidden />
+                {exportSubmitting
+                  ? t("hostDashboard.exportingCsv")
+                  : t("hostDashboard.exportCsv")}
+              </Button>
+            </div>
+            <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <NexaSelect
+                variant="field"
+                value={exportPeriod}
+                onChange={(v) =>
+                  setExportPeriod(
+                    v === "last_30_days" ||
+                      v === "this_year" ||
+                      v === "custom" ||
+                      v === "all"
+                      ? v
+                      : "all",
+                  )
+                }
+                aria-label={t("hostDashboard.exportPeriod")}
+                options={[
+                  { value: "all", label: t("hostDashboard.exportPeriodAll") },
+                  {
+                    value: "last_30_days",
+                    label: t("hostDashboard.exportPeriodLast30"),
+                  },
+                  {
+                    value: "this_year",
+                    label: t("hostDashboard.exportPeriodThisYear"),
+                  },
+                  {
+                    value: "custom",
+                    label: t("hostDashboard.exportPeriodCustom"),
+                  },
+                ]}
+              />
+              <NexaSelect
+                variant="field"
+                value={exportListingId}
+                onChange={setExportListingId}
+                aria-label={t("hostDashboard.listing")}
+                options={[
+                  { value: "", label: t("hostDashboard.exportListingAll") },
+                  ...listings.map((l) => ({ value: l.id, label: l.title })),
+                ]}
+              />
+              <NexaSelect
+                variant="field"
+                value={exportStatus}
+                onChange={setExportStatus}
+                aria-label={t("hostDashboard.exportStatusAll")}
+                options={[
+                  { value: "", label: t("hostDashboard.exportStatusAll") },
+                  { value: "CONFIRMED", label: "CONFIRMED" },
+                  { value: "CHECKED_IN", label: "CHECKED_IN" },
+                  { value: "COMPLETED", label: "COMPLETED" },
+                  { value: "PAYMENT_PENDING", label: "PAYMENT_PENDING" },
+                  { value: "CANCELLED_BY_GUEST", label: "CANCELLED_BY_GUEST" },
+                  { value: "CANCELLED_BY_HOST", label: "CANCELLED_BY_HOST" },
+                  { value: "EXPIRED", label: "EXPIRED" },
+                ]}
+              />
+            </div>
+            {exportPeriod === "custom" && (
+              <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
+                <DatePicker
+                  variant="field"
+                  value={exportFrom}
+                  onChange={setExportFrom}
+                  aria-label={t("hostDashboard.exportFrom")}
+                  placeholder={t("hostDashboard.exportFrom")}
+                />
+                <DatePicker
+                  variant="field"
+                  value={exportTo}
+                  onChange={setExportTo}
+                  min={exportFrom || undefined}
+                  aria-label={t("hostDashboard.exportTo")}
+                  placeholder={t("hostDashboard.exportTo")}
+                />
+              </div>
+            )}
             {bookingsLoading ? (
               <div className="py-12 text-center text-nexa-ink-4">{t("hostDashboard.loadingBookings")}</div>
             ) : bookings.length > 0 ? (

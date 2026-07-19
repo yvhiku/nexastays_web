@@ -758,7 +758,19 @@
     "updateCalendar": "Mettre à jour",
     "availabilityUpdateFailed": "Impossible de mettre à jour la disponibilité",
     "blockedNights": "{count} nuits bloquées",
-    "unblockedNights": "{count} nuits débloquées"
+    "unblockedNights": "{count} nuits débloquées",
+    "exportCsv": "Exporter CSV",
+    "exportingCsv": "Export…",
+    "exportCsvFailed": "Impossible d'exporter les réservations",
+    "exportPeriod": "Période",
+    "exportPeriodAll": "Tout",
+    "exportPeriodLast30": "30 derniers jours",
+    "exportPeriodThisYear": "Cette année",
+    "exportPeriodCustom": "Personnalisé",
+    "exportListingAll": "Toutes les annonces",
+    "exportStatusAll": "Tous les statuts",
+    "exportFrom": "Du",
+    "exportTo": "Au"
   },
   "hostListingEdit": {
     "title": "Modifier l'annonce",

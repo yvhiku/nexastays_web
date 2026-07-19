@@ -809,7 +809,19 @@
     "updateCalendar": "Update calendar",
     "availabilityUpdateFailed": "Could not update availability",
     "blockedNights": "{count} nights blocked",
-    "unblockedNights": "{count} nights unblocked"
+    "unblockedNights": "{count} nights unblocked",
+    "exportCsv": "Export CSV",
+    "exportingCsv": "Exporting…",
+    "exportCsvFailed": "Could not export bookings",
+    "exportPeriod": "Period",
+    "exportPeriodAll": "All",
+    "exportPeriodLast30": "Last 30 days",
+    "exportPeriodThisYear": "This year",
+    "exportPeriodCustom": "Custom",
+    "exportListingAll": "All listings",
+    "exportStatusAll": "All statuses",
+    "exportFrom": "From",
+    "exportTo": "To"
   },
   "hostListingEdit": {
     "title": "Edit listing",

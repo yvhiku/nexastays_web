@@ -758,7 +758,19 @@
     "updateCalendar": "تحديث التقويم",
     "availabilityUpdateFailed": "تعذر تحديث التوفر",
     "blockedNights": "تم حظر {count} ليلة",
-    "unblockedNights": "تم فتح {count} ليلة"
+    "unblockedNights": "تم فتح {count} ليلة",
+    "exportCsv": "تصدير CSV",
+    "exportingCsv": "جاري التصدير…",
+    "exportCsvFailed": "تعذر تصدير الحجوزات",
+    "exportPeriod": "الفترة",
+    "exportPeriodAll": "الكل",
+    "exportPeriodLast30": "آخر 30 يومًا",
+    "exportPeriodThisYear": "هذه السنة",
+    "exportPeriodCustom": "مخصص",
+    "exportListingAll": "كل القوائم",
+    "exportStatusAll": "كل الحالات",
+    "exportFrom": "من",
+    "exportTo": "إلى"
   },
   "hostListingEdit": {
     "title": "تعديل القائمة",

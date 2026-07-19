@@ -309,6 +309,7 @@ export interface SubmitHostVerificationBody {
 
 export interface HostBooking {
   id: string;
+  booking_reference?: string | null;
   listing_id: string;
   status: string;
   checkin_date: string;

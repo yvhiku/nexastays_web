@@ -471,6 +471,66 @@ export async function getHostBookings(
   return Array.isArray(data) ? data : [];
 }
 
+export type HostBookingsExportFilters = {
+  period?: "last_30_days" | "this_year" | "all" | "custom";
+  from?: string;
+  to?: string;
+  listing_id?: string;
+  status?: string;
+  format?: string;
+};
+
+/** Download host bookings CSV (requires JWT). Always returns a file (headers-only if empty). */
+export async function exportHostBookingsCsv(
+  token?: string | null,
+  filters: HostBookingsExportFilters = {},
+): Promise<void> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const params: Record<string, string> = {};
+  if (filters.period) params.period = filters.period;
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+  if (filters.listing_id) params.listing_id = filters.listing_id;
+  if (filters.status) params.status = filters.status;
+  if (filters.format) params.format = filters.format;
+
+  const res = await client
+    .get("/stays/host/bookings/export", {
+      headers,
+      params,
+      responseType: "blob",
+    })
+    .catch(async (err) => {
+      if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text) as { message?: string | string[] };
+          const raw = parsed.message;
+          const msg = Array.isArray(raw) ? raw[0] : raw;
+          if (msg) throw new Error(msg);
+        } catch (inner) {
+          if (inner instanceof Error && inner.message && !(inner instanceof SyntaxError)) {
+            throw inner;
+          }
+        }
+      }
+      return handleError(err);
+    });
+
+  const disposition = String(res.headers["content-disposition"] ?? "");
+  const match = /filename="([^"]+)"/i.exec(disposition);
+  const filename = match?.[1] || "nexa-bookings.csv";
+  const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 /** Get host's listings (requires JWT, approved host) */
 export async function getHostListings(
   token?: string | null
