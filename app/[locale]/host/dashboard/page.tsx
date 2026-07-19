@@ -32,6 +32,7 @@ import {
   Pause,
   Play,
   Download,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
@@ -445,6 +446,37 @@ function HostDashboardContent() {
         />
       )}
 
+      {/* Calendar sync (iCal) — above bookings so hosts see it again */}
+      {status === "APPROVED" && listings.length > 0 && token && (
+        <div id="host-calendar-sync" className="scroll-mt-24">
+          <HostCalendarSyncPanel
+            listings={listings.map((l) => ({ id: l.id, title: l.title }))}
+            token={token}
+            t={t}
+          />
+        </div>
+      )}
+      {status === "APPROVED" && listings.length === 0 && (
+        <div
+          id="host-calendar-sync"
+          className="rounded-2xl border-2 border-dashed border-nexa-line bg-nexa-bg-1 p-6 sm:p-8 mb-8 scroll-mt-24 text-center"
+        >
+          <Link2 className="h-10 w-10 text-nexa-ink-4 mx-auto mb-2" aria-hidden />
+          <h2 className="text-lg font-semibold text-nexa-ink mb-1">
+            {t("hostDashboard.calendarSyncTitle")}
+          </h2>
+          <p className="text-sm text-nexa-ink-3 max-w-md mx-auto">
+            {t("hostDashboard.calendarSyncNeedsListing")}
+          </p>
+          <Button className="mt-4" asChild>
+            <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
+              <PlusCircle className="h-4 w-4" />
+              {t("hostDashboard.addListing")}
+            </Link>
+          </Button>
+        </div>
+      )}
+
       {/* Your bookings - for approved hosts */}
       {status === "APPROVED" && (
         <div
@@ -457,18 +489,33 @@ function HostDashboardContent() {
                 <CalendarCheck className="h-5 w-5 text-nexa-primary" />
                 {t("hostDashboard.yourBookings")}
               </h2>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 shrink-0"
-                disabled={exportSubmitting}
-                onClick={handleExportBookingsCsv}
-              >
-                <Download className="h-4 w-4" aria-hidden />
-                {exportSubmitting
-                  ? t("hostDashboard.exportingCsv")
-                  : t("hostDashboard.exportCsv")}
-              </Button>
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10"
+                  onClick={() => {
+                    document
+                      .getElementById("host-calendar-sync")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  <Link2 className="h-4 w-4" aria-hidden />
+                  {t("hostDashboard.calendarSyncCta")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10"
+                  disabled={exportSubmitting}
+                  onClick={handleExportBookingsCsv}
+                >
+                  <Download className="h-4 w-4" aria-hidden />
+                  {exportSubmitting
+                    ? t("hostDashboard.exportingCsv")
+                    : t("hostDashboard.exportCsv")}
+                </Button>
+              </div>
             </div>
             <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <NexaSelect
@@ -582,15 +629,6 @@ function HostDashboardContent() {
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {status === "APPROVED" && listings.length > 0 && token && (
-        <div id="host-calendar-sync" className="scroll-mt-24">
-          <HostCalendarSyncPanel
-            listings={listings.map((l) => ({ id: l.id, title: l.title }))}
-            token={token}
-          />
         </div>
       )}
 

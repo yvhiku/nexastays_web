@@ -47,9 +47,10 @@ function relativeTime(iso?: string | null) {
 type Props = {
   listings: Array<{ id: string; title: string }>;
   token: string;
+  t: (key: string) => string;
 };
 
-export function HostCalendarSyncPanel({ listings, token }: Props) {
+export function HostCalendarSyncPanel({ listings, token, t }: Props) {
   const [listingId, setListingId] = useState(listings[0]?.id ?? "");
   const [calendars, setCalendars] = useState<ExternalCalendarDto[]>([]);
   const [exportUrl, setExportUrl] = useState("");
@@ -197,11 +198,10 @@ export function HostCalendarSyncPanel({ listings, token }: Props) {
         <div>
           <h2 className="text-lg font-semibold text-nexa-ink mb-2 flex items-center gap-2">
             <Link2 className="h-5 w-5 text-nexa-primary" />
-            Sync with Airbnb &amp; other platforms
+            {t("hostDashboard.calendarSyncTitle")}
           </h2>
           <p className="text-sm text-nexa-ink-3">
-            Import calendars so nights booked elsewhere are blocked on Nexa — then export your Nexa
-            calendar so other platforms stay updated too.
+            {t("hostDashboard.calendarSyncDesc")}
           </p>
         </div>
 
