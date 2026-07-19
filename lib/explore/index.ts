@@ -35,17 +35,13 @@ export const EXPLORE_CITIES: ExploreCityModule[] = [
   ifrane,
 ].sort((a, b) => a.priority - b.priority);
 
+/** Discover Morocco city chips — all Tier-1 catalog cities, highest searchWeight first. */
 export const MOROCCO_CONTEXT = {
   titleKey: "explore.moroccoTitle",
   subtitleKey: "explore.moroccoSubtitle",
-  popularCities: [
-    "Marrakech",
-    "Casablanca",
-    "Agadir",
-    "Tangier",
-    "Essaouira",
-    "Fes",
-  ],
+  popularCities: [...EXPLORE_CITIES]
+    .sort((a, b) => b.searchWeight - a.searchWeight || a.priority - b.priority)
+    .map((c) => c.city),
 } as const;
 
 function cityMatchTokens(city: ExploreCityModule): string[] {
