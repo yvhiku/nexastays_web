@@ -123,6 +123,16 @@ function HostDashboardContent() {
   }, [searchParams, router, localePath]);
 
   useEffect(() => {
+    if (loading) return;
+    const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+    if (hash !== "host-bookings" && hash !== "host-listings") return;
+    const id = window.setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [loading, listingsLoading, bookingsLoading]);
+
+  useEffect(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
     setListingsLoading(true);
     getHostListings(token)

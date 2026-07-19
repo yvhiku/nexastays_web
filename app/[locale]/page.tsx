@@ -10,6 +10,7 @@ import { StatsSection } from "./home/sections/stats/Stats";
 import { DestinationsSection } from "./home/sections/destinations/Destinations";
 import { HowItWorksSection } from "./home/sections/how-it-works/HowItWorks";
 import { HostCtaSection } from "./home/sections/host-cta/HostCta";
+import { RecentlyViewedSection } from "@/components/home/RecentlyViewedSection";
 
 export default function HomePage() {
   return (
@@ -18,6 +19,7 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <SearchSection />
+        <RecentlyViewedSection />
         <WhyNexaSection />
         <StatsSection />
         <DestinationsSection />

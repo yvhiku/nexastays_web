@@ -1349,5 +1349,28 @@
     "hostPoint4Desc": "L'adresse exacte et le contact d'accueil restent protégés jusqu'au statut de confirmation requis.",
     "findStay": "Trouver un séjour",
     "becomeHost": "Devenir hôte"
+  },
+  "pwa": {
+    "installTitle": "Installer Nexa Stays",
+    "installBody": "Ajoutez l'application à l'écran d'accueil pour un accès plus rapide aux séjours vérifiés.",
+    "installIosHint": "Installez Nexa Stays depuis Safari pour une expérience plein écran.",
+    "installIosSteps": "Partager → Sur l'écran d'accueil",
+    "installCta": "Installer",
+    "installLater": "Plus tard",
+    "updateAvailable": "Nouvelle version disponible",
+    "updateNow": "Mettre à jour",
+    "updateLater": "Plus tard",
+    "navAria": "Navigation mobile",
+    "navExplore": "Explorer",
+    "navWishlist": "Favoris",
+    "navTrips": "Voyages",
+    "navProfile": "Profil",
+    "navDashboard": "Tableau",
+    "navBookings": "Réservations",
+    "navListings": "Annonces",
+    "recentlyViewed": "Consultés récemment",
+    "share": "Partager",
+    "linkCopied": "Lien copié",
+    "notifications": "Notifications"
   }
 }

@@ -49,6 +49,8 @@ import {
 import type { StaysListing, CreateBookingOccupantDto } from "@/lib/stays-types";
 import { sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
+import { recordRecentlyViewed } from "@/lib/recently-viewed";
+import { ShareButton } from "@/components/pwa/ShareButton";
 import {
   amenityLabel,
   normalizeAmenities,
@@ -137,6 +139,15 @@ export default function ListingDetailPage() {
       .then((data) => {
         if (cancelled) return;
         setListing(data);
+        const firstPhoto = data.media?.find((m) => m.kind === "PHOTO") ?? data.media?.[0];
+        recordRecentlyViewed({
+          id: data.id,
+          title: data.title,
+          city: data.city,
+          imageUrl: firstPhoto
+            ? getListingMediaUrl(data.id, firstPhoto.asset_id)
+            : undefined,
+        });
         searchListings({ city: data.city, guests: 1 })
           .then((results) => {
             if (!cancelled) {
@@ -470,7 +481,9 @@ export default function ListingDetailPage() {
                 )}
               </div>
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-nexa-ink-3">
+            <div className="flex flex-col items-start md:items-end gap-3">
+              <ShareButton title={listing.title} text={getShortLocationLabel(listing)} />
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-nexa-ink-3">
               <span>{maxGuests} Guests max</span>
               {listing.instant_booking && (
                 <>
@@ -478,6 +491,7 @@ export default function ListingDetailPage() {
                   <span className="text-nexa-primary">Instant booking</span>
                 </>
               )}
+              </div>
             </div>
           </section>
 

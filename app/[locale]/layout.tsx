@@ -2,6 +2,7 @@ import React from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { StaysFeeProvider } from "@/contexts/StaysFeeContext";
+import { PwaAppShell } from "@/components/pwa/PwaAppShell";
 import type { Locale } from "@/lib/i18n";
 
 const VALID_LOCALES = ["en", "fr", "ar"] as const;
@@ -20,7 +21,12 @@ export default function LocaleLayout({
   return (
     <LanguageProvider initialLocale={locale}>
       <StaysFeeProvider>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <div className="pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+            {children}
+          </div>
+          <PwaAppShell />
+        </AuthProvider>
       </StaysFeeProvider>
     </LanguageProvider>
   );

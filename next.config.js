@@ -25,6 +25,8 @@ const csp = [
   "media-src 'self'" + (staysOrigin ? ` ${staysOrigin}` : ""),
   "connect-src 'self'" +
     [siteOrigin, identityOrigin, staysOrigin].filter(Boolean).map((origin) => ` ${origin}`).join(""),
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https:",
@@ -52,6 +54,7 @@ const securityHeaders = [
     : []),
 ];
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -87,4 +90,77 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  fallbacks: {
+    document: "/offline.html",
+  },
+  workboxOptions: {
+    // Keep false so SwUpdateBanner can prompt before activating a new SW.
+    skipWaiting: false,
+    clientsClaim: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "google-fonts",
+          expiration: { maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 * 365 },
+        },
+      },
+      {
+        urlPattern: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "static-font-assets",
+          expiration: { maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 * 365 },
+        },
+      },
+      {
+        urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp|avif)$/i,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "static-image-assets",
+          expiration: { maxEntries: 128, maxAgeSeconds: 60 * 60 * 24 * 30 },
+        },
+      },
+      {
+        urlPattern: ({ url }) =>
+          url.pathname.includes("/api/v1/stays/listings/") &&
+          (url.pathname.includes("/media") || url.pathname.includes("/photo")),
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "listing-images",
+          expiration: { maxEntries: 96, maxAgeSeconds: 60 * 60 * 24 * 14 },
+        },
+      },
+      {
+        urlPattern: ({ url }) =>
+          url.pathname.startsWith("/api/") ||
+          /\/api\/v1\//.test(url.pathname) ||
+          (typeof identityOrigin === "string" && url.origin === identityOrigin) ||
+          (typeof staysOrigin === "string" && url.origin === staysOrigin),
+        handler: "NetworkFirst",
+        method: "GET",
+        options: {
+          cacheName: "apis",
+          networkTimeoutSeconds: 10,
+          expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 },
+        },
+      },
+      {
+        urlPattern: ({ request }) => request.mode === "navigate",
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "pages",
+          networkTimeoutSeconds: 8,
+          expiration: { maxEntries: 48, maxAgeSeconds: 60 * 60 * 24 },
+        },
+      },
+    ],
+  },
+});
+
+module.exports = withPWA(nextConfig);

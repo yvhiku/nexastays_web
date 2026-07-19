@@ -10,7 +10,7 @@ import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
-import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Heart } from "lucide-react";
+import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Heart, Bell } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { getHostMe } from "@/lib/stays-api";
 
@@ -112,7 +112,7 @@ export const NavBar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 inset-x-0 z-50 h-[72px] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip">
+      <nav className="fixed top-0 inset-x-0 z-50 h-[calc(72px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip">
       <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0">
         <Link
           href={localePath("/")}
@@ -153,6 +153,13 @@ export const NavBar = () => {
           <div className="hidden xl:block">
             <LanguageSelector />
           </div>
+          <button
+            type="button"
+            className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-nexa-ink-3 hover:bg-nexa-bg-2"
+            aria-label={t("pwa.notifications")}
+          >
+            <Bell className="h-5 w-5" />
+          </button>
           {isAuthenticated ? (
             <div className="relative" ref={menuRef}>
               <button
@@ -167,7 +174,7 @@ export const NavBar = () => {
                   size="sm"
                 />
                 <span className="text-sm font-medium hidden md:inline">{t("common.profile")}</span>
-                <ChevronDown className={cn("h-4 w-4 transition-transform", profileOpen && "rotate-180")} />
+                <ChevronDown className={cn("h-4 w-4 transition-transform hidden md:inline", profileOpen && "rotate-180")} />
               </button>
               {profileOpen && (
                 <div className="absolute end-0 top-full mt-2 w-52 py-1 bg-white rounded-lg shadow-lg border border-nexa-line z-50">
@@ -232,7 +239,7 @@ export const NavBar = () => {
           )}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="xl:hidden flex items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
+            className="hidden md:flex xl:hidden items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -244,8 +251,8 @@ export const NavBar = () => {
       {/* Mobile / tablet menu overlay */}
     <div
       className={cn(
-        "fixed inset-0 z-[1100] xl:hidden transition-opacity duration-300",
-        mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        "fixed inset-0 z-[1100] hidden md:block xl:hidden transition-opacity duration-300",
+        mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       aria-hidden={!mobileMenuOpen}
     >

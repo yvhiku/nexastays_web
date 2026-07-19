@@ -1349,5 +1349,28 @@
     "hostPoint4Desc": "يبقى العنوان الدقيق وجهة اتصال الاستقبال محميين حتى حالة التأكيد المطلوبة.",
     "findStay": "البحث عن إقامة",
     "becomeHost": "كن مضيفاً"
+  },
+  "pwa": {
+    "installTitle": "ثبّت Nexa Stays",
+    "installBody": "أضف التطبيق إلى الشاشة الرئيسية للوصول أسرع إلى الإقامات الموثقة.",
+    "installIosHint": "ثبّت Nexa Stays من Safari لتجربة بملء الشاشة.",
+    "installIosSteps": "مشاركة ← إضافة إلى الشاشة الرئيسية",
+    "installCta": "تثبيت",
+    "installLater": "لاحقاً",
+    "updateAvailable": "يتوفر إصدار جديد",
+    "updateNow": "تحديث",
+    "updateLater": "لاحقاً",
+    "navAria": "التنقل للجوال",
+    "navExplore": "استكشف",
+    "navWishlist": "المفضلة",
+    "navTrips": "رحلاتي",
+    "navProfile": "الملف",
+    "navDashboard": "لوحة التحكم",
+    "navBookings": "الحجوزات",
+    "navListings": "الإعلانات",
+    "recentlyViewed": "شوهدت مؤخراً",
+    "share": "مشاركة",
+    "linkCopied": "تم نسخ الرابط",
+    "notifications": "الإشعارات"
   }
 }

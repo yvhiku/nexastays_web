@@ -1368,5 +1368,28 @@
     "hostPoint4Desc": "Exact address and welcome contact remain protected until the booking reaches the required confirmation status.",
     "findStay": "Find a Stay",
     "becomeHost": "Become a Host"
+  },
+  "pwa": {
+    "installTitle": "Install Nexa Stays",
+    "installBody": "Add the app to your home screen for faster access to verified stays.",
+    "installIosHint": "Install Nexa Stays from Safari for a full-screen experience.",
+    "installIosSteps": "Share → Add to Home Screen",
+    "installCta": "Install",
+    "installLater": "Later",
+    "updateAvailable": "New version available",
+    "updateNow": "Update",
+    "updateLater": "Later",
+    "navAria": "Mobile navigation",
+    "navExplore": "Explore",
+    "navWishlist": "Wishlist",
+    "navTrips": "Trips",
+    "navProfile": "Profile",
+    "navDashboard": "Dashboard",
+    "navBookings": "Bookings",
+    "navListings": "Listings",
+    "recentlyViewed": "Recently viewed",
+    "share": "Share",
+    "linkCopied": "Link copied",
+    "notifications": "Notifications"
   }
 }

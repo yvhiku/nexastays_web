@@ -10,9 +10,11 @@
     "audit": "npm audit --audit-level=high",
     "audit:osv": "npx --yes @google/osv-scanner@latest -r . || npx --yes osv-scanner@latest -r .",
     "validate:explore-catalog": "npx --yes tsx scripts/validate-explore-catalog.ts",
-    "import:explore-city": "npx --yes tsx scripts/import-explore-city.ts"
+    "import:explore-city": "npx --yes tsx scripts/import-explore-city.ts",
+    "generate:pwa-icons": "npx --yes tsx scripts/generate-pwa-icons.ts"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.8",
@@ -41,6 +43,7 @@
     "eslint": "^8.50.0",
     "eslint-config-next": "^14.0.0",
     "postcss": "^8.4.31",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }

@@ -5,7 +5,8 @@ type AnalyticsEventName =
   | "booking_created"
   | "payment_intent_started"
   | "host_dashboard_viewed"
-  | "host_calendar_updated";
+  | "host_calendar_updated"
+  | "host_bookings_csv_exported";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

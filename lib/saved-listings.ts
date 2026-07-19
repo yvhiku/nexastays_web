@@ -36,6 +36,9 @@ export function toggleSavedListing(
   try {
     localStorage.setItem(storageKey(userId), JSON.stringify(next));
     window.dispatchEvent(new CustomEvent("nexa-saved-listings-changed"));
+    if (!exists) {
+      void import("@/lib/pwa-engagement").then((m) => m.markPwaWishlistSaved());
+    }
   } catch {
     return exists;
   }

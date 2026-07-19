@@ -1,9 +1,10 @@
 import React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { getPublicSiteUrl } from "@/lib/env";
+import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 
 const siteUrl = getPublicSiteUrl();
 
@@ -12,6 +13,18 @@ export const metadata: Metadata = {
   title: "Nexa Stays | Verified Stays in Morocco",
   description:
     "Nexa Stays is a Moroccan verified-stays platform built for more safety, transparency, and comfort for guests and hosts.",
+  applicationName: "Nexa Stays",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Nexa Stays",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   alternates: {
     canonical: "/en",
     languages: {
@@ -37,9 +50,20 @@ export const metadata: Metadata = {
     images: [NEXA_STAYS_LOGO_SRC],
   },
   icons: {
-    icon: [{ url: NEXA_STAYS_LOGO_SRC, type: "image/png" }],
-    apple: [{ url: NEXA_STAYS_LOGO_SRC, type: "image/png" }],
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: NEXA_PWA_THEME,
 };
 
 const playfair = Playfair_Display({
