@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { PROPERTY_TYPE_COPY, bookingModelOptions } from "@/lib/host-listing-wizard/step-config";
 import { PROPERTY_TYPE_ICONS } from "@/components/host/listing-wizard/icons/PropertyTypeIcons";
 import { AMENITY_OPTIONS } from "@/lib/host-listing-constants";
@@ -34,7 +35,6 @@ import {
   SoftTip,
   StepHeader,
   ToggleChip,
-  selectClassName,
   textareaClassName,
 } from "@/components/host/listing-wizard/wizard-ui";
 import { HostLocationMapPicker } from "@/components/host/listing-wizard/HostLocationMapPicker";
@@ -844,72 +844,78 @@ export function WizardStepBody({
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Pets" hint="Shown on the listing before booking.">
-              <select
-                className={selectClassName}
+              <NexaSelect
+                variant="field"
                 value={form.petsPolicy}
-                onChange={(e) =>
+                onChange={(v) =>
                   patch({
-                    petsPolicy: e.target.value as ListingWizardFormState["petsPolicy"],
+                    petsPolicy: v as ListingWizardFormState["petsPolicy"],
                   })
                 }
-              >
-                <option value="NO">Not allowed</option>
-                <option value="DOGS_CATS">Dogs & cats only</option>
-                <option value="ALLOWED">All pets allowed</option>
-              </select>
+                aria-label="Pets"
+                options={[
+                  { value: "NO", label: "Not allowed" },
+                  { value: "DOGS_CATS", label: "Dogs & cats only" },
+                  { value: "ALLOWED", label: "All pets allowed" },
+                ]}
+              />
             </Field>
             <Field label="Smoking">
-              <select
-                className={selectClassName}
+              <NexaSelect
+                variant="field"
                 value={form.smokingPolicy}
-                onChange={(e) =>
+                onChange={(v) =>
                   patch({
-                    smokingPolicy: e.target
-                      .value as ListingWizardFormState["smokingPolicy"],
+                    smokingPolicy: v as ListingWizardFormState["smokingPolicy"],
                   })
                 }
-              >
-                <option value="NOT_ALLOWED">Not allowed indoors</option>
-                <option value="ALLOWED">Allowed (or designated areas)</option>
-              </select>
+                aria-label="Smoking"
+                options={[
+                  { value: "NOT_ALLOWED", label: "Not allowed indoors" },
+                  { value: "ALLOWED", label: "Allowed (or designated areas)" },
+                ]}
+              />
             </Field>
             <Field
               label="Cancellation policy"
               hint="Flexible = easier for guests. Strict = more protection for you."
             >
-              <select
-                className={selectClassName}
+              <NexaSelect
+                variant="field"
                 value={form.cancellationPolicy}
-                onChange={(e) =>
+                onChange={(v) =>
                   patch({
-                    cancellationPolicy: e.target
-                      .value as ListingWizardFormState["cancellationPolicy"],
+                    cancellationPolicy:
+                      v as ListingWizardFormState["cancellationPolicy"],
                   })
                 }
-              >
-                <option value="FLEXIBLE">Flexible</option>
-                <option value="MODERATE">Moderate</option>
-                <option value="STRICT">Strict</option>
-              </select>
+                aria-label="Cancellation policy"
+                options={[
+                  { value: "FLEXIBLE", label: "Flexible" },
+                  { value: "MODERATE", label: "Moderate" },
+                  { value: "STRICT", label: "Strict" },
+                ]}
+              />
             </Field>
             <Field
               label="How do guests check in?"
               hint="Who greets them or how they get keys."
             >
-              <select
-                className={selectClassName}
+              <NexaSelect
+                variant="field"
                 value={form.checkinMethod}
-                onChange={(e) =>
+                onChange={(v) =>
                   patch({
-                    checkinMethod: e.target
-                      .value as ListingWizardFormState["checkinMethod"],
+                    checkinMethod: v as ListingWizardFormState["checkinMethod"],
                   })
                 }
-              >
-                <option value="IN_PERSON">Host meets them in person</option>
-                <option value="SELF">Self check-in (lockbox / code)</option>
-                <option value="RECEPTION">Reception / front desk</option>
-              </select>
+                aria-label="How do guests check in?"
+                options={[
+                  { value: "IN_PERSON", label: "Host meets them in person" },
+                  { value: "SELF", label: "Self check-in (lockbox / code)" },
+                  { value: "RECEPTION", label: "Reception / front desk" },
+                ]}
+              />
             </Field>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1274,24 +1280,23 @@ export function WizardStepBody({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.preview} alt="" className="h-28 w-full object-cover" />
                   <div className="space-y-2 p-2.5">
-                    <select
-                      className={cn(selectClassName, "h-9 min-h-0 py-1 text-xs")}
+                    <NexaSelect
+                      variant="field"
                       value={p.category}
-                      onChange={(e) => {
+                      onChange={(v) => {
                         const next = [...form.photos];
                         next[idx] = {
                           ...p,
-                          category: e.target.value as MediaCategory,
+                          category: v as MediaCategory,
                         };
                         patch({ photos: next });
                       }}
-                    >
-                      {MEDIA_CATEGORIES.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
+                      aria-label={`Photo ${idx + 1} category`}
+                      options={MEDIA_CATEGORIES.map((c) => ({
+                        value: c.id,
+                        label: c.label,
+                      }))}
+                    />
                     <div className="flex items-center justify-between gap-2">
                       <button
                         type="button"

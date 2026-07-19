@@ -133,12 +133,33 @@ a{text-decoration:none}
 .form-control{width:100%;padding:12px 16px;border:1.5px solid var(--line);border-radius:var(--radius-md);font-family:var(--font-body);font-size:.9rem;color:var(--ink);background:var(--white);transition:border-color .2s,box-shadow .2s;outline:none}
 .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(232,80,122,.12)}
 .form-control::placeholder{color:var(--ink-4)}
-select.form-control{appearance:none;cursor:pointer}
 textarea.form-control{resize:vertical;min-height:120px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .form-note{font-size:.8rem;color:var(--ink-4);margin-top:6px}
 .form-checkbox{display:flex;align-items:flex-start;gap:10px;font-size:.875rem;color:var(--ink-3);cursor:pointer}
 .form-checkbox input{margin-top:3px;accent-color:var(--primary)}
+
+/* Custom dropdown (replaces native select menus) */
+.nexa-dd{position:relative;width:100%;font-family:var(--font-body)}
+.nexa-dd > select{position:absolute!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important;margin:0!important;padding:0!important;border:0!important;clip:rect(0,0,0,0)}
+.nexa-dd-trigger{display:flex;align-items:center;gap:8px;width:100%;text-align:left;cursor:pointer;font-family:inherit;color:var(--ink);transition:border-color .2s,box-shadow .2s,background .2s}
+.nexa-dd-trigger:focus-visible{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(232,80,122,.12)}
+.nexa-dd-trigger.open{border-color:var(--primary);box-shadow:0 0 0 3px rgba(232,80,122,.12)}
+.nexa-dd-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nexa-dd-chevron{flex-shrink:0;width:14px;height:14px;opacity:.55;transition:transform .2s}
+.nexa-dd-trigger.open .nexa-dd-chevron{transform:rotate(180deg);opacity:1;color:var(--primary)}
+.nexa-dd-panel{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:80;display:none;max-height:256px;overflow-y:auto;padding:6px 0;background:var(--white);border:1.5px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg)}
+.nexa-dd-panel.open{display:block}
+.nexa-dd-option{display:block;width:100%;padding:10px 14px;border:none;background:transparent;text-align:left;font-family:inherit;font-size:.875rem;font-weight:500;color:var(--ink);cursor:pointer;transition:background .15s,color .15s}
+.nexa-dd-option:hover{background:var(--primary-soft);color:var(--primary)}
+.nexa-dd-option.selected{background:var(--primary);color:#fff}
+.nexa-dd-option.selected:hover{background:var(--primary-dark);color:#fff}
+.nexa-dd.variant-field .nexa-dd-trigger{padding:12px 16px;border:1.5px solid var(--line);border-radius:var(--radius-md);background:var(--white);font-size:.9rem}
+.nexa-dd.variant-plain .nexa-dd-trigger{border:none;background:transparent;padding:0;font-size:.9rem;box-shadow:none}
+.nexa-dd.variant-plain .nexa-dd-trigger.open{box-shadow:none}
+.nexa-dd.variant-sort{width:auto}
+.nexa-dd.variant-sort .nexa-dd-trigger{width:auto;min-width:168px;padding:9px 16px;border:1.5px solid var(--line);border-radius:var(--radius-md);background:var(--white);font-size:.875rem}
+.nexa-dd.variant-sort .nexa-dd-panel{left:auto;right:0;min-width:100%}
 
 /* UPLOAD BOX */
 .upload-box{border:2px dashed var(--line);border-radius:var(--radius-md);padding:28px;text-align:center;cursor:pointer;transition:all .2s}
@@ -207,6 +228,7 @@ textarea.form-control{resize:vertical;min-height:120px}
 .search-field:last-of-type{border-right:none}
 .search-field label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:4px}
 .search-field input,.search-field select{border:none;outline:none;background:none;font-family:var(--font-body);font-size:.9rem;color:var(--ink);width:100%}
+.search-field .nexa-dd{width:100%}
 .search-btn{margin:4px;padding:14px 28px;background:var(--primary);color:var(--white);border:none;border-radius:var(--radius-lg);font-family:var(--font-body);font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;white-space:nowrap}
 .search-btn:hover{background:var(--primary-dark)}
 .search-chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px}
@@ -284,7 +306,6 @@ textarea.form-control{resize:vertical;min-height:120px}
 .filter-chip:hover,.filter-chip.active{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
 .listings-top-bar{background:var(--white);border-bottom:1px solid var(--line);padding:16px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:var(--nav-h);z-index:10}
 .search-pill{flex:1;background:var(--bg-2);border:1.5px solid var(--line);border-radius:999px;padding:10px 20px;display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--ink-3);cursor:pointer}
-.sort-select{padding:9px 16px;border:1.5px solid var(--line);border-radius:var(--radius-md);font-size:.875rem;font-family:var(--font-body);color:var(--ink);background:var(--white);cursor:pointer;outline:none}
 .listings-inner{padding:28px 32px}
 .listing-page-hero{background:linear-gradient(135deg,var(--ink) 0%,var(--ink-2) 100%);border-radius:var(--radius-xl);padding:36px 40px;margin-bottom:28px}
 .listing-page-hero h1{color:var(--white);font-size:1.8rem;margin-bottom:8px}
@@ -1303,13 +1324,119 @@ function selType(card) {
 
 // Contact form
 function setReason(val) {
-  document.getElementById('reasonSel').value = val;
+  const sel = document.getElementById('reasonSel');
+  if (!sel) return;
+  sel.value = val;
+  sel.dispatchEvent(new Event('change', { bubbles: true }));
+  if (typeof sel._nexaSync === 'function') sel._nexaSync();
   handleReason();
 }
 function handleReason() {
   const val = document.getElementById('reasonSel').value;
   document.getElementById('partnerFields').classList.toggle('show', val === 'Partnership (10+ units)');
 }
+
+function enhanceSelect(sel) {
+  if (sel.dataset.nexaEnhanced === '1') return;
+  sel.dataset.nexaEnhanced = '1';
+
+  const variant = sel.classList.contains('sort-select')
+    ? 'sort'
+    : sel.closest('.search-field')
+      ? 'plain'
+      : 'field';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'nexa-dd variant-' + variant;
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'nexa-dd-trigger';
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.innerHTML =
+    '<span class="nexa-dd-label"></span>' +
+    '<svg class="nexa-dd-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+  const panel = document.createElement('div');
+  panel.className = 'nexa-dd-panel';
+  panel.setAttribute('role', 'listbox');
+
+  const labelEl = trigger.querySelector('.nexa-dd-label');
+
+  function syncFromSelect() {
+    const opt = sel.options[sel.selectedIndex];
+    labelEl.textContent = opt ? opt.textContent : '';
+    panel.querySelectorAll('.nexa-dd-option').forEach((btn) => {
+      btn.classList.toggle('selected', btn.dataset.value === sel.value);
+    });
+  }
+
+  function close() {
+    panel.classList.remove('open');
+    trigger.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  function open() {
+    document.querySelectorAll('.nexa-dd-panel.open').forEach((p) => {
+      if (p !== panel) p.classList.remove('open');
+    });
+    document.querySelectorAll('.nexa-dd-trigger.open').forEach((t) => {
+      if (t !== trigger) {
+        t.classList.remove('open');
+        t.setAttribute('aria-expanded', 'false');
+      }
+    });
+    panel.classList.add('open');
+    trigger.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  Array.from(sel.options).forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nexa-dd-option';
+    btn.setAttribute('role', 'option');
+    btn.dataset.value = opt.value;
+    btn.textContent = opt.textContent;
+    btn.addEventListener('click', () => {
+      sel.value = opt.value;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      syncFromSelect();
+      close();
+    });
+    panel.appendChild(btn);
+  });
+
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (panel.classList.contains('open')) close();
+    else open();
+  });
+
+  sel._nexaSync = syncFromSelect;
+  wrap.appendChild(trigger);
+  wrap.appendChild(panel);
+  syncFromSelect();
+}
+
+function enhanceAllSelects() {
+  document.querySelectorAll('select').forEach(enhanceSelect);
+}
+
+document.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.nexa-dd')) return;
+  document.querySelectorAll('.nexa-dd-panel.open').forEach((p) => p.classList.remove('open'));
+  document.querySelectorAll('.nexa-dd-trigger.open').forEach((t) => {
+    t.classList.remove('open');
+    t.setAttribute('aria-expanded', 'false');
+  });
+});
+
+enhanceAllSelects();
 
 // Filter chips & toggle buttons
 document.addEventListener('click', e => {

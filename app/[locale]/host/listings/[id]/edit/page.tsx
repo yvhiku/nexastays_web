@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
 import { formatUserError } from "@/lib/errors";
@@ -444,53 +445,62 @@ function HostListingEditContent() {
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldPets")}
               </label>
-              <select
-                className="w-full h-10 rounded-xl border border-nexa-line px-3 text-sm"
+              <NexaSelect
+                variant="field"
                 value={form.petsPolicy}
-                onChange={(e) =>
-                  patch({ petsPolicy: e.target.value as EditFormState["petsPolicy"] })
+                onChange={(v) =>
+                  patch({ petsPolicy: v as EditFormState["petsPolicy"] })
                 }
-              >
-                <option value="NO">{t("hostListingEdit.petsNo")}</option>
-                <option value="DOGS_CATS">{t("hostListingEdit.petsDogsCats")}</option>
-                <option value="ALLOWED">{t("hostListingEdit.petsAllowed")}</option>
-              </select>
+                aria-label={t("hostListingEdit.fieldPets")}
+                options={[
+                  { value: "NO", label: t("hostListingEdit.petsNo") },
+                  { value: "DOGS_CATS", label: t("hostListingEdit.petsDogsCats") },
+                  { value: "ALLOWED", label: t("hostListingEdit.petsAllowed") },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldSmoking")}
               </label>
-              <select
-                className="w-full h-10 rounded-xl border border-nexa-line px-3 text-sm"
+              <NexaSelect
+                variant="field"
                 value={form.smokingPolicy}
-                onChange={(e) =>
-                  patch({
-                    smokingPolicy: e.target.value as EditFormState["smokingPolicy"],
-                  })
+                onChange={(v) =>
+                  patch({ smokingPolicy: v as EditFormState["smokingPolicy"] })
                 }
-              >
-                <option value="NOT_ALLOWED">{t("hostListingEdit.smokingNotAllowed")}</option>
-                <option value="ALLOWED">{t("hostListingEdit.smokingAllowed")}</option>
-              </select>
+                aria-label={t("hostListingEdit.fieldSmoking")}
+                options={[
+                  {
+                    value: "NOT_ALLOWED",
+                    label: t("hostListingEdit.smokingNotAllowed"),
+                  },
+                  {
+                    value: "ALLOWED",
+                    label: t("hostListingEdit.smokingAllowed"),
+                  },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldCancellation")}
               </label>
-              <select
-                className="w-full h-10 rounded-xl border border-nexa-line px-3 text-sm"
+              <NexaSelect
+                variant="field"
                 value={form.cancellationPolicy}
-                onChange={(e) =>
+                onChange={(v) =>
                   patch({
-                    cancellationPolicy:
-                      e.target.value as EditFormState["cancellationPolicy"],
+                    cancellationPolicy: v as EditFormState["cancellationPolicy"],
                   })
                 }
-              >
-                <option value="FLEXIBLE">{t("hostListingEdit.cancelFlexible")}</option>
-                <option value="MODERATE">{t("hostListingEdit.cancelModerate")}</option>
-                <option value="STRICT">{t("hostListingEdit.cancelStrict")}</option>
-              </select>
+                aria-label={t("hostListingEdit.fieldCancellation")}
+                options={[
+                  { value: "FLEXIBLE", label: t("hostListingEdit.cancelFlexible") },
+                  { value: "MODERATE", label: t("hostListingEdit.cancelModerate") },
+                  { value: "STRICT", label: t("hostListingEdit.cancelStrict") },
+                ]}
+              />
             </div>
           </div>
           <p className="text-sm font-medium text-nexa-ink mb-2">

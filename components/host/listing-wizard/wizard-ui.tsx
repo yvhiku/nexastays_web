@@ -2,9 +2,6 @@
 
 import { cn } from "@/lib/utils";
 
-export const selectClassName =
-  "flex h-11 min-h-[44px] w-full appearance-none rounded-xl border-2 border-nexa-line bg-white px-4 py-3 text-base font-sans text-nexa-ink outline-none transition-colors focus:border-nexa-primary focus:ring-2 focus:ring-nexa-primary/20 sm:text-sm";
-
 export const textareaClassName =
   "flex min-h-[120px] w-full rounded-xl border-2 border-nexa-line bg-white px-4 py-3 text-base font-sans text-nexa-ink outline-none transition-colors placeholder:text-nexa-ink-4 focus:border-nexa-primary focus:ring-2 focus:ring-nexa-primary/20 sm:text-sm";
 

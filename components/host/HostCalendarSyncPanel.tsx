@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Link2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import {
   connectExternalCalendar,
   deleteExternalCalendar,
@@ -206,17 +207,14 @@ export function HostCalendarSyncPanel({ listings, token }: Props) {
 
         <label className="block text-sm max-w-md">
           <span className="text-nexa-ink-3 text-xs font-semibold uppercase tracking-wide">Listing</span>
-          <select
+          <NexaSelect
+            variant="field"
+            className="mt-1"
             value={listingId}
-            onChange={(e) => setListingId(e.target.value)}
-            className="mt-1 h-11 w-full rounded-xl border border-nexa-line bg-white px-3 text-sm"
-          >
-            {listings.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.title}
-              </option>
-            ))}
-          </select>
+            onChange={setListingId}
+            aria-label="Listing"
+            options={listings.map((l) => ({ value: l.id, label: l.title }))}
+          />
         </label>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NexaSelect } from "@/components/ui/NexaSelect";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
 import {
@@ -156,15 +157,17 @@ function HostVerificationStep({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
             <div>
               <label className="block text-sm font-semibold mb-2">ID Type *</label>
-              <select
+              <NexaSelect
+                variant="field"
                 value={docType}
-                onChange={(e) => onDocTypeChange(e.target.value)}
-                className="w-full h-11 rounded-xl border-2 border-nexa-line bg-white px-4 py-3 text-sm"
-              >
-                <option value="CNIE">CNIE</option>
-                <option value="PASSPORT">Passport</option>
-                <option value="OTHER">Other</option>
-              </select>
+                onChange={onDocTypeChange}
+                aria-label="ID Type"
+                options={[
+                  { value: "CNIE", label: "CNIE" },
+                  { value: "PASSPORT", label: "Passport" },
+                  { value: "OTHER", label: "Other" },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">ID Number</label>
