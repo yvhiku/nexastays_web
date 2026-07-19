@@ -14,6 +14,7 @@ import { formatUserError } from "@/lib/errors";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
 import { HostKpiSection } from "@/components/host/HostKpiSection";
+import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
 import { AppLoader } from "@/components/AppLoader";
 import {
   Home,
@@ -463,6 +464,13 @@ function HostDashboardContent() {
             )}
           </form>
         </div>
+      )}
+
+      {status === "APPROVED" && listings.length > 0 && token && (
+        <HostCalendarSyncPanel
+          listings={listings.map((l) => ({ id: l.id, title: l.title }))}
+          token={token}
+        />
       )}
 
       {/* Your bookings - for approved hosts */}

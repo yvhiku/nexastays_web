@@ -551,6 +551,156 @@ export async function setHostAvailabilityBlock(
   return unwrap(res);
 }
 
+export type ExternalCalendarProvider =
+  | "AIRBNB"
+  | "BOOKING"
+  | "VRBO"
+  | "GOOGLE"
+  | "APPLE"
+  | "DIRECT"
+  | "OTHER";
+
+export type ExternalCalendarDto = {
+  id: string;
+  listing_id: string;
+  provider: ExternalCalendarProvider;
+  label: string;
+  ics_url: string;
+  status: string;
+  health: string;
+  next_sync_at?: string;
+  last_attempt_at?: string | null;
+  last_successful_sync_at?: string | null;
+  last_error?: string | null;
+  sync_result?: {
+    imported_events?: number;
+    blocked_nights?: number;
+    last_reservation?: { start: string; end: string } | null;
+    not_modified?: boolean;
+  } | null;
+  history?: Array<{
+    id: string;
+    started_at: string;
+    outcome: string;
+    message?: string | null;
+    blocked_nights?: number | null;
+  }>;
+};
+
+export type CalendarSyncSummary = {
+  calendar_id: string;
+  outcome: string;
+  imported_events: number;
+  blocked_nights: number;
+  last_reservation: { start: string; end: string } | null;
+  message?: string;
+};
+
+export async function listExternalCalendars(
+  listingId: string,
+  token?: string | null,
+): Promise<{
+  listing_id: string;
+  connected_calendars_count: number;
+  calendars: ExternalCalendarDto[];
+}> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .get(`/stays/host/listings/${listingId}/external-calendars`, { headers })
+    .catch(handleError);
+  return unwrap(res);
+}
+
+export async function connectExternalCalendar(
+  listingId: string,
+  body: {
+    provider: ExternalCalendarProvider;
+    ics_url: string;
+    label?: string;
+    provider_listing_reference?: string;
+  },
+  token?: string | null,
+): Promise<{ calendar: ExternalCalendarDto; sync: CalendarSyncSummary }> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(`/stays/host/listings/${listingId}/external-calendars`, body, { headers })
+    .catch(handleError);
+  return unwrap(res);
+}
+
+export async function syncExternalCalendar(
+  listingId: string,
+  calendarId: string,
+  token?: string | null,
+): Promise<CalendarSyncSummary> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(
+      `/stays/host/listings/${listingId}/external-calendars/${calendarId}/sync`,
+      {},
+      { headers },
+    )
+    .catch(handleError);
+  return unwrap(res);
+}
+
+export async function updateExternalCalendar(
+  listingId: string,
+  calendarId: string,
+  body: { label?: string; status?: "ACTIVE" | "PAUSED" },
+  token?: string | null,
+): Promise<ExternalCalendarDto> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .patch(
+      `/stays/host/listings/${listingId}/external-calendars/${calendarId}`,
+      body,
+      { headers },
+    )
+    .catch(handleError);
+  return unwrap(res);
+}
+
+export async function deleteExternalCalendar(
+  listingId: string,
+  calendarId: string,
+  token?: string | null,
+): Promise<{ deleted: boolean }> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .delete(`/stays/host/listings/${listingId}/external-calendars/${calendarId}`, {
+      headers,
+    })
+    .catch(handleError);
+  return unwrap(res);
+}
+
+export async function getCalendarExport(
+  listingId: string,
+  token?: string | null,
+): Promise<{ url: string; token: string }> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .get(`/stays/host/listings/${listingId}/calendar-export`, { headers })
+    .catch(handleError);
+  return unwrap(res);
+}
+
+export async function regenerateCalendarExport(
+  listingId: string,
+  token?: string | null,
+): Promise<{ url: string; token: string }> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(
+      `/stays/host/listings/${listingId}/calendar-export/regenerate`,
+      {},
+      { headers },
+    )
+    .catch(handleError);
+  return unwrap(res);
+}
+
 /** Create DRAFT listing from property type (requires JWT, approved host) */
 export async function createHostListing(
   body: CreateDraftListingBody | CreateHostListingBody,
