@@ -25,20 +25,101 @@
     "moroccoSubtitle": "Commencez par une ville, un quartier ou une collection — puis affinez avec des filtres vérifiés.",
     "cityGenericTitle": "Séjournez à {city} en toute confiance",
     "cityGenericSubtitle": "Explorez les quartiers et les séjours vérifiés avec des informations plus claires avant de réserver.",
-    "cityCasablancaTitle": "Séjournez à Casablanca en toute confiance",
-    "cityCasablancaSubtitle": "Quartiers d'affaires, côte atlantique et appartements modernes.",
-    "cityMarrakechTitle": "Séjournez à Marrakech en toute confiance",
-    "cityMarrakechSubtitle": "Riads de la médina, séjours à Guéliz et escapades désert.",
-    "cityAgadirTitle": "Séjournez à Agadir en toute confiance",
-    "cityAgadirSubtitle": "Séjours en front de mer et quartiers côtiers calmes.",
-    "cityTangierTitle": "Séjournez à Tanger en toute confiance",
-    "cityTangierSubtitle": "Vues de la Kasbah, lumière atlantique et escapades weekend.",
-    "cityEssaouiraTitle": "Séjournez à Essaouira en toute confiance",
-    "cityEssaouiraSubtitle": "Vent, remparts et charme atlantique.",
-    "cityFesTitle": "Séjournez à Fès en toute confiance",
-    "cityFesSubtitle": "Séjours dans la médina historique et immersion culturelle.",
-    "cityRabatTitle": "Séjournez à Rabat en toute confiance",
-    "cityRabatSubtitle": "Calme de la capitale — Agdal, Hassan et la médina.",
+    "cities": {
+      "casablanca": {
+        "title": "Séjournez à Casablanca en toute confiance",
+        "subtitle": "Quartiers d'affaires, côte atlantique et appartements modernes."
+      },
+      "marrakech": {
+        "title": "Séjournez à Marrakech en toute confiance",
+        "subtitle": "Riads de la médina, séjours à Guéliz et escapades désert."
+      },
+      "agadir": {
+        "title": "Séjournez à Agadir en toute confiance",
+        "subtitle": "Séjours en front de mer et quartiers côtiers calmes."
+      },
+      "tangier": {
+        "title": "Séjournez à Tanger en toute confiance",
+        "subtitle": "Vues de la Kasbah, lumière atlantique et escapades weekend."
+      },
+      "essaouira": {
+        "title": "Séjournez à Essaouira en toute confiance",
+        "subtitle": "Vent, remparts et charme atlantique."
+      },
+      "fes": {
+        "title": "Séjournez à Fès en toute confiance",
+        "subtitle": "Séjours dans la médina historique et immersion culturelle."
+      },
+      "rabat": {
+        "title": "Séjournez à Rabat en toute confiance",
+        "subtitle": "Calme de la capitale — Agdal, Hassan et la médina."
+      },
+      "chefchaouen": {
+        "title": "Séjournez à Chefchaouen en toute confiance",
+        "subtitle": "Rues bleues, air de montagne et médina."
+      },
+      "tetouan": {
+        "title": "Séjournez à Tétouan en toute confiance",
+        "subtitle": "Héritage andalou et rues blanches."
+      },
+      "ifrane": {
+        "title": "Séjournez à Ifrane en toute confiance",
+        "subtitle": "Air alpin, cèdres et escapades en montagne."
+      }
+    },
+    "cityTags": {
+      "economic_capital": "Capitale économique du Maroc",
+      "historic_imperial": "Cité impériale historique",
+      "capital_city": "Capitale du Maroc",
+      "europe_africa_gateway": "Porte entre l'Europe et l'Afrique",
+      "atlantic_coastal_medina": "Médina côtière atlantique",
+      "blue_city": "La ville bleue",
+      "atlantic_beach": "Destination plage atlantique",
+      "white_dove": "Colombe blanche du Maroc",
+      "spiritual_cultural": "Capitale spirituelle et culturelle",
+      "alpine_town": "Ville alpine du Maroc"
+    },
+    "descriptors": {
+      "historic_medina": "Médina historique",
+      "historic": "Historique",
+      "beachfront": "Front de mer",
+      "oceanfront": "Face à l'océan",
+      "waterfront": "Bord de l'eau",
+      "marina": "Marina",
+      "shopping_cafes": "Commerces et cafés",
+      "shopping": "Shopping",
+      "business_district": "Quartier d'affaires",
+      "business": "Affaires",
+      "luxury_living": "Cadre résidentiel haut de gamme",
+      "luxury": "Luxe",
+      "art_culture": "Art et culture",
+      "family_friendly": "Familial",
+      "family": "Famille",
+      "nightlife": "Vie nocturne",
+      "university_area": "Quartier universitaire",
+      "residential": "Résidentiel",
+      "mountain_escape": "Escapade montagne",
+      "surf_spot": "Spot de surf",
+      "surf": "Surf",
+      "quiet_retreat": "Retraite calme",
+      "food_dining": "Gastronomie",
+      "nature": "Nature",
+      "golf": "Golf"
+    },
+    "regions": {
+      "casablanca_settat": "Casablanca-Settat",
+      "marrakech_safi": "Marrakech-Safi",
+      "souss_massa": "Souss-Massa",
+      "rabat_sale_kenitra": "Rabat-Salé-Kénitra",
+      "fes_meknes": "Fès-Meknès",
+      "tanger_tetouan_al_hoceima": "Tanger-Tétouan-Al Hoceïma",
+      "oriental": "Oriental",
+      "beni_mellal_khenifra": "Béni Mellal-Khénifra",
+      "draa_tafilalet": "Drâa-Tafilalet",
+      "guelmim_oued_noun": "Guelmim-Oued Noun",
+      "laayoune_sakia_el_hamra": "Laâyoune-Sakia El Hamra",
+      "dakhla_oued_ed_dahab": "Dakhla-Oued Ed-Dahab"
+    },
     "staysWord": "séjours",
     "neighborhoodsWord": "quartiers",
     "collectionsTitle": "Collections à explorer",
@@ -81,27 +162,6 @@
     "mapEmptyTitle": "Aucun séjour ici.",
     "mapEmptyMessage": "Essayez de dézoomer ou explorez un autre quartier.",
     "exploreCityCta": "Explorer {city}",
-    "taglineCasablanca": "Ville océane",
-    "taglineMarrakech": "Médina historique",
-    "taglineAgadir": "Soleil atlantique",
-    "taglineTangier": "Porte de l'Afrique",
-    "taglineEssaouira": "Côte atlantique",
-    "taglineFes": "Cité impériale",
-    "taglineRabat": "Calme de la capitale",
-    "taglineChefchaouen": "Ville bleue",
-    "taglineTetouan": "Colombe blanche",
-    "cityChefchaouenTitle": "Séjournez à Chefchaouen en toute confiance",
-    "cityChefchaouenSubtitle": "Rues bleues, air de montagne et médina.",
-    "cityTetouanTitle": "Séjournez à Tétouan en toute confiance",
-    "cityTetouanSubtitle": "Héritage andalou et rues blanches.",
-    "descShopping": "Shopping",
-    "descBeach": "Plage",
-    "descHistoric": "Historique",
-    "descBusiness": "Affaires",
-    "descUrban": "Urbain",
-    "descResidential": "Résidentiel",
-    "descNature": "Nature",
-    "descLuxury": "Luxe",
     "allInCity": "Tout {city}",
     "allAreas": "Ville entière",
     "clearCity": "Découvrir le Maroc"

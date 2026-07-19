@@ -40,11 +40,15 @@ export function DestinationContext({
 
   const chips = React.useMemo(() => {
     if (!ctx) return [];
-    const set = new Set<string>([
-      ...ctx.neighborhoods.map((n) => n.name),
-      ...resultNeighborhoods.filter(Boolean),
-    ]);
-    return Array.from(set);
+    const curated = ctx.neighborhoods.map((n) => n.name);
+    const extras = resultNeighborhoods.filter(
+      (n) =>
+        n &&
+        !curated.some(
+          (c) => slugifyNeighborhood(c) === slugifyNeighborhood(n),
+        ),
+    );
+    return [...curated, ...extras];
   }, [ctx, resultNeighborhoods]);
 
   if (!city) {

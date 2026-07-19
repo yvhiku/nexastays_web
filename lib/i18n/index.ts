@@ -14,7 +14,9 @@ export const DEFAULT_LOCALE: Locale = "en";
 
 export const STORAGE_KEY = "nexa_locale";
 
-export type Translations = Record<string, string | Record<string, string | Record<string, string>>>;
+export type Translations = {
+  [key: string]: string | Translations;
+};
 
 function getNested(obj: unknown, path: string): string | undefined {
   const parts = path.split(".");

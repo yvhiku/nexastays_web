@@ -25,20 +25,101 @@
     "moroccoSubtitle": "Start with a city, neighborhood, or collection — then refine with verified filters.",
     "cityGenericTitle": "Stay in {city} with confidence",
     "cityGenericSubtitle": "Explore neighborhoods and verified stays with clearer information before you book.",
-    "cityCasablancaTitle": "Stay in Casablanca with confidence",
-    "cityCasablancaSubtitle": "Business districts, Atlantic coastline, and modern apartments across the city.",
-    "cityMarrakechTitle": "Stay in Marrakech with confidence",
-    "cityMarrakechSubtitle": "Medina riads, Gueliz stays, and desert escapes within reach.",
-    "cityAgadirTitle": "Stay in Agadir with confidence",
-    "cityAgadirSubtitle": "Beachfront stays and calm coastal neighborhoods.",
-    "cityTangierTitle": "Stay in Tangier with confidence",
-    "cityTangierSubtitle": "Kasbah views, Atlantic light, and weekend escapes.",
-    "cityEssaouiraTitle": "Stay in Essaouira with confidence",
-    "cityEssaouiraSubtitle": "Wind, medina walls, and Atlantic charm.",
-    "cityFesTitle": "Stay in Fes with confidence",
-    "cityFesSubtitle": "Historic medina stays and cultural immersion.",
-    "cityRabatTitle": "Stay in Rabat with confidence",
-    "cityRabatSubtitle": "Capital calm — Agdal, Hassan, and the medina.",
+    "cities": {
+      "casablanca": {
+        "title": "Stay in Casablanca with confidence",
+        "subtitle": "Business districts, Atlantic coastline, and modern apartments across the city."
+      },
+      "marrakech": {
+        "title": "Stay in Marrakech with confidence",
+        "subtitle": "Medina riads, Gueliz stays, and desert escapes within reach."
+      },
+      "agadir": {
+        "title": "Stay in Agadir with confidence",
+        "subtitle": "Beachfront stays and calm coastal neighborhoods."
+      },
+      "tangier": {
+        "title": "Stay in Tangier with confidence",
+        "subtitle": "Kasbah views, Atlantic light, and weekend escapes."
+      },
+      "essaouira": {
+        "title": "Stay in Essaouira with confidence",
+        "subtitle": "Wind, medina walls, and Atlantic charm."
+      },
+      "fes": {
+        "title": "Stay in Fes with confidence",
+        "subtitle": "Historic medina stays and cultural immersion."
+      },
+      "rabat": {
+        "title": "Stay in Rabat with confidence",
+        "subtitle": "Capital calm — Agdal, Hassan, and the medina."
+      },
+      "chefchaouen": {
+        "title": "Stay in Chefchaouen with confidence",
+        "subtitle": "Blue alleys, mountain air, and medina stays."
+      },
+      "tetouan": {
+        "title": "Stay in Tetouan with confidence",
+        "subtitle": "Andalusian heritage and whitewashed streets."
+      },
+      "ifrane": {
+        "title": "Stay in Ifrane with confidence",
+        "subtitle": "Alpine air, cedar forests, and mountain escapes."
+      }
+    },
+    "cityTags": {
+      "economic_capital": "Morocco's economic capital",
+      "historic_imperial": "Historic imperial city",
+      "capital_city": "Morocco's capital city",
+      "europe_africa_gateway": "Gateway between Europe and Africa",
+      "atlantic_coastal_medina": "Atlantic coastal medina",
+      "blue_city": "The Blue City",
+      "atlantic_beach": "Atlantic beach destination",
+      "white_dove": "White Dove of Morocco",
+      "spiritual_cultural": "Spiritual and cultural capital",
+      "alpine_town": "Morocco's alpine town"
+    },
+    "descriptors": {
+      "historic_medina": "Historic Medina",
+      "historic": "Historic",
+      "beachfront": "Beachfront",
+      "oceanfront": "Oceanfront",
+      "waterfront": "Waterfront",
+      "marina": "Marina",
+      "shopping_cafes": "Shopping & Cafés",
+      "shopping": "Shopping",
+      "business_district": "Business District",
+      "business": "Business",
+      "luxury_living": "Luxury Living",
+      "luxury": "Luxury",
+      "art_culture": "Art & Culture",
+      "family_friendly": "Family Friendly",
+      "family": "Family",
+      "nightlife": "Nightlife",
+      "university_area": "University Area",
+      "residential": "Residential",
+      "mountain_escape": "Mountain Escape",
+      "surf_spot": "Surf Spot",
+      "surf": "Surf",
+      "quiet_retreat": "Quiet Retreat",
+      "food_dining": "Food & Dining",
+      "nature": "Nature",
+      "golf": "Golf"
+    },
+    "regions": {
+      "casablanca_settat": "Casablanca-Settat",
+      "marrakech_safi": "Marrakech-Safi",
+      "souss_massa": "Souss-Massa",
+      "rabat_sale_kenitra": "Rabat-Salé-Kénitra",
+      "fes_meknes": "Fès-Meknès",
+      "tanger_tetouan_al_hoceima": "Tanger-Tétouan-Al Hoceïma",
+      "oriental": "Oriental",
+      "beni_mellal_khenifra": "Béni Mellal-Khénifra",
+      "draa_tafilalet": "Drâa-Tafilalet",
+      "guelmim_oued_noun": "Guelmim-Oued Noun",
+      "laayoune_sakia_el_hamra": "Laâyoune-Sakia El Hamra",
+      "dakhla_oued_ed_dahab": "Dakhla-Oued Ed-Dahab"
+    },
     "staysWord": "stays",
     "neighborhoodsWord": "neighborhoods",
     "collectionsTitle": "Explore collections",
@@ -81,27 +162,6 @@
     "mapEmptyTitle": "No stays found here.",
     "mapEmptyMessage": "Try zooming out or explore another neighborhood.",
     "exploreCityCta": "Explore {city}",
-    "taglineCasablanca": "Ocean city",
-    "taglineMarrakech": "Historic medina",
-    "taglineAgadir": "Atlantic sunshine",
-    "taglineTangier": "Gateway to Africa",
-    "taglineEssaouira": "Atlantic coast",
-    "taglineFes": "Imperial city",
-    "taglineRabat": "Capital calm",
-    "taglineChefchaouen": "Blue city",
-    "taglineTetouan": "White dove",
-    "cityChefchaouenTitle": "Stay in Chefchaouen with confidence",
-    "cityChefchaouenSubtitle": "Blue alleys, mountain air, and medina stays.",
-    "cityTetouanTitle": "Stay in Tetouan with confidence",
-    "cityTetouanSubtitle": "Andalusian heritage and whitewashed streets.",
-    "descShopping": "Shopping",
-    "descBeach": "Beach",
-    "descHistoric": "Historic",
-    "descBusiness": "Business",
-    "descUrban": "Urban",
-    "descResidential": "Residential",
-    "descNature": "Nature",
-    "descLuxury": "Luxury",
     "allInCity": "All {city}",
     "allAreas": "Entire city",
     "clearCity": "Discover Morocco"

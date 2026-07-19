@@ -1,0 +1,26 @@
+name: Explore catalog
+
+on:
+  push:
+    paths:
+      - "lib/explore/**"
+      - "lib/i18n/locales/**"
+      - "scripts/validate-explore-catalog.ts"
+      - "package.json"
+  pull_request:
+    paths:
+      - "lib/explore/**"
+      - "lib/i18n/locales/**"
+      - "scripts/validate-explore-catalog.ts"
+      - "package.json"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate explore catalog
+        run: npm run validate:explore-catalog

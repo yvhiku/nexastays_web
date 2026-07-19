@@ -1,0 +1,53 @@
+import type { ExploreCityModule } from "../types";
+
+export const tetouan: ExploreCityModule = {
+  id: "tetouan",
+  slug: "tetouan",
+  city: "Tetouan",
+  countryCode: "MA",
+  region: "tanger_tetouan_al_hoceima",
+  aliases: ["Tétouan", "تطوان", "Tetuan"],
+  tag: "white_dove",
+  timezone: "Africa/Casablanca",
+  mapCenter: { lat: 35.5697958, lng: -5.3746918 },
+  defaultZoom: 13,
+  bounds: {
+    southwest: { lat: 35.5410698, lng: -5.4303242 },
+    northeast: { lat: 35.6106991, lng: -5.261143 },
+  },
+  priority: 55,
+  searchWeight: 60,
+  popularity: 62,
+  osmId: "relation/2464649",
+  wikidataId: "Q185157",
+  neighborhoods: [
+    {
+      id: "medina",
+      slug: "medina",
+      name: "Medina",
+      aliases: ["Médina", "المدينة العتيقة"],
+      descriptor: "historic_medina",
+      lat: 35.5710625,
+      lng: -5.3664659,
+      featuredOrder: 1,
+      searchWeight: 90,
+      popularity: 88,
+      osmId: "node/4026734052",
+      wikidataId: "Q3847588",
+    },
+    {
+      id: "ensanche",
+      slug: "ensanche",
+      name: "Ensanche",
+      aliases: ["El Ensanche", "Ville Nouvelle", "المدينة الجديدة"],
+      descriptor: "residential",
+      lat: 35.5762,
+      lng: -5.3688,
+      featuredOrder: 2,
+      searchWeight: 70,
+      popularity: 68,
+      // Spanish colonial Ensanche / new town north of the medina
+    },
+  ],
+  nearbyDestinations: [],
+};

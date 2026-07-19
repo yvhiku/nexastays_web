@@ -8,7 +8,7 @@ import {
   MOROCCO_CONTEXT,
   slugifyNeighborhood,
   viewportAvgPrice,
-  type ExploreNeighborhood,
+  type ExploreNeighborhoodView,
 } from "@/lib/explore-city-context";
 import type { StaysListing } from "@/lib/stays-types";
 
@@ -25,12 +25,16 @@ export type ExploreMapCanvasHeaderProps = {
 };
 
 function descriptorIcon(descriptorKey: string): string {
-  if (descriptorKey.includes("Beach")) return "🌊";
-  if (descriptorKey.includes("Historic")) return "🏛";
-  if (descriptorKey.includes("Shopping")) return "📍";
-  if (descriptorKey.includes("Nature")) return "🌿";
-  if (descriptorKey.includes("Luxury")) return "✨";
-  if (descriptorKey.includes("Business")) return "🏢";
+  if (descriptorKey.includes("beach") || descriptorKey.includes("ocean") || descriptorKey.includes("surf") || descriptorKey.includes("marina"))
+    return "🌊";
+  if (descriptorKey.includes("historic") || descriptorKey.includes("medina"))
+    return "🏛";
+  if (descriptorKey.includes("shopping") || descriptorKey.includes("food"))
+    return "📍";
+  if (descriptorKey.includes("nature") || descriptorKey.includes("mountain") || descriptorKey.includes("quiet"))
+    return "🌿";
+  if (descriptorKey.includes("luxury")) return "✨";
+  if (descriptorKey.includes("business")) return "🏢";
   return "📍";
 }
 
@@ -40,7 +44,7 @@ function DestinationChip({
   onClick,
   t,
 }: {
-  neighborhood: ExploreNeighborhood;
+  neighborhood: ExploreNeighborhoodView;
   selected: boolean;
   onClick: () => void;
   t: (key: string) => string;

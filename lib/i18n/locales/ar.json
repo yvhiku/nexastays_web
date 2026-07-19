@@ -25,20 +25,101 @@
     "moroccoSubtitle": "ابدأ بمدينة أو حي أو مجموعة — ثم ضيّق البحث بفلاتر موثوقة.",
     "cityGenericTitle": "أقم في {city} بثقة أكبر",
     "cityGenericSubtitle": "استكشف الأحياء والإقامات الموثقة بمعلومات أوضح قبل الحجز.",
-    "cityCasablancaTitle": "أقم في الدار البيضاء بثقة أكبر",
-    "cityCasablancaSubtitle": "أحياء الأعمال وساحل الأطلسي وشقق عصرية.",
-    "cityMarrakechTitle": "أقم في مراكش بثقة أكبر",
-    "cityMarrakechSubtitle": "رياض المدينة العتيقة وإقامات جليز ورحلات الصحراء.",
-    "cityAgadirTitle": "أقم في أكادير بثقة أكبر",
-    "cityAgadirSubtitle": "إقامات على الشاطئ وأحياء ساحلية هادئة.",
-    "cityTangierTitle": "أقم في طنجة بثقة أكبر",
-    "cityTangierSubtitle": "إطلالات القصبة وضوء الأطلسي وعطلات نهاية الأسبوع.",
-    "cityEssaouiraTitle": "أقم في الصويرة بثقة أكبر",
-    "cityEssaouiraSubtitle": "الرياح وأسوار المدينة وسحر الأطلسي.",
-    "cityFesTitle": "أقم في فاس بثقة أكبر",
-    "cityFesSubtitle": "إقامات المدينة التاريخية وانغماس ثقافي.",
-    "cityRabatTitle": "أقم في الرباط بثقة أكبر",
-    "cityRabatSubtitle": "هدوء العاصمة — أكدال وحسان والمدينة العتيقة.",
+    "cities": {
+      "casablanca": {
+        "title": "أقم في الدار البيضاء بثقة أكبر",
+        "subtitle": "أحياء الأعمال وساحل الأطلسي وشقق عصرية."
+      },
+      "marrakech": {
+        "title": "أقم في مراكش بثقة أكبر",
+        "subtitle": "رياض المدينة العتيقة وإقامات جليز ورحلات الصحراء."
+      },
+      "agadir": {
+        "title": "أقم في أكادير بثقة أكبر",
+        "subtitle": "إقامات على الشاطئ وأحياء ساحلية هادئة."
+      },
+      "tangier": {
+        "title": "أقم في طنجة بثقة أكبر",
+        "subtitle": "إطلالات القصبة وضوء الأطلسي وعطلات نهاية الأسبوع."
+      },
+      "essaouira": {
+        "title": "أقم في الصويرة بثقة أكبر",
+        "subtitle": "الرياح وأسوار المدينة وسحر الأطلسي."
+      },
+      "fes": {
+        "title": "أقم في فاس بثقة أكبر",
+        "subtitle": "إقامات المدينة التاريخية وانغماس ثقافي."
+      },
+      "rabat": {
+        "title": "أقم في الرباط بثقة أكبر",
+        "subtitle": "هدوء العاصمة — أكدال وحسان والمدينة العتيقة."
+      },
+      "chefchaouen": {
+        "title": "أقم في شفشاون بثقة أكبر",
+        "subtitle": "أزقة زرقاء وهواء جبلي وإقامات المدينة."
+      },
+      "tetouan": {
+        "title": "أقم في تطوان بثقة أكبر",
+        "subtitle": "تراث أندلسي وشوارع بيضاء."
+      },
+      "ifrane": {
+        "title": "أقم في إفران بثقة أكبر",
+        "subtitle": "هواء جبلي وغابات الأرز ورحلات جبلية."
+      }
+    },
+    "cityTags": {
+      "economic_capital": "العاصمة الاقتصادية للمغرب",
+      "historic_imperial": "مدينة إمبراطورية تاريخية",
+      "capital_city": "عاصمة المغرب",
+      "europe_africa_gateway": "بوابة بين أوروبا وأفريقيا",
+      "atlantic_coastal_medina": "مدينة عتيقة على ساحل الأطلسي",
+      "blue_city": "المدينة الزرقاء",
+      "atlantic_beach": "وجهة شاطئية أطلسية",
+      "white_dove": "الحمامة البيضاء للمغرب",
+      "spiritual_cultural": "عاصمة روحية وثقافية",
+      "alpine_town": "المدينة الجبلية في المغرب"
+    },
+    "descriptors": {
+      "historic_medina": "المدينة العتيقة",
+      "historic": "تاريخي",
+      "beachfront": "على الشاطئ",
+      "oceanfront": "على المحيط",
+      "waterfront": "على الواجهة المائية",
+      "marina": "المارينا",
+      "shopping_cafes": "التسوق والمقاهي",
+      "shopping": "تسوق",
+      "business_district": "حي الأعمال",
+      "business": "أعمال",
+      "luxury_living": "سكن فاخر",
+      "luxury": "فاخر",
+      "art_culture": "فن وثقافة",
+      "family_friendly": "مناسب للعائلات",
+      "family": "عائلي",
+      "nightlife": "حياة ليلية",
+      "university_area": "منطقة جامعية",
+      "residential": "سكني",
+      "mountain_escape": "ملاذ جبلي",
+      "surf_spot": "موقع ركوب الأمواج",
+      "surf": "ركوب الأمواج",
+      "quiet_retreat": "ملاذ هادئ",
+      "food_dining": "مطاعم ومأكولات",
+      "nature": "طبيعة",
+      "golf": "غولف"
+    },
+    "regions": {
+      "casablanca_settat": "الدار البيضاء-سطات",
+      "marrakech_safi": "مراكش-آسفي",
+      "souss_massa": "سوس-ماسة",
+      "rabat_sale_kenitra": "الرباط-سلا-القنيطرة",
+      "fes_meknes": "فاس-مكناس",
+      "tanger_tetouan_al_hoceima": "طنجة-تطوان-الحسيمة",
+      "oriental": "الشرق",
+      "beni_mellal_khenifra": "بني ملال-خنيفرة",
+      "draa_tafilalet": "درعة-تافيلالت",
+      "guelmim_oued_noun": "كلميم-واد نون",
+      "laayoune_sakia_el_hamra": "العيون-الساقية الحمراء",
+      "dakhla_oued_ed_dahab": "الداخلة-وادي الذهب"
+    },
     "staysWord": "إقامات",
     "neighborhoodsWord": "أحياء",
     "collectionsTitle": "مجموعات للاستكشاف",
@@ -81,27 +162,6 @@
     "mapEmptyTitle": "لا توجد إقامات هنا.",
     "mapEmptyMessage": "جرّب التصغير أو استكشف حياً آخر.",
     "exploreCityCta": "استكشف {city}",
-    "taglineCasablanca": "مدينة المحيط",
-    "taglineMarrakech": "المدينة التاريخية",
-    "taglineAgadir": "شمس الأطلسي",
-    "taglineTangier": "بوابة أفريقيا",
-    "taglineEssaouira": "ساحل الأطلسي",
-    "taglineFes": "المدينة الإمبراطورية",
-    "taglineRabat": "هدوء العاصمة",
-    "taglineChefchaouen": "المدينة الزرقاء",
-    "taglineTetouan": "الحمامة البيضاء",
-    "cityChefchaouenTitle": "أقم في شفشاون بثقة أكبر",
-    "cityChefchaouenSubtitle": "أزقة زرقاء وهواء جبلي وإقامات المدينة.",
-    "cityTetouanTitle": "أقم في تطوان بثقة أكبر",
-    "cityTetouanSubtitle": "تراث أندلسي وشوارع بيضاء.",
-    "descShopping": "تسوق",
-    "descBeach": "شاطئ",
-    "descHistoric": "تاريخي",
-    "descBusiness": "أعمال",
-    "descUrban": "حضري",
-    "descResidential": "سكني",
-    "descNature": "طبيعة",
-    "descLuxury": "فاخر",
     "allInCity": "كل {city}",
     "allAreas": "المدينة كلها",
     "clearCity": "اكتشف المغرب"

@@ -34,10 +34,10 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 async function loadTranslations(locale: Locale): Promise<Translations> {
   try {
     const mod = await import(`@/lib/i18n/locales/${locale}.json`);
-    return mod.default as Translations;
+    return mod.default as unknown as Translations;
   } catch {
     const en = await import(`@/lib/i18n/locales/en.json`);
-    return en.default as Translations;
+    return en.default as unknown as Translations;
   }
 }
 
