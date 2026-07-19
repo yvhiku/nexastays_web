@@ -1,55 +1,87 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Download, Share2, X } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import {
   dismissInstallPrompt,
   isIosSafari,
+  isPwaMarkedInstalled,
   isStandaloneDisplay,
+  markPwaInstalled,
   shouldShowInstallPrompt,
 } from "@/lib/pwa-engagement";
+import {
+  bindBeforeInstallPromptCapture,
+  clearDeferredInstallPrompt,
+  getDeferredInstallPrompt,
+  subscribeDeferredInstallPrompt,
+} from "@/lib/pwa-install-prompt";
 import { cn } from "@/lib/utils";
+import { InstallAppSheet, InstallSuccessToast } from "@/components/pwa/InstallAppSheet";
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
-
+/**
+ * Floating install prompt:
+ * - standalone / installed → nothing
+ * - iOS Safari (+ eligible) → Share → Add to Home Screen
+ * - beforeinstallprompt (+ eligible) → Android Install App
+ * - else → nothing
+ */
 export function InstallAppPrompt() {
-  const { t } = useLanguage();
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+  const [, setDeferredTick] = useState(0);
   const [visible, setVisible] = useState(false);
-  const [iosTip, setIosTip] = useState(false);
+  const [variant, setVariant] = useState<"ios" | "android" | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const evaluate = useCallback(() => {
-    if (isStandaloneDisplay()) {
+    if (isStandaloneDisplay() || isPwaMarkedInstalled()) {
       setVisible(false);
+      setVariant(null);
       return;
     }
     if (!shouldShowInstallPrompt()) {
       setVisible(false);
-      return;
-    }
-    if (deferred) {
-      setVisible(true);
-      setIosTip(false);
+      setVariant(null);
       return;
     }
     if (isIosSafari()) {
-      setIosTip(true);
+      setVariant("ios");
       setVisible(true);
+      return;
     }
-  }, [deferred]);
+    if (getDeferredInstallPrompt()) {
+      setVariant("android");
+      setVisible(true);
+      return;
+    }
+    setVisible(false);
+    setVariant(null);
+  }, []);
 
   useEffect(() => {
-    const onBip = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
+    const unbind = bindBeforeInstallPromptCapture();
+    const unsub = subscribeDeferredInstallPrompt(() => {
+      setDeferredTick((n) => n + 1);
+      evaluate();
+    });
+    const onInstalled = () => {
+      markPwaInstalled();
+      clearDeferredInstallPrompt();
+      setVisible(false);
+      setVariant(null);
+      setSuccess(true);
     };
-    window.addEventListener("beforeinstallprompt", onBip);
-    return () => window.removeEventListener("beforeinstallprompt", onBip);
-  }, []);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      unbind();
+      unsub();
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, [evaluate]);
+
+  useEffect(() => {
+    if (!success) return;
+    const id = window.setTimeout(() => setSuccess(false), 3500);
+    return () => window.clearTimeout(id);
+  }, [success]);
 
   useEffect(() => {
     evaluate();
@@ -57,14 +89,34 @@ export function InstallAppPrompt() {
     return () => window.clearInterval(id);
   }, [evaluate]);
 
-  if (!visible) return null;
+  useEffect(() => {
+    const onForce = () => {
+      if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;
+      if (isIosSafari()) {
+        setVariant("ios");
+        setVisible(true);
+        return;
+      }
+      if (getDeferredInstallPrompt()) {
+        setVariant("android");
+        setVisible(true);
+      }
+    };
+    window.addEventListener("nexa-pwa-force-install-prompt", onForce);
+    return () => window.removeEventListener("nexa-pwa-force-install-prompt", onForce);
+  }, []);
 
   const onInstall = async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    await deferred.userChoice;
-    setDeferred(null);
+    const promptEvent = getDeferredInstallPrompt();
+    if (!promptEvent) return;
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    clearDeferredInstallPrompt();
     setVisible(false);
+    if (choice.outcome === "accepted") {
+      markPwaInstalled();
+      setSuccess(true);
+    }
   };
 
   const onDismiss = () => {
@@ -72,60 +124,31 @@ export function InstallAppPrompt() {
     setVisible(false);
   };
 
-  return (
-    <div
-      className={cn(
-        "fixed inset-x-0 z-[60] px-3 md:px-6",
-        "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6",
-      )}
-      role="dialog"
-      aria-label={t("pwa.installTitle")}
-    >
-      <div className="mx-auto max-w-md rounded-2xl border border-nexa-line bg-white p-4 shadow-nexa-lg">
-        <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-nexa-primary to-nexa-primary-dark text-lg font-bold text-white">
-            N
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-nexa-ink">{t("pwa.installTitle")}</p>
-            <p className="mt-0.5 text-xs text-nexa-ink-3">
-              {iosTip ? t("pwa.installIosHint") : t("pwa.installBody")}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {!iosTip && deferred && (
-                <button
-                  type="button"
-                  onClick={onInstall}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-nexa-primary px-3 text-sm font-semibold text-white"
-                >
-                  <Download className="h-4 w-4" aria-hidden />
-                  {t("pwa.installCta")}
-                </button>
-              )}
-              {iosTip && (
-                <span className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-nexa-bg-2 px-3 text-xs font-medium text-nexa-ink-2">
-                  <Share2 className="h-3.5 w-3.5" aria-hidden />
-                  {t("pwa.installIosSteps")}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={onDismiss}
-                className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-nexa-ink-3"
-              >
-                {t("pwa.installLater")}
-              </button>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="rounded-lg p-1 text-nexa-ink-4 hover:bg-nexa-bg-2"
-            aria-label={t("common.close")}
-          >
-            <X className="h-4 w-4" />
-          </button>
+  const shellClass = cn(
+    "fixed inset-x-0 z-[60] px-3 md:px-6",
+    "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6",
+  );
+
+  if (success) {
+    return (
+      <div className={shellClass}>
+        <div className="mx-auto max-w-md">
+          <InstallSuccessToast />
         </div>
+      </div>
+    );
+  }
+
+  if (!visible || !variant) return null;
+
+  return (
+    <div className={shellClass}>
+      <div className="mx-auto max-w-md">
+        <InstallAppSheet
+          variant={variant}
+          onInstall={variant === "android" ? onInstall : undefined}
+          onDismiss={onDismiss}
+        />
       </div>
     </div>
   );

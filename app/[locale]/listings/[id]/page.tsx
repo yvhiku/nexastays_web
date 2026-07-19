@@ -50,6 +50,7 @@ import type { StaysListing, CreateBookingOccupantDto } from "@/lib/stays-types";
 import { sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
 import { recordRecentlyViewed } from "@/lib/recently-viewed";
+import { recordListingViewForInstall } from "@/lib/pwa-engagement";
 import { ShareButton } from "@/components/pwa/ShareButton";
 import {
   amenityLabel,
@@ -148,6 +149,7 @@ export default function ListingDetailPage() {
             ? getListingMediaUrl(data.id, firstPhoto.asset_id)
             : undefined,
         });
+        recordListingViewForInstall(data.id);
         searchListings({ city: data.city, guests: 1 })
           .then((results) => {
             if (!cancelled) {
@@ -306,6 +308,7 @@ export default function ListingDetailPage() {
         total_paid: b.total_paid,
         currency: b.currency,
       });
+      void import("@/lib/pwa-engagement").then((m) => m.markPwaBookingCompleted());
       setShowVerificationStep(false);
       router.push(localePath(`/bookings/${b.id}`));
     } catch (err) {

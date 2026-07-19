@@ -17,6 +17,7 @@ import { Camera, User, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
 import { NexaSelect } from "@/components/ui/NexaSelect";
+import { InstallAppSettings } from "@/components/pwa/InstallAppSettings";
 
 function ProfilePageContent() {
   const { user, token, tokenType, refreshUser } = useAuth();
@@ -98,6 +99,9 @@ function ProfilePageContent() {
             </div>
 
             <div className="p-8">
+              <div className="mb-8">
+                <InstallAppSettings />
+              </div>
               {/* Profile photo */}
               <div className="flex flex-col items-center mb-10">
                 <div className="relative group">
