@@ -12,6 +12,7 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-playfair)", "Georgia", "serif"],
         sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        arabic: ["var(--font-arabic)", "var(--font-dm-sans)", "system-ui", "sans-serif"],
       },
       colors: {
         nexa: {

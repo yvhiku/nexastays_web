@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Locale } from "@/lib/i18n";
 import { getServerTranslations } from "@/lib/i18n/server";
-import { DESTINATION_IMAGES } from "@/lib/destination-assets";
+import { DESTINATION_IMAGES, DESTINATION_IMAGE_BLUR } from "@/lib/destination-assets";
 import { Button } from "@/components/ui/button";
 
 const destinations = [
@@ -81,6 +81,8 @@ export function DestinationsSection({ locale }: Props) {
                     alt={t(dest.titleKey)}
                     fill
                     priority={dest.priority}
+                    placeholder="blur"
+                    blurDataURL={DESTINATION_IMAGE_BLUR}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover"
                   />

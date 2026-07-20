@@ -24,9 +24,11 @@ export default async function HomePage({ params }: Props) {
       <NavBar />
       <main>
         <HeroSection locale={locale} />
-        <SearchHomeGate>
-          <SearchPreview t={t} />
-        </SearchHomeGate>
+        <Suspense fallback={<SearchPreview t={t} />}>
+          <SearchHomeGate>
+            <SearchPreview t={t} />
+          </SearchHomeGate>
+        </Suspense>
         <Suspense fallback={null}>
           <DeferredHomeClient />
         </Suspense>

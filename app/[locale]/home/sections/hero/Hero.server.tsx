@@ -2,7 +2,7 @@ import type { Locale } from "@/lib/i18n";
 import { getServerTranslations } from "@/lib/i18n/server";
 import { HeroContent, HeroTrust } from "./HeroContent.server";
 import { HeroActions } from "./HeroActions.client";
-import { HeroVisual } from "./HeroVisual.client";
+import { HeroVisual } from "./HeroVisualLazy.client";
 
 type Props = {
   locale: Locale;

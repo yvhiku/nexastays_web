@@ -56,6 +56,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // PPR requires Next.js canary — static shell + Suspense streaming is used instead (see HomePage.server.tsx).
   images: {
     remotePatterns: [
       {
