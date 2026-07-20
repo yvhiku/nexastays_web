@@ -33,7 +33,13 @@ type AnalyticsEventName =
   | "review_completed"
   | "review_skipped"
   | "review_edited"
-  | "review_viewed";
+  | "review_viewed"
+  | "notification_opened"
+  | "notification_clicked"
+  | "notification_mark_read"
+  | "notification_mark_all_read"
+  | "notification_received"
+  | "push_registered";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

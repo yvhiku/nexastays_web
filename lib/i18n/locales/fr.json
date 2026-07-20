@@ -1449,6 +1449,7 @@
     "notificationsEmptyBody": "Les mises à jour de réservation, rappels de voyage et messages hôte apparaîtront ici.",
     "notificationsSignInTitle": "Connectez-vous pour les alertes",
     "notificationsSignInBody": "Recevez confirmations, rappels de voyage et mises à jour importantes au même endroit.",
+    "notificationsMarkAllRead": "Tout marquer lu",
     "getAppTitle": "Obtenir l'app",
     "getAppSubtitle": "Le moyen le plus rapide d'utiliser Nexa Stays",
     "getAppCta": "Utiliser l'app",
