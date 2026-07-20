@@ -11,7 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { LanguagePill } from "@/components/mobile/LanguagePill";
-import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark, Bell } from "lucide-react";
+import { NotificationBell } from "@/components/mobile/NotificationBell";
+import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { getHostMe } from "@/lib/stays-api";
 
@@ -155,13 +156,7 @@ export const NavBar = () => {
           <div className="hidden xl:block">
             <LanguageSelector />
           </div>
-          <button
-            type="button"
-            className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-nexa-ink-3 hover:bg-nexa-bg-2"
-            aria-label={t("pwa.notifications")}
-          >
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationBell />
           {isAuthenticated ? (
             <div className="relative" ref={menuRef}>
               <button
