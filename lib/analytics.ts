@@ -26,7 +26,14 @@ type AnalyticsEventName =
   | "install_prompt_failed"
   | "install_completed"
   | "guide_queued"
-  | "guide_shown";
+  | "guide_shown"
+  | "review_prompt_seen"
+  | "review_cta_clicked"
+  | "review_started"
+  | "review_completed"
+  | "review_skipped"
+  | "review_edited"
+  | "review_viewed";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

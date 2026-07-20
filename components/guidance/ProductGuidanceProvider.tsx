@@ -294,11 +294,16 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
     const onInstalledSuccess = () => {
       enqueueGuide("install_success", { force: true });
     };
+    const onReviewCompleted = () => {
+      enqueueGuide("review_celebration", { force: true });
+    };
     window.addEventListener("nexa-guidance-install-eligible", onInstallEligible);
     window.addEventListener("nexa-guidance-install-success", onInstalledSuccess);
+    window.addEventListener("nexa-guidance-review-completed", onReviewCompleted);
     return () => {
       window.removeEventListener("nexa-guidance-install-eligible", onInstallEligible);
       window.removeEventListener("nexa-guidance-install-success", onInstalledSuccess);
+      window.removeEventListener("nexa-guidance-review-completed", onReviewCompleted);
     };
   }, [enqueueGuide]);
 
@@ -402,6 +407,13 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
             router.push(localePath("/my-bookings"));
           }}
           onSecondary={() => finishActive("complete", "trips_tab")}
+        />
+      ) : null}
+      {active === "review_celebration" ? (
+        <CelebrationModal
+          guideId="review_celebration"
+          onPrimary={() => finishActive("complete")}
+          onSecondary={() => finishActive("dismiss")}
         />
       ) : null}
       {active === "trips_tab" ? (

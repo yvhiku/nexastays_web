@@ -935,6 +935,17 @@
     "viewReview": "عرض التقييم",
     "editReview": "تعديل التقييم",
     "bookAgain": "احجز مجدداً",
+    "badgeNeedsReview": "بانتظار تقييم",
+    "badgeReviewed": "تم التقييم ✓",
+    "eligibleTitle": "كيف كانت إقامتك؟",
+    "eligibleBody": "شارك تجربتك مع المسافرين القادمين.",
+    "stayCompleteTitle": "اكتملت إقامتك",
+    "reviewedTitle": "شكراً لمشاركة تجربتك",
+    "reviewedBody": "تقييمك يساعد المسافرين الآخرين.",
+    "reviewUnavailable": "لم يعد التقييم متاحاً لهذه الإقامة.",
+    "reviewBlockedOwn": "لا يمكن للمضيفين تقييم إعلاناتهم.",
+    "completedEmptyTitle": "لا توجد رحلات مكتملة بعد",
+    "completedEmptyBody": "بعد انتهاء إقامتك ستتمكن من تقييمها هنا.",
     "tabsLabel": "فئات الحجوزات",
     "tabs": {
       "upcoming": "القادمة",
@@ -989,7 +1000,10 @@
     "saveChanges": "حفظ التغييرات",
     "submitting": "جارٍ الإرسال…",
     "thankYou": "شكراً على تقييمك!",
-    "thankYouDesc": "ملاحظاتك تساعد مجتمع Nexa Stays.",
+    "thankYouDesc": "لقد ساعدت المسافرين القادمين على اتخاذ قرار أفضل.",
+    "thankYouContinue": "متابعة",
+    "justNow": "الآن",
+    "yourReviewLabel": "تقييمك",
     "backToBooking": "العودة إلى الحجز",
     "notAvailable": "التقييم غير متاح",
     "notAvailableDesc": "يمكنك ترك تقييم بعد اكتمال الإقامة ومرور تاريخ المغادرة.",
@@ -1470,6 +1484,8 @@
     "installSuccessSaved": "المحفوظات",
     "installSuccessSavedSub": "وصول سريع إلى المفضلة",
     "installSuccessOffline": "دعم دون اتصال",
-    "installSuccessOfflineSub": "الوصول للحجوزات دون إنترنت"
+    "installSuccessOfflineSub": "الوصول للحجوزات دون إنترنت",
+    "reviewTitle": "شكراً لتقييمك!",
+    "reviewBody": "لقد ساعدت المسافرين القادمين على اتخاذ قرار أفضل."
   }
 }

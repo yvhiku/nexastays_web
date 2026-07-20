@@ -1,4 +1,4 @@
-import type { StaysBooking, BookingLifecycle } from "./stays-types";
+import type { StaysBooking, BookingLifecycle, BookingReviewStatus } from "./stays-types";
 import { parseLocalDateOnly } from "./booking-dates";
 
 const CANCELLED_STATUSES = ["CANCELLED_BY_GUEST", "CANCELLED_BY_HOST"];
@@ -108,8 +108,25 @@ export function canComplainBooking(booking: StaysBooking): boolean {
 }
 
 export function canReviewBooking(booking: StaysBooking): boolean {
+  if (booking.review_status != null) return booking.review_status === "ELIGIBLE";
   if (booking.can_review != null) return booking.can_review;
-  return resolveBookingLifecycle(booking) === "COMPLETED";
+  return (
+    resolveBookingLifecycle(booking) === "COMPLETED" &&
+    !booking.has_reviewed &&
+    booking.review_blocked_reason !== "OWN_LISTING"
+  );
+}
+
+/** Product review state for completed stays (prefer API review_status). */
+export function resolveReviewStatus(booking: StaysBooking): BookingReviewStatus {
+  if (booking.review_status) return booking.review_status;
+  const lifecycle = resolveBookingLifecycle(booking);
+  if (lifecycle !== "COMPLETED") return "NONE";
+  if (booking.has_reviewed) return "REVIEWED";
+  if (booking.review_blocked_reason === "OWN_LISTING") return "BLOCKED";
+  if (booking.can_review === true) return "ELIGIBLE";
+  if (booking.can_review === false) return "BLOCKED";
+  return "ELIGIBLE";
 }
 
 export type SortOption =

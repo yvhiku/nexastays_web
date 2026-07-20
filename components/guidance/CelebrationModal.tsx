@@ -10,7 +10,7 @@ import type { GuideId } from "@/lib/guidance-types";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  guideId: Extract<GuideId, "save_first" | "booking_success">;
+  guideId: Extract<GuideId, "save_first" | "booking_success" | "review_celebration">;
   onPrimary: () => void;
   onSecondary: () => void;
 };
@@ -67,7 +67,7 @@ export function CelebrationModal({ guideId, onPrimary, onSecondary }: Props) {
     return () => window.clearTimeout(id);
   }, [reduce]);
 
-  const floatArt = guideId === "booking_success";
+  const floatArt = guideId === "booking_success" || guideId === "review_celebration";
 
   return (
     <GuidanceOverlay

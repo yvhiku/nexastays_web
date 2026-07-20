@@ -6,7 +6,7 @@ import { getListingReviews, getReviewMediaUrl } from "@/lib/stays-api";
 import type { ListingReview, ReviewSort } from "@/lib/stays-types";
 import { StarRatingDisplay } from "./StarRatingSelector";
 import { NexaSelect } from "@/components/ui/NexaSelect";
-import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function formatReviewDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -15,18 +15,33 @@ function formatReviewDate(iso: string): string {
   });
 }
 
-function ReviewCard({ review }: { review: ListingReview }) {
+function ReviewCard({
+  review,
+  optimistic,
+  yourLabel,
+  justNowLabel,
+}: {
+  review: ListingReview;
+  optimistic?: boolean;
+  yourLabel: string;
+  justNowLabel: string;
+}) {
   return (
     <article className="py-6 border-b border-nexa-line/50 last:border-0">
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-full bg-nexa-primary/15 flex items-center justify-center shrink-0 text-sm font-bold text-nexa-primary">
-          {review.guest_name.charAt(0).toUpperCase()}
+          {(optimistic ? yourLabel : review.guest_name).charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-nexa-ink dark:text-white text-sm">
-              {review.guest_name}
+              {optimistic ? yourLabel : review.guest_name}
             </span>
+            {optimistic && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-nexa-primary">
+                {justNowLabel}
+              </span>
+            )}
             {review.is_verified_stay && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-green-700 bg-green-50 dark:bg-green-950/40 px-2 py-0.5 rounded-full">
                 <BadgeCheck className="h-3 w-3" />
@@ -39,7 +54,9 @@ function ReviewCard({ review }: { review: ListingReview }) {
           </div>
           <div className="flex items-center gap-2 mt-1">
             <StarRatingDisplay rating={review.rating} />
-            <span className="text-xs text-nexa-ink-4">{formatReviewDate(review.created_at)}</span>
+            <span className="text-xs text-nexa-ink-4">
+              {optimistic ? justNowLabel : formatReviewDate(review.created_at)}
+            </span>
           </div>
           {review.comment && (
             <p className="mt-3 text-sm text-nexa-ink-3 dark:text-nexa-ink-2 leading-relaxed whitespace-pre-wrap">
@@ -138,7 +155,9 @@ export function ListingReviewsSection({
   initialAvg,
   initialCount = 0,
 }: ListingReviewsSectionProps) {
+  const { t } = useLanguage();
   const [reviews, setReviews] = useState<ListingReview[]>([]);
+  const [optimisticIds, setOptimisticIds] = useState<Set<string>>(() => new Set());
   const [avg, setAvg] = useState<number | null>(initialAvg ?? null);
   const [total, setTotal] = useState(initialCount);
   const [distribution, setDistribution] = useState<Record<string, number>>({});
@@ -176,6 +195,29 @@ export function ListingReviewsSection({
   useEffect(() => {
     load(1, sort, false);
   }, [listingId, sort, load]);
+
+  useEffect(() => {
+    const onSubmitted = (e: Event) => {
+      const detail = (e as CustomEvent<{ listingId?: string; review?: ListingReview }>).detail;
+      if (!detail?.listingId || detail.listingId !== listingId || !detail.review) return;
+      const incoming = detail.review;
+      setReviews((prev) => {
+        if (prev.some((r) => r.id === incoming.id)) return prev;
+        return [incoming, ...prev];
+      });
+      setOptimisticIds((prev) => new Set(prev).add(incoming.id));
+      setTotal((n) => {
+        const next = n + 1;
+        setAvg((prevAvg) => {
+          if (prevAvg == null) return incoming.rating;
+          return Math.round(((prevAvg * n + incoming.rating) / next) * 100) / 100;
+        });
+        return next;
+      });
+    };
+    window.addEventListener("nexa-review-submitted", onSubmitted);
+    return () => window.removeEventListener("nexa-review-submitted", onSubmitted);
+  }, [listingId]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -243,7 +285,15 @@ export function ListingReviewsSection({
       <div>
         {loading
           ? Array.from({ length: 3 }).map((_, i) => <ReviewSkeleton key={i} />)
-          : reviews.map((r) => <ReviewCard key={r.id} review={r} />)}
+          : reviews.map((r) => (
+              <ReviewCard
+                key={r.id}
+                review={r}
+                optimistic={optimisticIds.has(r.id)}
+                yourLabel={t("rateStay.yourReviewLabel")}
+                justNowLabel={t("rateStay.justNow")}
+              />
+            ))}
         {loadingMore && (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-nexa-primary" />

@@ -6,7 +6,8 @@ export type GuideId =
   | "booking_success"
   | "trips_tab"
   | "install_app"
-  | "install_success";
+  | "install_success"
+  | "review_celebration";
 
 export type GuidePriority = "critical" | "high" | "normal";
 

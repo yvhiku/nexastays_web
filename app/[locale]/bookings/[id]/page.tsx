@@ -24,6 +24,7 @@ import {
   canCancelBooking,
   canReviewBooking,
 } from "@/lib/booking-lifecycle";
+import { CompletedStayReviewPrompt } from "@/components/bookings/CompletedStayReviewPrompt";
 import { StarRatingDisplay } from "@/components/reviews/StarRatingSelector";
 import { HostBookingDetailView } from "@/components/bookings/HostBookingDetailView";
 import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
@@ -300,6 +301,16 @@ function BookingDetailPageInner() {
               </span>
             </div>
           </header>
+
+          {lifecycle === "COMPLETED" && booking.viewer_role !== "HOST" && (
+            <CompletedStayReviewPrompt
+              booking={booking}
+              localePath={localePath}
+              t={t}
+              variant="detail"
+              className="mb-6"
+            />
+          )}
 
           {booking.listing && booking.listing.media && booking.listing.media.length > 0 && (
             <div className="mb-6 rounded-2xl overflow-hidden">

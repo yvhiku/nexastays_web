@@ -935,6 +935,17 @@
     "viewReview": "Voir l'avis",
     "editReview": "Modifier l'avis",
     "bookAgain": "Réserver à nouveau",
+    "badgeNeedsReview": "Avis à laisser",
+    "badgeReviewed": "Avis laissé ✓",
+    "eligibleTitle": "Comment s'est passé votre séjour ?",
+    "eligibleBody": "Partagez votre expérience avec les futurs voyageurs.",
+    "stayCompleteTitle": "Votre séjour est terminé",
+    "reviewedTitle": "Merci d'avoir partagé votre expérience",
+    "reviewedBody": "Votre avis aide les autres voyageurs.",
+    "reviewUnavailable": "Les avis ne sont plus disponibles pour ce séjour.",
+    "reviewBlockedOwn": "Les hôtes ne peuvent pas évaluer leur propre annonce.",
+    "completedEmptyTitle": "Aucun séjour terminé",
+    "completedEmptyBody": "Une fois un séjour terminé, vous pourrez laisser un avis ici.",
     "tabsLabel": "Catégories de réservation",
     "tabs": {
       "upcoming": "À venir",
@@ -989,7 +1000,10 @@
     "saveChanges": "Enregistrer",
     "submitting": "Envoi…",
     "thankYou": "Merci pour votre avis !",
-    "thankYouDesc": "Votre retour aide la communauté Nexa Stays.",
+    "thankYouDesc": "Vous venez d'aider de futurs voyageurs à mieux choisir.",
+    "thankYouContinue": "Continuer",
+    "justNow": "À l'instant",
+    "yourReviewLabel": "Votre avis",
     "backToBooking": "Retour à la réservation",
     "notAvailable": "Avis non disponible",
     "notAvailableDesc": "Vous pourrez laisser un avis une fois le séjour terminé et la date de départ passée.",
@@ -1470,6 +1484,8 @@
     "installSuccessSaved": "Séjours enregistrés",
     "installSuccessSavedSub": "Accès rapide à vos favoris",
     "installSuccessOffline": "Support hors ligne",
-    "installSuccessOfflineSub": "Accédez aux réservations sans internet"
+    "installSuccessOfflineSub": "Accédez aux réservations sans internet",
+    "reviewTitle": "Merci pour votre avis !",
+    "reviewBody": "Vous venez d'aider de futurs voyageurs à mieux choisir."
   }
 }

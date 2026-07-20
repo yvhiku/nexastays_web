@@ -197,6 +197,9 @@ export type BookingLifecycle =
   | "CANCELLED"
   | "EXPIRED";
 
+/** Derived post-stay review product state (Completed Booking Experience). */
+export type BookingReviewStatus = "NONE" | "ELIGIBLE" | "REVIEWED" | "BLOCKED";
+
 export interface StaysBooking {
   id: string;
   listing_id: string;
@@ -219,6 +222,8 @@ export interface StaysBooking {
   can_complain?: boolean;
   can_cancel?: boolean;
   has_reviewed?: boolean;
+  review_status?: BookingReviewStatus;
+  review_rating?: number;
   review_blocked_reason?: "OWN_LISTING";
   viewer_role?: "GUEST" | "HOST";
   guest_name?: string | null;

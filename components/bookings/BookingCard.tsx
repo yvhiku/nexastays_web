@@ -11,24 +11,24 @@ import {
   lifecycleBadgeClasses,
   canCancelBooking,
   canComplainBooking,
-  canReviewBooking,
+  resolveReviewStatus,
   getPaymentExpiresAt,
 } from "@/lib/booking-lifecycle";
 import { formatLocalDateOnly } from "@/lib/booking-dates";
+import { CompletedStayReviewPrompt } from "@/components/bookings/CompletedStayReviewPrompt";
 import {
   ChevronRight,
   MapPin,
-  XCircle,
   MessageCircle,
   Navigation,
   Phone,
-  Star,
   RotateCcw,
   CreditCard,
   FileText,
   AlertTriangle,
   Calendar,
   Users,
+  XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -148,6 +148,16 @@ function BookingCardComponent({
                 >
                   {statusLabel}
                 </span>
+                {lifecycle === "COMPLETED" && resolveReviewStatus(booking) === "ELIGIBLE" && (
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-[0.62rem] font-bold uppercase tracking-wide border border-nexa-primary/30 bg-nexa-primary/10 text-nexa-primary whitespace-nowrap">
+                    {t("myBookings.badgeNeedsReview")}
+                  </span>
+                )}
+                {lifecycle === "COMPLETED" && resolveReviewStatus(booking) === "REVIEWED" && (
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-[0.62rem] font-bold uppercase tracking-wide border border-green-200 bg-green-50 text-green-800 whitespace-nowrap">
+                    {t("myBookings.badgeReviewed")}
+                  </span>
+                )}
                 <span className="text-sm font-bold text-nexa-ink whitespace-nowrap">
                   {price} {booking.currency}
                 </span>
@@ -183,6 +193,16 @@ function BookingCardComponent({
                 <AlertTriangle className="h-3 w-3" aria-hidden />
                 {t("myBookings.paymentFailed")}
               </p>
+            )}
+
+            {lifecycle === "COMPLETED" && (
+              <CompletedStayReviewPrompt
+                booking={booking}
+                localePath={localePath}
+                t={t}
+                variant="card"
+                className="mt-2.5"
+              />
             )}
           </div>
 
@@ -354,17 +374,15 @@ function BookingCardActions({
 
       {lifecycle === "COMPLETED" && (
         <>
+          {outline(t("myBookings.bookAgain"), {
+            href: listingHref,
+            icon: <RotateCcw className="h-3 w-3" />,
+          })}
           {outline(t("myBookings.viewReceipt"), {
             href: detailHref,
             icon: <FileText className="h-3 w-3" />,
           })}
-          {canReviewBooking(booking) &&
-            outline(t("myBookings.leaveReview"), {
-              href: `${detailHref}/review`,
-              icon: <Star className="h-3 w-3" />,
-            })}
           {reportIssue}
-          {primary(t("myBookings.bookAgain"), listingHref, <RotateCcw className="h-3 w-3" />)}
         </>
       )}
 

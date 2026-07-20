@@ -190,18 +190,34 @@ function MyBookingsContent() {
             </div>
           ) : filteredBookings.length === 0 ? (
             <div className="rounded-2xl border border-nexa-line bg-white p-10 text-center">
-              <p className="text-nexa-ink font-medium">{t("myBookings.noResults")}</p>
-              <p className="text-nexa-ink-3 text-sm mt-1">{t("myBookings.noResultsHint")}</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setDraftFilters(DEFAULT_BOOKING_FILTERS);
-                  setAppliedFilters(DEFAULT_BOOKING_FILTERS);
-                }}
-              >
-                {t("myBookings.clearFilters")}
-              </Button>
+              {activeTab === "completed" &&
+              !appliedFilters.search &&
+              appliedFilters.status === "all" &&
+              appliedFilters.city === "all" ? (
+                <>
+                  <CalendarCheck className="h-14 w-14 text-nexa-ink-4 mx-auto mb-4" aria-hidden />
+                  <p className="text-nexa-ink font-medium">{t("myBookings.completedEmptyTitle")}</p>
+                  <p className="text-nexa-ink-3 text-sm mt-1">{t("myBookings.completedEmptyBody")}</p>
+                  <Button asChild className="mt-4">
+                    <Link href={localePath("/listings")}>{t("myBookings.browseStays")}</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-nexa-ink font-medium">{t("myBookings.noResults")}</p>
+                  <p className="text-nexa-ink-3 text-sm mt-1">{t("myBookings.noResultsHint")}</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => {
+                      setDraftFilters(DEFAULT_BOOKING_FILTERS);
+                      setAppliedFilters(DEFAULT_BOOKING_FILTERS);
+                    }}
+                  >
+                    {t("myBookings.clearFilters")}
+                  </Button>
+                </>
+              )}
             </div>
           ) : (
             <>

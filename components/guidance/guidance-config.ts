@@ -128,6 +128,21 @@ export const GUIDE_CATALOG: GuideDefinition[] = [
     bodyKey: "guidance.installSuccessBody",
     primaryKey: "guidance.continue",
   },
+  {
+    id: "review_celebration",
+    type: "celebration",
+    priority: "high",
+    trigger: "review_submitted",
+    cooldownSec: 0,
+    once: true,
+    enabled: true,
+    rollout: 100,
+    analytics: true,
+    titleKey: "guidance.reviewTitle",
+    bodyKey: "guidance.reviewBody",
+    primaryKey: "guidance.continue",
+    secondaryKey: "guidance.notNow",
+  },
 ];
 
 export const GUIDE_BY_ID: Record<GuideId, GuideDefinition> = GUIDE_CATALOG.reduce(
