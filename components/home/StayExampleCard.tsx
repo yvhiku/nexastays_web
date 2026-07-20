@@ -22,7 +22,7 @@ export function StayExampleCard({ layout = "hero" }: StayExampleCardProps) {
         src="/images/assets/rooftop-riad.jpg"
         alt={t("home.hero.previewTitle")}
         fill
-        priority={layout === "hero"}
+        priority
         sizes={layout === "hero" ? "(max-width: 768px) 90vw, 340px" : "(max-width: 1024px) 100vw, 420px"}
         className="object-cover"
         style={{ objectPosition: "center 42%" }}

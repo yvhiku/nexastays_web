@@ -99,9 +99,6 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
-      <head>
-        <link rel="preload" href={PWA_ICONS.icon512} as="image" type="image/png" />
-      </head>
       <body suppressHydrationWarning>
         <a
           href="#main-content"
