@@ -21,8 +21,27 @@
     --input: 330 20% 93%;
     --ring: 347 76% 59%;
     --radius: 0.875rem;
+    --nexa-app-banner-h: 0px;
   }
 
+  /* Smart “Get the app” banner sits above the nav; pad page chrome accordingly. */
+  html[data-nexa-app-banner="1"] #main-content {
+    padding-top: var(--nexa-app-banner-h);
+  }
+
+  /* Banner already includes safe-area — keep nav at 72px below it. */
+  html[data-nexa-app-banner="1"] .nexa-top-nav {
+    height: 72px;
+    padding-top: 0;
+  }
+
+  .nexa-sw-update-banner {
+    top: calc(72px + env(safe-area-inset-top, 0px) + var(--nexa-app-banner-h, 0px));
+  }
+
+  html[data-nexa-app-banner="1"] .nexa-sw-update-banner {
+    top: calc(72px + var(--nexa-app-banner-h));
+  }
   * {
     @apply border-border;
   }

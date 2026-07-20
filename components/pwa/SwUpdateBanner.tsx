@@ -57,7 +57,7 @@ export function SwUpdateBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 top-[calc(72px+env(safe-area-inset-top))] z-[70] flex justify-center px-3"
+      className="fixed inset-x-0 z-[70] flex justify-center px-3 nexa-sw-update-banner"
       role="status"
       aria-live="polite"
     >

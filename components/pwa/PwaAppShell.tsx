@@ -2,6 +2,7 @@
 
 import React from "react";
 import { InstallAppPrompt } from "@/components/pwa/InstallAppPrompt";
+import { GetAppBanner } from "@/components/pwa/GetAppBanner";
 import { SwUpdateBanner } from "@/components/pwa/SwUpdateBanner";
 import { MobileBottomNav } from "@/components/nav/MobileBottomNav";
 import { PwaSplash } from "@/components/pwa/PwaSplash";
@@ -18,6 +19,7 @@ export function PwaAppShell() {
       <ProductGuidanceProvider>
         <NexaDebugBoot />
         <PwaSplash />
+        <GetAppBanner />
         <SwUpdateBanner />
         <InstallAppPrompt />
         <SavedExperienceHost />

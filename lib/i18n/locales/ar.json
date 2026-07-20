@@ -19,7 +19,8 @@
     "dismiss": "إغلاق",
     "home": "الرئيسية",
     "browseStays": "تصفح الإقامات",
-    "language": "اللغة"
+    "language": "اللغة",
+    "gotIt": "حسناً"
   },
   "explore": {
     "moroccoTitle": "استكشف الإقامات في المغرب",
@@ -1422,7 +1423,11 @@
     "recentlyViewed": "شوهدت مؤخراً",
     "share": "مشاركة",
     "linkCopied": "تم نسخ الرابط",
-    "notifications": "الإشعارات"
+    "notifications": "الإشعارات",
+    "getAppTitle": "احصل على التطبيق",
+    "getAppSubtitle": "أسرع وأسهل طريقة لاستخدام Nexa Stays",
+    "getAppCta": "استخدم التطبيق",
+    "androidMenuHint": "إذا لم يظهر مربع التثبيت، افتح قائمة Chrome (⋮) ثم اضغط تثبيت التطبيق."
   },
   "guidance": {
     "continue": "متابعة",

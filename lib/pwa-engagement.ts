@@ -236,6 +236,7 @@ export function resetPwaEngagementFlags() {
     localStorage.removeItem(DISMISS_UNTIL_KEY);
     localStorage.removeItem(LEGACY_DISMISS_KEY);
     localStorage.removeItem(WELCOME_SEEN_KEY);
+    localStorage.removeItem("nexa-get-app-banner-dismissed-until");
   } catch {
     /* ignore */
   }

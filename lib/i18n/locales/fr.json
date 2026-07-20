@@ -19,7 +19,8 @@
     "dismiss": "Fermer",
     "home": "Accueil",
     "browseStays": "Parcourir les séjours",
-    "language": "Langue"
+    "language": "Langue",
+    "gotIt": "Compris"
   },
   "explore": {
     "moroccoTitle": "Explorez les séjours au Maroc",
@@ -1422,7 +1423,11 @@
     "recentlyViewed": "Consultés récemment",
     "share": "Partager",
     "linkCopied": "Lien copié",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "getAppTitle": "Obtenir l'app",
+    "getAppSubtitle": "Le moyen le plus rapide d'utiliser Nexa Stays",
+    "getAppCta": "Utiliser l'app",
+    "androidMenuHint": "Si la boîte d'installation n'apparaît pas, ouvrez le menu Chrome (⋮) puis Installez l'application."
   },
   "guidance": {
     "continue": "Continuer",

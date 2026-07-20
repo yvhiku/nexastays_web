@@ -19,7 +19,8 @@
     "dismiss": "Dismiss",
     "home": "Home",
     "browseStays": "Browse Stays",
-    "language": "Language"
+    "language": "Language",
+    "gotIt": "Got it"
   },
   "explore": {
     "moroccoTitle": "Explore stays across Morocco",
@@ -1441,7 +1442,11 @@
     "recentlyViewed": "Recently viewed",
     "share": "Share",
     "linkCopied": "Link copied",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "getAppTitle": "Get the app",
+    "getAppSubtitle": "The fastest, easiest way to Nexa Stays",
+    "getAppCta": "Use app",
+    "androidMenuHint": "If the install dialog didn’t appear, open Chrome’s menu (⋮) and tap Install app."
   },
   "guidance": {
     "continue": "Continue",

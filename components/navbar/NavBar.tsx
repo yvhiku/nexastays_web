@@ -113,7 +113,7 @@ export const NavBar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 inset-x-0 z-50 h-[calc(72px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip">
+      <nav className="fixed inset-x-0 z-50 top-[var(--nexa-app-banner-h,0px)] h-[calc(72px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip nexa-top-nav">
       <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0">
         <Link
           href={localePath("/")}
