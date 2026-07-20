@@ -117,7 +117,7 @@ export function DestinationPanel({
         </div>
       </div>
 
-      <div className="max-h-[280px] overflow-y-auto -mx-1 px-1 space-y-4">
+      <div className="max-h-[min(52dvh,420px)] overflow-y-auto -mx-1 px-1 space-y-4">
         {showBrowse && recent.length > 0 && (
           <section>
             <p className="text-[0.7rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-1.5 px-1">

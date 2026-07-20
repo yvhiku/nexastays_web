@@ -228,6 +228,7 @@ export function MobileBottomNav() {
           type="button"
           onClick={openSearch}
           data-guidance-target="search-fab"
+          data-nexa-search-fab=""
           aria-label={t("pwa.navSearch")}
           className={cn(
             "absolute left-1/2 top-0 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-[18px] items-center justify-center",
