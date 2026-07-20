@@ -9,16 +9,16 @@ import {
 } from "@/lib/pwa-engagement";
 import { isAndroidBrowser } from "@/lib/pwa-platform";
 import {
-  bindBeforeInstallPromptCapture,
-  clearDeferredInstallPrompt,
   getDeferredInstallPrompt,
   subscribeDeferredInstallPrompt,
 } from "@/lib/pwa-install-prompt";
+import { bindInstallStateMachine } from "@/lib/pwa-install-state";
 import { useProductGuidanceOptional } from "@/components/guidance/ProductGuidanceProvider";
 import { isGuideFinished } from "@/lib/guidance-storage";
 
 /**
  * Eligibility watcher — displays via ProductGuidanceProvider queue (install_app).
+ * Owns BIP + appinstalled binding for the install state machine.
  */
 export function InstallAppPrompt() {
   const guidance = useProductGuidanceOptional();
@@ -42,23 +42,17 @@ export function InstallAppPrompt() {
   }, []);
 
   useEffect(() => {
-    const unbind = bindBeforeInstallPromptCapture();
+    const unbind = bindInstallStateMachine();
     const unsub = subscribeDeferredInstallPrompt(() => {
       setTick((n) => n + 1);
       evaluate();
     });
     const onEngagement = () => evaluate();
-    const onInstalled = () => {
-      clearDeferredInstallPrompt();
-      window.dispatchEvent(new Event("nexa-guidance-install-success"));
-    };
-    window.addEventListener("appinstalled", onInstalled);
     window.addEventListener("nexa-pwa-engagement-changed", onEngagement);
     window.addEventListener("nexa-pwa-force-install-prompt", evaluate);
     return () => {
       unbind();
       unsub();
-      window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener("nexa-pwa-engagement-changed", onEngagement);
       window.removeEventListener("nexa-pwa-force-install-prompt", evaluate);
     };
@@ -70,7 +64,6 @@ export function InstallAppPrompt() {
     return () => window.clearInterval(id);
   }, [evaluate]);
 
-  // Prefer direct enqueue when provider is available
   useEffect(() => {
     if (!guidance) return;
     if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;

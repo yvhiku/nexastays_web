@@ -8,13 +8,16 @@ import {
   isIosSafari,
   isPwaMarkedInstalled,
   isStandaloneDisplay,
-  markPwaInstalled,
 } from "@/lib/pwa-engagement";
 import {
-  clearDeferredInstallPrompt,
   getDeferredInstallPrompt,
   subscribeDeferredInstallPrompt,
 } from "@/lib/pwa-install-prompt";
+import {
+  getInstallPhase,
+  requestInstallPrompt,
+  subscribeInstallPhase,
+} from "@/lib/pwa-install-state";
 import { InstallAppSheet } from "@/components/pwa/InstallAppSheet";
 
 /**
@@ -27,25 +30,24 @@ export function InstallAppSettings() {
   const [hasDeferred, setHasDeferred] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [ios, setIos] = useState(false);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     setIos(isIosSafari());
     const refresh = () => {
-      setInstalled(isStandaloneDisplay() || isPwaMarkedInstalled());
-      setHasDeferred(Boolean(getDeferredInstallPrompt()));
+      const phase = getInstallPhase();
+      setInstalled(
+        isStandaloneDisplay() || isPwaMarkedInstalled() || phase === "INSTALLED",
+      );
+      setPending(phase === "PROMPTING" || phase === "ACCEPTED");
+      setHasDeferred(Boolean(getDeferredInstallPrompt()) || phase === "CAN_INSTALL");
     };
     refresh();
-    const unsub = subscribeDeferredInstallPrompt(refresh);
-    const onInstalled = () => {
-      markPwaInstalled();
-      clearDeferredInstallPrompt();
-      refresh();
-      setShowGuide(false);
-    };
-    window.addEventListener("appinstalled", onInstalled);
+    const unsubPrompt = subscribeDeferredInstallPrompt(refresh);
+    const unsubPhase = subscribeInstallPhase(refresh);
     return () => {
-      unsub();
-      window.removeEventListener("appinstalled", onInstalled);
+      unsubPrompt();
+      unsubPhase();
     };
   }, []);
 
@@ -55,16 +57,12 @@ export function InstallAppSettings() {
       window.dispatchEvent(new Event("nexa-pwa-force-install-prompt"));
       return;
     }
-    const promptEvent = getDeferredInstallPrompt();
-    if (promptEvent) {
-      await promptEvent.prompt();
-      const choice = await promptEvent.userChoice;
-      clearDeferredInstallPrompt();
-      if (choice.outcome === "accepted") {
-        markPwaInstalled();
-        setInstalled(true);
-        setShowGuide(false);
-      }
+    setPending(true);
+    const outcome = await requestInstallPrompt();
+    setPending(false);
+    if (outcome === "accepted") {
+      // Wait for appinstalled → INSTALLED; ACCEPTED already reflected in UI.
+      setShowGuide(false);
     }
   };
 
@@ -92,8 +90,9 @@ export function InstallAppSettings() {
       </p>
       <button
         type="button"
-        onClick={onInstallClick}
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-nexa-primary px-4 text-sm font-semibold text-white"
+        disabled={pending}
+        onClick={() => void onInstallClick()}
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-nexa-primary px-4 text-sm font-semibold text-white disabled:opacity-70"
       >
         <Download className="h-4 w-4" aria-hidden />
         {t("pwa.appInstall")}

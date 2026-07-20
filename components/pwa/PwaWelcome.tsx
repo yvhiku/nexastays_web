@@ -6,7 +6,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   isPwaWelcomeSeen,
   isStandaloneDisplay,
-  markPwaInstalled,
   markPwaWelcomeSeen,
 } from "@/lib/pwa-engagement";
 
@@ -18,7 +17,6 @@ export function PwaWelcome() {
   useEffect(() => {
     if (!isStandaloneDisplay()) return;
     if (isPwaWelcomeSeen()) return;
-    markPwaInstalled();
     setOpen(true);
   }, []);
 

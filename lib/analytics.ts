@@ -19,7 +19,14 @@ type AnalyticsEventName =
   | "saved_popup_cta"
   | "booking_success_seen"
   | "trip_spotlight_seen"
-  | "install_guide_shown";
+  | "install_guide_shown"
+  | "install_prompt_shown"
+  | "install_prompt_clicked"
+  | "install_prompt_cancelled"
+  | "install_prompt_failed"
+  | "install_completed"
+  | "guide_queued"
+  | "guide_shown";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

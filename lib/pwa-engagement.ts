@@ -215,11 +215,27 @@ export function getInstallPromptContext(): InstallPromptContext {
   return read().installContext || "default";
 }
 
+/**
+ * Persist installed flag. Prefer calling via `lib/pwa-install-state` on `appinstalled`
+ * (or standalone sync) — UI must not call this on userChoice.accepted alone.
+ */
 export function markPwaInstalled() {
   try {
     localStorage.setItem(INSTALLED_KEY, "1");
     localStorage.removeItem(DISMISS_UNTIL_KEY);
     localStorage.removeItem(LEGACY_DISMISS_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Clear install + dismiss + welcome flags (NexaDebug.reset). */
+export function resetPwaEngagementFlags() {
+  try {
+    localStorage.removeItem(INSTALLED_KEY);
+    localStorage.removeItem(DISMISS_UNTIL_KEY);
+    localStorage.removeItem(LEGACY_DISMISS_KEY);
+    localStorage.removeItem(WELCOME_SEEN_KEY);
   } catch {
     /* ignore */
   }

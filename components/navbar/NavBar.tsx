@@ -10,6 +10,7 @@ import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { LanguagePill } from "@/components/mobile/LanguagePill";
 import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark, Bell } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { getHostMe } from "@/lib/stays-api";
@@ -150,6 +151,7 @@ export const NavBar = () => {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <LanguagePill />
           <div className="hidden xl:block">
             <LanguageSelector />
           </div>

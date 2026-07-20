@@ -1,7 +1,11 @@
 /**
- * Generates public/favicon.ico from public/images/nexastays.png (transparent mark).
- * Does not write under public/icons or public/pwa/screenshots.
+ * Generates versioned PWA icons from public/images/nexastays.png
+ * and normalizes install screenshots to 412×913.
  * Run: npm run generate:pwa-icons
+ *
+ * Browser favicons + any icons: transparent logo mark (black knocked out).
+ * Maskable only: black plate + SAFE_PADDING.
+ * Bump ICON_VERSION in sync with lib/pwa-assets.ts PWA_ICON_VERSION.
  */
 import crypto from "crypto";
 import fs from "fs";
@@ -10,13 +14,42 @@ import sharp from "sharp";
 
 const ROOT = path.join(__dirname, "..");
 const SOURCE = path.join(ROOT, "public", "images", "nexastays.png");
+const ICONS = path.join(ROOT, "public", "icons");
 const PUBLIC = path.join(ROOT, "public");
-const FAVICON_OUT = path.join(PUBLIC, "favicon.ico");
 const SCREENSHOTS = path.join(ROOT, "public", "pwa", "screenshots");
-const ICONS_DIR = path.join(ROOT, "public", "icons");
 
-const BLACK_LUMA_THRESHOLD = 28;
+/** Keep in sync with lib/pwa-assets.ts → PWA_ICON_VERSION */
+const ICON_VERSION = "v3";
+const SAFE_PADDING = 0.18;
 const FAVICON_PADDING = 0.08;
+const BLACK_LUMA_THRESHOLD = 28;
+const SCREENSHOT_W = 412;
+const SCREENSHOT_H = 913;
+
+const SHORTCUT_BG: Record<string, string> = {
+  explore: "#000000",
+  saved: "#1A1A1A",
+  trips: "#12161C",
+  host: "#0A0610",
+};
+
+const REQUIRED_FILES = [
+  `favicon-16.${ICON_VERSION}.png`,
+  `favicon-32.${ICON_VERSION}.png`,
+  `favicon-48.${ICON_VERSION}.png`,
+  `apple-touch-180.${ICON_VERSION}.png`,
+  `icon-192.${ICON_VERSION}.png`,
+  `icon-512.${ICON_VERSION}.png`,
+  `maskable-512.${ICON_VERSION}.png`,
+  `monochrome-512.${ICON_VERSION}.png`,
+  `shortcut-explore.${ICON_VERSION}.png`,
+  `shortcut-saved.${ICON_VERSION}.png`,
+  `shortcut-trips.${ICON_VERSION}.png`,
+  `shortcut-host.${ICON_VERSION}.png`,
+  "build.json",
+] as const;
+
+const SCREENSHOT_NAMES = ["welcome.png", "explore.png", "listing.png", "host.png"] as const;
 
 function assertNotScreenshotPath(out: string) {
   const resolved = path.resolve(out);
@@ -24,6 +57,17 @@ function assertNotScreenshotPath(out: string) {
   if (resolved === shotRoot || resolved.startsWith(shotRoot + path.sep)) {
     throw new Error(`Refusing to write under screenshots: ${out}`);
   }
+}
+
+function sha256File(filePath: string): string {
+  const buf = fs.readFileSync(filePath);
+  return crypto.createHash("sha256").update(buf).digest("hex");
+}
+
+async function writeSafe(out: string, buf: Buffer) {
+  assertNotScreenshotPath(out);
+  await fs.promises.writeFile(out, buf);
+  console.log("wrote", path.relative(ROOT, out));
 }
 
 async function knockoutBlackToAlpha(sourceBuf: Buffer): Promise<Buffer> {
@@ -48,8 +92,12 @@ async function knockoutBlackToAlpha(sourceBuf: Buffer): Promise<Buffer> {
     .toBuffer();
 }
 
-async function renderTransparent(markBuf: Buffer, size: number): Promise<Buffer> {
-  const inner = Math.max(1, Math.round(size * (1 - 2 * FAVICON_PADDING)));
+async function renderTransparent(
+  markBuf: Buffer,
+  size: number,
+  padding = FAVICON_PADDING,
+): Promise<Buffer> {
+  const inner = Math.max(1, Math.round(size * (1 - 2 * padding)));
   const logo = await sharp(markBuf)
     .resize(inner, inner, {
       fit: "contain",
@@ -67,6 +115,75 @@ async function renderTransparent(markBuf: Buffer, size: number): Promise<Buffer>
     },
   })
     .composite([{ input: logo, gravity: "centre" }])
+    .png()
+    .toBuffer();
+}
+
+async function renderOnBackground(
+  markBuf: Buffer,
+  size: number,
+  background: string,
+  padding = SAFE_PADDING,
+): Promise<Buffer> {
+  const inner = Math.max(1, Math.round(size * (1 - 2 * padding)));
+  const logo = await sharp(markBuf)
+    .resize(inner, inner, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background,
+    },
+  })
+    .composite([{ input: logo, gravity: "centre" }])
+    .png()
+    .toBuffer();
+}
+
+async function renderMonochrome(markBuf: Buffer, size: number): Promise<Buffer> {
+  const inner = Math.max(1, Math.round(size * (1 - 2 * SAFE_PADDING)));
+  const logo = await sharp(markBuf)
+    .resize(inner, inner, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { data, info } = logo;
+  const out = Buffer.alloc(data.length);
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    const mark = a > 10 ? 255 : 0;
+    out[i] = mark;
+    out[i + 1] = mark;
+    out[i + 2] = mark;
+    out[i + 3] = mark ? a : 0;
+  }
+
+  const markPng = await sharp(out, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: markPng, gravity: "centre" }])
     .png()
     .toBuffer();
 }
@@ -100,31 +217,113 @@ function buildIco(pngBuffers: Buffer[]): Buffer {
   return Buffer.concat([header, ...dirEntries, ...bodies]);
 }
 
+async function normalizeScreenshots() {
+  for (const name of SCREENSHOT_NAMES) {
+    const file = path.join(SCREENSHOTS, name);
+    if (!fs.existsSync(file)) {
+      console.warn(`skip missing screenshot: ${name}`);
+      continue;
+    }
+    const meta = await sharp(file).metadata();
+    if (meta.width === SCREENSHOT_W && meta.height === SCREENSHOT_H) {
+      console.log(`ok screenshots/${name} ${SCREENSHOT_W}x${SCREENSHOT_H}`);
+      continue;
+    }
+    const buf = await sharp(file)
+      .resize(SCREENSHOT_W, SCREENSHOT_H, { fit: "cover", position: "centre" })
+      .png()
+      .toBuffer();
+    await fs.promises.writeFile(file, buf);
+    console.log(
+      `normalized screenshots/${name} ${meta.width}x${meta.height} → ${SCREENSHOT_W}x${SCREENSHOT_H}`,
+    );
+  }
+}
+
+function validateOutputs() {
+  for (const name of REQUIRED_FILES) {
+    const p = path.join(ICONS, name);
+    if (!fs.existsSync(p)) {
+      throw new Error(`Missing required PWA asset: ${name}`);
+    }
+    console.log(`✓ ${name}`);
+  }
+  const fav = path.join(PUBLIC, "favicon.ico");
+  if (!fs.existsSync(fav)) {
+    throw new Error("Missing public/favicon.ico");
+  }
+  console.log("✓ ../favicon.ico");
+}
+
 async function main() {
   if (!fs.existsSync(SOURCE)) {
     throw new Error(`Source logo missing: ${SOURCE}`);
   }
 
+  const sha256 = sha256File(SOURCE);
   const sourceBuf = fs.readFileSync(SOURCE);
-  const sha256 = crypto.createHash("sha256").update(sourceBuf).digest("hex");
   const markBuf = await knockoutBlackToAlpha(sourceBuf);
+
+  if (fs.existsSync(ICONS)) {
+    fs.rmSync(ICONS, { recursive: true, force: true });
+  }
+  fs.mkdirSync(ICONS, { recursive: true });
 
   const fav16 = await renderTransparent(markBuf, 16);
   const fav32 = await renderTransparent(markBuf, 32);
   const fav48 = await renderTransparent(markBuf, 48);
 
-  assertNotScreenshotPath(FAVICON_OUT);
-  await fs.promises.writeFile(FAVICON_OUT, buildIco([fav16, fav32, fav48]));
-  console.log("wrote public/favicon.ico");
+  await writeSafe(path.join(ICONS, `favicon-16.${ICON_VERSION}.png`), fav16);
+  await writeSafe(path.join(ICONS, `favicon-32.${ICON_VERSION}.png`), fav32);
+  await writeSafe(path.join(ICONS, `favicon-48.${ICON_VERSION}.png`), fav48);
+  await writeSafe(
+    path.join(ICONS, `apple-touch-180.${ICON_VERSION}.png`),
+    await renderTransparent(markBuf, 180),
+  );
+  await writeSafe(
+    path.join(ICONS, `icon-192.${ICON_VERSION}.png`),
+    await renderTransparent(markBuf, 192),
+  );
+  await writeSafe(
+    path.join(ICONS, `icon-512.${ICON_VERSION}.png`),
+    await renderTransparent(markBuf, 512),
+  );
+  await writeSafe(
+    path.join(ICONS, `maskable-512.${ICON_VERSION}.png`),
+    await renderOnBackground(markBuf, 512, "#000000"),
+  );
+  await writeSafe(
+    path.join(ICONS, `monochrome-512.${ICON_VERSION}.png`),
+    await renderMonochrome(markBuf, 512),
+  );
 
-  // Ensure legacy generated icon folder stays empty
-  if (fs.existsSync(ICONS_DIR)) {
-    fs.rmSync(ICONS_DIR, { recursive: true, force: true });
-    console.log("removed public/icons (unused)");
+  for (const [key, bg] of Object.entries(SHORTCUT_BG)) {
+    await writeSafe(
+      path.join(ICONS, `shortcut-${key}.${ICON_VERSION}.png`),
+      await renderOnBackground(markBuf, 96, bg, 0.12),
+    );
   }
 
-  console.log(`source sha256=${sha256.slice(0, 12)}…`);
-  console.log("Done.");
+  const ico = buildIco([fav16, fav32, fav48]);
+  await writeSafe(path.join(PUBLIC, "favicon.ico"), ico);
+
+  const files = REQUIRED_FILES.filter((f) => f !== "build.json");
+  const build = {
+    source: "public/images/nexastays.png",
+    sha256,
+    version: ICON_VERSION,
+    generatedAt: new Date().toISOString(),
+    safePadding: SAFE_PADDING,
+    transparentFavicons: true,
+    files: [...files, "favicon.ico"],
+  };
+  await writeSafe(path.join(ICONS, "build.json"), Buffer.from(JSON.stringify(build, null, 2)));
+
+  console.log("");
+  await normalizeScreenshots();
+  console.log("");
+  validateOutputs();
+  console.log("\nDone.");
 }
 
 main().catch((e) => {

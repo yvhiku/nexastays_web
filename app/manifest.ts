@@ -1,34 +1,35 @@
 import type { MetadataRoute } from "next";
 import { getPublicSiteUrl } from "@/lib/env";
-import { PWA_LOGO, PWA_SHORTCUT_ICONS } from "@/lib/pwa-assets";
+import { PWA_ICONS, PWA_SCREENSHOT_SIZE, PWA_SHORTCUT_ICONS } from "@/lib/pwa-assets";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 
 export default function manifest(): MetadataRoute.Manifest {
+  const shot = `${PWA_SCREENSHOT_SIZE.width}x${PWA_SCREENSHOT_SIZE.height}`;
   const screenshots = [
     {
       src: "/pwa/screenshots/welcome.png",
-      sizes: "412x913",
+      sizes: shot,
       type: "image/png",
       form_factor: "narrow" as const,
       label: "Welcome to Nexa Stays",
     },
     {
       src: "/pwa/screenshots/explore.png",
-      sizes: "410x915",
+      sizes: shot,
       type: "image/png",
       form_factor: "narrow" as const,
       label: "Find your next stay in Morocco",
     },
     {
       src: "/pwa/screenshots/listing.png",
-      sizes: "411x912",
+      sizes: shot,
       type: "image/png",
       form_factor: "narrow" as const,
       label: "Listing gallery, calendar, and reserve",
     },
     {
       src: "/pwa/screenshots/host.png",
-      sizes: "410x913",
+      sizes: shot,
       type: "image/png",
       form_factor: "narrow" as const,
       label: "Host dashboard with revenue and calendar sync",
@@ -36,11 +37,6 @@ export default function manifest(): MetadataRoute.Manifest {
   ];
 
   const siteUrl = getPublicSiteUrl();
-  const logoIcon = {
-    src: PWA_LOGO,
-    sizes: "512x512",
-    type: "image/png" as const,
-  };
 
   return {
     id: `${siteUrl}/`,
@@ -59,9 +55,24 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "ltr",
     prefer_related_applications: false,
     icons: [
-      { ...logoIcon, sizes: "192x192", purpose: "any" },
-      { ...logoIcon, purpose: "any" },
-      { ...logoIcon, purpose: "maskable" },
+      {
+        src: PWA_ICONS.icon192,
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: PWA_ICONS.icon512,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: PWA_ICONS.maskable,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
     ],
     shortcuts: [
       {

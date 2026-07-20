@@ -24,28 +24,34 @@ import {
   markGuideDismissed,
   markGuideSeen,
   resetGuide as resetGuideStorage,
+  isGuideFinished,
 } from "@/lib/guidance-storage";
 import {
   trackGuideCompleted,
   trackGuideDismissed,
+  trackGuideQueued,
   trackGuideShown,
   trackGuideSkipped,
 } from "@/lib/guidance-events";
 import type { GuideId, GuideState } from "@/lib/guidance-types";
+import { getDeferredInstallPrompt } from "@/lib/pwa-install-prompt";
 import {
-  clearDeferredInstallPrompt,
-  getDeferredInstallPrompt,
-} from "@/lib/pwa-install-prompt";
+  noteInstallPromptShown,
+  requestInstallPrompt,
+} from "@/lib/pwa-install-state";
 import {
   dismissInstallPrompt,
   isIosSafari,
-  markPwaInstalled,
   markPwaWelcomeSeen,
   shouldOfferAndroidInstallAfterWelcome,
 } from "@/lib/pwa-engagement";
 
 const GAP_MS = 500;
 const WELCOME_DELAY_MS = 700;
+const WELCOME_RETRY_MS = 2000;
+
+/** Queue item lifecycle for event-driven guidance. */
+export type GuideQueuePhase = "READY" | "WAITING" | "SHOWING" | "COMPLETED" | "SKIPPED" | "DISMISSED";
 
 type Api = {
   enqueueGuide: (id: GuideId, opts?: { force?: boolean }) => void;
@@ -87,7 +93,8 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
   const queueRef = useRef<GuideId[]>([]);
   const forceRef = useRef<Set<GuideId>>(new Set());
   const gapTimer = useRef<number | null>(null);
-  const welcomeBooted = useRef(false);
+  const welcomeSettled = useRef(false);
+  const welcomeRetryTimer = useRef<number | null>(null);
 
   const pump = useCallback(() => {
     if (active) return;
@@ -97,15 +104,19 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
     if (!next) return;
     const force = forceRef.current.has(next);
     if (!canShowGuide(next, { bypassCooldown: force })) {
-      queueRef.current = queueRef.current.filter((id) => id !== next);
-      forceRef.current.delete(next);
-      pump();
+      // Keep waiting in queue until cooldown clears (event-driven WAITING).
+      if (gapTimer.current) window.clearTimeout(gapTimer.current);
+      gapTimer.current = window.setTimeout(() => {
+        gapTimer.current = null;
+        pump();
+      }, WELCOME_RETRY_MS);
       return;
     }
     queueRef.current = queueRef.current.filter((id) => id !== next);
     forceRef.current.delete(next);
     markGuideSeen(next);
     trackGuideShown(next);
+    if (next === "install_app") noteInstallPromptShown();
     setActive(next);
     setFabGlow(next === "search_fab");
   }, [active, searchOpen]);
@@ -123,11 +134,13 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
 
   const enqueueGuide = useCallback(
     (id: GuideId, opts?: { force?: boolean }) => {
-      if (!canShowGuide(id, { bypassCooldown: opts?.force })) return;
-      if (active === id || queueRef.current.includes(id)) return;
+      if (!canShowGuide(id, { bypassCooldown: opts?.force })) return false;
+      if (active === id || queueRef.current.includes(id)) return false;
       if (opts?.force) forceRef.current.add(id);
       queueRef.current = [...queueRef.current, id];
+      trackGuideQueued(id);
       if (!active) schedulePump(0);
+      return true;
     },
     [active, schedulePump],
   );
@@ -152,6 +165,7 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       setFabGlow(false);
       setActive(null);
       queueRef.current = [...queueRef.current, ...afterWelcome];
+      afterWelcome.forEach((gid) => trackGuideQueued(gid));
       schedulePump(GAP_MS);
     },
     [active, schedulePump],
@@ -177,6 +191,7 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       if (thenEnqueue) {
         forceRef.current.add(thenEnqueue);
         queueRef.current = [...queueRef.current, thenEnqueue];
+        trackGuideQueued(thenEnqueue);
       }
       schedulePump(GAP_MS);
     },
@@ -216,16 +231,45 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
     [active, finishActive],
   );
 
+  // home_ready → Welcome (retry if cooldown blocks enqueue)
   useEffect(() => {
-    if (welcomeBooted.current) return;
     const bare = pathname.replace(/^\/(en|fr|ar)/, "") || "/";
     if (bare !== "/" && bare !== "") return;
-    welcomeBooted.current = true;
-    const id = window.setTimeout(() => {
-      enqueueGuide("welcome");
-    }, WELCOME_DELAY_MS);
-    return () => window.clearTimeout(id);
-  }, [pathname, enqueueGuide]);
+    if (welcomeSettled.current) return;
+
+    const clearRetry = () => {
+      if (welcomeRetryTimer.current) {
+        window.clearTimeout(welcomeRetryTimer.current);
+        welcomeRetryTimer.current = null;
+      }
+    };
+
+    const attemptWelcome = () => {
+      if (isGuideFinished("welcome")) {
+        welcomeSettled.current = true;
+        clearRetry();
+        return;
+      }
+      if (active === "welcome" || queueRef.current.includes("welcome")) {
+        welcomeSettled.current = true;
+        clearRetry();
+        return;
+      }
+      const ok = enqueueGuide("welcome");
+      if (ok) {
+        welcomeSettled.current = true;
+        clearRetry();
+        return;
+      }
+      welcomeRetryTimer.current = window.setTimeout(attemptWelcome, WELCOME_RETRY_MS);
+    };
+
+    const id = window.setTimeout(attemptWelcome, WELCOME_DELAY_MS);
+    return () => {
+      window.clearTimeout(id);
+      clearRetry();
+    };
+  }, [pathname, enqueueGuide, active]);
 
   useEffect(() => {
     const onSaved = (e: Event) => {
@@ -247,18 +291,14 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
 
   useEffect(() => {
     const onInstallEligible = () => enqueueGuide("install_app");
-    const onInstalled = () => {
-      markPwaInstalled();
-      clearDeferredInstallPrompt();
+    const onInstalledSuccess = () => {
       enqueueGuide("install_success", { force: true });
     };
     window.addEventListener("nexa-guidance-install-eligible", onInstallEligible);
-    window.addEventListener("appinstalled", onInstalled);
-    window.addEventListener("nexa-guidance-install-success", onInstalled);
+    window.addEventListener("nexa-guidance-install-success", onInstalledSuccess);
     return () => {
       window.removeEventListener("nexa-guidance-install-eligible", onInstallEligible);
-      window.removeEventListener("appinstalled", onInstalled);
-      window.removeEventListener("nexa-guidance-install-success", onInstalled);
+      window.removeEventListener("nexa-guidance-install-success", onInstalledSuccess);
     };
   }, [enqueueGuide]);
 
@@ -275,7 +315,9 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
 
   const api = useMemo<Api>(
     () => ({
-      enqueueGuide,
+      enqueueGuide: (id, opts) => {
+        enqueueGuide(id, opts);
+      },
       completeGuide,
       dismissGuide,
       skipGuide,
@@ -296,19 +338,23 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       finishActive("complete");
       return;
     }
-    const promptEvent = getDeferredInstallPrompt();
-    if (!promptEvent) {
+    if (!getDeferredInstallPrompt()) {
+      // No BIP: tip only — do not mark installed or complete once forever as installed.
+      dismissInstallPrompt();
+      finishActive("dismiss");
+      return;
+    }
+    const outcome = await requestInstallPrompt();
+    if (outcome === "accepted") {
+      // Wait for appinstalled → install_success via SM; close tip without marking installed.
       finishActive("complete");
       return;
     }
-    await promptEvent.prompt();
-    const choice = await promptEvent.userChoice;
-    clearDeferredInstallPrompt();
-    if (choice.outcome === "accepted") {
-      markPwaInstalled();
-      finishActive("complete", "install_success");
+    if (outcome === "dismissed") {
+      finishActive("dismiss");
       return;
     }
+    dismissInstallPrompt();
     finishActive("dismiss");
   };
 

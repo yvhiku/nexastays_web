@@ -122,6 +122,17 @@ export function resetGuide(id: GuideId) {
   writeStore(store);
 }
 
+/** Clear all product-guidance state (NexaDebug.reset). */
+export function resetAllGuides() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_WELCOME);
+    localStorage.removeItem(LEGACY_SAVED_ONBOARDING);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function isGuideFinished(id: GuideId): boolean {
   const s = getGuideState(id);
   return s.completed || s.dismissed;

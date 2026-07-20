@@ -1,0 +1,41 @@
+/**
+ * Dev / QA helpers exposed as `window.NexaDebug`.
+ */
+import { resetAllGuides } from "@/lib/guidance-storage";
+import { resetPwaEngagementFlags } from "@/lib/pwa-engagement";
+import { resetInstallStateMachine } from "@/lib/pwa-install-state";
+
+declare global {
+  interface Window {
+    NexaDebug?: {
+      reset: () => void;
+    };
+  }
+}
+
+export function resetNexaClientState() {
+  resetAllGuides();
+  resetPwaEngagementFlags();
+  resetInstallStateMachine();
+  try {
+    localStorage.removeItem("nexa-saved-onboarding-seen");
+  } catch {
+    /* ignore */
+  }
+  window.dispatchEvent(new Event("nexa-pwa-engagement-changed"));
+  window.dispatchEvent(new Event("nexa-debug-reset"));
+}
+
+export function bindNexaDebug() {
+  if (typeof window === "undefined") return () => undefined;
+  window.NexaDebug = {
+    reset: () => {
+      resetNexaClientState();
+      // Soft reload so welcome / install SM re-bootstrap cleanly.
+      window.location.reload();
+    },
+  };
+  return () => {
+    delete window.NexaDebug;
+  };
+}

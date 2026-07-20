@@ -1,8 +1,13 @@
 import { trackEvent } from "@/lib/analytics";
 import type { GuideId } from "@/lib/guidance-types";
 
+export function trackGuideQueued(id: GuideId) {
+  trackEvent("guide_queued", { guideId: id });
+}
+
 export function trackGuideShown(id: GuideId) {
   trackEvent("guide_viewed", { guideId: id });
+  trackEvent("guide_shown", { guideId: id });
   if (id === "welcome") trackEvent("welcome_shown", { guideId: id });
   if (id === "search_fab") trackEvent("search_spotlight_seen", { guideId: id });
   if (id === "save_first") trackEvent("saved_popup_seen", { guideId: id });
