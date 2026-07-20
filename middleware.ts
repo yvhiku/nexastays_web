@@ -51,6 +51,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|images).*)",
+    // Skip locale rewrite for Next internals, API, and static public assets
+    "/((?!api|_next/static|_next/image|favicon.ico|images|guidance|icons|pwa|sw\\.js|workbox|offline\\.html|fallback).*)",
   ],
 };
