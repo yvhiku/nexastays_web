@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { refreshToken as refreshTokenApi } from "@/lib/auth-api";
 import { getIdentityApiBaseUrl } from "@/lib/env";
+import { runAfterIdle } from "@/lib/defer-after-idle";
 
 const AUTH_TOKEN_REFRESHED = "nexa:auth:token-refreshed";
 const AUTH_LOGOUT = "nexa:auth:logout";
@@ -97,10 +98,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
     const otp = localStorage.getItem(OTP_SESSION_KEY);
 
-    async function initAuth() {
+    if (jwt) {
+      setToken(jwt);
+      setTokenType("jwt");
+    } else if (otp) {
+      setToken(otp);
+      setTokenType("otp_session");
+      setUser(null);
+    } else {
+      setToken(null);
+      setTokenType("none");
+      setUser(null);
+    }
+
+    setReady(true);
+
+    async function hydrateAuth() {
       if (jwt) {
-        setToken(jwt);
-        setTokenType("jwt");
         const { user: u, status } = await fetchCurrentUser(apiBase, jwt);
         if (cancelled) return;
         if (status === 401 && refresh) {
@@ -112,7 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
             }
             setToken(tokens.access_token);
-            const { user: u2, status: s2 } = await fetchCurrentUser(apiBase, tokens.access_token);
+            const { user: u2, status: s2 } = await fetchCurrentUser(
+              apiBase,
+              tokens.access_token,
+            );
             if (cancelled) return;
             if (s2 === 401) {
               clearStoredTokens();
@@ -129,19 +146,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUser(null);
         }
-      } else if (otp) {
-        setToken(otp);
-        setTokenType("otp_session");
-        setUser(null);
-      } else {
-        setToken(null);
-        setTokenType("none");
-        setUser(null);
       }
-      if (!cancelled) setReady(true);
     }
-    initAuth();
-    return () => { cancelled = true; };
+
+    runAfterIdle(() => {
+      void hydrateAuth();
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [apiBase, clearStoredTokens]);
 
   useEffect(() => {

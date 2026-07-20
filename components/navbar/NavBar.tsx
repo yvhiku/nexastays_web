@@ -15,7 +15,7 @@ import { NotificationBell } from "@/components/mobile/NotificationBell";
 import { InboxBell } from "@/components/messaging/InboxBell";
 import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
-import { getHostMe } from "@/lib/stays-api";
+import { useHeaderState } from "@/components/navbar/HeaderStateProvider.client";
 
 const navLinks = [
   { href: "/listings", labelKey: "nav.stays", id: "listings" },
@@ -29,9 +29,10 @@ export const NavBar = () => {
   const pathname = usePathname();
   const { t, localePath, isRtl } = useLanguage();
   const { isAuthenticated, user, token, tokenType, logout } = useAuth();
+  const { hostMode, pollingActive } = useHeaderState();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showBecomeHostLink, setShowBecomeHostLink] = useState(false);
+  const showBecomeHostLink = pollingActive ? !hostMode : true;
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,27 +59,6 @@ export const NavBar = () => {
       document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
-
-  // Hide "Become a Host" for users who already applied or are approved hosts.
-  useEffect(() => {
-    if (!isAuthenticated || !token || tokenType !== "jwt") {
-      setShowBecomeHostLink(false);
-      return;
-    }
-    let cancelled = false;
-    getHostMe(token)
-      .then((me) => {
-        if (cancelled) return;
-        const status = (me.application_status || me.host_verification_status || "").toUpperCase();
-        setShowBecomeHostLink(status !== "APPROVED" && status !== "PENDING");
-      })
-      .catch(() => {
-        if (!cancelled) setShowBecomeHostLink(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, token, tokenType]);
 
   const isActive = (href: string, id: string) => {
     if (href === "/" || href.startsWith("/#")) {

@@ -44,16 +44,24 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
 export function LanguageProvider({
   children,
   initialLocale,
+  initialTranslations,
+  initialFallbackTranslations,
 }: {
   children: React.ReactNode;
   initialLocale: Locale;
+  initialTranslations?: Translations | null;
+  initialFallbackTranslations?: Translations | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-  const [translations, setTranslations] = useState<Translations | null>(null);
-  const [fallbackTranslations, setFallbackTranslations] = useState<Translations | null>(null);
-  const [ready, setReady] = useState(false);
+  const [translations, setTranslations] = useState<Translations | null>(
+    initialTranslations ?? null,
+  );
+  const [fallbackTranslations, setFallbackTranslations] = useState<Translations | null>(
+    initialFallbackTranslations ?? initialTranslations ?? null,
+  );
+  const [ready, setReady] = useState(Boolean(initialTranslations));
 
   useEffect(() => {
     const valid = VALID_LOCALES.includes(initialLocale as (typeof VALID_LOCALES)[number]);
@@ -63,6 +71,12 @@ export function LanguageProvider({
   }, [initialLocale]);
 
   useEffect(() => {
+    if (initialTranslations && locale === initialLocale) {
+      setTranslations(initialTranslations);
+      setFallbackTranslations(initialFallbackTranslations ?? initialTranslations);
+      setReady(true);
+      return;
+    }
     Promise.all([
       loadTranslations(locale),
       locale !== DEFAULT_LOCALE ? loadTranslations(DEFAULT_LOCALE) : Promise.resolve(null),
@@ -71,7 +85,7 @@ export function LanguageProvider({
       setFallbackTranslations(fallback ?? current);
       setReady(true);
     });
-  }, [locale]);
+  }, [locale, initialLocale, initialTranslations, initialFallbackTranslations]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !ready) return;

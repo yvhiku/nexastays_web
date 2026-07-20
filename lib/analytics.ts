@@ -52,8 +52,17 @@ type AnalyticsEventName =
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 
+let analyticsReady = false;
+
+/** Idempotent analytics bootstrap — call after idle, not at module load. */
+export function initAnalytics(): void {
+  if (typeof window === "undefined" || analyticsReady) return;
+  analyticsReady = true;
+}
+
 export function trackEvent(name: AnalyticsEventName, payload: AnalyticsPayload = {}): void {
   if (typeof window === "undefined") return;
+  if (!analyticsReady && process.env.NODE_ENV === "production") return;
 
   const body = {
     name,

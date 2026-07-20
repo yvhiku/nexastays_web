@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getUnreadConversationCount } from "@/lib/messaging/messages-api";
-import { useMessagingRealtime } from "@/components/messaging/hooks/useMessagingRealtime";
+import { useHeaderState } from "@/components/navbar/HeaderStateProvider.client";
 
 type Props = {
   className?: string;
@@ -22,33 +21,10 @@ function formatBadge(count: number): string {
 /** Header inbox icon with unread badge — links to inbox page. */
 export function InboxBell({ className }: Props) {
   const { t, localePath } = useLanguage();
-  const { isAuthenticated, token, ready } = useAuth();
-  const [unread, setUnread] = useState(0);
+  const { isAuthenticated } = useAuth();
+  const { inboxCount } = useHeaderState();
 
-  const refreshUnread = useCallback(async () => {
-    if (!isAuthenticated || !token) {
-      setUnread(0);
-      return;
-    }
-    try {
-      const count = await getUnreadConversationCount(token);
-      setUnread(count);
-    } catch {
-      /* keep last known */
-    }
-  }, [isAuthenticated, token]);
-
-  useEffect(() => {
-    if (ready && isAuthenticated && token) {
-      void refreshUnread();
-    } else if (ready) {
-      setUnread(0);
-    }
-  }, [ready, isAuthenticated, token, refreshUnread]);
-
-  useMessagingRealtime("inbox", refreshUnread, ready && isAuthenticated && !!token);
-
-  const badge = formatBadge(unread);
+  const badge = formatBadge(inboxCount);
 
   if (!isAuthenticated) return null;
 

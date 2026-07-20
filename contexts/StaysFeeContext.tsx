@@ -12,6 +12,7 @@ import {
   fetchStaysFeeRates,
   type StaysFeeRates,
 } from "@/lib/stays-fees";
+import { runAfterIdle } from "@/lib/defer-after-idle";
 
 type StaysFeeContextValue = {
   rates: StaysFeeRates;
@@ -36,13 +37,15 @@ export function StaysFeeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    fetchStaysFeeRates()
-      .then((next) => {
-        if (active) setRates(next);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    runAfterIdle(() => {
+      fetchStaysFeeRates()
+        .then((next) => {
+          if (active) setRates(next);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    });
     return () => {
       active = false;
     };
