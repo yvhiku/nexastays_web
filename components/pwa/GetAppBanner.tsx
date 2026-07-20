@@ -214,8 +214,8 @@ export function GetAppBanner() {
             disabled={busy}
             onClick={() => void onUseApp()}
             className={cn(
-              "shrink-0 rounded-full bg-[#3B82F6] px-3.5 py-2 text-[11px] font-bold uppercase tracking-wide text-white",
-              "active:scale-95 disabled:opacity-70",
+              "shrink-0 rounded-full bg-nexa-primary px-4 py-2 text-xs font-semibold text-white",
+              "hover:bg-nexa-primary-dark active:scale-95 disabled:opacity-70",
             )}
           >
             {busy ? t("common.loading") : t("pwa.getAppCta")}
