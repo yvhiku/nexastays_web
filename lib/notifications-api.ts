@@ -34,7 +34,7 @@ client.interceptors.response.use(
           localStorage.setItem(JWT_KEY, tokens.access_token);
           if (tokens.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
           notifyTokenRefreshed(tokens.access_token);
-          config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
+          config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` } as typeof config.headers;
           return client.request(config);
         } catch {
           localStorage.removeItem(JWT_KEY);
