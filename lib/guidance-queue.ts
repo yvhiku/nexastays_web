@@ -15,7 +15,7 @@ const NORMAL_COOLDOWN_MS = 30_000;
 
 export function canShowGuide(
   id: GuideId,
-  opts?: { bypassCooldown?: boolean },
+  opts?: { bypassCooldown?: boolean; bypassOnce?: boolean },
 ): boolean {
   const def = GUIDE_BY_ID[id];
   if (!def || !def.enabled) return false;
@@ -24,7 +24,8 @@ export function canShowGuide(
     const bucket = hashId(id) % 100;
     if (bucket >= def.rollout) return false;
   }
-  if (def.once && isGuideFinished(id)) return false;
+  // force / event-driven reshow may bypass once (e.g. review_celebration after submit)
+  if (def.once && isGuideFinished(id) && !opts?.bypassOnce) return false;
 
   const priority = def.priority;
   const bypass =

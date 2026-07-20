@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
@@ -26,6 +27,7 @@ import type { StaysBooking, StaysReviewDetail } from "@/lib/stays-types";
 import { StarRatingDisplay } from "./StarRatingSelector";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
+import { useProductGuidanceOptional } from "@/components/guidance/ProductGuidanceProvider";
 
 const MAX_COMMENT = 1000;
 const MAX_PHOTOS = 5;
@@ -133,6 +135,8 @@ export function RateStayContent({
   const isEdit = !!existingReview?.can_edit;
   const readOnly = !!existingReview && !existingReview.can_edit;
   const reduce = useReducedMotion();
+  const guidance = useProductGuidanceOptional();
+  const [mounted, setMounted] = useState(false);
 
   const [rating, setRating] = useState(existingReview?.rating ?? 0);
   const [comment, setComment] = useState(existingReview?.comment ?? "");
@@ -149,6 +153,8 @@ export function RateStayContent({
   const fileRef = useRef<HTMLInputElement>(null);
   const [successReview, setSuccessReview] = useState<StaysReviewDetail | null>(null);
 
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (readOnly) {
       trackEvent("review_viewed", { bookingId: booking.id });
@@ -159,6 +165,15 @@ export function RateStayContent({
       });
     }
   }, [booking.id, isEdit, readOnly]);
+
+  useEffect(() => {
+    if (!success) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [success]);
 
   const listing = booking.listing;
   const photoMedia = listing?.media?.find((m) => m.kind === "PHOTO");
@@ -244,7 +259,6 @@ export function RateStayContent({
           },
         }),
       );
-      window.dispatchEvent(new Event("nexa-guidance-review-completed"));
       setSuccessReview(result);
       setSuccess(true);
     } catch (err) {
@@ -257,48 +271,69 @@ export function RateStayContent({
   const tagline = useMemo(() => ratingTagline(rating), [rating]);
 
   if (success) {
-    return (
-      <motion.div
-        initial={reduce ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        className="relative flex flex-col items-center justify-center py-20 sm:py-24 text-center overflow-hidden"
+    const celebration = (
+      <div
+        className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-[rgba(253,251,252,0.96)] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))] backdrop-blur-md"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="review-celebration-title"
       >
-        {!reduce && (
-          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-            {Array.from({ length: 18 }).map((_, i) => (
-              <motion.span
-                key={i}
-                className="absolute h-2 w-2 rounded-full bg-nexa-primary/70"
-                style={{
-                  left: `${8 + ((i * 17) % 84)}%`,
-                  top: `${10 + ((i * 23) % 60)}%`,
-                }}
-                initial={{ opacity: 0, y: -8, scale: 0.6 }}
-                animate={{ opacity: [0, 1, 0], y: [0, 40, 70], scale: [0.6, 1, 0.4] }}
-                transition={{ duration: 1.6, delay: i * 0.04, ease: "easeOut" }}
-              />
-            ))}
-          </div>
-        )}
-        <CheckCircle2 className="h-16 w-16 text-nexa-primary mb-6 relative" />
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-nexa-ink mb-2 relative">
-          {t("rateStay.thankYou")}
-        </h2>
-        <p className="text-nexa-ink-3 max-w-md relative mb-8">{t("rateStay.thankYouDesc")}</p>
-        {successReview && (
-          <div className="relative mb-8 rounded-2xl border border-nexa-line bg-white px-6 py-4 shadow-sm">
-            <StarRatingDisplay rating={successReview.rating} size="md" />
-          </div>
-        )}
-        <Button
-          type="button"
-          className="relative min-w-[160px]"
-          onClick={() => onSuccess(successReview ?? existingReview!)}
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="relative flex w-full max-w-md flex-col items-center text-center overflow-hidden rounded-[28px] border border-nexa-line/60 bg-white px-6 py-10 shadow-nexa-lg"
         >
-          {t("rateStay.thankYouContinue")}
-        </Button>
-      </motion.div>
+          {!reduce && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+              {Array.from({ length: 18 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute h-2 w-2 rounded-full bg-nexa-primary/70"
+                  style={{
+                    left: `${8 + ((i * 17) % 84)}%`,
+                    top: `${10 + ((i * 23) % 60)}%`,
+                  }}
+                  initial={{ opacity: 0, y: -8, scale: 0.6 }}
+                  animate={{ opacity: [0, 1, 0], y: [0, 40, 70], scale: [0.6, 1, 0.4] }}
+                  transition={{ duration: 1.6, delay: i * 0.04, ease: "easeOut" }}
+                />
+              ))}
+            </div>
+          )}
+          <CheckCircle2 className="relative mb-6 h-16 w-16 text-nexa-primary" />
+          <h2
+            id="review-celebration-title"
+            className="relative mb-2 font-display text-2xl font-bold text-nexa-ink sm:text-3xl"
+          >
+            {t("rateStay.thankYou")}
+          </h2>
+          <p className="relative mb-8 max-w-md text-nexa-ink-3">{t("rateStay.thankYouDesc")}</p>
+          {successReview && (
+            <div className="relative mb-8 rounded-2xl border border-nexa-line bg-white px-6 py-4 shadow-sm">
+              <StarRatingDisplay rating={successReview.rating} size="md" />
+            </div>
+          )}
+          <Button
+            type="button"
+            className="relative min-w-[160px]"
+            onClick={() => {
+              guidance?.markGuideCompleted("review_celebration");
+              onSuccess(successReview ?? existingReview!);
+            }}
+          >
+            {t("rateStay.thankYouContinue")}
+          </Button>
+        </motion.div>
+      </div>
+    );
+
+    return (
+      <>
+        {/* Keep layout for back-link context while overlay covers chrome */}
+        <div className="min-h-[40vh]" aria-hidden />
+        {mounted ? createPortal(celebration, document.body) : celebration}
+      </>
     );
   }
 

@@ -54,7 +54,7 @@ const WELCOME_RETRY_MS = 2000;
 export type GuideQueuePhase = "READY" | "WAITING" | "SHOWING" | "COMPLETED" | "SKIPPED" | "DISMISSED";
 
 type Api = {
-  enqueueGuide: (id: GuideId, opts?: { force?: boolean }) => void;
+  enqueueGuide: (id: GuideId, opts?: { force?: boolean }) => boolean;
   completeGuide: (id: GuideId) => void;
   dismissGuide: (id: GuideId) => void;
   skipGuide: (id: GuideId) => void;
@@ -95,15 +95,18 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
   const gapTimer = useRef<number | null>(null);
   const welcomeSettled = useRef(false);
   const welcomeRetryTimer = useRef<number | null>(null);
+  const activeRef = useRef<GuideId | null>(null);
+  activeRef.current = active;
 
   const pump = useCallback(() => {
-    if (active) return;
-    if (searchOpen) return;
+    if (activeRef.current) return;
     const sorted = sortQueue(queueRef.current);
     const next = sorted[0];
     if (!next) return;
     const force = forceRef.current.has(next);
-    if (!canShowGuide(next, { bypassCooldown: force })) {
+    // Forced event celebrations (review / booking) must not wait on mobile search sheet
+    if (searchOpen && !force) return;
+    if (!canShowGuide(next, { bypassCooldown: force, bypassOnce: force })) {
       // Keep waiting in queue until cooldown clears (event-driven WAITING).
       if (gapTimer.current) window.clearTimeout(gapTimer.current);
       gapTimer.current = window.setTimeout(() => {
@@ -117,9 +120,10 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
     markGuideSeen(next);
     trackGuideShown(next);
     if (next === "install_app") noteInstallPromptShown();
+    activeRef.current = next;
     setActive(next);
     setFabGlow(next === "search_fab");
-  }, [active, searchOpen]);
+  }, [searchOpen]);
 
   const schedulePump = useCallback(
     (delay = GAP_MS) => {
@@ -134,15 +138,37 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
 
   const enqueueGuide = useCallback(
     (id: GuideId, opts?: { force?: boolean }) => {
-      if (!canShowGuide(id, { bypassCooldown: opts?.force })) return false;
-      if (active === id || queueRef.current.includes(id)) return false;
+      if (
+        !canShowGuide(id, {
+          bypassCooldown: opts?.force,
+          bypassOnce: opts?.force,
+        })
+      ) {
+        return false;
+      }
+      if (activeRef.current === id || queueRef.current.includes(id)) return false;
       if (opts?.force) forceRef.current.add(id);
       queueRef.current = [...queueRef.current, id];
       trackGuideQueued(id);
-      if (!active) schedulePump(0);
+      // Event celebrations preempt soft tips so the pop shows immediately on mobile
+      if (
+        opts?.force &&
+        activeRef.current &&
+        activeRef.current !== id &&
+        (id === "review_celebration" ||
+          id === "booking_success" ||
+          id === "save_first")
+      ) {
+        activeRef.current = null;
+        setActive(null);
+        setFabGlow(false);
+        schedulePump(0);
+        return true;
+      }
+      if (!activeRef.current) schedulePump(0);
       return true;
     },
-    [active, schedulePump],
+    [schedulePump],
   );
 
   const finishWelcome = useCallback(
@@ -163,6 +189,7 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       }
       markPwaWelcomeSeen();
       setFabGlow(false);
+      activeRef.current = null;
       setActive(null);
       queueRef.current = [...queueRef.current, ...afterWelcome];
       afterWelcome.forEach((gid) => trackGuideQueued(gid));
@@ -187,6 +214,7 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       }
       if (id === "welcome") markPwaWelcomeSeen();
       setFabGlow(false);
+      activeRef.current = null;
       setActive(null);
       if (thenEnqueue) {
         forceRef.current.add(thenEnqueue);
@@ -320,9 +348,7 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
 
   const api = useMemo<Api>(
     () => ({
-      enqueueGuide: (id, opts) => {
-        enqueueGuide(id, opts);
-      },
+      enqueueGuide: (id, opts) => enqueueGuide(id, opts),
       completeGuide,
       dismissGuide,
       skipGuide,

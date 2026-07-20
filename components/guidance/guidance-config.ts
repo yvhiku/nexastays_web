@@ -138,6 +138,7 @@ export const GUIDE_CATALOG: GuideDefinition[] = [
     enabled: true,
     rollout: 100,
     analytics: true,
+    asset: "/guidance/trip.png",
     titleKey: "guidance.reviewTitle",
     bodyKey: "guidance.reviewBody",
     primaryKey: "guidance.continue",

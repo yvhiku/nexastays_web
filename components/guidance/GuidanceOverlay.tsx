@@ -66,7 +66,7 @@ export function GuidanceOverlay({
   return (
     <div
       ref={rootRef}
-      className={cn("fixed inset-0 z-[85] flex", className)}
+      className={cn("fixed inset-0 z-[120] flex", className)}
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}
