@@ -41,6 +41,7 @@ import {
   isIosSafari,
   markPwaInstalled,
   markPwaWelcomeSeen,
+  shouldOfferAndroidInstallAfterWelcome,
 } from "@/lib/pwa-engagement";
 
 const GAP_MS = 500;
@@ -127,6 +128,31 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       if (opts?.force) forceRef.current.add(id);
       queueRef.current = [...queueRef.current, id];
       if (!active) schedulePump(0);
+    },
+    [active, schedulePump],
+  );
+
+  const finishWelcome = useCallback(
+    (mode: "complete" | "dismiss") => {
+      const afterWelcome: GuideId[] = ["search_fab"];
+      if (mode === "complete" && shouldOfferAndroidInstallAfterWelcome()) {
+        afterWelcome.unshift("install_app");
+        forceRef.current.add("install_app");
+      }
+      const id = active;
+      if (id !== "welcome") return;
+      if (mode === "complete") {
+        markGuideCompleted(id);
+        trackGuideCompleted(id);
+      } else {
+        markGuideDismissed(id);
+        trackGuideDismissed(id);
+      }
+      markPwaWelcomeSeen();
+      setFabGlow(false);
+      setActive(null);
+      queueRef.current = [...queueRef.current, ...afterWelcome];
+      schedulePump(GAP_MS);
     },
     [active, schedulePump],
   );
@@ -271,15 +297,17 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       return;
     }
     const promptEvent = getDeferredInstallPrompt();
-    if (promptEvent) {
-      await promptEvent.prompt();
-      const choice = await promptEvent.userChoice;
-      clearDeferredInstallPrompt();
-      if (choice.outcome === "accepted") {
-        markPwaInstalled();
-        finishActive("complete", "install_success");
-        return;
-      }
+    if (!promptEvent) {
+      finishActive("complete");
+      return;
+    }
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    clearDeferredInstallPrompt();
+    if (choice.outcome === "accepted") {
+      markPwaInstalled();
+      finishActive("complete", "install_success");
+      return;
     }
     finishActive("dismiss");
   };
@@ -289,8 +317,8 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       {children}
       {active === "welcome" ? (
         <WelcomeModal
-          onContinue={() => finishActive("complete", "search_fab")}
-          onNotNow={() => finishActive("dismiss", "search_fab")}
+          onContinue={() => finishWelcome("complete")}
+          onNotNow={() => finishWelcome("dismiss")}
         />
       ) : null}
       {active === "search_fab" ? (
@@ -340,6 +368,7 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       {active === "install_app" ? (
         <BottomTip
           variant={isIosSafari() ? "ios" : "android"}
+          canNativeInstall={Boolean(getDeferredInstallPrompt())}
           onPrimary={() => void onInstallPrimary()}
           onNotNow={() => {
             dismissInstallPrompt();

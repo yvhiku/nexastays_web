@@ -92,7 +92,8 @@ const nextConfig = {
 
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
-  disable: process.env.NODE_ENV === "development",
+  // Keep SW active in dev so Android can install a real standalone app (not a browser shortcut).
+  disable: process.env.NEXT_PUBLIC_DISABLE_PWA === "true",
   register: true,
   fallbacks: {
     document: "/offline.html",

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getPublicSiteUrl } from "@/lib/env";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -26,13 +27,17 @@ export default function manifest(): MetadataRoute.Manifest {
     },
   ];
 
+  const siteUrl = getPublicSiteUrl();
+
   return {
+    id: `${siteUrl}/`,
     name: "Nexa Stays",
     short_name: "Nexa Stays",
     description: "Book unique stays across Morocco with Nexa Stays.",
-    start_url: "/",
+    start_url: "/en?source=pwa",
     scope: "/",
     display: "standalone",
+    display_override: ["standalone", "browser"],
     orientation: "portrait",
     background_color: NEXA_PWA_THEME,
     theme_color: NEXA_PWA_THEME,

@@ -101,8 +101,8 @@ export const GUIDE_CATALOG: GuideDefinition[] = [
   {
     id: "install_app",
     type: "bottom_tip",
-    priority: "normal",
-    trigger: "install_eligible",
+    priority: "high",
+    trigger: "after_welcome_android",
     asset: "/guidance/phonemockup.png",
     cooldownSec: 30,
     once: true,

@@ -7,6 +7,7 @@ import {
   isStandaloneDisplay,
   shouldShowInstallPrompt,
 } from "@/lib/pwa-engagement";
+import { isAndroidBrowser } from "@/lib/pwa-platform";
 import {
   bindBeforeInstallPromptCapture,
   clearDeferredInstallPrompt,
@@ -28,6 +29,10 @@ export function InstallAppPrompt() {
     if (isGuideFinished("install_app") || isGuideFinished("install_success")) return;
     if (!shouldShowInstallPrompt()) return;
     if (isIosSafari()) {
+      window.dispatchEvent(new Event("nexa-guidance-install-eligible"));
+      return;
+    }
+    if (isAndroidBrowser() && shouldShowInstallPrompt()) {
       window.dispatchEvent(new Event("nexa-guidance-install-eligible"));
       return;
     }
@@ -70,7 +75,7 @@ export function InstallAppPrompt() {
     if (!guidance) return;
     if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;
     if (!shouldShowInstallPrompt()) return;
-    if (isIosSafari() || getDeferredInstallPrompt()) {
+    if (isIosSafari() || (isAndroidBrowser() && shouldShowInstallPrompt()) || getDeferredInstallPrompt()) {
       guidance.enqueueGuide("install_app");
     }
   }, [guidance, evaluate]);

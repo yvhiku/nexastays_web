@@ -11,11 +11,13 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   variant: "ios" | "android";
+  /** When false on Android, show Chrome menu steps instead of native prompt(). */
+  canNativeInstall?: boolean;
   onPrimary: () => void;
   onNotNow: () => void;
 };
 
-export function BottomTip({ variant, onPrimary, onNotNow }: Props) {
+export function BottomTip({ variant, canNativeInstall = true, onPrimary, onNotNow }: Props) {
   const { t } = useLanguage();
   const reduce = useReducedMotion();
   const def = GUIDE_BY_ID.install_app;
@@ -142,23 +144,51 @@ export function BottomTip({ variant, onPrimary, onNotNow }: Props) {
         <p className="mb-8 max-w-[280px] text-center text-base leading-relaxed text-nexa-ink-3">
           {t(def.bodyKey)}
         </p>
-        <div className="mb-10 grid w-full grid-cols-2 gap-3">
-          {features.map(({ icon: Icon, label }) => (
-            <div
-              key={label}
-              className="flex flex-col items-start gap-2 rounded-2xl border border-nexa-line bg-[#ffeff8] p-4"
-            >
-              <Icon className="h-5 w-5 text-nexa-primary" aria-hidden />
-              <span className="text-sm font-semibold text-nexa-primary">{label}</span>
+        {!canNativeInstall ? (
+          <div className="mb-8 w-full space-y-4 text-left">
+            <p className="text-center text-sm text-nexa-ink-3">{t("guidance.androidInstallHint")}</p>
+            <div className="flex items-center gap-4 rounded-2xl border border-white/40 bg-white/50 p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#ffd9df] font-bold text-nexa-primary">
+                1
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-nexa-ink-3">
+                  {t("guidance.step1")}
+                </p>
+                <p className="font-medium">{t("guidance.androidStep1")}</p>
+              </div>
             </div>
-          ))}
-        </div>
+            <div className="flex items-center gap-4 rounded-2xl border border-white/40 bg-white/50 p-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#ffd9df] font-bold text-nexa-primary">
+                2
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-nexa-ink-3">
+                  {t("guidance.step2")}
+                </p>
+                <p className="font-medium">{t("guidance.androidStep2")}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-10 grid w-full grid-cols-2 gap-3">
+            {features.map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-start gap-2 rounded-2xl border border-nexa-line bg-[#ffeff8] p-4"
+              >
+                <Icon className="h-5 w-5 text-nexa-primary" aria-hidden />
+                <span className="text-sm font-semibold text-nexa-primary">{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           onClick={onPrimary}
           className="h-14 w-full rounded-full bg-nexa-primary font-semibold text-white active:scale-[0.97]"
         >
-          {t(def.primaryKey)}
+          {t(canNativeInstall ? def.primaryKey : "guidance.continue")}
         </button>
         <button
           type="button"

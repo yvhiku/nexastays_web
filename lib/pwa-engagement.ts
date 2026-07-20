@@ -1,3 +1,6 @@
+import { isGuideFinished } from "@/lib/guidance-storage";
+import { isAndroidBrowser } from "@/lib/pwa-platform";
+
 const ENGAGE_KEY = "nexa-pwa-engagement";
 const DISMISS_UNTIL_KEY = "nexa-pwa-dismissed-until";
 const INSTALLED_KEY = "nexa-pwa-installed";
@@ -279,14 +282,24 @@ function isEligibleByAction(): boolean {
   );
 }
 
+/** Android first visit: offer install right after the welcome guide. */
+export function shouldOfferAndroidInstallAfterWelcome(): boolean {
+  if (typeof window === "undefined") return false;
+  if (isStandaloneDisplay() || isPwaMarkedInstalled()) return false;
+  if (isDismissedUntilActive()) return false;
+  if (!isAndroidBrowser() || isIosSafari()) return false;
+  if (isGuideFinished("install_app") || isGuideFinished("install_success")) return false;
+  return true;
+}
+
 /**
- * Floating popup gate: value action + not in 30-day dismiss window / installed / standalone.
+ * Install prompt gate: value action OR Android post-welcome, and not dismissed / installed / standalone.
  */
 export function shouldShowInstallPrompt(): boolean {
   if (typeof window === "undefined") return false;
   if (isStandaloneDisplay() || isPwaMarkedInstalled()) return false;
   if (isDismissedUntilActive()) return false;
-  return isEligibleByAction();
+  return isEligibleByAction() || shouldOfferAndroidInstallAfterWelcome();
 }
 
 /** Profile can always offer install when not already installed / standalone. */
