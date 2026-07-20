@@ -126,15 +126,10 @@ const nextConfig = {
   },
 };
 
-const pwaEnabledInDev = process.env.NEXT_PUBLIC_ENABLE_PWA_DEV === "true";
-
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
-  // Opt-in for local dev (NEXT_PUBLIC_ENABLE_PWA_DEV=true) to avoid stale SW errors after .next rebuilds.
-  // Production PWA stays enabled unless NEXT_PUBLIC_DISABLE_PWA=true.
-  disable:
-    process.env.NEXT_PUBLIC_DISABLE_PWA === "true" ||
-    (process.env.NODE_ENV === "development" && !pwaEnabledInDev),
+  // Disable only when explicitly opted out. Stale SW in dev is handled by NexaDebugBoot recovery.
+  disable: process.env.NEXT_PUBLIC_DISABLE_PWA === "true",
   register: true,
   fallbacks: {
     document: "/offline.html",
