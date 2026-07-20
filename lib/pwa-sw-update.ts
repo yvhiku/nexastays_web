@@ -2,6 +2,40 @@
 
 const IMAGE_CACHE_HINTS = ["static-image", "image", "pages", "start-url"];
 
+/** Unregister all service workers (dev/QA recovery). */
+export async function unregisterAllServiceWorkers(): Promise<number> {
+  if (!("serviceWorker" in navigator)) return 0;
+  const regs = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(regs.map((r) => r.unregister()));
+  return regs.length;
+}
+
+/**
+ * Dev-only: if the PWA fallback script is HTML (broken .next / stale SW), unregister and reload once.
+ */
+export async function recoverBrokenDevServiceWorker(): Promise<void> {
+  if (process.env.NODE_ENV !== "development") return;
+  if (!("serviceWorker" in navigator)) return;
+  if (sessionStorage.getItem("nexa-sw-recovery") === "1") return;
+
+  let broken = false;
+  try {
+    const res = await fetch("/fallback-development.js", { cache: "no-store" });
+    const contentType = res.headers.get("content-type") ?? "";
+    broken = !res.ok || !contentType.includes("javascript");
+  } catch {
+    broken = true;
+  }
+
+  if (!broken) return;
+
+  const removed = await unregisterAllServiceWorkers();
+  if (removed === 0) return;
+
+  sessionStorage.setItem("nexa-sw-recovery", "1");
+  window.location.reload();
+}
+
 export async function clearStaleRuntimeCaches(): Promise<void> {
   if (typeof caches === "undefined") return;
   try {

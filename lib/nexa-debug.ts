@@ -4,6 +4,7 @@
 import { resetAllGuides } from "@/lib/guidance-storage";
 import { resetPwaEngagementFlags } from "@/lib/pwa-engagement";
 import { resetInstallStateMachine } from "@/lib/pwa-install-state";
+import { unregisterAllServiceWorkers } from "@/lib/pwa-sw-update";
 
 declare global {
   interface Window {
@@ -13,7 +14,7 @@ declare global {
   }
 }
 
-export function resetNexaClientState() {
+export async function resetNexaClientState() {
   resetAllGuides();
   resetPwaEngagementFlags();
   resetInstallStateMachine();
@@ -22,6 +23,7 @@ export function resetNexaClientState() {
   } catch {
     /* ignore */
   }
+  await unregisterAllServiceWorkers();
   window.dispatchEvent(new Event("nexa-pwa-engagement-changed"));
   window.dispatchEvent(new Event("nexa-debug-reset"));
 }
@@ -30,9 +32,10 @@ export function bindNexaDebug() {
   if (typeof window === "undefined") return () => undefined;
   window.NexaDebug = {
     reset: () => {
-      resetNexaClientState();
-      // Soft reload so welcome / install SM re-bootstrap cleanly.
-      window.location.reload();
+      void resetNexaClientState().then(() => {
+        // Soft reload so welcome / install SM re-bootstrap cleanly.
+        window.location.reload();
+      });
     },
   };
   return () => {
