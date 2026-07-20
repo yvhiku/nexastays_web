@@ -71,6 +71,7 @@ export interface ConversationPermissions {
   isReadOnly: boolean;
   canArchive: boolean;
   canDelete: boolean;
+  notificationLevel: "ALL" | "IMPORTANT" | "MUTED";
 }
 
 export interface ReservationSnapshot {

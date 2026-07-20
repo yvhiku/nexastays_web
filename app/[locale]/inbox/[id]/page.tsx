@@ -36,6 +36,7 @@ import {
   flushOfflineQueue,
   isOnline,
 } from "@/lib/messaging/offline-queue";
+import { shouldFetchAfterPush } from "@/lib/messaging/push-sync";
 import { formatUserError } from "@/lib/errors";
 import { trackEvent } from "@/lib/analytics";
 
@@ -129,6 +130,14 @@ function ConversationPageInner() {
     if (!token) return;
     try {
       const detail = await getConversation(conversationId, token);
+      const localVersion = conversation?.conversationVersion;
+      if (
+        localVersion != null &&
+        !shouldFetchAfterPush(localVersion, detail.conversationVersion) &&
+        detail.messages.at(-1)?.id === messages.at(-1)?.id
+      ) {
+        return;
+      }
       setConversation(detail);
       setMessages((prev) => mergeMessages(prev, detail.messages));
       setHasMore(detail.hasMore);
@@ -139,7 +148,7 @@ function ConversationPageInner() {
     } catch {
       /* silent poll failure */
     }
-  }, [conversationId, token, scheduleRead, scrollToBottom]);
+  }, [conversationId, token, scheduleRead, scrollToBottom, conversation?.conversationVersion, messages]);
 
   const { bumpActivity } = useMessagingRealtime("conversation", poll, !!token && !!conversation);
 

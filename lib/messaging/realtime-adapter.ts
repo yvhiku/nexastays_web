@@ -4,17 +4,14 @@
  * Inbox only: 30s. Background: off.
  */
 
+import {
+  getPollingIntervalMs,
+  type RealtimeMode as IntervalMode,
+} from "./realtime-intervals";
+
 export type RealtimeMode = "conversation" | "inbox" | "off";
 
 export type RealtimePollHandler = () => void | Promise<void>;
-
-const ACTIVE_MS = 5_000;
-const IDLE_MS = 10_000;
-const VERY_IDLE_MS = 20_000;
-const INBOX_MS = 30_000;
-
-const ACTIVE_THRESHOLD_MS = 30_000;
-const IDLE_THRESHOLD_MS = 5 * 60_000;
 
 export class MessagingRealtimeAdapter {
   private mode: RealtimeMode = "off";
@@ -97,13 +94,11 @@ export class MessagingRealtimeAdapter {
   }
 
   private intervalMs(): number {
-    if (this.mode === "off" || !this.visible) return 0;
-    if (this.mode === "inbox") return INBOX_MS;
-
-    const idle = Date.now() - this.lastActivityAt;
-    if (idle < ACTIVE_THRESHOLD_MS) return ACTIVE_MS;
-    if (idle < IDLE_THRESHOLD_MS) return IDLE_MS;
-    return VERY_IDLE_MS;
+    return getPollingIntervalMs(
+      this.mode as IntervalMode,
+      this.visible,
+      this.lastActivityAt,
+    );
   }
 
   private stopTimer(): void {
