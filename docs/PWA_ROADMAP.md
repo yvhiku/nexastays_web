@@ -38,49 +38,39 @@ Installable Progressive Web App and mobile shell for [`nexastays_web`](../nexast
 ## Brand assets (PWA icons)
 
 ```text
-public/images/nexastays.png   ← only hand-edited brand file
-        │
-        ▼
-npm run generate:pwa
-        │
-        ▼
-public/icons/*.v3.png + public/favicon.ico + build.json
-        │
-        ▼
-lib/pwa-assets.ts  → layout / manifest / splash / install UI
+public/images/nexastays.png   ← only brand image (manifest, splash, install UI)
+public/favicon.ico            ← browser tab (generated from logo)
+public/pwa/screenshots/       ← hand-authored install screenshots
 ```
 
 **Rules**
 
-- Browser favicons + `icon-192` / `icon-512`: **transparent logo mark** (black knocked out) — no black square in the tab.
-- Maskable only: black plate + `SAFE_PADDING = 0.18`.
-- Never edit files under `public/icons/` by hand — regenerate them.
-- Never let the generator write under `public/pwa/screenshots/` (hand-authored product captures).
-- Consumers must import paths from `lib/pwa-assets.ts` (no hardcoded `/icons/...` strings).
+- Do **not** use `public/icons/` — removed; everything points at the real logo.
+- Never let the generator write under `public/pwa/screenshots/`.
+- Consumers import from `lib/pwa-assets.ts` (`PWA_LOGO`, `PWA_FAVICON_ICO`).
 
 **When the logo changes**
 
 1. Replace `public/images/nexastays.png`
-2. Bump `ICON_VERSION` in `scripts/generate-pwa-icons.ts` **and** `PWA_ICON_VERSION` in `lib/pwa-assets.ts` (e.g. `v3` → `v4`)
-3. Run `npm run generate:pwa`
-4. Commit icons + code
-5. Users: tap **Update Now** for in-app assets; fully close the PWA so Chrome can refresh the Home Screen icon (WebAPK) — uninstall not required when icon URLs change
+2. Run `npm run generate:pwa` (refreshes `favicon.ico` only)
+3. Commit + deploy
+4. Users: **Update Now** for app content; fully close PWA for Home Screen icon refresh
 
 **Updates (SW vs launcher icon)**
 
-- **Update Now** → `SKIP_WAITING` → clear image caches → reload (app content + in-app icons).
-- **Home Screen icon** → Chrome WebAPK after the app is fully closed (manifest `icons` URL change required).
+- **Update Now** → `SKIP_WAITING` → clear image caches → reload.
+- **Home Screen icon** → Chrome WebAPK after the app is fully closed.
 
 **QA matrix**
 
 - Android: Chrome · Samsung Internet · Edge · Brave
 - iPhone: Safari
 - Desktop: Chrome · Edge · Safari · Firefox
-- Verify: install, update, offline, splash, favicons (transparent), bottom nav, search sheet, saved, trips, guidance, motion, skeletons, safe areas
+- Verify: install, update, offline, splash, favicons, bottom nav, search sheet, saved, trips, guidance, motion, skeletons, safe areas
 
 ## Launch Polish (shipped)
 
-- Transparent v3 branding + `/favicon.ico`
+- Branding via `nexastays.png` + `/favicon.ico` (no `public/icons` set)
 - Hardened Update Now (applying state, poll, fallback reload)
 - Listing / profile skeletons (no spinner-first on primary routes)
 - Motion tokens (`lib/motion.ts`) + press feedback on buttons / sheets

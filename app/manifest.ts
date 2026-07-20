@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getPublicSiteUrl } from "@/lib/env";
-import { PWA_ICONS, PWA_SHORTCUT_ICONS } from "@/lib/pwa-assets";
+import { PWA_LOGO, PWA_SHORTCUT_ICONS } from "@/lib/pwa-assets";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -36,6 +36,11 @@ export default function manifest(): MetadataRoute.Manifest {
   ];
 
   const siteUrl = getPublicSiteUrl();
+  const logoIcon = {
+    src: PWA_LOGO,
+    sizes: "512x512",
+    type: "image/png" as const,
+  };
 
   return {
     id: `${siteUrl}/`,
@@ -54,30 +59,9 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "ltr",
     prefer_related_applications: false,
     icons: [
-      {
-        src: PWA_ICONS.icon192,
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: PWA_ICONS.icon512,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: PWA_ICONS.maskable,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
-      },
-      {
-        src: PWA_ICONS.monochrome,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "monochrome",
-      },
+      { ...logoIcon, sizes: "192x192", purpose: "any" },
+      { ...logoIcon, purpose: "any" },
+      { ...logoIcon, purpose: "maskable" },
     ],
     shortcuts: [
       {

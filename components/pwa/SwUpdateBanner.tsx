@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PWA_ICONS } from "@/lib/pwa-assets";
+import { PWA_LOGO } from "@/lib/pwa-assets";
 import {
   applyWaitingWorker,
   clearStaleRuntimeCaches,
@@ -70,7 +70,7 @@ export function SwUpdateBanner() {
         <div className="flex items-start gap-3">
           <div className="relative h-10 w-10 shrink-0 overflow-hidden">
             <Image
-              src={PWA_ICONS.icon192}
+              src={PWA_LOGO}
               alt=""
               width={40}
               height={40}

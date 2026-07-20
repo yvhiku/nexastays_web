@@ -7,7 +7,7 @@ import { Zap, WifiOff, Bookmark, Smartphone } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { GuidanceOverlay } from "@/components/guidance/GuidanceOverlay";
 import { GUIDE_BY_ID } from "@/components/guidance/guidance-config";
-import { PWA_ICONS } from "@/lib/pwa-assets";
+import { PWA_LOGO } from "@/lib/pwa-assets";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -132,7 +132,7 @@ export function BottomTip({ variant, canNativeInstall = true, onPrimary, onNotNo
         <div className="mb-8 h-1 w-8 rounded-full bg-nexa-line" />
         <div className="mb-6 h-20 w-20 overflow-hidden rounded-2xl bg-transparent p-1">
           <Image
-            src={PWA_ICONS.icon192}
+            src={PWA_LOGO}
             alt=""
             width={80}
             height={80}

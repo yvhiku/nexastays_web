@@ -96,16 +96,16 @@ const nextConfig = {
         ],
       },
       {
-        source: "/icons/:path*",
+        source: "/favicon.ico",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "public, max-age=86400",
           },
         ],
       },
       {
-        source: "/favicon.ico",
+        source: "/images/nexastays.png",
         headers: [
           {
             key: "Cache-Control",

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { isStandaloneDisplay } from "@/lib/pwa-engagement";
-import { PWA_ICONS } from "@/lib/pwa-assets";
+import { PWA_LOGO } from "@/lib/pwa-assets";
 import { cn } from "@/lib/utils";
 
 const SPLASH_KEY = "nexa-pwa-splash-shown";
@@ -88,7 +88,7 @@ export function PwaSplash() {
         style={{ transitionDuration: `${ENTER_MS}ms` }}
       >
         <Image
-          src={PWA_ICONS.icon512}
+          src={PWA_LOGO}
           alt=""
           width={96}
           height={96}
