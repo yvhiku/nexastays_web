@@ -39,7 +39,16 @@ type AnalyticsEventName =
   | "notification_mark_read"
   | "notification_mark_all_read"
   | "notification_received"
-  | "push_registered";
+  | "push_registered"
+  | "inbox_opened"
+  | "inbox_conversation_opened"
+  | "message_sent"
+  | "message_read"
+  | "message_composer_focused"
+  | "conversation_archived"
+  | "conversation_reported"
+  | "conversation_blocked"
+  | "conversation_muted";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

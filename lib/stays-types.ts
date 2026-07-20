@@ -226,6 +226,7 @@ export interface StaysBooking {
   review_rating?: number;
   review_blocked_reason?: "OWN_LISTING";
   viewer_role?: "GUEST" | "HOST";
+  booking_reference?: string | null;
   guest_name?: string | null;
   guest_phone?: string | null;
   occupants?: BookingOccupantInfo[];

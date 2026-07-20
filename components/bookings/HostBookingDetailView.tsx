@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -25,6 +26,8 @@ import {
 } from "@/lib/booking-lifecycle";
 import type { StaysBooking } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
+import { findConversationForBooking } from "@/lib/messaging/messages-api";
+import { useAuth } from "@/contexts/AuthContext";
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, {
@@ -76,6 +79,29 @@ export function HostBookingDetailView({
   onCancel,
   cancelling = false,
 }: HostBookingDetailViewProps) {
+  const router = useRouter();
+  const { token } = useAuth();
+  const [messaging, setMessaging] = useState(false);
+
+  const handleMessageGuest = async () => {
+    if (!token) return;
+    setMessaging(true);
+    try {
+      const conv = await findConversationForBooking(
+        booking.id,
+        booking.booking_reference,
+        token,
+      );
+      if (conv) {
+        router.push(localePath(`/inbox/${conv.id}`));
+      } else {
+        router.push(localePath("/inbox"));
+      }
+    } finally {
+      setMessaging(false);
+    }
+  };
+
   const lifecycle = resolveBookingLifecycle(booking);
   const lifecycleKey = `myBookings.lifecycle.${lifecycle}`;
   const lifecycleLabel = t(lifecycleKey) !== lifecycleKey ? t(lifecycleKey) : lifecycle;
@@ -172,11 +198,11 @@ export function HostBookingDetailView({
                   <Button
                     variant="outline"
                     className="rounded-full gap-2"
-                    disabled
-                    title={t("bookings.comingSoon")}
+                    disabled={messaging}
+                    onClick={() => void handleMessageGuest()}
                   >
                     <MessageCircle className="h-4 w-4" />
-                    {t("hostBooking.messageGuest")}
+                    {messaging ? t("inbox.opening") : t("hostBooking.messageGuest")}
                   </Button>
                   {guestPhone && (
                     <Button asChild variant="outline" className="rounded-full gap-2">

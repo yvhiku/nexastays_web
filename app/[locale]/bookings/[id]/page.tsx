@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
@@ -32,6 +32,7 @@ import { getBookingReview } from "@/lib/stays-api";
 import type { StaysReviewDetail } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
+import { findConversationForBooking } from "@/lib/messaging/messages-api";
 import {
   ArrowLeft,
   Download,
@@ -73,6 +74,7 @@ function Section({
 
 function BookingDetailPageInner() {
   const params = useParams();
+  const router = useRouter();
   const { token } = useAuth();
   const { t, tf, localePath } = useLanguage();
   const { rates } = useStaysFees();
@@ -89,6 +91,7 @@ function BookingDetailPageInner() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [existingReview, setExistingReview] = useState<StaysReviewDetail | null>(null);
+  const [openingMessage, setOpeningMessage] = useState(false);
 
   const reloadBooking = () => {
     setLoading(true);
@@ -119,6 +122,25 @@ function BookingDetailPageInner() {
         .catch(() => setConsentAccepted(false));
     }
   }, [token, booking?.status, consentAccepted]);
+
+  const handleMessageHost = async () => {
+    if (!token || !booking) return;
+    setOpeningMessage(true);
+    try {
+      const conv = await findConversationForBooking(
+        booking.id,
+        booking.booking_reference,
+        token,
+      );
+      if (conv) {
+        router.push(localePath(`/inbox/${conv.id}`));
+      } else {
+        router.push(localePath("/inbox"));
+      }
+    } finally {
+      setOpeningMessage(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -540,6 +562,15 @@ function BookingDetailPageInner() {
 
             <Section title={t("bookings.support")} id="review">
               <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  disabled={openingMessage}
+                  onClick={() => void handleMessageHost()}
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden />
+                  {openingMessage ? t("inbox.opening") : t("inbox.messageHost")}
+                </Button>
                 <Button variant="outline" asChild className="gap-2">
                   <Link href={`/contact?booking=${booking.id}`}>
                     <MessageCircle className="h-4 w-4" aria-hidden />

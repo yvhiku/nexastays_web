@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { LanguagePill } from "@/components/mobile/LanguagePill";
 import { NotificationBell } from "@/components/mobile/NotificationBell";
+import { InboxBell } from "@/components/messaging/InboxBell";
 import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { getHostMe } from "@/lib/stays-api";
@@ -156,6 +157,7 @@ export const NavBar = () => {
           <div className="hidden xl:block">
             <LanguageSelector />
           </div>
+          <InboxBell />
           <NotificationBell />
           {isAuthenticated ? (
             <div className="relative" ref={menuRef}>
