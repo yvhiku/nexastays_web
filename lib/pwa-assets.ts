@@ -3,7 +3,10 @@
  * Bump PWA_ICON_VERSION together with ICON_VERSION in scripts/generate-pwa-icons.ts,
  * then run `npm run generate:pwa`.
  */
-export const PWA_ICON_VERSION = "v2";
+export const PWA_ICON_VERSION = "v3";
+
+/** Root favicon for browsers that request /favicon.ico */
+export const PWA_FAVICON_ICO = "/favicon.ico" as const;
 
 export const PWA_ICONS = {
   favicon16: `/icons/favicon-16.${PWA_ICON_VERSION}.png`,

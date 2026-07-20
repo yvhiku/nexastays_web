@@ -11,6 +11,7 @@ Installable Progressive Web App and mobile shell for [`nexastays_web`](../nexast
 | Sprint 1 nav + Save | Floating glass nav, Search FAB sheet, Saved rename, premium Save UX | **Done** |
 | Sprint 1 Product Guidance | Guest discovery engine (Welcome → Search → Save → Trips + Install queue) | **Done** |
 | PWA Branding | Real logo icons, versioned assets, splash, screenshots | **Done** |
+| Launch Polish | Transparent v3 favicons, seamless updates, skeletons, motion, feedback | **Done** |
 | Sprint 2 | Rich search sheet + **Saved Collections** + host guidance + interaction quality | Deferred |
 | 3 | Search redesign + install funnel analytics | Deferred (partially in Sprint 2) |
 | 4 | Explore map | Deferred |
@@ -43,7 +44,7 @@ public/images/nexastays.png   ← only hand-edited brand file
 npm run generate:pwa
         │
         ▼
-public/icons/*.v2.png + build.json
+public/icons/*.v3.png + public/favicon.ico + build.json
         │
         ▼
 lib/pwa-assets.ts  → layout / manifest / splash / install UI
@@ -51,6 +52,8 @@ lib/pwa-assets.ts  → layout / manifest / splash / install UI
 
 **Rules**
 
+- Browser favicons + `icon-192` / `icon-512`: **transparent logo mark** (black knocked out) — no black square in the tab.
+- Maskable only: black plate + `SAFE_PADDING = 0.18`.
 - Never edit files under `public/icons/` by hand — regenerate them.
 - Never let the generator write under `public/pwa/screenshots/` (hand-authored product captures).
 - Consumers must import paths from `lib/pwa-assets.ts` (no hardcoded `/icons/...` strings).
@@ -58,16 +61,30 @@ lib/pwa-assets.ts  → layout / manifest / splash / install UI
 **When the logo changes**
 
 1. Replace `public/images/nexastays.png`
-2. Bump `ICON_VERSION` in `scripts/generate-pwa-icons.ts` **and** `PWA_ICON_VERSION` in `lib/pwa-assets.ts` (e.g. `v2` → `v3`)
+2. Bump `ICON_VERSION` in `scripts/generate-pwa-icons.ts` **and** `PWA_ICON_VERSION` in `lib/pwa-assets.ts` (e.g. `v3` → `v4`)
 3. Run `npm run generate:pwa`
 4. Commit icons + code
-5. Users pick up new icons after SW update; Android home-screen icon may need uninstall/reinstall once
+5. Users: tap **Update Now** for in-app assets; fully close the PWA so Chrome can refresh the Home Screen icon (WebAPK) — uninstall not required when icon URLs change
 
-**QA matrix (install + icon crop)**
+**Updates (SW vs launcher icon)**
 
-- Chrome Android · Samsung Internet · Edge Android · Brave Android
-- iOS Safari
-- Chrome Desktop · Edge Desktop
+- **Update Now** → `SKIP_WAITING` → clear image caches → reload (app content + in-app icons).
+- **Home Screen icon** → Chrome WebAPK after the app is fully closed (manifest `icons` URL change required).
+
+**QA matrix**
+
+- Android: Chrome · Samsung Internet · Edge · Brave
+- iPhone: Safari
+- Desktop: Chrome · Edge · Safari · Firefox
+- Verify: install, update, offline, splash, favicons (transparent), bottom nav, search sheet, saved, trips, guidance, motion, skeletons, safe areas
+
+## Launch Polish (shipped)
+
+- Transparent v3 branding + `/favicon.ico`
+- Hardened Update Now (applying state, poll, fallback reload)
+- Listing / profile skeletons (no spinner-first on primary routes)
+- Motion tokens (`lib/motion.ts`) + press feedback on buttons / sheets
+- Overscroll + tap highlight polish; focus rings on buttons
 
 ## Sprint 1 — premium mobile nav + Save (shipped)
 

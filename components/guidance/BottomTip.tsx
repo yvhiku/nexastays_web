@@ -130,7 +130,7 @@ export function BottomTip({ variant, canNativeInstall = true, onPrimary, onNotNo
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
       >
         <div className="mb-8 h-1 w-8 rounded-full bg-nexa-line" />
-        <div className="mb-6 h-20 w-20 overflow-hidden rounded-2xl bg-black p-2 shadow-sm">
+        <div className="mb-6 h-20 w-20 overflow-hidden rounded-2xl bg-transparent p-1">
           <Image
             src={PWA_ICONS.icon192}
             alt=""

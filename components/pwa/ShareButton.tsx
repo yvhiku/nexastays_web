@@ -40,7 +40,7 @@ export function ShareButton({ title, text, url, className }: Props) {
       type="button"
       onClick={onShare}
       className={cn(
-        "inline-flex h-10 items-center gap-2 rounded-xl border border-nexa-line bg-white px-3 text-sm font-medium text-nexa-ink hover:border-nexa-primary/40",
+        "inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-nexa-line bg-white px-3 text-sm font-medium text-nexa-ink hover:border-nexa-primary/40 active:scale-95 transition-transform",
         className,
       )}
       aria-label={t("pwa.share")}

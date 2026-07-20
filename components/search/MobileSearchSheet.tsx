@@ -64,7 +64,8 @@ export function MobileSearchSheet() {
           "absolute inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto rounded-t-[28px]",
           "border border-white/40 bg-white/95 backdrop-blur-2xl shadow-nexa-lg",
           "pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 px-4",
-          "animate-in slide-in-from-bottom duration-200",
+          "animate-in slide-in-from-bottom duration-[220ms]",
+          "motion-reduce:animate-none",
         )}
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-nexa-line" />
@@ -73,7 +74,7 @@ export function MobileSearchSheet() {
           <button
             type="button"
             onClick={closeSearch}
-            className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-nexa-bg-2"
+            className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full hover:bg-nexa-bg-2 active:scale-95"
             aria-label={t("common.close")}
           >
             <X className="h-5 w-5 text-nexa-ink-3" />

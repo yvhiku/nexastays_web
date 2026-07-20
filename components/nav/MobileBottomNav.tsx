@@ -234,6 +234,7 @@ export function MobileBottomNav() {
             "rounded-full text-white shadow-[0_8px_24px_rgba(232,80,122,0.45)]",
             "bg-gradient-to-br from-[#FF5A7D] to-[#FF7D9D]",
             "transition-transform duration-200 active:scale-110",
+            "motion-reduce:animate-none motion-reduce:scale-100",
             fabGlow && "scale-110 ring-4 ring-[#E8507A]/50 animate-pulse",
           )}
         >

@@ -41,6 +41,14 @@ function main() {
     }
   }
 
+  const favIco = path.join(ROOT, "public", "favicon.ico");
+  if (!fs.existsSync(favIco)) {
+    console.error("✗ missing public/favicon.ico");
+    failed = true;
+  } else {
+    console.log("✓ favicon.ico");
+  }
+
   const buildPath = path.join(ICONS, "build.json");
   if (fs.existsSync(buildPath)) {
     try {

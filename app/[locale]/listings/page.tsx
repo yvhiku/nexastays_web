@@ -17,7 +17,7 @@ import {
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { ListingCard } from "@/components/listing/ListingCard";
-import { ListingGridSkeleton } from "@/components/ui/skeleton";
+import { ListingCardSkeleton, ListingGridSkeleton } from "@/components/ui/skeleton";
 import {
   DEFAULT_SEARCH_BAR_VALUE,
   SearchBar,
@@ -766,13 +766,15 @@ export default function ListingsPage() {
                   </div>
                   <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
                   {isLoadingMore && (
-                    <p className="mb-4 text-center text-sm text-nexa-ink-4 inline-flex w-full items-center justify-center gap-2">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
-                        aria-hidden
-                      />
-                      {t("common.loading")}
-                    </p>
+                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+                      <ListingCardSkeleton />
+                      <div className="hidden sm:block">
+                        <ListingCardSkeleton />
+                      </div>
+                      <div className="hidden lg:block">
+                        <ListingCardSkeleton />
+                      </div>
+                    </div>
                   )}
                   {hasMore && (
                     <div className="mb-9 flex justify-center">

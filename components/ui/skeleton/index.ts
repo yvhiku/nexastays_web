@@ -7,6 +7,8 @@ export { SkeletonCard } from "./SkeletonCard";
 export { SkeletonSection } from "./SkeletonSection";
 export { ListingCardSkeleton } from "./ListingCardSkeleton";
 export { ListingGridSkeleton } from "./ListingGridSkeleton";
+export { ListingDetailSkeleton } from "./ListingDetailSkeleton";
+export { ProfileSkeleton } from "./ProfileSkeleton";
 export { NavbarSkeleton } from "./NavbarSkeleton";
 export { SearchBarSkeleton } from "./SearchBarSkeleton";
 export { LocaleRouteSkeleton } from "./LocaleRouteSkeleton";

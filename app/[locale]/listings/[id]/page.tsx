@@ -52,6 +52,7 @@ import { trackEvent } from "@/lib/analytics";
 import { recordRecentlyViewed } from "@/lib/recently-viewed";
 import { recordListingViewForInstall } from "@/lib/pwa-engagement";
 import { ShareButton } from "@/components/pwa/ShareButton";
+import { ListingDetailSkeleton } from "@/components/ui/skeleton";
 import {
   amenityLabel,
   normalizeAmenities,
@@ -342,8 +343,8 @@ export default function ListingDetailPage() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nexa-primary" />
+        <main className="min-h-screen pt-[72px]">
+          <ListingDetailSkeleton />
         </main>
       </>
     );

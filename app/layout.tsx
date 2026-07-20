@@ -4,7 +4,7 @@ import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { getPublicSiteUrl } from "@/lib/env";
-import { PWA_ICONS } from "@/lib/pwa-assets";
+import { PWA_FAVICON_ICO, PWA_ICONS } from "@/lib/pwa-assets";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 
 const siteUrl = getPublicSiteUrl();
@@ -52,6 +52,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: PWA_FAVICON_ICO, sizes: "any" },
       { url: PWA_ICONS.favicon16, sizes: "16x16", type: "image/png" },
       { url: PWA_ICONS.favicon32, sizes: "32x32", type: "image/png" },
       { url: PWA_ICONS.favicon48, sizes: "48x48", type: "image/png" },
@@ -101,6 +102,9 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        <link rel="preload" href={PWA_ICONS.icon192} as="image" type="image/png" />
+      </head>
       <body suppressHydrationWarning>
         <a
           href="#main-content"

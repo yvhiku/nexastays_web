@@ -30,6 +30,13 @@
   html {
     scroll-behavior: smooth;
     max-width: 100%;
+    overscroll-behavior-y: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   body {
@@ -38,6 +45,8 @@
     line-height: 1.6;
     overflow-x: hidden;
     max-width: 100%;
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #main-content {
