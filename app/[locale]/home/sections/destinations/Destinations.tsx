@@ -43,11 +43,11 @@ export const DestinationsSection = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
               className={`rounded-[22px] overflow-hidden relative cursor-pointer hover:scale-[1.02] transition-transform ${
-                dest.span === 2 ? "sm:row-span-2 min-h-[440px]" : ""
+                dest.span === 2 ? "sm:row-span-2 sm:min-h-[440px]" : ""
               }`}
             >
               <Link href={localePath(`/listings?city=${encodeURIComponent(dest.city)}`)}>
-                <div className="relative h-[220px] sm:h-full min-h-[220px]">
+                <div className="relative h-[220px] min-h-[220px] sm:h-full">
                   <Image
                     src={dest.img}
                     alt={t(dest.titleKey)}
