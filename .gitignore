@@ -44,3 +44,7 @@ public/fallback-*.js
 # OS
 .DS_Store
 Thumbs.db
+
+# Source popup art (served from public/guidance)
+images/assets/popups/
+

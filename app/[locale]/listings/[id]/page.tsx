@@ -309,6 +309,7 @@ export default function ListingDetailPage() {
         currency: b.currency,
       });
       void import("@/lib/pwa-engagement").then((m) => m.markPwaBookingCompleted());
+      window.dispatchEvent(new Event("nexa-guidance-booking-success"));
       setShowVerificationStep(false);
       router.push(localePath(`/bookings/${b.id}`));
     } catch (err) {

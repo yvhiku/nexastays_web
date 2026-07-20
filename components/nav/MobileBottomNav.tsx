@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -32,6 +32,7 @@ export function MobileBottomNav() {
   const { t, localePath, isRtl } = useLanguage();
   const { isAuthenticated } = useAuth();
   const { openSearch } = useMobileSearch();
+  const [fabGlow, setFabGlow] = useState(false);
 
   const isHostArea =
     pathname.includes("/host/dashboard") || pathname.includes("/host/listings");
@@ -39,6 +40,18 @@ export function MobileBottomNav() {
   useEffect(() => {
     trackPwaPageView(pathname);
   }, [pathname]);
+
+  useEffect(() => {
+    const sync = () =>
+      setFabGlow(document.documentElement.dataset.guidanceFabGlow === "1");
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-guidance-fab-glow"],
+    });
+    return () => obs.disconnect();
+  }, []);
 
   const guestSideTabs: Tab[] = useMemo(
     () => [
@@ -172,6 +185,7 @@ export function MobileBottomNav() {
               <Link
                 key={tab.id}
                 href={tab.href}
+                data-guidance-target={tab.id === "saved" ? "nav-saved" : undefined}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-12 min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.7rem] font-medium transition-all duration-200 active:scale-95",
@@ -190,10 +204,13 @@ export function MobileBottomNav() {
           {right.map((tab) => {
             const Icon = tab.icon;
             const active = tab.match(pathname);
+            const guidanceTarget =
+              tab.id === "trips" ? "nav-trips" : tab.id === "saved" ? "nav-saved" : undefined;
             return (
               <Link
                 key={tab.id}
                 href={tab.href}
+                data-guidance-target={guidanceTarget}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-12 min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.7rem] font-medium transition-all duration-200 active:scale-95",
@@ -210,12 +227,14 @@ export function MobileBottomNav() {
         <button
           type="button"
           onClick={openSearch}
+          data-guidance-target="search-fab"
           aria-label={t("pwa.navSearch")}
           className={cn(
             "absolute left-1/2 top-0 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-[18px] items-center justify-center",
             "rounded-full text-white shadow-[0_8px_24px_rgba(232,80,122,0.45)]",
             "bg-gradient-to-br from-[#FF5A7D] to-[#FF7D9D]",
             "transition-transform duration-200 active:scale-110",
+            fabGlow && "scale-110 ring-4 ring-[#E8507A]/50 animate-pulse",
           )}
         >
           <Search className="h-6 w-6" strokeWidth={2.25} />

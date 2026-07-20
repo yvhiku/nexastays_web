@@ -2,14 +2,10 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  dismissInstallPrompt,
-  getInstallPromptContext,
   isIosSafari,
   isPwaMarkedInstalled,
   isStandaloneDisplay,
-  markPwaInstalled,
   shouldShowInstallPrompt,
-  type InstallPromptContext,
 } from "@/lib/pwa-engagement";
 import {
   bindBeforeInstallPromptCapture,
@@ -17,71 +13,51 @@ import {
   getDeferredInstallPrompt,
   subscribeDeferredInstallPrompt,
 } from "@/lib/pwa-install-prompt";
-import { cn } from "@/lib/utils";
-import { InstallAppSheet, InstallSuccessToast } from "@/components/pwa/InstallAppSheet";
+import { useProductGuidanceOptional } from "@/components/guidance/ProductGuidanceProvider";
+import { isGuideFinished } from "@/lib/guidance-storage";
 
+/**
+ * Eligibility watcher — displays via ProductGuidanceProvider queue (install_app).
+ */
 export function InstallAppPrompt() {
-  const [, setDeferredTick] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const [variant, setVariant] = useState<"ios" | "android" | null>(null);
-  const [context, setContext] = useState<InstallPromptContext>("default");
-  const [success, setSuccess] = useState(false);
+  const guidance = useProductGuidanceOptional();
+  const [, setTick] = useState(0);
 
   const evaluate = useCallback(() => {
-    if (isStandaloneDisplay() || isPwaMarkedInstalled()) {
-      setVisible(false);
-      setVariant(null);
-      return;
-    }
-    if (!shouldShowInstallPrompt()) {
-      setVisible(false);
-      setVariant(null);
-      return;
-    }
-    setContext(getInstallPromptContext());
+    if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;
+    if (isGuideFinished("install_app") || isGuideFinished("install_success")) return;
+    if (!shouldShowInstallPrompt()) return;
     if (isIosSafari()) {
-      setVariant("ios");
-      setVisible(true);
+      window.dispatchEvent(new Event("nexa-guidance-install-eligible"));
       return;
     }
     if (getDeferredInstallPrompt()) {
-      setVariant("android");
-      setVisible(true);
-      return;
+      window.dispatchEvent(new Event("nexa-guidance-install-eligible"));
     }
-    setVisible(false);
-    setVariant(null);
   }, []);
 
   useEffect(() => {
     const unbind = bindBeforeInstallPromptCapture();
     const unsub = subscribeDeferredInstallPrompt(() => {
-      setDeferredTick((n) => n + 1);
+      setTick((n) => n + 1);
       evaluate();
     });
     const onEngagement = () => evaluate();
     const onInstalled = () => {
-      markPwaInstalled();
       clearDeferredInstallPrompt();
-      setVisible(false);
-      setVariant(null);
-      setSuccess(true);
+      window.dispatchEvent(new Event("nexa-guidance-install-success"));
     };
     window.addEventListener("appinstalled", onInstalled);
     window.addEventListener("nexa-pwa-engagement-changed", onEngagement);
+    window.addEventListener("nexa-pwa-force-install-prompt", evaluate);
     return () => {
       unbind();
       unsub();
       window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener("nexa-pwa-engagement-changed", onEngagement);
+      window.removeEventListener("nexa-pwa-force-install-prompt", evaluate);
     };
   }, [evaluate]);
-
-  useEffect(() => {
-    if (!success) return;
-    const id = window.setTimeout(() => setSuccess(false), 3500);
-    return () => window.clearTimeout(id);
-  }, [success]);
 
   useEffect(() => {
     evaluate();
@@ -89,69 +65,15 @@ export function InstallAppPrompt() {
     return () => window.clearInterval(id);
   }, [evaluate]);
 
+  // Prefer direct enqueue when provider is available
   useEffect(() => {
-    const onForce = () => {
-      if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;
-      setContext(getInstallPromptContext());
-      if (isIosSafari()) {
-        setVariant("ios");
-        setVisible(true);
-        return;
-      }
-      if (getDeferredInstallPrompt()) {
-        setVariant("android");
-        setVisible(true);
-      }
-    };
-    window.addEventListener("nexa-pwa-force-install-prompt", onForce);
-    return () => window.removeEventListener("nexa-pwa-force-install-prompt", onForce);
-  }, []);
-
-  const onInstall = async () => {
-    const promptEvent = getDeferredInstallPrompt();
-    if (!promptEvent) return;
-    await promptEvent.prompt();
-    const choice = await promptEvent.userChoice;
-    clearDeferredInstallPrompt();
-    setVisible(false);
-    if (choice.outcome === "accepted") {
-      markPwaInstalled();
-      setSuccess(true);
+    if (!guidance) return;
+    if (isStandaloneDisplay() || isPwaMarkedInstalled()) return;
+    if (!shouldShowInstallPrompt()) return;
+    if (isIosSafari() || getDeferredInstallPrompt()) {
+      guidance.enqueueGuide("install_app");
     }
-  };
+  }, [guidance, evaluate]);
 
-  const onDismiss = () => {
-    dismissInstallPrompt();
-    setVisible(false);
-  };
-
-  const shellClass = cn(
-    "fixed inset-x-0 z-[60] px-3 md:px-6",
-    "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6",
-  );
-
-  if (success) {
-    return (
-      <div className={shellClass}>
-        <div className="mx-auto max-w-md">
-          <InstallSuccessToast />
-        </div>
-      </div>
-    );
-  }
-
-  if (!visible || !variant) return null;
-
-  return (
-    <div className={shellClass}>
-      <div className="mx-auto max-w-md">
-        <InstallAppSheet
-          variant={variant}
-          context={context}
-          onInstall={variant === "android" ? onInstall : undefined}
-          onDismiss={onDismiss}
-        />
-      </div>
-    </div>
-  );
+  return null;
 }

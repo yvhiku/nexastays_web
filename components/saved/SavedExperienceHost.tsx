@@ -8,14 +8,12 @@ import {
   markCollectionMilestoneSeen,
   saveListingId,
   type SavedListingEventDetail,
-  type SavedListingSnapshot,
 } from "@/lib/saved-listings";
-import { SavedOnboardingSheet } from "@/components/saved/SavedOnboardingSheet";
 import { SavedToast, type SavedToastState } from "@/components/saved/SavedToast";
 
+/** Toasts only — first-save celebration is owned by ProductGuidanceProvider. */
 export function SavedExperienceHost() {
   const { userId } = useAuth();
-  const [onboarding, setOnboarding] = useState<SavedListingSnapshot | null>(null);
   const [toast, setToast] = useState<SavedToastState | null>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -50,11 +48,8 @@ export function SavedExperienceHost() {
         return;
       }
 
-      // saved
-      if (detail.isFirstSaveEver || (!isSavedOnboardingSeen() && detail.snapshot)) {
-        setOnboarding(detail.snapshot ?? { id: detail.listingId, title: "Stay" });
-        return;
-      }
+      // First save: guidance celebration handles UX
+      if (detail.isFirstSaveEver || !isSavedOnboardingSeen()) return;
 
       if (detail.count >= 3 && !isCollectionMilestoneSeen()) {
         markCollectionMilestoneSeen();
@@ -72,12 +67,5 @@ export function SavedExperienceHost() {
     };
   }, [userId]);
 
-  return (
-    <>
-      {onboarding ? (
-        <SavedOnboardingSheet snapshot={onboarding} onClose={() => setOnboarding(null)} />
-      ) : null}
-      <SavedToast toast={toast} onDismiss={() => setToast(null)} />
-    </>
-  );
+  return <SavedToast toast={toast} onDismiss={() => setToast(null)} />;
 }

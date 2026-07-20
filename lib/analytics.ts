@@ -6,7 +6,20 @@ type AnalyticsEventName =
   | "payment_intent_started"
   | "host_dashboard_viewed"
   | "host_calendar_updated"
-  | "host_bookings_csv_exported";
+  | "host_bookings_csv_exported"
+  | "guide_viewed"
+  | "guide_completed"
+  | "guide_dismissed"
+  | "guide_skipped"
+  | "welcome_shown"
+  | "welcome_completed"
+  | "search_spotlight_seen"
+  | "search_spotlight_clicked"
+  | "saved_popup_seen"
+  | "saved_popup_cta"
+  | "booking_success_seen"
+  | "trip_spotlight_seen"
+  | "install_guide_shown";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 
