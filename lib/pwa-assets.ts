@@ -1,13 +1,15 @@
 /**
  * Versioned PWA icon paths — single source for layout, manifest, splash, install UI.
+ * Icons are always derived from the Nexa star logo (`public/images/nexastays.png`).
+ * Do not swap these for a letter monogram / pink "N" tile.
  * Bump PWA_ICON_VERSION together with ICON_VERSION in scripts/generate-pwa-icons.ts,
  * then run `npm run generate:pwa`.
  */
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 
-export const PWA_ICON_VERSION = "v3";
+export const PWA_ICON_VERSION = "v4";
 
-/** Root favicon for browsers that request /favicon.ico */
+/** Root favicon for browsers that request /favicon.ico (Nexa star mark) */
 export const PWA_FAVICON_ICO = "/favicon.ico" as const;
 
 /** Real logo for splash / in-app UI (may differ from square launcher icons). */

@@ -1,8 +1,9 @@
 /**
- * Generates versioned PWA icons from public/images/nexastays.png
+ * Generates versioned PWA icons from public/images/nexastays.png (the Nexa star mark).
  * and normalizes install screenshots to 412×913.
  * Run: npm run generate:pwa-icons
  *
+ * ALWAYS use the Nexa star logo from nexastays.png — never a letter monogram / "N" tile.
  * Browser favicons + any icons: transparent logo mark (black knocked out).
  * Maskable only: black plate + SAFE_PADDING.
  * Bump ICON_VERSION in sync with lib/pwa-assets.ts PWA_ICON_VERSION.
@@ -19,7 +20,7 @@ const PUBLIC = path.join(ROOT, "public");
 const SCREENSHOTS = path.join(ROOT, "public", "pwa", "screenshots");
 
 /** Keep in sync with lib/pwa-assets.ts → PWA_ICON_VERSION */
-const ICON_VERSION = "v3";
+const ICON_VERSION = "v4";
 const SAFE_PADDING = 0.18;
 const FAVICON_PADDING = 0.08;
 const BLACK_LUMA_THRESHOLD = 28;
@@ -188,7 +189,9 @@ async function renderMonochrome(markBuf: Buffer, size: number): Promise<Buffer> 
     .toBuffer();
 }
 
-function buildIco(pngBuffers: Buffer[]): Buffer {
+function buildIco(
+  pngBuffers: { buf: Buffer; width: number; height: number }[],
+): Buffer {
   const count = pngBuffers.length;
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0);
@@ -199,10 +202,11 @@ function buildIco(pngBuffers: Buffer[]): Buffer {
   let offset = 6 + count * 16;
   const bodies: Buffer[] = [];
 
-  for (const png of pngBuffers) {
+  for (const { buf: png, width, height } of pngBuffers) {
     const meta = Buffer.alloc(16);
-    meta.writeUInt8(0, 0);
-    meta.writeUInt8(0, 1);
+    // ICO uses 0 to mean 256; never write 0 for 16/32/48 or Chrome falls back to a letter monogram
+    meta.writeUInt8(width >= 256 ? 0 : width, 0);
+    meta.writeUInt8(height >= 256 ? 0 : height, 1);
     meta.writeUInt8(0, 2);
     meta.writeUInt8(0, 3);
     meta.writeUInt16LE(1, 4);
@@ -304,7 +308,11 @@ async function main() {
     );
   }
 
-  const ico = buildIco([fav16, fav32, fav48]);
+  const ico = buildIco([
+    { buf: fav16, width: 16, height: 16 },
+    { buf: fav32, width: 32, height: 32 },
+    { buf: fav48, width: 48, height: 48 },
+  ]);
   await writeSafe(path.join(PUBLIC, "favicon.ico"), ico);
 
   const files = REQUIRED_FILES.filter((f) => f !== "build.json");
