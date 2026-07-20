@@ -74,8 +74,8 @@ export default function manifest(): MetadataRoute.Manifest {
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
       },
       {
-        name: "Wishlist",
-        short_name: "Wishlist",
+        name: "Saved",
+        short_name: "Saved",
         url: "/en/saved-listings",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
       },

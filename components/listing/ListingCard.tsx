@@ -4,15 +4,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Heart, Lock, Star, Zap } from "lucide-react";
+import { BadgeCheck, Lock, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LISTING_TYPES } from "@/lib/host-listing-constants";
 import { getShortLocationLabel } from "@/lib/listing-location";
 import { getListingMediaUrl } from "@/lib/stays-api";
 import type { StaysListing } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
+import { SaveButton } from "@/components/saved/SaveButton";
 import {
   LISTING_CARD_IMAGE_RATIO,
   LISTING_CARD_RADIUS,
@@ -66,7 +65,6 @@ export function ListingCard({
   localePath,
 }: ListingCardProps) {
   const router = useRouter();
-  const { userId, isAuthenticated } = useAuth();
   const price = listing.rate_plan?.base_price ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const cover = listing.media?.find((m) => m.kind === "PHOTO");
@@ -74,16 +72,8 @@ export function ListingCard({
   const coverSrc = cover
     ? getListingMediaUrl(listing.id, cover.asset_id)
     : placeholderImg;
-  const [saved, setSaved] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-
-  useEffect(() => {
-    setSaved(isListingSaved(listing.id, userId));
-    const onChange = () => setSaved(isListingSaved(listing.id, userId));
-    window.addEventListener("nexa-saved-listings-changed", onChange);
-    return () => window.removeEventListener("nexa-saved-listings-changed", onChange);
-  }, [listing.id, userId]);
 
   useEffect(() => {
     setImgLoaded(false);
@@ -152,32 +142,16 @@ export function ListingCard({
           <span className="inline-flex px-2.5 py-1 rounded-full text-[0.65rem] font-semibold uppercase tracking-wide bg-white/95 text-nexa-ink shadow-sm font-sans">
             {listingTypeLabel(listing.listing_type)}
           </span>
-          <button
-            type="button"
-            className={cn(
-              "w-8 h-8 rounded-full bg-white/95 flex items-center justify-center hover:bg-white shadow-sm transition-colors relative z-20",
-              saved ? "text-nexa-primary" : "text-nexa-ink-4 hover:text-nexa-primary",
-            )}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!isAuthenticated || !userId) {
-                const returnTo =
-                  typeof window !== "undefined"
-                    ? `${window.location.pathname}${window.location.search}`
-                    : linkHref;
-                router.push(
-                  `${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`,
-                );
-                return;
-              }
-              setSaved(toggleSavedListing(listing.id, userId));
+          <SaveButton
+            listingId={listing.id}
+            snapshot={{
+              id: listing.id,
+              title: listing.title,
+              city: listing.city,
+              imageUrl: cover ? coverSrc : undefined,
             }}
-            aria-label={t("common.save")}
-            aria-pressed={saved}
-          >
-            <Heart className={cn("w-4 h-4", saved && "fill-nexa-primary")} />
-          </button>
+            className="relative z-20"
+          />
         </div>
 
         <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 z-10 pointer-events-none">

@@ -22,7 +22,7 @@ export default function LocaleLayout({
     <LanguageProvider initialLocale={locale}>
       <StaysFeeProvider>
         <AuthProvider>
-          <div className="pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-0">
             {children}
           </div>
           <PwaAppShell />

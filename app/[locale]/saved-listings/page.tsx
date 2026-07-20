@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ function SavedListingsContent() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14">
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-nexa-ink flex items-center gap-2">
-              <Heart className="h-7 w-7 text-nexa-primary" />
+              <Bookmark className="h-7 w-7 text-nexa-primary" />
               {t("savedListings.title")}
             </h1>
             <p className="text-nexa-ink-3 mt-2">{t("savedListings.subtitle")}</p>
@@ -80,12 +80,18 @@ function SavedListingsContent() {
           {loading ? (
             <ListingGridSkeleton variant="saved" />
           ) : listings.length === 0 ? (
-            <div className="text-center py-16 text-nexa-ink-4">
-              <Heart className="h-12 w-12 mx-auto mb-4 text-nexa-primary/40" />
-              <p className="text-lg font-medium text-nexa-ink mb-2">{t("savedListings.emptyTitle")}</p>
-              <p className="text-sm mb-6">{t("savedListings.emptySubtitle")}</p>
+            <div className="mx-auto max-w-md text-center py-16">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-nexa-primary-soft">
+                <Bookmark className="h-8 w-8 text-nexa-primary" />
+              </div>
+              <p className="text-xl font-semibold text-nexa-ink mb-2">
+                {t("savedListings.emptyTitle")}
+              </p>
+              <p className="text-sm text-nexa-ink-3 mb-8">
+                {t("savedListings.emptySubtitle")}
+              </p>
               <Button asChild>
-                <Link href={localePath("/listings")}>{t("savedListings.browseStays")}</Link>
+                <Link href={localePath("/")}>{t("savedListings.browseStays")}</Link>
               </Button>
             </div>
           ) : (

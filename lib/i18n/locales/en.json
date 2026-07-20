@@ -241,7 +241,7 @@
     "contact": "Contact",
     "hostDashboard": "Host dashboard",
     "myBookings": "My Bookings",
-    "savedListings": "Saved listings"
+    "savedListings": "Saved"
   },
   "home": {
     "hero": {
@@ -1051,13 +1051,27 @@
     "ownListingDesc": "Hosts cannot review listings they own. Book a stay as a guest with a different account to leave a review."
   },
   "savedListings": {
-    "title": "Saved listings",
-    "subtitle": "Stays you've saved for later",
+    "title": "Your saved stays",
+    "subtitle": "Come back anytime you're ready to book",
     "deviceOnly": "Saved on this device. Cross-device sync is coming later.",
-    "emptyTitle": "No saved listings yet",
-    "emptySubtitle": "Tap the heart on any stay to save it here.",
-    "browseStays": "Browse Stays",
-    "failedLoad": "Failed to load saved listings"
+    "emptyTitle": "Your saved stays",
+    "emptySubtitle": "Save homes you love and find them instantly later.",
+    "browseStays": "Explore stays",
+    "failedLoad": "Failed to load saved stays"
+  },
+  "saved": {
+    "save": "Save stay",
+    "unsave": "Remove from saved",
+    "onboardingTitle": "Save stays you'll love",
+    "onboardingBody": "Bookmark homes, riads and apartments to quickly find them whenever you're ready to book.",
+    "browseSaved": "Browse Saved Stays",
+    "continueExploring": "Continue exploring",
+    "savedToast": "Saved",
+    "viewSaved": "View Saved →",
+    "collectionToast": "You're building your collection.",
+    "seeSaved": "See Saved →",
+    "removed": "Removed",
+    "undo": "Undo"
   },
   "registration": {
     "personalInfo": "Personal Info",
@@ -1399,7 +1413,7 @@
     "welcomeTitle": "Welcome to Nexa Stays",
     "welcomeBenefitFast": "Faster browsing",
     "welcomeBenefitOffline": "Works offline",
-    "welcomeBenefitWishlist": "Add stays to your wishlist",
+    "welcomeBenefitWishlist": "Add stays to your Saved list",
     "welcomeContinue": "Continue",
     "appSection": "App",
     "appInstalled": "Installed",
@@ -1412,7 +1426,9 @@
     "updateLater": "Dismiss",
     "navAria": "Mobile navigation",
     "navExplore": "Explore",
-    "navWishlist": "Wishlist",
+    "navWishlist": "Saved",
+    "navSaved": "Saved",
+    "navSearch": "Search",
     "navTrips": "Trips",
     "navProfile": "Profile",
     "navDashboard": "Dashboard",

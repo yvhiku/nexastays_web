@@ -1,5 +1,32 @@
 "use client";
 
+import { matchCuratedNeighborhood } from "@/lib/explore-city-context";
+import { getListingMediaUrl } from "@/lib/stays-api";
+import { cn } from "@/lib/utils";
+import type { MapBounds, StaysListing } from "@/lib/stays-types";
+import { SaveButton } from "@/components/saved/SaveButton";
+import {
+  createPriceBubbleIcon,
+  formatListingPriceLabel,
+} from "@/lib/map-pin";
+import {
+  NEXA_EXPLORE_TILE_OPTIONS,
+  NEXA_EXPLORE_TILE_URL,
+} from "@/lib/explore-map-tiles";
+import {
+  hasMapCoordinates,
+  parseNeighborhood,
+} from "@/lib/listing-location";
+import {
+  BadgeCheck,
+  Home,
+  LocateFixed,
+  Minus,
+  Plus,
+  Star,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import React, {
   useCallback,
   useEffect,
@@ -9,36 +36,6 @@ import React, {
   useState,
   forwardRef,
 } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  BadgeCheck,
-  Heart,
-  Home,
-  LocateFixed,
-  Minus,
-  Plus,
-  Star,
-} from "lucide-react";
-import {
-  hasMapCoordinates,
-  parseNeighborhood,
-} from "@/lib/listing-location";
-import {
-  createPriceBubbleIcon,
-  formatListingPriceLabel,
-} from "@/lib/map-pin";
-import {
-  NEXA_EXPLORE_TILE_OPTIONS,
-  NEXA_EXPLORE_TILE_URL,
-} from "@/lib/explore-map-tiles";
-import { matchCuratedNeighborhood } from "@/lib/explore-city-context";
-import { getListingMediaUrl } from "@/lib/stays-api";
-import { isListingSaved, toggleSavedListing } from "@/lib/saved-listings";
-import { useAuth } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
-import type { MapBounds, StaysListing } from "@/lib/stays-types";
 
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
 const BOUNDS_DEBOUNCE_MS = 350;
@@ -153,8 +150,6 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     },
     ref,
   ) {
-    const router = useRouter();
-    const { userId, isAuthenticated } = useAuth();
     const mapEl = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<import("leaflet").Map | null>(null);
     const clusterRef = useRef<MarkerClusterGroup | null>(null);
@@ -175,7 +170,6 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       lng: number;
     } | null>(null);
     const [locating, setLocating] = useState(true);
-    const [saved, setSaved] = useState(false);
     const [coverError, setCoverError] = useState(false);
     const [exploringName, setExploringName] = useState<string | null>(null);
     const [exploringKey, setExploringKey] = useState(0);
@@ -273,20 +267,15 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     useEffect(() => {
       setCoverError(false);
       if (!selected) {
-        setSaved(false);
         setPreviewEnter(false);
         return;
       }
       setPreviewEnter(false);
       const id = requestAnimationFrame(() => setPreviewEnter(true));
-      setSaved(isListingSaved(selected.id, userId));
-      const onChange = () => setSaved(isListingSaved(selected.id, userId));
-      window.addEventListener("nexa-saved-listings-changed", onChange);
       return () => {
         cancelAnimationFrame(id);
-        window.removeEventListener("nexa-saved-listings-changed", onChange);
       };
-    }, [selected?.id, userId]);
+    }, [selected?.id]);
 
     useEffect(() => {
       let cancelled = false;
@@ -725,36 +714,16 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className={cn(
-                    "shrink-0 rounded-full p-2 transition-colors",
-                    saved
-                      ? "text-nexa-primary"
-                      : "text-nexa-ink-4 hover:text-nexa-primary",
-                  )}
-                  aria-label="Save stay"
-                  aria-pressed={saved}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!isAuthenticated || !userId) {
-                      const returnTo =
-                        typeof window !== "undefined"
-                          ? `${window.location.pathname}${window.location.search}`
-                          : detailHref;
-                      router.push(
-                        `${localePath("/login")}?redirect=${encodeURIComponent(returnTo)}`,
-                      );
-                      return;
-                    }
-                    setSaved(toggleSavedListing(selected.id, userId));
+                <SaveButton
+                  listingId={selected.id}
+                  snapshot={{
+                    id: selected.id,
+                    title: selected.title,
+                    city: selected.city,
+                    imageUrl: coverPhoto ? coverSrc : undefined,
                   }}
-                >
-                  <Heart
-                    className={cn("h-4 w-4", saved && "fill-nexa-primary")}
-                  />
-                </button>
+                  className="shrink-0"
+                />
               </div>
 
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-nexa-ink-3">

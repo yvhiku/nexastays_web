@@ -10,7 +10,7 @@ import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
-import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Heart, Bell } from "lucide-react";
+import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark, Bell } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { getHostMe } from "@/lib/stays-api";
 
@@ -199,7 +199,7 @@ export const NavBar = () => {
                     className="flex items-center gap-2 px-4 py-2 text-sm text-nexa-ink hover:bg-nexa-bg-2"
                     onClick={() => setProfileOpen(false)}
                   >
-                    <Heart className="h-4 w-4 shrink-0" />
+                    <Bookmark className="h-4 w-4 shrink-0" />
                     {t("nav.savedListings")}
                   </Link>
                   <Link
@@ -317,7 +317,7 @@ export const NavBar = () => {
                   className="flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl text-nexa-ink hover:bg-nexa-bg-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Heart className="h-4 w-4 shrink-0" />
+                  <Bookmark className="h-4 w-4 shrink-0" />
                   {t("nav.savedListings")}
                 </Link>
                 <Link
