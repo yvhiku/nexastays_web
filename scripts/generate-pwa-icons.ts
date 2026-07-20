@@ -1,162 +1,212 @@
 /**
- * Generates PWA icons (any, maskable, monochrome, favicons, apple) and 3 install screenshots.
+ * Generates versioned PWA icons from public/images/nexastays.png.
  * Run: npm run generate:pwa-icons
+ *
+ * Never writes under public/pwa/screenshots.
+ * Bump ICON_VERSION in sync with lib/pwa-assets.ts PWA_ICON_VERSION.
  */
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 
 const ROOT = path.join(__dirname, "..");
+const SOURCE = path.join(ROOT, "public", "images", "nexastays.png");
 const ICONS = path.join(ROOT, "public", "icons");
-const SHOTS = path.join(ROOT, "public", "pwa", "screenshots");
+const SCREENSHOTS = path.join(ROOT, "public", "pwa", "screenshots");
 
-const PRIMARY = "#E8507A";
-const PRIMARY_DARK = "#C93A62";
-const SURFACE = "#FDFBFC";
-const INK = "#1A1118";
-const MUTED = "#6B5460";
-const LINE = "#EDE0E5";
+/** Keep in sync with lib/pwa-assets.ts → PWA_ICON_VERSION */
+const ICON_VERSION = "v2";
+const SAFE_PADDING = 0.18;
 
-function iconSvg(size: number, maskable = false): string {
-  const r = maskable ? size * 0.22 : size * 0.18;
-  const fontSize = size * 0.42;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${PRIMARY}"/>
-      <stop offset="100%" stop-color="${PRIMARY_DARK}"/>
-    </linearGradient>
-  </defs>
-  <rect width="${size}" height="${size}" rx="${r}" fill="url(#g)"/>
-  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
-    font-family="Georgia, 'Playfair Display', serif" font-weight="700"
-    font-size="${fontSize}" fill="#FFFFFF">N</text>
-</svg>`;
+const SHORTCUT_BG: Record<string, string> = {
+  explore: "#000000",
+  saved: "#1A1A1A",
+  trips: "#12161C",
+  host: "#0A0610",
+};
+
+const REQUIRED_FILES = [
+  `favicon-16.${ICON_VERSION}.png`,
+  `favicon-32.${ICON_VERSION}.png`,
+  `favicon-48.${ICON_VERSION}.png`,
+  `apple-touch-180.${ICON_VERSION}.png`,
+  `icon-192.${ICON_VERSION}.png`,
+  `icon-512.${ICON_VERSION}.png`,
+  `maskable-512.${ICON_VERSION}.png`,
+  `monochrome-512.${ICON_VERSION}.png`,
+  `shortcut-explore.${ICON_VERSION}.png`,
+  `shortcut-saved.${ICON_VERSION}.png`,
+  `shortcut-trips.${ICON_VERSION}.png`,
+  `shortcut-host.${ICON_VERSION}.png`,
+  "build.json",
+] as const;
+
+function assertNotScreenshotPath(out: string) {
+  const resolved = path.resolve(out);
+  const shotRoot = path.resolve(SCREENSHOTS);
+  if (resolved === shotRoot || resolved.startsWith(shotRoot + path.sep)) {
+    throw new Error(`Refusing to write under screenshots: ${out}`);
+  }
 }
 
-/** White N on transparent — Android 13 monochrome / themed icon. */
-function monochromeSvg(size: number): string {
-  const fontSize = size * 0.5;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
-    font-family="Georgia, 'Playfair Display', serif" font-weight="700"
-    font-size="${fontSize}" fill="#FFFFFF">N</text>
-</svg>`;
+function sha256File(filePath: string): string {
+  const buf = fs.readFileSync(filePath);
+  return crypto.createHash("sha256").update(buf).digest("hex");
 }
 
-function exploreShot(): string {
-  const w = 390;
-  const h = 844;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${SURFACE}"/>
-      <stop offset="100%" stop-color="#F8F2F5"/>
-    </linearGradient>
-    <linearGradient id="hero" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${PRIMARY}"/>
-      <stop offset="100%" stop-color="${PRIMARY_DARK}"/>
-    </linearGradient>
-  </defs>
-  <rect width="${w}" height="${h}" fill="url(#bg)"/>
-  <rect x="0" y="0" width="${w}" height="320" fill="url(#hero)"/>
-  <text x="28" y="72" font-family="Georgia, serif" font-size="28" fill="#fff" font-weight="700">Nexa Stays</text>
-  <text x="28" y="130" font-family="system-ui, sans-serif" font-size="26" fill="#fff" font-weight="700">Find your next stay</text>
-  <text x="28" y="162" font-family="system-ui, sans-serif" font-size="14" fill="rgba(255,255,255,0.85)">Beautiful search · Morocco destinations</text>
-  <rect x="20" y="200" width="350" height="56" rx="16" fill="#fff"/>
-  <text x="40" y="234" font-family="system-ui, sans-serif" font-size="14" fill="${MUTED}">Where to? Casablanca, Marrakech…</text>
-  <rect x="20" y="360" width="165" height="120" rx="16" fill="#fff" stroke="${LINE}"/>
-  <rect x="205" y="360" width="165" height="120" rx="16" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="500" font-family="system-ui, sans-serif" font-size="13" fill="${INK}" font-weight="600">Casablanca</text>
-  <text x="220" y="500" font-family="system-ui, sans-serif" font-size="13" fill="${INK}" font-weight="600">Marrakech</text>
-  <rect x="20" y="530" width="165" height="120" rx="16" fill="#fff" stroke="${LINE}"/>
-  <rect x="205" y="530" width="165" height="120" rx="16" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="670" font-family="system-ui, sans-serif" font-size="13" fill="${INK}" font-weight="600">Taghazout</text>
-  <text x="220" y="670" font-family="system-ui, sans-serif" font-size="13" fill="${INK}" font-weight="600">Fès</text>
-</svg>`;
+async function writeSafe(out: string, buf: Buffer) {
+  assertNotScreenshotPath(out);
+  await fs.promises.writeFile(out, buf);
+  console.log("wrote", path.relative(ROOT, out));
 }
 
-function listingShot(): string {
-  const w = 390;
-  const h = 844;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <rect width="${w}" height="${h}" fill="${SURFACE}"/>
-  <rect x="0" y="0" width="${w}" height="280" fill="#D4A5B5"/>
-  <rect x="12" y="12" width="180" height="120" rx="12" fill="#C48A9D"/>
-  <rect x="200" y="12" width="178" height="120" rx="12" fill="#B87A90"/>
-  <rect x="12" y="140" width="366" height="128" rx="12" fill="#E8B8C6"/>
-  <text x="24" y="320" font-family="Georgia, serif" font-size="22" fill="${INK}" font-weight="700">Riad with courtyard</text>
-  <text x="24" y="348" font-family="system-ui, sans-serif" font-size="13" fill="${MUTED}">Marrakech · Médina</text>
-  <rect x="24" y="370" width="140" height="72" rx="12" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="400" font-family="system-ui, sans-serif" font-size="11" fill="${MUTED}">Check-in</text>
-  <text x="36" y="420" font-family="system-ui, sans-serif" font-size="13" fill="${INK}" font-weight="600">Apr 12</text>
-  <rect x="176" y="370" width="140" height="72" rx="12" fill="#fff" stroke="${LINE}"/>
-  <text x="188" y="400" font-family="system-ui, sans-serif" font-size="11" fill="${MUTED}">Check-out</text>
-  <text x="188" y="420" font-family="system-ui, sans-serif" font-size="13" fill="${INK}" font-weight="600">Apr 15</text>
-  <text x="24" y="480" font-family="system-ui, sans-serif" font-size="18" fill="${INK}" font-weight="700">1,250 MAD</text>
-  <text x="24" y="504" font-family="system-ui, sans-serif" font-size="12" fill="${MUTED}">per night · transparent fees</text>
-  <rect x="24" y="740" width="342" height="52" rx="16" fill="${PRIMARY}"/>
-  <text x="195" y="772" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#fff" font-weight="700">Reserve</text>
-</svg>`;
+/** Square icon: logo contained with SAFE_PADDING on solid background. */
+async function renderIcon(
+  sourceBuf: Buffer,
+  size: number,
+  background: string,
+): Promise<Buffer> {
+  const inner = Math.round(size * (1 - 2 * SAFE_PADDING));
+  const logo = await sharp(sourceBuf)
+    .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background,
+    },
+  })
+    .composite([{ input: logo, gravity: "centre" }])
+    .png()
+    .toBuffer();
 }
 
-function hostShot(): string {
-  const w = 390;
-  const h = 844;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <rect width="${w}" height="${h}" fill="${SURFACE}"/>
-  <text x="24" y="56" font-family="Georgia, serif" font-size="22" fill="${INK}" font-weight="700">Host dashboard</text>
-  <text x="24" y="82" font-family="system-ui, sans-serif" font-size="13" fill="${MUTED}">Revenue · Bookings · Calendar sync</text>
-  <rect x="20" y="110" width="350" height="100" rx="18" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="148" font-family="system-ui, sans-serif" font-size="12" fill="${MUTED}">This month</text>
-  <text x="36" y="180" font-family="system-ui, sans-serif" font-size="28" fill="${INK}" font-weight="700">18,400 MAD</text>
-  <rect x="20" y="230" width="168" height="90" rx="16" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="268" font-family="system-ui, sans-serif" font-size="12" fill="${MUTED}">Bookings</text>
-  <text x="36" y="296" font-family="system-ui, sans-serif" font-size="22" fill="${PRIMARY}" font-weight="700">12</text>
-  <rect x="202" y="230" width="168" height="90" rx="16" fill="#fff" stroke="${LINE}"/>
-  <text x="218" y="268" font-family="system-ui, sans-serif" font-size="12" fill="${MUTED}">Live listings</text>
-  <text x="218" y="296" font-family="system-ui, sans-serif" font-size="22" fill="${INK}" font-weight="700">3</text>
-  <rect x="20" y="340" width="350" height="70" rx="16" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="382" font-family="system-ui, sans-serif" font-size="14" fill="${INK}" font-weight="600">Calendar Sync</text>
-  <text x="250" y="382" font-family="system-ui, sans-serif" font-size="12" fill="${PRIMARY}" font-weight="600">Connected</text>
-  <rect x="20" y="430" width="350" height="120" rx="16" fill="#fff" stroke="${LINE}"/>
-  <text x="36" y="468" font-family="system-ui, sans-serif" font-size="14" fill="${INK}" font-weight="600">Upcoming stays</text>
-  <text x="36" y="500" font-family="system-ui, sans-serif" font-size="13" fill="${MUTED}">Guest check-in · Apr 14</text>
-  <text x="36" y="524" font-family="system-ui, sans-serif" font-size="13" fill="${MUTED}">Guest check-in · Apr 18</text>
-</svg>`;
+/** White silhouette for Android monochrome / themed icons. */
+async function renderMonochrome(sourceBuf: Buffer, size: number): Promise<Buffer> {
+  const inner = Math.round(size * (1 - 2 * SAFE_PADDING));
+  const logo = await sharp(sourceBuf)
+    .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const { data, info } = logo;
+  const out = Buffer.alloc(data.length);
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    const lum = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    // Keep non-black mark pixels as white with original alpha strength
+    const mark = lum > 20 ? 255 : 0;
+    out[i] = mark;
+    out[i + 1] = mark;
+    out[i + 2] = mark;
+    out[i + 3] = mark ? a : 0;
+  }
+
+  const markPng = await sharp(out, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: markPng, gravity: "centre" }])
+    .png()
+    .toBuffer();
 }
 
-async function writePng(svg: string, out: string) {
-  await sharp(Buffer.from(svg)).png().toFile(out);
-  console.log("wrote", out);
+function validateOutputs() {
+  for (const name of REQUIRED_FILES) {
+    const p = path.join(ICONS, name);
+    if (!fs.existsSync(p)) {
+      throw new Error(`Missing required PWA asset: ${name}`);
+    }
+    console.log(`✓ ${name}`);
+  }
 }
 
 async function main() {
-  fs.mkdirSync(ICONS, { recursive: true });
-  fs.mkdirSync(SHOTS, { recursive: true });
-
-  await writePng(iconSvg(16), path.join(ICONS, "favicon-16.png"));
-  await writePng(iconSvg(32), path.join(ICONS, "favicon-32.png"));
-  await writePng(iconSvg(180), path.join(ICONS, "apple-touch-icon.png"));
-  await writePng(iconSvg(192), path.join(ICONS, "icon-192.png"));
-  await writePng(iconSvg(512), path.join(ICONS, "icon-512.png"));
-  await writePng(iconSvg(512, true), path.join(ICONS, "icon-maskable-512.png"));
-  await writePng(monochromeSvg(512), path.join(ICONS, "icon-monochrome-512.png"));
-
-  await writePng(exploreShot(), path.join(SHOTS, "explore.png"));
-  await writePng(listingShot(), path.join(SHOTS, "listing.png"));
-  await writePng(hostShot(), path.join(SHOTS, "host.png"));
-
-  // Remove legacy stub names if regenerating clean set (keep if referenced elsewhere briefly)
-  for (const legacy of ["narrow.png", "wide.png"]) {
-    const p = path.join(SHOTS, legacy);
-    if (fs.existsSync(p)) fs.unlinkSync(p);
+  if (!fs.existsSync(SOURCE)) {
+    throw new Error(`Source logo missing: ${SOURCE}`);
   }
+
+  const sha256 = sha256File(SOURCE);
+  const sourceBuf = fs.readFileSync(SOURCE);
+
+  // Idempotent: wipe and recreate icons dir (never touches screenshots)
+  if (fs.existsSync(ICONS)) {
+    fs.rmSync(ICONS, { recursive: true, force: true });
+  }
+  fs.mkdirSync(ICONS, { recursive: true });
+
+  const black = "#000000";
+
+  await writeSafe(
+    path.join(ICONS, `favicon-16.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 16, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `favicon-32.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 32, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `favicon-48.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 48, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `apple-touch-180.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 180, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `icon-192.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 192, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `icon-512.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 512, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `maskable-512.${ICON_VERSION}.png`),
+    await renderIcon(sourceBuf, 512, black),
+  );
+  await writeSafe(
+    path.join(ICONS, `monochrome-512.${ICON_VERSION}.png`),
+    await renderMonochrome(sourceBuf, 512),
+  );
+
+  for (const [key, bg] of Object.entries(SHORTCUT_BG)) {
+    await writeSafe(
+      path.join(ICONS, `shortcut-${key}.${ICON_VERSION}.png`),
+      await renderIcon(sourceBuf, 96, bg),
+    );
+  }
+
+  const files = REQUIRED_FILES.filter((f) => f !== "build.json");
+  const build = {
+    source: "public/images/nexastays.png",
+    sha256,
+    version: ICON_VERSION,
+    generatedAt: new Date().toISOString(),
+    safePadding: SAFE_PADDING,
+    files: [...files],
+  };
+  await writeSafe(path.join(ICONS, "build.json"), Buffer.from(JSON.stringify(build, null, 2)));
+
+  console.log("");
+  validateOutputs();
+  console.log("\nDone.");
 }
 
 main().catch((e) => {

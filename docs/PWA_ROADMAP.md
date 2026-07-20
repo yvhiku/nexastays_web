@@ -10,6 +10,7 @@ Installable Progressive Web App and mobile shell for [`nexastays_web`](../nexast
 | 2 | Mobile shell (4-tab bottom nav, safe areas) | **Done** (superseded by floating glass below) |
 | Sprint 1 nav + Save | Floating glass nav, Search FAB sheet, Saved rename, premium Save UX | **Done** |
 | Sprint 1 Product Guidance | Guest discovery engine (Welcome → Search → Save → Trips + Install queue) | **Done** |
+| PWA Branding | Real logo icons, versioned assets, splash, screenshots | **Done** |
 | Sprint 2 | Rich search sheet + **Saved Collections** + host guidance + interaction quality | Deferred |
 | 3 | Search redesign + install funnel analytics | Deferred (partially in Sprint 2) |
 | 4 | Explore map | Deferred |
@@ -29,9 +30,44 @@ Installable Progressive Web App and mobile shell for [`nexastays_web`](../nexast
 - Premium update banner (Update Now / Dismiss)
 - Offline: No internet + recently viewed + Retry + Browse recently viewed
 - Adaptive splash 500–1200ms (standalone, once per open)
-- Icons: 16/32 favicon, 180 apple, 192/512, maskable, monochrome
-- Three intentional screenshots (explore / listing / host)
-- Manifest: description, categories, portrait, `start_url: "/"`
+- Icons: generated from `public/images/nexastays.png` (see Brand assets)
+- Screenshots: welcome / explore / listing / host (hand-authored)
+- Manifest: description, categories, portrait, standalone + window-controls-overlay
+
+## Brand assets (PWA icons)
+
+```text
+public/images/nexastays.png   ← only hand-edited brand file
+        │
+        ▼
+npm run generate:pwa
+        │
+        ▼
+public/icons/*.v2.png + build.json
+        │
+        ▼
+lib/pwa-assets.ts  → layout / manifest / splash / install UI
+```
+
+**Rules**
+
+- Never edit files under `public/icons/` by hand — regenerate them.
+- Never let the generator write under `public/pwa/screenshots/` (hand-authored product captures).
+- Consumers must import paths from `lib/pwa-assets.ts` (no hardcoded `/icons/...` strings).
+
+**When the logo changes**
+
+1. Replace `public/images/nexastays.png`
+2. Bump `ICON_VERSION` in `scripts/generate-pwa-icons.ts` **and** `PWA_ICON_VERSION` in `lib/pwa-assets.ts` (e.g. `v2` → `v3`)
+3. Run `npm run generate:pwa`
+4. Commit icons + code
+5. Users pick up new icons after SW update; Android home-screen icon may need uninstall/reinstall once
+
+**QA matrix (install + icon crop)**
+
+- Chrome Android · Samsung Internet · Edge Android · Brave Android
+- iOS Safari
+- Chrome Desktop · Edge Desktop
 
 ## Sprint 1 — premium mobile nav + Save (shipped)
 

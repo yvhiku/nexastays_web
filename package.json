@@ -11,7 +11,9 @@
     "audit:osv": "npx --yes @google/osv-scanner@latest -r . || npx --yes osv-scanner@latest -r .",
     "validate:explore-catalog": "npx --yes tsx scripts/validate-explore-catalog.ts",
     "import:explore-city": "npx --yes tsx scripts/import-explore-city.ts",
-    "generate:pwa-icons": "npx --yes tsx scripts/generate-pwa-icons.ts"
+    "generate:pwa-icons": "npx --yes tsx scripts/generate-pwa-icons.ts",
+    "verify:pwa-assets": "npx --yes tsx scripts/verify-pwa-assets.ts",
+    "generate:pwa": "npm run generate:pwa-icons && npm run verify:pwa-assets"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",

@@ -4,6 +4,7 @@ import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { getPublicSiteUrl } from "@/lib/env";
+import { PWA_ICONS } from "@/lib/pwa-assets";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 
 const siteUrl = getPublicSiteUrl();
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   applicationName: "Nexa Stays",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Nexa Stays",
   },
   formatDetection: {
@@ -51,12 +52,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/favicon-16.png", sizes: "16x16", type: "image/png" },
-      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: PWA_ICONS.favicon16, sizes: "16x16", type: "image/png" },
+      { url: PWA_ICONS.favicon32, sizes: "32x32", type: "image/png" },
+      { url: PWA_ICONS.favicon48, sizes: "48x48", type: "image/png" },
+      { url: PWA_ICONS.icon192, sizes: "192x192", type: "image/png" },
+      { url: PWA_ICONS.icon512, sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: PWA_ICONS.apple, sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest",
 };
