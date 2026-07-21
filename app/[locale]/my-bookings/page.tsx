@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { BookingCard } from "@/components/bookings/BookingCard";
 import { BookingFiltersPanel } from "@/components/bookings/BookingFiltersPanel";
 import { BookingListSkeleton } from "@/components/bookings/BookingCardSkeleton";
 import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
+import { openConversationForBooking } from "@/lib/messaging/messages-api";
 import {
   CalendarCheck,
   Search,
@@ -38,6 +40,7 @@ const PAGE_SIZE = 10;
 function MyBookingsContent() {
   const { token } = useAuth();
   const { t, localePath } = useLanguage();
+  const router = useRouter();
   const [bookings, setBookings] = useState<StaysBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +51,24 @@ function MyBookingsContent() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<StaysBooking | null>(null);
+  const [messagingBookingId, setMessagingBookingId] = useState<string | null>(null);
+
+  const handleMessageHost = useCallback(
+    async (bookingId: string) => {
+      if (!token) return;
+      setMessagingBookingId(bookingId);
+      setError(null);
+      try {
+        const conv = await openConversationForBooking(bookingId, token);
+        router.push(localePath(`/inbox/${conv.id}`));
+      } catch (e) {
+        setError(formatUserError(e) || t("inbox.emptyBody"));
+      } finally {
+        setMessagingBookingId(null);
+      }
+    },
+    [token, router, localePath, t],
+  );
 
   const fetchBookings = useCallback(() => {
     if (!token) return;
@@ -229,6 +250,8 @@ function MyBookingsContent() {
                     localePath={localePath}
                     t={t}
                     onCancel={() => setCancelTarget(b)}
+                    onMessageHost={handleMessageHost}
+                    messagingBookingId={messagingBookingId}
                     cancelling={cancellingId === b.id}
                   />
                 ))}

@@ -26,7 +26,7 @@ import {
 } from "@/lib/booking-lifecycle";
 import type { StaysBooking } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
-import { findConversationForBooking } from "@/lib/messaging/messages-api";
+import { openConversationForBooking } from "@/lib/messaging/messages-api";
 import { useAuth } from "@/contexts/AuthContext";
 
 function formatDate(value: string): string {
@@ -87,16 +87,8 @@ export function HostBookingDetailView({
     if (!token) return;
     setMessaging(true);
     try {
-      const conv = await findConversationForBooking(
-        booking.id,
-        booking.booking_reference,
-        token,
-      );
-      if (conv) {
-        router.push(localePath(`/inbox/${conv.id}`));
-      } else {
-        router.push(localePath("/inbox"));
-      }
+      const conv = await openConversationForBooking(booking.id, token);
+      router.push(localePath(`/inbox/${conv.id}`));
     } finally {
       setMessaging(false);
     }

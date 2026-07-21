@@ -38,7 +38,7 @@ import { getBookingReview } from "@/lib/stays-api";
 import type { StaysReviewDetail } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
-import { findConversationForBooking } from "@/lib/messaging/messages-api";
+import { openConversationForBooking } from "@/lib/messaging/messages-api";
 import {
   ArrowLeft,
   Download,
@@ -132,17 +132,12 @@ function BookingDetailPageInner() {
   const handleMessageHost = async () => {
     if (!token || !booking) return;
     setOpeningMessage(true);
+    setPaymentError(null);
     try {
-      const conv = await findConversationForBooking(
-        booking.id,
-        booking.booking_reference,
-        token,
-      );
-      if (conv) {
-        router.push(localePath(`/inbox/${conv.id}`));
-      } else {
-        router.push(localePath("/inbox"));
-      }
+      const conv = await openConversationForBooking(booking.id, token);
+      router.push(localePath(`/inbox/${conv.id}`));
+    } catch (err) {
+      setPaymentError(formatUserError(err) || t("inbox.emptyBody"));
     } finally {
       setOpeningMessage(false);
     }

@@ -21,7 +21,6 @@ import {
   MapPin,
   MessageCircle,
   Navigation,
-  Phone,
   RotateCcw,
   CreditCard,
   FileText,
@@ -78,6 +77,8 @@ export interface BookingCardProps {
   localePath: (path: string) => string;
   t: (key: string) => string;
   onCancel?: (id: string) => void;
+  onMessageHost?: (bookingId: string) => void;
+  messagingBookingId?: string | null;
   cancelling?: boolean;
 }
 
@@ -86,6 +87,8 @@ function BookingCardComponent({
   localePath,
   t,
   onCancel,
+  onMessageHost,
+  messagingBookingId,
   cancelling,
 }: BookingCardProps) {
   const lifecycle = resolveBookingLifecycle(booking);
@@ -216,6 +219,8 @@ function BookingCardComponent({
               contactHref={contactHref}
               t={t}
               onCancel={onCancel}
+              onMessageHost={onMessageHost}
+              messaging={messagingBookingId === booking.id}
               cancelling={cancelling}
               btnClass={actionBtnClass}
               horizontal
@@ -233,6 +238,8 @@ function BookingCardComponent({
             contactHref={contactHref}
             t={t}
             onCancel={onCancel}
+            onMessageHost={onMessageHost}
+            messaging={messagingBookingId === booking.id}
             cancelling={cancelling}
             btnClass={cn(actionBtnClass, "w-full justify-center")}
             horizontal={false}
@@ -266,6 +273,8 @@ interface BookingCardActionsProps {
   contactHref: string;
   t: (key: string) => string;
   onCancel?: (id: string) => void;
+  onMessageHost?: (bookingId: string) => void;
+  messaging?: boolean;
   cancelling?: boolean;
   btnClass: string;
   horizontal: boolean;
@@ -279,6 +288,8 @@ function BookingCardActions({
   contactHref,
   t,
   onCancel,
+  onMessageHost,
+  messaging,
   cancelling,
   btnClass,
   horizontal,
@@ -352,10 +363,15 @@ function BookingCardActions({
             href: detailHref,
             icon: <Navigation className="h-3 w-3" />,
           })}
-          {outline(t("myBookings.contactHost"), {
-            href: detailHref,
-            icon: <Phone className="h-3 w-3" />,
-          })}
+          {outline(
+            messaging ? t("bookings.processing") : t("myBookings.contactHost"),
+            {
+              onClick: onMessageHost ? () => onMessageHost(booking.id) : undefined,
+              href: onMessageHost ? undefined : detailHref,
+              icon: <MessageCircle className="h-3 w-3" />,
+              className: messaging ? "opacity-70 pointer-events-none" : undefined,
+            },
+          )}
           {reportIssue}
         </>
       )}

@@ -270,12 +270,58 @@ export async function reportSafetyIssue(
   return unwrap<{ supportUrl: string }>(res);
 }
 
+/** Find existing thread for a booking, if any. */
+export async function getConversationByBooking(
+  bookingId: string,
+  token?: string | null,
+): Promise<ConversationListItem | null> {
+  try {
+    const res = await client.get(
+      `/messaging/conversations/by-booking/${encodeURIComponent(bookingId)}`,
+      { headers: getAuthHeaders(token) },
+    );
+    const data = unwrap<ConversationListItem | null>(res);
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Create inbox thread for a confirmed booking when missing (backfill). */
+export async function ensureConversationForBooking(
+  bookingId: string,
+  token?: string | null,
+): Promise<ConversationListItem> {
+  const res = await client.post(
+    `/messaging/conversations/ensure-for-booking/${encodeURIComponent(bookingId)}`,
+    {},
+    { headers: getAuthHeaders(token) },
+  );
+  return unwrap<ConversationListItem>(res);
+}
+
+/** Open or create the inbox thread for a booking. */
+export async function openConversationForBooking(
+  bookingId: string,
+  token?: string | null,
+): Promise<ConversationListItem> {
+  const existing = await getConversationByBooking(bookingId, token);
+  if (existing) return existing;
+  return ensureConversationForBooking(bookingId, token);
+}
+
 /** Resolve inbox thread for a booking via reference search or listing title fallback. */
 export async function findConversationForBooking(
   bookingId: string,
   bookingReference: string | null | undefined,
   token?: string | null,
 ): Promise<ConversationListItem | null> {
+  try {
+    return await openConversationForBooking(bookingId, token);
+  } catch {
+    /* fall through to legacy search */
+  }
+
   if (bookingReference?.trim()) {
     const byRef = await listConversations(token, "all", bookingReference.trim());
     if (byRef.length > 0) return byRef[0];
