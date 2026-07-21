@@ -640,6 +640,18 @@
     "mute": "Mute notifications",
     "unmute": "Unmute notifications",
     "reportPrompt": "Tell us briefly what happened (optional)",
+    "attachmentComposer": {
+      "captionPlaceholder": "Add a caption…",
+      "send": "Send",
+      "discard": "Discard",
+      "remove": "Remove",
+      "rotate": "Rotate",
+      "crop": "Zoom",
+      "comingSoon": "Coming soon",
+      "uploadProgress": "Uploading",
+      "retry": "Retry",
+      "close": "Close"
+    },
     "filters": {
       "all": "All",
       "unread": "Unread",

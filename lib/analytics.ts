@@ -48,7 +48,16 @@ type AnalyticsEventName =
   | "conversation_archived"
   | "conversation_reported"
   | "conversation_blocked"
-  | "conversation_muted";
+  | "conversation_muted"
+  | "attachment_selected"
+  | "composer_opened"
+  | "session_created"
+  | "send_clicked"
+  | "upload_success"
+  | "upload_failed"
+  | "retry_upload"
+  | "crop_used"
+  | "rotate_used";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

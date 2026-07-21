@@ -621,6 +621,18 @@
     "mute": "Couper les notifications",
     "unmute": "Réactiver les notifications",
     "reportPrompt": "Décrivez brièvement ce qui s'est passé (facultatif)",
+    "attachmentComposer": {
+      "captionPlaceholder": "Ajouter une légende…",
+      "send": "Envoyer",
+      "discard": "Annuler",
+      "remove": "Supprimer",
+      "rotate": "Pivoter",
+      "crop": "Zoom",
+      "comingSoon": "Bientôt disponible",
+      "uploadProgress": "Envoi en cours",
+      "retry": "Réessayer",
+      "close": "Fermer"
+    },
     "filters": {
       "all": "Tous",
       "unread": "Non lus",

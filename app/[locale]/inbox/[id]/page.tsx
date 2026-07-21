@@ -4,9 +4,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ConversationContext } from "@/components/messaging/ConversationContext";
-import { MediaGallery } from "@/components/messaging/MediaGallery";
+import { MediaGallery } from "@/components/messaging/ImageViewer";
+import { AttachmentComposer } from "@/components/messaging/AttachmentComposer";
 import { ConversationSearchSheet } from "@/components/messaging/ConversationSearchSheet";
-import { useUploadQueue } from "@/lib/messaging/useUploadQueue";
+import { useAttachmentManager } from "@/lib/messaging/AttachmentManager";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { MessageComposer } from "@/components/messaging/MessageComposer";
 import { TimelineRenderer } from "@/components/messaging/TimelineRenderer";
@@ -169,7 +170,7 @@ function ConversationPageInner() {
 
   const { bumpActivity } = useMessagingRealtime("conversation", poll, !!token && !!conversation);
 
-  const { enqueueFiles, activeProgress } = useUploadQueue(conversationId, token, (message) => {
+  const attachmentManager = useAttachmentManager(conversationId, token, (message) => {
     setMessages((prev) => reconcileOptimisticMessage(prev, message));
     requestAnimationFrame(() => scrollToBottom(true));
     void poll();
@@ -389,7 +390,7 @@ function ConversationPageInner() {
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files?.length) enqueueFiles(e.target.files);
+          if (e.target.files?.length) attachmentManager.stageFiles(e.target.files);
           e.target.value = "";
         }}
       />
@@ -401,7 +402,27 @@ function ConversationPageInner() {
         onClose={() => setGallery(null)}
       />
 
-      {draftReady ? (
+      <AttachmentComposer
+        manager={attachmentManager}
+        labels={{
+          captionPlaceholder: t("inbox.attachmentComposer.captionPlaceholder"),
+          send: t("inbox.attachmentComposer.send"),
+          discard: t("inbox.attachmentComposer.discard"),
+          remove: t("inbox.attachmentComposer.remove"),
+          rotate: t("inbox.attachmentComposer.rotate"),
+          crop: t("inbox.attachmentComposer.crop"),
+          comingSoon: t("inbox.attachmentComposer.comingSoon"),
+          uploadProgress: t("inbox.attachmentComposer.uploadProgress"),
+          retry: t("inbox.attachmentComposer.retry"),
+          close: t("inbox.attachmentComposer.close"),
+        }}
+        onSent={() => {
+          bumpActivity();
+          scrollToBottom(true);
+        }}
+      />
+
+      {draftReady && !attachmentManager.state.isOpen ? (
         <MessageComposer
           value={draft}
           onChange={updateDraft}
@@ -412,7 +433,7 @@ function ConversationPageInner() {
           readOnlyHint={readOnlyHint}
           onAttach={() => fileInputRef.current?.click()}
           attachDisabled={!conversation.permissions.canUpload}
-          uploadProgress={activeProgress}
+          uploadProgress={attachmentManager.state.progress?.overallPct ?? null}
           onFocus={() => {
             setContextCollapsed(true);
             trackEvent("message_composer_focused", { conversation_id: conversationId });

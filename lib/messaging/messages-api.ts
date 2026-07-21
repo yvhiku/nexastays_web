@@ -290,6 +290,92 @@ export async function sendMessageWithAttachments(
   return normalizeMessageDto(unwrap<MessageDto>(res));
 }
 
+export interface AttachmentSessionDto {
+  id: string;
+  conversationId: string;
+  status: "CREATED" | "UPLOADING" | "READY" | "COMPLETED" | "ABANDONED";
+  expiresAt: string;
+  attachments: AttachmentDto[];
+}
+
+export async function createAttachmentSession(
+  conversationId: string,
+  token?: string | null,
+): Promise<AttachmentSessionDto> {
+  const res = await client.post(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/attachment-sessions`,
+    {},
+    { headers: getAuthHeaders(token) },
+  );
+  return unwrap<AttachmentSessionDto>(res);
+}
+
+export async function uploadToAttachmentSession(
+  sessionId: string,
+  file: File,
+  token?: string | null,
+  onProgress?: (pct: number) => void,
+): Promise<AttachmentDto> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await client.post(
+    `/messaging/attachment-sessions/${encodeURIComponent(sessionId)}/attachments`,
+    form,
+    {
+      headers: { ...getAuthHeaders(token), "Content-Type": "multipart/form-data" },
+      onUploadProgress: (evt) => {
+        if (evt.total && onProgress) {
+          onProgress(Math.round((evt.loaded / evt.total) * 100));
+        }
+      },
+    },
+  );
+  return unwrap<AttachmentDto>(res);
+}
+
+export async function completeAttachmentSession(
+  sessionId: string,
+  token?: string | null,
+): Promise<AttachmentSessionDto> {
+  const res = await client.post(
+    `/messaging/attachment-sessions/${encodeURIComponent(sessionId)}/complete`,
+    {},
+    { headers: getAuthHeaders(token) },
+  );
+  return unwrap<AttachmentSessionDto>(res);
+}
+
+export async function abandonAttachmentSession(
+  sessionId: string,
+  token?: string | null,
+): Promise<void> {
+  await client.delete(
+    `/messaging/attachment-sessions/${encodeURIComponent(sessionId)}`,
+    { headers: getAuthHeaders(token) },
+  );
+}
+
+export async function sendMessageWithSession(
+  conversationId: string,
+  type: "IMAGE" | "FILE",
+  sessionId: string,
+  token?: string | null,
+  caption?: string,
+  clientMessageId?: string,
+): Promise<MessageDto> {
+  const res = await client.post(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/messages`,
+    {
+      type,
+      session_id: sessionId,
+      caption,
+      ...(clientMessageId ? { client_message_id: clientMessageId } : {}),
+    },
+    { headers: getAuthHeaders(token) },
+  );
+  return normalizeMessageDto(unwrap<MessageDto>(res));
+}
+
 export async function uploadAttachment(
   conversationId: string,
   file: File,

@@ -28,6 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.33.0",
+    "heic2any": "^0.0.4",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "libphonenumber-js": "^1.12.38",
@@ -35,6 +36,7 @@
     "next": "^14.2.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-easy-crop": "^5.4.2",
     "react-phone-number-input": "^3.4.17",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7"

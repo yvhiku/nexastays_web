@@ -621,6 +621,18 @@
     "mute": "كتم الإشعارات",
     "unmute": "إلغاء كتم الإشعارات",
     "reportPrompt": "صف باختصار ما حدث (اختياري)",
+    "attachmentComposer": {
+      "captionPlaceholder": "أضف تعليقًا…",
+      "send": "إرسال",
+      "discard": "تجاهل",
+      "remove": "إزالة",
+      "rotate": "تدوير",
+      "crop": "تكبير",
+      "comingSoon": "قريبًا",
+      "uploadProgress": "جاري الرفع",
+      "retry": "إعادة المحاولة",
+      "close": "إغلاق"
+    },
     "filters": {
       "all": "الكل",
       "unread": "غير مقروء",

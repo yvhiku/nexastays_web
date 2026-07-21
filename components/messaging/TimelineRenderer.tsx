@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { MessageBubble } from "./MessageBubble";
 import type { ConversationPresentation, MessageDto, AttachmentDto } from "@/lib/messaging/messages-api";
 import { selectGroupedMessages } from "@/lib/messaging/selectors/group-messages";
+import { messageRendererRegistry, isRegistryMessageType } from "./MessageRendererRegistry";
 import { renderTimelineCard, resolveCardKind } from "./timeline/registry";
 
 const CARD_TYPES = new Set([
@@ -17,8 +17,6 @@ const CARD_TYPES = new Set([
   "REVIEW_CARD",
   "PAYMENT_CARD",
   "AI_CARD",
-  "IMAGE",
-  "FILE",
 ]);
 
 type Props = {
@@ -52,14 +50,8 @@ export function TimelineRenderer({
   localePath,
   onOpenGallery,
 }: Props) {
-  const textMessages = messages.filter((m) => m.type === "TEXT");
-  const mediaMessages = messages.filter((m) => m.type === "IMAGE" || m.type === "FILE");
-  const groupedText = selectGroupedMessages(textMessages);
-  const groupedMedia = selectGroupedMessages(mediaMessages);
-  const allGroups = [...groupedText, ...groupedMedia].sort(
-    (a, b) =>
-      (a.messages[0]?.conversationSequence ?? 0) - (b.messages[0]?.conversationSequence ?? 0),
-  );
+  const bubbleMessages = messages.filter((m) => isRegistryMessageType(m.type));
+  const grouped = selectGroupedMessages(bubbleMessages);
 
   let lastDay = "";
   let lastIncomingSender: string | null = null;
@@ -80,8 +72,8 @@ export function TimelineRenderer({
           </div>
         ) : null;
 
-        if (message.type === "TEXT" || message.type === "IMAGE" || message.type === "FILE") {
-          const group = allGroups.find((g) => g.messages.some((m) => m.id === message.id));
+        if (isRegistryMessageType(message.type)) {
+          const group = grouped.find((g) => g.messages.some((m) => m.id === message.id));
           if (!group || group.messages[0]?.id !== message.id) {
             return dayDivider;
           }
@@ -96,13 +88,14 @@ export function TimelineRenderer({
           return (
             <React.Fragment key={message.id}>
               {dayDivider}
-              <MessageBubble
-                group={{ ...group, showAvatar: group.showAvatar && !hideAvatar }}
-                counterpartAvatar={presentation.avatar}
-                counterpartName={presentation.title}
-                removedLabel={removedLabel}
-                onOpenGallery={onOpenGallery}
-              />
+              {messageRendererRegistry.render({
+                group: { ...group, showAvatar: group.showAvatar && !hideAvatar },
+                message,
+                counterpartAvatar: presentation.avatar,
+                counterpartName: presentation.title,
+                removedLabel,
+                onOpenGallery,
+              })}
             </React.Fragment>
           );
         }
