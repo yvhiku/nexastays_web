@@ -60,7 +60,8 @@ type AnalyticsEventName =
   | "rotate_used"
   | "cancel_upload"
   | "draft_restored"
-  | "session_abandoned";
+  | "session_abandoned"
+  | "voice_message_recorded";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

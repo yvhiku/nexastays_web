@@ -544,9 +544,13 @@ function ConversationPageInner() {
           value={draft}
           onChange={updateDraft}
           onSend={() => void handleSend()}
+          onVoiceRecorded={(file) => void attachmentManager.sendVoiceNote(file)}
           disabled={sending || !conversation.permissions.canSend}
           placeholder={t("inbox.composerPlaceholder")}
           sendLabel={t("inbox.send")}
+          voiceLabel={t("inbox.voiceMessage")}
+          recordingLabel={t("inbox.recordingVoice")}
+          cancelLabel={t("common.cancel")}
           readOnlyHint={readOnlyHint}
           onAttach={() => fileInputRef.current?.click()}
           attachDisabled={!conversation.permissions.canUpload}

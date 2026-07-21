@@ -37,6 +37,7 @@ import {
   type PendingUploadFileMeta,
 } from "./pending-upload-store";
 import { createClientMessageId } from "./offline-queue";
+import { setOptimisticInboxActivity } from "./inbox-optimistic";
 
 export type QueueItemStatus =
   | "queued"
@@ -626,6 +627,65 @@ export function useAttachmentManager(
     executeSend,
   ]);
 
+  const sendVoiceNote = useCallback(
+    async (file: File) => {
+      if (!token || isSending) return null;
+      const validationError = validateAttachmentBatch([file]);
+      if (validationError) {
+        setError(validationError);
+        return null;
+      }
+
+      const clientMessageId = createClientMessageId();
+      const item: StagedItem = {
+        id: createClientMessageId(),
+        file,
+        kind: "file",
+        previewUrl: "",
+        status: "queued",
+        progress: 0,
+        rotation: 0,
+      };
+
+      trackEvent("voice_message_recorded", { conversation_id: conversationId });
+
+      const previews: OptimisticPreview[] = [
+        {
+          id: `optimistic_att_${item.id}`,
+          previewUrl: "",
+          mime: file.type || "audio/webm",
+          originalFilename: file.name,
+        },
+      ];
+      const optimistic = buildOptimisticMediaMessage(
+        conversationId,
+        clientMessageId,
+        callbacks.senderId ?? null,
+        "FILE",
+        "Voice message",
+        previews,
+        { uploadState: "uploading", uploadProgress: 0, uploadLabel: "Uploading voice note…" },
+      );
+      callbacks.onOptimisticMessage?.(optimistic);
+      setOptimisticInboxActivity(conversationId, "Voice message");
+
+      const sendSnapshot: ActiveSend = {
+        clientMessageId,
+        caption: "Voice message",
+        items: [item],
+        messageType: "FILE",
+        sessionId: sessionRef.current,
+        uploadPhase: "uploading",
+      };
+      activeSendRef.current = sendSnapshot;
+      setActiveUploadClientId(clientMessageId);
+      setIsSending(true);
+      void executeSend(sendSnapshot);
+      return clientMessageId;
+    },
+    [token, isSending, conversationId, callbacks, executeSend],
+  );
+
   const retryFailed = useCallback(async (clientMessageId?: string) => {
     trackEvent("retry_upload", { conversation_id: conversationId });
     const send = activeSendRef.current;
@@ -746,6 +806,7 @@ export function useAttachmentManager(
     rotateItem,
     setCaption,
     sendBatch,
+    sendVoiceNote,
     retryFailed,
     closeComposer,
     hideComposer,

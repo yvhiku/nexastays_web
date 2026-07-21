@@ -28,6 +28,13 @@ export interface ImagePipelineResult {
 const DEFAULT_MAX = 1600;
 const THUMB_MAX = 640;
 
+function isAudioFile(file: File): boolean {
+  return (
+    file.type.startsWith("audio/") ||
+    /\.(webm|ogg|mp3|m4a|wav|aac)$/i.test(file.name)
+  );
+}
+
 function isHeic(file: File): boolean {
   const name = file.name.toLowerCase();
   return (
@@ -192,10 +199,15 @@ export const ATTACHMENT_LIMITS = {
 export function validateAttachmentBatch(files: File[]): string | null {
   const images = files.filter((f) => f.type.startsWith("image/") || isHeic(f));
   const pdfs = files.filter((f) => f.type === "application/pdf");
-  const other = files.length - images.length - pdfs.length;
+  const audio = files.filter(isAudioFile);
+  const other = files.length - images.length - pdfs.length - audio.length;
 
   if (other > 0) return "Unsupported file type";
-  if (images.length && pdfs.length) return "Cannot mix photos and documents in one send";
+  if (images.length && (pdfs.length || audio.length)) {
+    return "Cannot mix photos and documents in one send";
+  }
+  if (pdfs.length && audio.length) return "Cannot mix documents and voice notes in one send";
+  if (audio.length > 1) return "Send one voice note at a time";
   if (images.length > ATTACHMENT_LIMITS.maxImages) {
     return `Maximum ${ATTACHMENT_LIMITS.maxImages} photos per send`;
   }
