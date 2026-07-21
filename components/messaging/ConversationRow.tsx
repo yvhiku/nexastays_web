@@ -73,7 +73,6 @@ export const ConversationRow = React.memo(
   (prev, next) =>
     prev.href === next.href &&
     prev.isActive === next.isActive &&
-    prev.optimisticAt === next.optimisticAt &&
     prev.item.sync.conversationVersion === next.item.sync.conversationVersion &&
     prev.item.sync.unreadCount === next.item.sync.unreadCount &&
     prev.optimistic?.at === next.optimistic?.at &&
