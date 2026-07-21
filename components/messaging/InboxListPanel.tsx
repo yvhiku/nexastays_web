@@ -101,10 +101,10 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
         onQueryChange={setQuery}
         labels={{
           active: t("inbox.filters.active"),
-          all: t("inbox.filters.all"),
           unread: t("inbox.filters.unread"),
-          hosts: t("inbox.filters.hosts"),
           support: t("inbox.filters.support"),
+          archived: t("inbox.filters.archived"),
+          all: t("inbox.filters.all"),
           searchPlaceholder: t("inbox.searchPlaceholder"),
         }}
       />

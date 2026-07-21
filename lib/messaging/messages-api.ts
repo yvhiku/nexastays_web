@@ -138,6 +138,9 @@ export interface ConversationDomain {
   listingId: string | null;
   messagingState: string;
   visibility: string;
+  postStayEndsAt?: string | null;
+  autoArchiveDisabled?: boolean;
+  archiveReason?: string | null;
 }
 
 export interface ConversationListResponse {
@@ -176,7 +179,7 @@ export interface MessagesPage {
   hasMore: boolean;
 }
 
-export type InboxFilter = "active" | "all" | "unread" | "hosts" | "support";
+export type InboxFilter = "active" | "unread" | "support" | "archived" | "all" | "hosts";
 
 /** Convenience alias for inbox rows */
 export type ConversationListItem = ConversationListResponse;

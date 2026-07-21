@@ -742,11 +742,20 @@
     },
     "filters": {
       "active": "Active stays",
-      "all": "All",
       "unread": "Unread",
-      "hosts": "All stays",
-      "support": "Support"
-    }
+      "support": "Support",
+      "archived": "Archived",
+      "all": "All",
+      "hosts": "All stays"
+    },
+    "stayCompleted": "Stay completed",
+    "conversationAvailableUntil": "Conversation available until {date}",
+    "leaveReview": "Leave a review",
+    "thanksForReviewing": "Thanks for reviewing",
+    "archivedBannerTitle": "Stay completed · This conversation has been archived.",
+    "archivedBannerBody": "Need help with this reservation?",
+    "contactSupport": "Contact Support",
+    "viewReservation": "View reservation"
   },
   "hostApply": {
     "title": "Host Application",

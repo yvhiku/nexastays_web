@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ConversationContext } from "@/components/messaging/ConversationContext";
+import { ArchivedThreadBanner } from "@/components/messaging/ArchivedThreadBanner";
 import { MediaGallery } from "@/components/messaging/ImageViewer";
 import { AttachmentComposer } from "@/components/messaging/AttachmentComposer";
 import { AttachmentDraftPrompt } from "@/components/messaging/AttachmentDraftPrompt";
@@ -463,6 +464,10 @@ function ConversationPageInner() {
             presentation={conversation.presentation}
             collapsed={contextCollapsed}
             localePath={localePath}
+            messagingState={conversation.conversation.messagingState}
+            postStayEndsAt={conversation.conversation.postStayEndsAt}
+            bookingStatus={conversation.bookingStatus ?? null}
+            canReview={conversation.permissions.canReview}
           />
         }
       />
@@ -545,27 +550,39 @@ function ConversationPageInner() {
       />
 
       {draftReady && !attachmentManager.state.isOpen ? (
-        <MessageComposer
-          value={draft}
-          onChange={updateDraft}
-          onSend={() => void handleSend()}
-          onVoiceRecorded={(file) => void attachmentManager.sendVoiceNote(file)}
-          disabled={sending || !conversation.permissions.canSend}
-          placeholder={t("inbox.composerPlaceholder")}
-          sendLabel={t("inbox.send")}
-          voiceLabel={t("inbox.voiceMessage")}
-          recordingLabel={t("inbox.recordingVoice")}
-          cancelLabel={t("common.cancel")}
-          readOnlyHint={readOnlyHint}
-          onAttach={() => fileInputRef.current?.click()}
-          attachDisabled={!conversation.permissions.canUpload}
-          uploadProgress={attachmentManager.state.progress?.overallPct ?? null}
-          onFocus={() => {
-            setContextCollapsed(true);
-            trackEvent("message_composer_focused", { conversation_id: conversationId });
-          }}
-          onActivity={bumpActivity}
-        />
+        <>
+          {conversation.conversation.messagingState === "ARCHIVED" ? (
+            <ArchivedThreadBanner
+              bookingId={conversation.conversation.bookingId}
+              localePath={localePath}
+              title={t("inbox.archivedBannerTitle")}
+              body={t("inbox.archivedBannerBody")}
+              contactSupportLabel={t("inbox.contactSupport")}
+              viewReservationLabel={t("inbox.viewReservation")}
+            />
+          ) : null}
+          <MessageComposer
+            value={draft}
+            onChange={updateDraft}
+            onSend={() => void handleSend()}
+            onVoiceRecorded={(file) => void attachmentManager.sendVoiceNote(file)}
+            disabled={sending || !conversation.permissions.canSend}
+            placeholder={t("inbox.composerPlaceholder")}
+            sendLabel={t("inbox.send")}
+            voiceLabel={t("inbox.voiceMessage")}
+            recordingLabel={t("inbox.recordingVoice")}
+            cancelLabel={t("common.cancel")}
+            readOnlyHint={readOnlyHint}
+            onAttach={() => fileInputRef.current?.click()}
+            attachDisabled={!conversation.permissions.canUpload}
+            uploadProgress={attachmentManager.state.progress?.overallPct ?? null}
+            onFocus={() => {
+              setContextCollapsed(true);
+              trackEvent("message_composer_focused", { conversation_id: conversationId });
+            }}
+            onActivity={bumpActivity}
+          />
+        </>
       ) : null}
     </div>
   );

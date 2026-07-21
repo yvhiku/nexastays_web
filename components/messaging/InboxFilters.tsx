@@ -12,15 +12,15 @@ type Props = {
   onQueryChange: (query: string) => void;
   labels: {
     active: string;
-    all: string;
     unread: string;
-    hosts: string;
     support: string;
+    archived: string;
+    all: string;
     searchPlaceholder: string;
   };
 };
 
-const FILTERS: InboxFilter[] = ["active", "unread", "all", "hosts", "support"];
+const FILTERS: InboxFilter[] = ["active", "unread", "support", "archived", "all"];
 
 export function InboxFilters({ filter, onFilterChange, query, onQueryChange, labels }: Props) {
   const labelFor = (f: InboxFilter) => {
@@ -29,10 +29,10 @@ export function InboxFilters({ filter, onFilterChange, query, onQueryChange, lab
         return labels.active;
       case "unread":
         return labels.unread;
-      case "hosts":
-        return labels.hosts;
       case "support":
         return labels.support;
+      case "archived":
+        return labels.archived;
       default:
         return labels.all;
     }

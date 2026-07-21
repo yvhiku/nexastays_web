@@ -723,11 +723,20 @@
     },
     "filters": {
       "active": "Séjours actifs",
-      "all": "Tous",
       "unread": "Non lus",
-      "hosts": "Tous les séjours",
-      "support": "Assistance"
-    }
+      "support": "Assistance",
+      "archived": "Archivés",
+      "all": "Tous",
+      "hosts": "Tous les séjours"
+    },
+    "stayCompleted": "Séjour terminé",
+    "conversationAvailableUntil": "Conversation disponible jusqu'au {date}",
+    "leaveReview": "Laisser un avis",
+    "thanksForReviewing": "Merci pour votre avis",
+    "archivedBannerTitle": "Séjour terminé · Cette conversation a été archivée.",
+    "archivedBannerBody": "Besoin d'aide pour cette réservation ?",
+    "contactSupport": "Contacter l'assistance",
+    "viewReservation": "Voir la réservation"
   },
   "host": {
     "hostType": "Type d'hôte",

@@ -723,11 +723,20 @@
     },
     "filters": {
       "active": "إقامات نشطة",
-      "all": "الكل",
       "unread": "غير مقروء",
-      "hosts": "كل الإقامات",
-      "support": "الدعم"
-    }
+      "support": "الدعم",
+      "archived": "مؤرشف",
+      "all": "الكل",
+      "hosts": "كل الإقامات"
+    },
+    "stayCompleted": "اكتملت الإقامة",
+    "conversationAvailableUntil": "المحادثة متاحة حتى {date}",
+    "leaveReview": "اترك تقييماً",
+    "thanksForReviewing": "شكراً على تقييمك",
+    "archivedBannerTitle": "اكتملت الإقامة · تم أرشفة هذه المحادثة.",
+    "archivedBannerBody": "هل تحتاج مساعدة بخصوص هذا الحجز؟",
+    "contactSupport": "تواصل مع الدعم",
+    "viewReservation": "عرض الحجز"
   },
   "host": {
     "hostType": "نوع المضيف",
