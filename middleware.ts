@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { findDestinationByCity } from "@/lib/search-destinations";
 
 const LOCALES = ["en", "fr", "ar"] as const;
 const DEFAULT_LOCALE = "en";
@@ -32,7 +33,27 @@ export function middleware(request: NextRequest) {
   }
 
   const pathnameHasLocale = LOCALES.some((loc) => pathname === `/${loc}` || pathname.startsWith(`/${loc}/`));
-  if (pathnameHasLocale) return NextResponse.next();
+
+  if (pathnameHasLocale) {
+    const locale = LOCALES.find((loc) => pathname === `/${loc}` || pathname.startsWith(`/${loc}/`)) ?? DEFAULT_LOCALE;
+    const listingsMatch = pathname.match(/^\/(en|fr|ar)\/listings\/?$/);
+    if (listingsMatch) {
+      const city = request.nextUrl.searchParams.get("city");
+      if (city?.trim()) {
+        const dest = findDestinationByCity(city);
+        const slug = dest?.id ?? city.trim().toLowerCase().replace(/\s+/g, "-");
+        const url = request.nextUrl.clone();
+        url.pathname = `/${locale}/stays/${slug}`;
+        const preserve = ["checkin_date", "checkout_date", "guests", "adults", "children", "infants", "pets"];
+        for (const key of [...url.searchParams.keys()]) {
+          if (key !== "city" && !preserve.includes(key)) url.searchParams.delete(key);
+        }
+        url.searchParams.delete("city");
+        return NextResponse.redirect(url, 301);
+      }
+    }
+    return NextResponse.next();
+  }
 
   if (pathname === "/") {
     const locale = getPreferredLocale(request);

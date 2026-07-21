@@ -9,6 +9,7 @@ const destinations = [
   {
     img: DESTINATION_IMAGES.marrakech,
     city: "Marrakech",
+    slug: "marrakech",
     titleKey: "home.destinations.marrakech",
     subtitleKey: "home.destinations.marrakechSub",
     span: 2,
@@ -17,6 +18,7 @@ const destinations = [
   {
     img: DESTINATION_IMAGES.agadir,
     city: "Agadir",
+    slug: "agadir",
     titleKey: "home.destinations.agadir",
     subtitleKey: "home.destinations.agadirSub",
     span: 1,
@@ -25,6 +27,7 @@ const destinations = [
   {
     img: DESTINATION_IMAGES.tangier,
     city: "Tangier",
+    slug: "tangier",
     titleKey: "home.destinations.tangier",
     subtitleKey: "home.destinations.tangierSub",
     span: 1,
@@ -33,6 +36,7 @@ const destinations = [
   {
     img: DESTINATION_IMAGES.casablanca,
     city: "Casablanca",
+    slug: "casablanca",
     titleKey: "home.destinations.casablanca",
     subtitleKey: "home.destinations.casablancaSub",
     span: 1,
@@ -41,6 +45,7 @@ const destinations = [
   {
     img: DESTINATION_IMAGES.fes,
     city: "Fes",
+    slug: "fes",
     titleKey: "home.destinations.fes",
     subtitleKey: "home.destinations.fesSub",
     span: 1,
@@ -74,7 +79,7 @@ export function DestinationsSection({ locale }: Props) {
                 dest.span === 2 ? "sm:row-span-2 sm:min-h-[440px]" : ""
               }`}
             >
-              <Link href={localePath(`/listings?city=${encodeURIComponent(dest.city)}`)}>
+              <Link href={localePath(`/stays/${dest.slug}`)}>
                 <div className="relative h-[220px] min-h-[220px] sm:h-full">
                   <Image
                     src={dest.img}

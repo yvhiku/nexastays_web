@@ -27,11 +27,11 @@ export const metadata: Metadata = {
     "mobile-web-app-capable": "yes",
   },
   alternates: {
-    canonical: "/en",
     languages: {
       en: "/en",
       fr: "/fr",
       ar: "/ar",
+      "x-default": "/en",
     },
   },
   openGraph: {
