@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === "production";
+const isDev = process.env.NODE_ENV === "development";
 const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
 const identityApi = process.env.NEXT_PUBLIC_IDENTITY_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3001";
 const staysApi = process.env.NEXT_PUBLIC_STAYS_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3002";
@@ -56,6 +57,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: isDev ? ".next-dev" : ".next",
   // PPR requires Next.js canary — static shell + Suspense streaming is used instead (see HomePage.server.tsx).
   experimental: {
     // Avoid huge lucide vendor chunks that often go stale in dev on Windows.
@@ -64,7 +66,7 @@ const nextConfig = {
   webpack: (config, { dev }) => {
     if (dev) {
       // Filesystem webpack cache + Windows file locks → missing ./8948.js / vendor-chunks/*.js
-      config.cache = { type: "memory" };
+      config.cache = { type: "memory", maxGenerations: 1 };
     }
     return config;
   },

@@ -8,6 +8,7 @@ import { fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoGuideJsonLd } from "@/lib/seo/json-ld";
 import { SeoGuidePageClient } from "@/components/seo/SeoGuidePage.client";
+import { staticParamsInDev } from "@/lib/seo/dev-static-params";
 
 export const revalidate = 86400;
 
@@ -18,8 +19,10 @@ type Props = {
 export async function generateStaticParams() {
   const locales: SeoLocale[] = ["en", "fr", "ar"];
   const enGuides = await fetchSeoGuides("en");
-  return enGuides.flatMap((guide) =>
-    locales.map((locale) => ({ locale, slug: guide.slug })),
+  return staticParamsInDev(
+    enGuides.flatMap((guide) =>
+      locales.map((locale) => ({ locale, slug: guide.slug })),
+    ),
   );
 }
 

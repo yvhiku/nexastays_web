@@ -5,6 +5,10 @@ const LOCALES = ["en", "fr", "ar"] as const;
 const DEFAULT_LOCALE = "en";
 const LOCALE_COOKIE = "nexa_locale";
 
+/** Browser / crawler probes — never locale-redirect; return 404 immediately. */
+const PROBE_PATH =
+  /^\/(?:\.well-known(?:\/|$)|favicon\.ico|apple-touch-icon(?:-precomposed)?(?:\.|$)|robots\.txt|browserconfig\.xml|manifest\.json)/;
+
 function getPreferredLocale(request: NextRequest): string {
   const cookie = request.cookies.get(LOCALE_COOKIE)?.value;
   if (cookie && LOCALES.includes(cookie as (typeof LOCALES)[number])) return cookie;
@@ -18,6 +22,10 @@ function getPreferredLocale(request: NextRequest): string {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (PROBE_PATH.test(pathname)) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   // Enforce HTTPS when behind a TLS-terminating proxy (production)
   if (
@@ -72,7 +80,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Skip locale rewrite for Next internals, API, and static public assets
-    "/((?!api|_next/static|_next/image|favicon.ico|icons|images|guidance|pwa|manifest\\.webmanifest|sw\\.js|workbox|offline\\.html|fallback).*)",
+    // Skip locale rewrite for Next internals, API, static assets, and browser probes
+    "/((?!api|_next/static|_next/image|favicon\\.ico|icons|images|guidance|pwa|manifest\\.webmanifest|manifest\\.json|sw\\.js|workbox|offline\\.html|fallback|\\.well-known|apple-touch-icon|robots\\.txt|browserconfig\\.xml).*)",
   ],
 };

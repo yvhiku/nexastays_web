@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev-safe.mjs",
-    "dev:quick": "next dev -p 3005",
-    "clean:next": "node -e \"const fs=require('fs');['.next','node_modules/.cache'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true})}catch{}})\"",
+    "dev:quick": "node scripts/dev-safe.mjs --quick",
+    "dev:recover": "npm run clean:next && node scripts/dev-safe.mjs --force",
+    "dev:turbo": "node scripts/dev-safe.mjs --turbo",
+    "clean:next": "node -e \"const fs=require('fs');['.next','.next-dev','node_modules/.cache'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true})}catch{}})\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

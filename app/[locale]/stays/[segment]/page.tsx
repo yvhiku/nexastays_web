@@ -12,6 +12,7 @@ import { fetchSeoDestinations, fetchSeoPage, fetchSeoListings } from "@/lib/seo/
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
 import { SeoLandingPageClient } from "@/components/seo/SeoLandingPage.client";
+import { staticParamsInDev } from "@/lib/seo/dev-static-params";
 
 export const revalidate = 86400;
 
@@ -34,7 +35,7 @@ export async function generateStaticParams() {
   const landmarkParams = SEO_LANDMARK_URL_SLUGS.flatMap((segment) =>
     locales.map((locale) => ({ locale, segment })),
   );
-  return [...cityParams, ...typeParams, ...amenityParams, ...landmarkParams];
+  return staticParamsInDev([...cityParams, ...typeParams, ...amenityParams, ...landmarkParams]);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
