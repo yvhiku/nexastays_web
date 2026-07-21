@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock, exportHostBookingsCsv } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
+import { showSaveToast } from "@/lib/save-toast";
 import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
 import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
 import { HostKpiSection } from "@/components/host/HostKpiSection";
@@ -87,9 +88,6 @@ function HostDashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [listingActionId, setListingActionId] = useState<string | null>(null);
   const [listingActionError, setListingActionError] = useState<string | null>(null);
-  const [savedNotice, setSavedNotice] = useState(
-    () => searchParams.get("saved") === "1",
-  );
   const [blockListingId, setBlockListingId] = useState("");
   const [blockFrom, setBlockFrom] = useState("");
   const [blockTo, setBlockTo] = useState("");
@@ -125,7 +123,6 @@ function HostDashboardContent() {
 
   useEffect(() => {
     if (searchParams.get("saved") !== "1") return;
-    setSavedNotice(true);
     router.replace(localePath("/host/dashboard"), { scroll: false });
   }, [searchParams, router, localePath]);
 
@@ -244,11 +241,12 @@ function HostDashboardContent() {
         { from: blockFrom, to: blockTo, is_blocked: blockAction === "block" },
         token,
       );
-      setBlockMessage(
+      const message =
         blockAction === "block"
           ? tf("hostDashboard.blockedNights", { count: result.nights })
-          : tf("hostDashboard.unblockedNights", { count: result.nights }),
-      );
+          : tf("hostDashboard.unblockedNights", { count: result.nights });
+      setBlockMessage(message);
+      showSaveToast(t("common.changesSaved"));
       trackEvent("host_calendar_updated", {
         listing_id: blockListingId,
         from: blockFrom,
@@ -333,15 +331,6 @@ function HostDashboardContent() {
           )}
         </div>
       </div>
-
-      {savedNotice && (
-        <Alert
-          variant="success"
-          title={t("hostListingEdit.saved")}
-          className="mb-6"
-          onDismiss={() => setSavedNotice(false)}
-        />
-      )}
 
       {error && (
         <ErrorAlert

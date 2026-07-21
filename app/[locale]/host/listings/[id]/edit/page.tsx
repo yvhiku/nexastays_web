@@ -7,9 +7,10 @@ import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NexaSelect } from "@/components/ui/NexaSelect";
-import { Alert, ErrorAlert } from "@/components/ui/Alert";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
 import { formatUserError } from "@/lib/errors";
+import { showSaveToast } from "@/lib/save-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -102,7 +103,6 @@ function HostListingEditContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const feedbackRef = React.useRef<HTMLDivElement | null>(null);
 
   const patch = useCallback(
@@ -131,14 +131,8 @@ function HostListingEditContent() {
       .finally(() => setLoading(false));
   }, [token, listingId, t, user?.full_name, user?.phone_number]);
 
-  const showFeedback = (kind: "error" | "success", message: string) => {
-    if (kind === "error") {
-      setSuccess(null);
-      setError(message);
-    } else {
-      setError(null);
-      setSuccess(message);
-    }
+  const showFeedback = (message: string) => {
+    setError(message);
     requestAnimationFrame(() => {
       feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
@@ -218,23 +212,19 @@ function HostListingEditContent() {
   const handleSave = async () => {
     const err = validate();
     if (err) {
-      showFeedback("error", err);
+      showFeedback(err);
       return;
     }
     if (!token || !listingId) return;
 
     setSaving(true);
     setError(null);
-    setSuccess(null);
     try {
       await updateHostListing(listingId, buildPayload(), token);
-      showFeedback("success", t("hostListingEdit.saved"));
+      showSaveToast(t("common.changesSaved"));
       router.push(localePath("/host/dashboard?saved=1"));
     } catch (e) {
-      showFeedback(
-        "error",
-        formatUserError(e) || t("hostListingEdit.saveFailed"),
-      );
+      showFeedback(formatUserError(e) || t("hostListingEdit.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -569,28 +559,15 @@ function HostListingEditContent() {
         <p className="text-xs text-nexa-ink-4">{t("hostListingEdit.mediaNote")}</p>
 
         <div ref={feedbackRef} className="space-y-3 pb-8">
-          {error && (
-            <ErrorAlert error={error} onDismiss={() => setError(null)} />
-          )}
-          {success && (
-            <Alert
-              variant="success"
-              title={t("hostListingEdit.saved")}
-              onDismiss={() => setSuccess(null)}
-            />
-          )}
+          {error && <ErrorAlert error={error} onDismiss={() => setError(null)} />}
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               onClick={handleSave}
-              disabled={saving || Boolean(success)}
+              disabled={saving}
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              {saving
-                ? t("hostListingEdit.saving")
-                : success
-                  ? t("hostListingEdit.saved")
-                  : t("hostListingEdit.save")}
+              {saving ? t("hostListingEdit.saving") : t("hostListingEdit.save")}
             </Button>
             {(listing.status === "LIVE" || listing.status === "APPROVED") && (
               <Button variant="outline" asChild>

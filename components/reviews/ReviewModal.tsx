@@ -7,6 +7,7 @@ import { ErrorAlert } from "@/components/ui/Alert";
 import { StarRatingSelector } from "./StarRatingSelector";
 import { cn } from "@/lib/utils";
 import { formatUserError } from "@/lib/errors";
+import { showSaveToast } from "@/lib/save-toast";
 import {
   createReview,
   updateReview,
@@ -108,6 +109,9 @@ export function ReviewModal({
       const result = isEdit && existingReview
         ? await updateReview(existingReview.id, body, token)
         : await createReview({ bookingId, ...body }, token);
+      if (isEdit) {
+        showSaveToast();
+      }
       setSuccess(true);
       setTimeout(() => onSuccess(result), 800);
     } catch (err) {

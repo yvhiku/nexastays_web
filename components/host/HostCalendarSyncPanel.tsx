@@ -16,6 +16,7 @@ import {
   type ExternalCalendarProvider,
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
+import { showSaveToast } from "@/lib/save-toast";
 import { cn } from "@/lib/utils";
 
 const PROVIDERS: { id: ExternalCalendarProvider; label: string; hint: string }[] = [
@@ -120,6 +121,7 @@ export function HostCalendarSyncPanel({ listings, token, t }: Props) {
       setSuccess(
         `${PROVIDERS.find((p) => p.id === provider)?.label ?? "Calendar"} connected`,
       );
+      showSaveToast();
       await refresh();
     } catch (err) {
       setError(formatUserError(err) || "Could not connect calendar");
@@ -139,6 +141,7 @@ export function HostCalendarSyncPanel({ listings, token, t }: Props) {
           ? "Already up to date"
           : `Synced — ${summary.blocked_nights} nights blocked`,
       );
+      showSaveToast();
       await refresh();
     } catch (err) {
       setError(formatUserError(err) || "Sync failed");
@@ -153,6 +156,7 @@ export function HostCalendarSyncPanel({ listings, token, t }: Props) {
         { status: cal.status === "PAUSED" ? "ACTIVE" : "PAUSED" },
         token,
       );
+      showSaveToast();
       await refresh();
     } catch (err) {
       setError(formatUserError(err) || "Update failed");
@@ -166,6 +170,7 @@ export function HostCalendarSyncPanel({ listings, token, t }: Props) {
     try {
       await deleteExternalCalendar(listingId, calId, token);
       setConnectGuide(null);
+      showSaveToast();
       await refresh();
     } catch (err) {
       setError(formatUserError(err) || "Disconnect failed");
@@ -185,6 +190,7 @@ export function HostCalendarSyncPanel({ listings, token, t }: Props) {
       const exp = await regenerateCalendarExport(listingId, token);
       setExportUrl(exp.url);
       setSuccess("Export link regenerated");
+      showSaveToast();
     } catch (err) {
       setError(formatUserError(err) || "Could not regenerate link");
     }

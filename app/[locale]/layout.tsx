@@ -6,6 +6,7 @@ import { StaysFeeProvider } from "@/contexts/StaysFeeContext";
 import { PwaAppShell } from "@/components/pwa/PwaAppShell";
 import { LocaleShell } from "@/components/layout/LocaleShell.client";
 import { HeaderStateProvider } from "@/components/navbar/HeaderStateProvider.client";
+import { SaveToastHost } from "@/components/ui/SaveToastHost";
 import { getServerLocale, getLocaleBundle } from "@/lib/i18n/server";
 import type { Locale } from "@/lib/i18n";
 
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
             >
               {children}
             </LocaleShell>
+            <SaveToastHost />
             <PwaAppShell />
           </HeaderStateProvider>
         </AuthProvider>

@@ -5,13 +5,14 @@ import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
-import { Alert, ErrorAlert } from "@/components/ui/Alert";
+import { ErrorAlert } from "@/components/ui/Alert";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { updateProfile, uploadProfilePhoto } from "@/lib/kyc-api";
 import { formatUserError } from "@/lib/errors";
+import { showSaveToast } from "@/lib/save-toast";
 import { ChangePhoneModal } from "@/components/ChangePhoneModal";
 import { Camera, User, Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ function ProfilePageContent() {
   const { t, localePath } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "error"; text: string } | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [city, setCity] = useState("");
@@ -55,7 +56,7 @@ function ProfilePageContent() {
         getToken
       );
       await refreshUser();
-      setMessage({ type: "success", text: t("profile.profileUpdated") });
+      showSaveToast(t("common.changesSaved"));
     } catch (err) {
       setMessage({
         type: "error",
@@ -74,7 +75,7 @@ function ProfilePageContent() {
     try {
       await uploadProfilePhoto(file, getToken);
       await refreshUser();
-      setMessage({ type: "success", text: t("profile.photoUpdated") });
+      showSaveToast(t("profile.photoUpdated"));
     } catch (err) {
       setMessage({
         type: "error",
@@ -133,21 +134,13 @@ function ProfilePageContent() {
                 </p>
               </div>
 
-              {message &&
-                (message.type === "success" ? (
-                  <Alert
-                    variant="success"
-                    title={message.text}
-                    className="mb-6"
-                    onDismiss={() => setMessage(null)}
-                  />
-                ) : (
-                  <ErrorAlert
-                    error={message.text}
-                    className="mb-6"
-                    onDismiss={() => setMessage(null)}
-                  />
-                ))}
+              {message && (
+                <ErrorAlert
+                  error={message.text}
+                  className="mb-6"
+                  onDismiss={() => setMessage(null)}
+                />
+              )}
 
               {/* Profile form - full name and date of birth locked; email, city editable */}
               <form onSubmit={handleSaveProfile} className="space-y-6">
@@ -187,6 +180,7 @@ function ProfilePageContent() {
                       onSuccess={() => {
                         refreshUser();
                         setShowChangePhone(false);
+                        showSaveToast(t("common.changesSaved"));
                       }}
                     />
                   )}

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatUserError } from "@/lib/errors";
+import { showSaveToast } from "@/lib/save-toast";
 import { trackEvent } from "@/lib/analytics";
 import {
   createReview,
@@ -259,6 +260,9 @@ export function RateStayContent({
           },
         }),
       );
+      if (isEdit) {
+        showSaveToast();
+      }
       setSuccessReview(result);
       setSuccess(true);
     } catch (err) {
