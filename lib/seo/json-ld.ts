@@ -1,6 +1,6 @@
 import { getPublicSiteUrl } from "@/lib/env";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
-import type { SeoGuidePagePayload, SeoPagePayload } from "./types";
+import type { SeoGuidePagePayload, SeoListingPagePayload, SeoPagePayload } from "./types";
 
 export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
@@ -195,6 +195,69 @@ export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, u
   }
 
   return nodes;
+}
+
+export function buildListingJsonLd(page: SeoListingPagePayload): Record<string, unknown>[] {
+  const siteUrl = getPublicSiteUrl();
+  const pageUrl = `${siteUrl}${page.canonical}`;
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: page.breadcrumbs.map((crumb, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: crumb.name,
+      item: `${siteUrl}${crumb.path}`,
+    })),
+  };
+
+  const lodging: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: page.h1,
+    description: page.description,
+    url: pageUrl,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: page.city,
+      addressCountry: "MA",
+      ...(page.neighborhood ? { streetAddress: page.neighborhood } : {}),
+    },
+  };
+
+  if (page.geoLat != null && page.geoLng != null) {
+    lodging.geo = {
+      "@type": "GeoCoordinates",
+      latitude: page.geoLat,
+      longitude: page.geoLng,
+    };
+  }
+
+  if (page.ogImageUrl) {
+    lodging.image = page.ogImageUrl;
+  }
+
+  if (page.avgRating != null && page.reviewCount > 0) {
+    lodging.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: page.avgRating,
+      reviewCount: page.reviewCount,
+      bestRating: 5,
+    };
+  }
+
+  if (page.basePrice != null) {
+    lodging.offers = {
+      "@type": "Offer",
+      price: page.basePrice,
+      priceCurrency: page.currency,
+      availability: "https://schema.org/InStock",
+      url: pageUrl,
+    };
+  }
+
+  return [breadcrumb, lodging];
 }
 
 /** @deprecated use buildSeoPageJsonLd */
