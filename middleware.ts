@@ -7,7 +7,7 @@ const LOCALE_COOKIE = "nexa_locale";
 
 /** Browser / crawler probes — never locale-redirect; return 404 immediately. */
 const PROBE_PATH =
-  /^\/(?:\.well-known(?:\/|$)|favicon\.ico|apple-touch-icon(?:-precomposed)?(?:\.|$)|robots\.txt|browserconfig\.xml|manifest\.json)/;
+  /^\/(?:\.well-known(?:\/|$)|favicon\.ico|apple-touch-icon[^/]*|robots\.txt|browserconfig\.xml|manifest\.json)/;
 
 function getPreferredLocale(request: NextRequest): string {
   const cookie = request.cookies.get(LOCALE_COOKIE)?.value;
