@@ -2,8 +2,10 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Share2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { AttachmentDto } from "@/lib/messaging/messages-api";
-import { attachmentFullUrl } from "./ProgressiveImage";
+import { attachmentFullUrl, attachmentThumbUrl } from "./ProgressiveImage";
+import { useFocusTrap } from "./hooks/useFocusTrap";
 
 type Props = {
   attachments: AttachmentDto[];
@@ -19,10 +21,15 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
   const [index, setIndex] = useState(initialIndex);
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [displayUrl, setDisplayUrl] = useState<string | null>(null);
+  const [fullReady, setFullReady] = useState(false);
   const dragging = useRef(false);
   const lastPoint = useRef({ x: 0, y: 0 });
   const pinchStart = useRef<{ distance: number; scale: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (open) {
@@ -33,7 +40,48 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
   }, [open, initialIndex]);
 
   const current = attachments[index];
-  const url = current ? attachmentFullUrl(current) : null;
+  const thumbUrl = current ? attachmentThumbUrl(current) : null;
+  const fullUrl = current ? attachmentFullUrl(current) : null;
+
+  useEffect(() => {
+    if (!open || !current) {
+      setDisplayUrl(null);
+      setFullReady(false);
+      return;
+    }
+
+    const thumb = thumbUrl;
+    const full = fullUrl;
+    if (!thumb && !full) {
+      setDisplayUrl(null);
+      setFullReady(false);
+      return;
+    }
+
+    setDisplayUrl(thumb ?? full);
+    setFullReady(!full || full === thumb);
+
+    if (!full || full === thumb) return;
+
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      setDisplayUrl(full);
+      setFullReady(true);
+    };
+    img.onerror = () => {
+      if (cancelled) return;
+      setFullReady(false);
+    };
+    img.src = full;
+
+    return () => {
+      cancelled = true;
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [open, index, current, thumbUrl, fullUrl]);
 
   const goPrev = useCallback(() => {
     setIndex((i) => (i > 0 ? i - 1 : attachments.length - 1));
@@ -104,30 +152,38 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
     pinchStart.current = null;
   };
 
-  if (!open || !current || !url) return null;
+  if (!open || !current || !displayUrl) return null;
+
+  const downloadUrl = fullUrl ?? displayUrl;
 
   const download = () => {
     const a = document.createElement("a");
-    a.href = url;
+    a.href = downloadUrl;
     a.download = current.originalFilename ?? "image";
     a.click();
   };
 
   const share = async () => {
     if (navigator.share) {
-      await navigator.share({ title: current.originalFilename ?? "Photo", url });
+      await navigator.share({ title: current.originalFilename ?? "Photo", url: downloadUrl });
     } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(downloadUrl);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-black/95">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-[100] flex flex-col bg-black/95"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image ${index + 1} of ${attachments.length}`}
+    >
       <div className="flex items-center justify-between px-4 py-3 text-white">
         <button type="button" onClick={onClose} aria-label="Close">
           <X className="h-6 w-6" />
         </button>
-        <span className="text-sm tabular-nums">
+        <span className="text-sm tabular-nums" aria-live="polite">
           {index + 1} / {attachments.length}
         </span>
         <div className="flex gap-3">
@@ -153,15 +209,15 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
             type="button"
             onClick={goPrev}
             className="absolute left-2 z-10 rounded-full bg-white/10 p-2 text-white"
-            aria-label="Previous"
+            aria-label="Previous image"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
         ) : null}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={url}
-          alt=""
+          src={displayUrl}
+          alt={current.originalFilename ?? "Attachment"}
           draggable={false}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -170,15 +226,19 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
           style={{
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
             transition: dragging.current ? "none" : "transform 0.15s ease-out",
+            filter: fullReady ? "none" : "blur(0px)",
           }}
-          className="max-h-[75dvh] max-w-full object-contain select-none cursor-grab active:cursor-grabbing"
+          className={cn(
+            "max-h-[75dvh] max-w-full object-contain select-none cursor-grab active:cursor-grabbing transition-opacity duration-200",
+            fullReady ? "opacity-100" : "opacity-90",
+          )}
         />
         {attachments.length > 1 ? (
           <button
             type="button"
             onClick={goNext}
             className="absolute right-2 z-10 rounded-full bg-white/10 p-2 text-white"
-            aria-label="Next"
+            aria-label="Next image"
           >
             <ChevronRight className="h-6 w-6" />
           </button>

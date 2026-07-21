@@ -29,6 +29,13 @@ import {
   type AttachmentDto,
   type MessageDto,
 } from "./messages-api";
+import {
+  clearPendingUpload,
+  loadPendingUpload,
+  savePendingUpload,
+  PENDING_UPLOAD_VERSION,
+  type PendingUploadFileMeta,
+} from "./pending-upload-store";
 import { createClientMessageId } from "./offline-queue";
 
 export type QueueItemStatus =
@@ -83,6 +90,7 @@ interface ActiveSend {
   items: StagedItem[];
   messageType: "IMAGE" | "FILE";
   sessionId: string | null;
+  uploadPhase: "uploading" | "ready" | "sending";
 }
 
 function isImageFile(file: File): boolean {
@@ -93,6 +101,76 @@ function revokePreviews(items: StagedItem[]): void {
   for (const item of items) {
     if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
   }
+}
+
+async function persistActiveSend(conversationId: string, send: ActiveSend): Promise<void> {
+  const blobs = new Map<string, Blob>();
+  const files: PendingUploadFileMeta[] = send.items.map((item) => {
+    const blobKey = `pending_${conversationId}_${item.id}`;
+    blobs.set(blobKey, item.file);
+    return {
+      id: item.id,
+      name: item.file.name,
+      mime: item.file.type,
+      size: item.file.size,
+      lastModified: item.file.lastModified,
+      kind: item.kind,
+      rotation: item.rotation,
+      crop: item.crop,
+      blobKey,
+      status: item.status === "cancelled" ? "queued" : item.status,
+      attachmentId: item.attachment?.id,
+    };
+  });
+  await savePendingUpload(
+    {
+      version: PENDING_UPLOAD_VERSION,
+      conversationId,
+      clientMessageId: send.clientMessageId,
+      sessionId: send.sessionId,
+      caption: send.caption,
+      messageType: send.messageType,
+      updatedAt: Date.now(),
+      files,
+    },
+    blobs,
+  );
+}
+
+function rebuildSendFromPending(
+  record: Awaited<ReturnType<typeof loadPendingUpload>>,
+): ActiveSend | null {
+  if (!record) return null;
+  const items: StagedItem[] = record.record.files.flatMap((meta) => {
+    const blob = record.blobs.get(meta.blobKey);
+    if (!blob) return [];
+    const file = new File([blob], meta.name, {
+      type: meta.mime || (meta.kind === "image" ? "image/jpeg" : "application/pdf"),
+      lastModified: meta.lastModified,
+    });
+    return [
+      {
+        id: meta.id,
+        file,
+        kind: meta.kind,
+        previewUrl: meta.kind === "image" ? URL.createObjectURL(file) : "",
+        status: meta.status,
+        progress: meta.status === "done" ? 100 : 0,
+        rotation: meta.rotation,
+        crop: meta.crop,
+        attachment: meta.attachmentId ? { id: meta.attachmentId } as AttachmentDto : undefined,
+      },
+    ];
+  });
+  if (!items.length) return null;
+  return {
+    clientMessageId: record.record.clientMessageId,
+    caption: record.record.caption,
+    items,
+    messageType: record.record.messageType,
+    sessionId: record.record.sessionId,
+    uploadPhase: items.every((i) => i.status === "done") ? "ready" : "uploading",
+  };
 }
 
 export function useAttachmentManager(
@@ -111,6 +189,7 @@ export function useAttachmentManager(
   const sessionRef = useRef<string | null>(null);
   const activeSendRef = useRef<ActiveSend | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumeCheckedRef = useRef(false);
 
   const persistDraft = useCallback(async (draftItems: StagedItem[], draftCaption: string) => {
     if (!draftItems.length) {
@@ -336,6 +415,37 @@ export function useAttachmentManager(
       if (!token) return;
 
       const { clientMessageId, caption: sendCaption, items: sendItems, messageType } = send;
+
+      if (send.uploadPhase === "ready" && send.sessionId) {
+        setIsSending(true);
+        setActiveUploadClientId(clientMessageId);
+        try {
+          send.uploadPhase = "sending";
+          const message = await sendMessageWithSession(
+            conversationId,
+            messageType,
+            send.sessionId,
+            token,
+            sendCaption.trim() || undefined,
+            clientMessageId,
+          );
+          callbacks.onMessageSent?.(message);
+          revokePreviews(sendItems);
+          activeSendRef.current = null;
+          sessionRef.current = null;
+          await clearPendingUpload(conversationId).catch(() => undefined);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "Send failed";
+          callbacks.onSendFailed?.(clientMessageId, msg);
+          activeSendRef.current = send;
+          await persistActiveSend(conversationId, send).catch(() => undefined);
+        } finally {
+          setIsSending(false);
+          setActiveUploadClientId(null);
+        }
+        return;
+      }
+
       setIsSending(true);
       setActiveUploadClientId(clientMessageId);
       setError(null);
@@ -386,6 +496,9 @@ export function useAttachmentManager(
             count: failed.length,
           });
           callbacks.onSendFailed?.(clientMessageId, "Some uploads failed");
+          send.sessionId = sessionId;
+          activeSendRef.current = send;
+          await persistActiveSend(conversationId, send).catch(() => undefined);
           setError("Some uploads failed. Tap retry.");
           setIsSending(false);
           setActiveUploadClientId(null);
@@ -393,6 +506,9 @@ export function useAttachmentManager(
         }
 
         await completeAttachmentSession(sessionId, token);
+        send.uploadPhase = "ready";
+        await persistActiveSend(conversationId, send).catch(() => undefined);
+
         const doneProgress: UploadProgress = {
           overallPct: 100,
           completedCount: total,
@@ -402,6 +518,7 @@ export function useAttachmentManager(
         setProgress(doneProgress);
         callbacks.onUploadProgress?.(clientMessageId, doneProgress);
 
+        send.uploadPhase = "sending";
         const message = await sendMessageWithSession(
           conversationId,
           messageType,
@@ -419,21 +536,22 @@ export function useAttachmentManager(
         setCaption("");
         setProgress(null);
         await clearAttachmentDraft(conversationId).catch(() => undefined);
+        await clearPendingUpload(conversationId).catch(() => undefined);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Send failed";
         trackEvent("upload_failed", { conversation_id: conversationId });
         callbacks.onSendFailed?.(clientMessageId, msg);
-        if (sessionRef.current) {
-          try {
-            await abandonAttachmentSession(sessionRef.current, token);
-            trackEvent("session_abandoned", {
-              conversation_id: conversationId,
-              session_id: sessionRef.current,
-            });
-          } catch {
-            /* ignore */
-          }
-          sessionRef.current = null;
+
+        const uploadsDone = sendItems.every((i) => i.status === "done" && i.attachment);
+        if (uploadsDone) {
+          send.uploadPhase = "ready";
+          send.sessionId = sessionRef.current;
+          activeSendRef.current = send;
+          await persistActiveSend(conversationId, send).catch(() => undefined);
+        } else if (sessionRef.current) {
+          send.sessionId = sessionRef.current;
+          activeSendRef.current = send;
+          await persistActiveSend(conversationId, send).catch(() => undefined);
         }
         setError(msg);
       } finally {
@@ -488,8 +606,10 @@ export function useAttachmentManager(
       items: items.map((i) => ({ ...i })),
       messageType,
       sessionId: sessionRef.current,
+      uploadPhase: "uploading",
     };
     activeSendRef.current = sendSnapshot;
+    void persistActiveSend(conversationId, sendSnapshot).catch(() => undefined);
 
     hideComposer();
 
@@ -529,6 +649,81 @@ export function useAttachmentManager(
     await executeSend(send);
   }, [conversationId, items, sendBatch, executeSend]);
 
+  const abandonPendingUpload = useCallback(async () => {
+    const send = activeSendRef.current;
+    if (send?.sessionId && token) {
+      try {
+        await abandonAttachmentSession(send.sessionId, token);
+        trackEvent("session_abandoned", {
+          conversation_id: conversationId,
+          session_id: send.sessionId,
+        });
+      } catch {
+        /* ignore */
+      }
+    }
+    if (send) revokePreviews(send.items);
+    activeSendRef.current = null;
+    sessionRef.current = null;
+    await clearPendingUpload(conversationId).catch(() => undefined);
+  }, [conversationId, token]);
+
+  const resumePendingUpload = useCallback(async (): Promise<boolean> => {
+    if (!token || activeSendRef.current) return false;
+    const pending = await loadPendingUpload(conversationId);
+    const send = rebuildSendFromPending(pending);
+    if (!send) return false;
+
+    sessionRef.current = send.sessionId;
+    activeSendRef.current = send;
+
+    const previews: OptimisticPreview[] = send.items.map((item) => ({
+      id: `optimistic_att_${item.id}`,
+      previewUrl: item.previewUrl || "",
+      mime: item.file.type || (item.kind === "image" ? "image/jpeg" : "application/pdf"),
+      originalFilename: item.file.name,
+    }));
+    const optimistic = buildOptimisticMediaMessage(
+      conversationId,
+      send.clientMessageId,
+      callbacks.senderId ?? null,
+      send.messageType,
+      send.caption.trim() || undefined,
+      previews,
+      {
+        uploadState: send.uploadPhase === "ready" ? "uploading" : "uploading",
+        uploadProgress: 0,
+        uploadLabel: "Resuming upload…",
+      },
+    );
+    callbacks.onOptimisticMessage?.(optimistic);
+    trackEvent("retry_upload", { conversation_id: conversationId, resumed: true });
+    void executeSend(send);
+    return true;
+  }, [token, conversationId, callbacks, executeSend]);
+
+  useEffect(() => {
+    if (!token || resumeCheckedRef.current) return;
+    resumeCheckedRef.current = true;
+    void resumePendingUpload();
+  }, [token, resumePendingUpload]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      const send = activeSendRef.current;
+      if (!send || !token) return;
+      const needsRetry = send.items.some(
+        (i) => i.status === "failed" || i.status === "uploading",
+      );
+      if (needsRetry || send.uploadPhase === "ready") {
+        void executeSend(send);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [token, executeSend]);
+
   const state: AttachmentManagerState = useMemo(
     () => ({
       items,
@@ -554,5 +749,7 @@ export function useAttachmentManager(
     retryFailed,
     closeComposer,
     hideComposer,
+    abandonPendingUpload,
+    resumePendingUpload,
   };
 }

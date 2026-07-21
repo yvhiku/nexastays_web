@@ -9,6 +9,7 @@ import {
   getAttachmentKindDef,
   listAttachmentKinds,
 } from "@/lib/messaging/attachments/registry";
+import { useFocusTrap } from "./hooks/useFocusTrap";
 import "./attachments/register-defaults";
 
 type Manager = ReturnType<typeof useAttachmentManager>;
@@ -40,6 +41,8 @@ export function AttachmentComposer({ manager, labels }: Props) {
   const active = items[activeIndex];
   const kindDef = active ? getAttachmentKindDef(getAttachmentKind(active.file)) : null;
   const Editor = kindDef?.Editor;
+
+  useFocusTrap(state.isOpen && items.length > 0, trapRef);
 
   useEffect(() => {
     if (!state.isOpen) return;
@@ -140,7 +143,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
       ) : null}
 
       {state.progress ? (
-        <div className="px-4 py-2">
+        <div className="px-4 py-2" aria-live="polite" aria-atomic="true">
           <div className="mb-1 flex justify-between text-xs text-white/80">
             <span>{state.progress.label}</span>
             <span>{state.progress.overallPct}%</span>
@@ -155,7 +158,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
       ) : null}
 
       {state.error ? (
-        <div className="px-4 py-2 text-center text-sm text-red-300">
+        <div className="px-4 py-2 text-center text-sm text-red-300" role="alert">
           {state.error}
           {items.some((i) => i.status === "failed") ? (
             <button type="button" className="ml-2 underline" onClick={() => void retryFailed()}>
@@ -171,6 +174,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
           value={state.caption}
           onChange={(e) => setCaption(e.target.value.slice(0, 2000))}
           placeholder={labels.captionPlaceholder}
+          aria-label={labels.captionPlaceholder}
           rows={2}
           disabled={state.isSending}
           className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-nexa-primary/40"

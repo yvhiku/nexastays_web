@@ -21,6 +21,7 @@ export function MediaUploadStatus({ meta, isOwn, labels, onRetry }: Props) {
   if (meta.uploadState === "failed") {
     return (
       <div
+        role="alert"
         className={cn(
           "mt-1 flex items-center gap-2 rounded-lg px-2 py-1 text-xs",
           isOwn ? "justify-end text-red-200" : "text-red-600 bg-red-50",
@@ -41,7 +42,11 @@ export function MediaUploadStatus({ meta, isOwn, labels, onRetry }: Props) {
   }
 
   return (
-    <div className={cn("mt-1 space-y-1", isOwn ? "text-right" : "")}>
+    <div
+      className={cn("mt-1 space-y-1", isOwn ? "text-right" : "")}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="flex items-center justify-between gap-2 text-[11px] text-nexa-ink-4">
         <span>{meta.uploadLabel ?? labels.uploading}</span>
         <span className="tabular-nums">{meta.uploadProgress}%</span>
