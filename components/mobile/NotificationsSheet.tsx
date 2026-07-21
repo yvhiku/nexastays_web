@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
@@ -43,28 +43,33 @@ export function NotificationsSheet({ open, onOpenChange, onUnreadChange }: Props
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
+  const onUnreadChangeRef = useRef(onUnreadChange);
+  const loadInFlightRef = useRef(false);
 
-  const refreshUnread = useCallback(
-    async (list: UserNotificationItem[]) => {
-      onUnreadChange?.(list.filter((n) => !n.is_read).length);
-    },
-    [onUnreadChange],
-  );
+  useEffect(() => {
+    onUnreadChangeRef.current = onUnreadChange;
+  }, [onUnreadChange]);
+
+  const notifyUnreadCount = useCallback((list: UserNotificationItem[]) => {
+    onUnreadChangeRef.current?.(list.filter((n) => !n.is_read).length);
+  }, []);
 
   const load = useCallback(async () => {
-    if (!token) return;
+    if (!token || loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     setLoading(true);
     setError(null);
     try {
       const data = await getNotifications(token, 20);
       setItems(data);
-      await refreshUnread(data);
+      notifyUnreadCount(data);
     } catch (e) {
       setError(formatUserError(e));
     } finally {
+      loadInFlightRef.current = false;
       setLoading(false);
     }
-  }, [token, refreshUnread]);
+  }, [token, notifyUnreadCount]);
 
   useEffect(() => {
     if (open && isAuthenticated && ready && token) {
@@ -85,7 +90,7 @@ export function NotificationsSheet({ open, onOpenChange, onUnreadChange }: Props
         read_at: n.read_at ?? new Date().toISOString(),
       }));
       setItems(next);
-      onUnreadChange?.(0);
+      onUnreadChangeRef.current?.(0);
     } catch (e) {
       setError(formatUserError(e));
     } finally {
@@ -111,7 +116,9 @@ export function NotificationsSheet({ open, onOpenChange, onUnreadChange }: Props
               : n,
           ),
         );
-        onUnreadChange?.(items.filter((n) => n.id !== item.id && !n.is_read).length);
+        onUnreadChangeRef.current?.(
+          items.filter((n) => n.id !== item.id && !n.is_read).length,
+        );
       } catch {
         /* navigation still proceeds */
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +24,10 @@ export function NotificationBell({ className }: Props) {
   const { isAuthenticated } = useAuth();
   const { notificationCount, refresh } = useHeaderState();
   const [open, setOpen] = useState(false);
+
+  const handleUnreadChange = useCallback(() => {
+    void refresh();
+  }, [refresh]);
 
   const badge = formatBadge(notificationCount);
 
@@ -53,9 +57,7 @@ export function NotificationBell({ className }: Props) {
       <NotificationsSheet
         open={open}
         onOpenChange={setOpen}
-        onUnreadChange={() => {
-          void refresh();
-        }}
+        onUnreadChange={handleUnreadChange}
       />
     </>
   );
