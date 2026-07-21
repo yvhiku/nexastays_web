@@ -740,9 +740,10 @@
       "continue": "Continue editing"
     },
     "filters": {
+      "active": "Active stays",
       "all": "All",
       "unread": "Unread",
-      "hosts": "Stays",
+      "hosts": "All stays",
       "support": "Support"
     }
   },

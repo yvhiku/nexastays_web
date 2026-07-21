@@ -176,7 +176,7 @@ export interface MessagesPage {
   hasMore: boolean;
 }
 
-export type InboxFilter = "all" | "unread" | "hosts" | "support";
+export type InboxFilter = "active" | "all" | "unread" | "hosts" | "support";
 
 /** Convenience alias for inbox rows */
 export type ConversationListItem = ConversationListResponse;
@@ -202,7 +202,7 @@ function normalizeDetail(raw: ConversationDetailResponse): ConversationDetail {
 
 export async function listConversations(
   token?: string | null,
-  filter: InboxFilter = "all",
+  filter: InboxFilter = "active",
   q?: string,
 ): Promise<ConversationListResponse[]> {
   const res = await client.get("/messaging/conversations", {

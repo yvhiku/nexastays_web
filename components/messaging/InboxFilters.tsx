@@ -11,6 +11,7 @@ type Props = {
   query: string;
   onQueryChange: (query: string) => void;
   labels: {
+    active: string;
     all: string;
     unread: string;
     hosts: string;
@@ -19,11 +20,13 @@ type Props = {
   };
 };
 
-const FILTERS: InboxFilter[] = ["all", "unread", "hosts", "support"];
+const FILTERS: InboxFilter[] = ["active", "unread", "all", "hosts", "support"];
 
 export function InboxFilters({ filter, onFilterChange, query, onQueryChange, labels }: Props) {
   const labelFor = (f: InboxFilter) => {
     switch (f) {
+      case "active":
+        return labels.active;
       case "unread":
         return labels.unread;
       case "hosts":

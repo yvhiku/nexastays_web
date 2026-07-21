@@ -46,7 +46,7 @@ type Props = {
 export function InboxListPanel({ activeConversationId = null }: Props) {
   const { token } = useAuth();
   const { t, localePath } = useLanguage();
-  const [filter, setFilter] = useState<InboxFilter>("all");
+  const [filter, setFilter] = useState<InboxFilter>("active");
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [items, setItems] = useState<ConversationListItem[]>([]);
@@ -100,6 +100,7 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
         query={query}
         onQueryChange={setQuery}
         labels={{
+          active: t("inbox.filters.active"),
           all: t("inbox.filters.all"),
           unread: t("inbox.filters.unread"),
           hosts: t("inbox.filters.hosts"),

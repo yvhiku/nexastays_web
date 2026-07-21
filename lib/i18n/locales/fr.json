@@ -721,9 +721,10 @@
       "continue": "Continuer"
     },
     "filters": {
+      "active": "Séjours actifs",
       "all": "Tous",
       "unread": "Non lus",
-      "hosts": "Séjours",
+      "hosts": "Tous les séjours",
       "support": "Assistance"
     }
   },
