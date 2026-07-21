@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { SeoTrustSignals } from "@/components/seo/landing/SeoTrustSignals";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SeoPagePayload } from "@/lib/seo/types";
@@ -91,9 +91,13 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
           <SeoTrustSignals compact />
         </div>
         <div className="mt-6">
-          <Button asChild size="lg">
-            <Link href={listingsPath}>{t("seo.browseListings")}</Link>
-          </Button>
+          <Link
+            href={listingsPath}
+            prefetch={false}
+            className={buttonVariants({ size: "lg" })}
+          >
+            {t("seo.browseListings")}
+          </Link>
         </div>
       </div>
     </section>

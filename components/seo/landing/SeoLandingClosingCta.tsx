@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 type Props = {
   title: string;
@@ -15,9 +15,9 @@ export function SeoLandingClosingCta({ title, body, listingsPath, ctaLabel }: Pr
       <h2 className="font-display text-2xl sm:text-3xl font-semibold text-nexa-ink">{title}</h2>
       <p className="text-nexa-muted mt-3 max-w-xl mx-auto text-sm sm:text-base">{body}</p>
       <div className="mt-6">
-        <Button asChild size="lg">
-          <Link href={listingsPath}>{ctaLabel}</Link>
-        </Button>
+        <Link href={listingsPath} prefetch={false} className={buttonVariants({ size: "lg" })}>
+          {ctaLabel}
+        </Link>
       </div>
     </section>
   );
