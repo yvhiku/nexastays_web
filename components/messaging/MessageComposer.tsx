@@ -70,14 +70,14 @@ export function MessageComposer({
   return (
     <footer className="shrink-0 z-50 border-t border-[#F7F7F7] bg-[rgba(252,249,248,0.92)] backdrop-blur-2xl px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       {uploadProgress != null ? (
-        <div className="mb-2 h-1 overflow-hidden rounded-full bg-nexa-bg-2 max-w-2xl mx-auto">
+        <div className="mb-2 h-1 overflow-hidden rounded-full bg-nexa-bg-2 w-full">
           <div
             className="h-full bg-nexa-primary transition-all"
             style={{ width: `${uploadProgress}%` }}
           />
         </div>
       ) : null}
-      <div className="flex items-end gap-2 max-w-2xl mx-auto w-full">
+      <div className="flex w-full max-w-none items-end gap-2 lg:max-w-none">
         <button
           type="button"
           onClick={onAttach}

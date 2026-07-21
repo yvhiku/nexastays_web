@@ -42,10 +42,10 @@ export function ConversationHeader({
 
   return (
     <header className="shrink-0 z-50 bg-[rgba(252,249,248,0.92)] backdrop-blur-xl shadow-[0_20px_20px_rgba(34,34,34,0.04)] border-b border-[#F7F7F7]">
-      <div className="flex items-center gap-2 px-4 h-16 max-w-2xl mx-auto w-full">
+      <div className="mx-auto flex h-16 w-full max-w-none items-center gap-2 px-4 lg:max-w-none">
         <Link
           href={backHref}
-          className="flex items-center justify-center w-10 h-10 rounded-full text-nexa-primary hover:bg-[#F7F7F7] shrink-0 transition-colors active:scale-95"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-colors hover:bg-[#F7F7F7] active:scale-95 lg:hidden"
           aria-label={backLabel}
         >
           <ArrowLeft className="h-5 w-5" />

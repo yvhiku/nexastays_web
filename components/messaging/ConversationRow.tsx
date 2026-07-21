@@ -10,6 +10,7 @@ type Props = {
   item: ConversationListResponse;
   href: string;
   optimisticAt?: number | null;
+  isActive?: boolean;
 };
 
 function formatRelativeTime(iso: string | null, optimisticAt?: number | null): string {
@@ -26,7 +27,7 @@ function formatRelativeTime(iso: string | null, optimisticAt?: number | null): s
   return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function ConversationRowInner({ item, href, optimisticAt }: Props) {
+function ConversationRowInner({ item, href, optimisticAt, isActive = false }: Props) {
   const { presentation, sync, lastMessage } = item;
   const unread = sync.unreadCount > 0;
   const preview = lastMessage.preview?.trim() || "—";
@@ -37,7 +38,11 @@ function ConversationRowInner({ item, href, optimisticAt }: Props) {
       href={href}
       className={cn(
         "flex items-start gap-3 px-4 py-3.5 min-h-[72px] border-b border-nexa-line/50 transition-colors",
-        unread ? "bg-nexa-primary-soft/30" : "hover:bg-nexa-bg-2/80 active:bg-nexa-bg-2",
+        isActive
+          ? "border-l-4 border-l-nexa-primary bg-[#f2dde1]/40"
+          : unread
+            ? "bg-nexa-primary-soft/30"
+            : "hover:bg-nexa-bg-2/80 active:bg-nexa-bg-2",
       )}
     >
       <UserAvatar name={presentation.title} media={presentation.avatar} size="lg" />
@@ -66,6 +71,7 @@ export const ConversationRow = React.memo(
   ConversationRowInner,
   (prev, next) =>
     prev.href === next.href &&
+    prev.isActive === next.isActive &&
     prev.optimisticAt === next.optimisticAt &&
     prev.item.sync.conversationVersion === next.item.sync.conversationVersion &&
     prev.item.sync.unreadCount === next.item.sync.unreadCount &&

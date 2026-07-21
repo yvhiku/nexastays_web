@@ -2,3 +2,8 @@
 export function isMessagingThreadPath(pathname: string): boolean {
   return /\/inbox\/[^/]+$/.test(pathname);
 }
+
+export function activeConversationIdFromPath(pathname: string): string | null {
+  const match = pathname.match(/\/inbox\/([^/]+)/);
+  return match?.[1] ?? null;
+}

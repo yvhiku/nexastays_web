@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ConversationContext } from "@/components/messaging/ConversationContext";
 import { MediaGallery } from "@/components/messaging/MediaGallery";
@@ -281,15 +280,15 @@ function ConversationPageInner() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fcf9f8] md:static md:inset-auto md:min-h-[100dvh]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nexa-primary" />
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fcf9f8] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-nexa-primary" />
       </div>
     );
   }
 
   if (error && !conversation) {
     return (
-      <div className="fixed inset-0 z-[60] bg-[#fcf9f8] px-4 flex items-center justify-center md:static md:inset-auto md:min-h-[100dvh]">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fcf9f8] px-4 lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
         <div className="w-full max-w-md">
           <ErrorAlert error={error} />
         </div>
@@ -306,7 +305,7 @@ function ConversationPageInner() {
       : undefined;
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-[#fcf9f8] md:static md:inset-auto md:min-h-[100dvh] md:max-w-2xl md:mx-auto md:w-full">
+    <div className="fixed inset-0 z-[60] flex h-[100dvh] flex-col bg-[#fcf9f8] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
       <ConversationHeader
         conversation={conversation}
         backHref={localePath("/inbox")}
@@ -356,7 +355,7 @@ function ConversationPageInner() {
       />
 
       {error ? (
-        <div className="shrink-0 px-4 pt-2 max-w-2xl mx-auto w-full">
+        <div className="w-full shrink-0 px-4 pt-2">
           <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
         </div>
       ) : null}
@@ -371,7 +370,7 @@ function ConversationPageInner() {
         ) : null}
         {messages.length === 0 ? (
           <p className="py-12 text-center text-sm text-nexa-ink-3">
-            Your conversation with {conversation.presentation.title} starts here.
+            {t("inbox.emptyThread").replace("{name}", conversation.presentation.title)}
           </p>
         ) : null}
         <TimelineRenderer
@@ -426,9 +425,5 @@ function ConversationPageInner() {
 }
 
 export default function ConversationPage() {
-  return (
-    <ProtectedRoute>
-      <ConversationPageInner />
-    </ProtectedRoute>
-  );
+  return <ConversationPageInner />;
 }
