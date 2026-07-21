@@ -618,6 +618,8 @@
     "messageRemoved": "This message was removed",
     "loadingOlder": "Loading earlier messages…",
     "guests": "guests",
+    "viewBooking": "View booking",
+    "emptyThread": "Your conversation with {name} starts here.",
     "checkIn": "Check-in",
     "checkOut": "Check-out",
     "showDetails": "Show details",

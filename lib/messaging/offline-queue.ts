@@ -60,7 +60,9 @@ export function buildOptimisticMessage(
     type: "TEXT",
     body,
     metadata: { source: "USER", schemaVersion: 1, cardVersion: 1, presentationVersion: 1 },
+    payload: { text: body },
     status: "PENDING",
+    deliveryState: "PENDING",
     sentAt: null,
     deliveredAt: null,
     readAt: null,
@@ -69,6 +71,7 @@ export function buildOptimisticMessage(
     createdAt: now,
     isOwn: true,
     presentationVersion: 1,
+    attachments: [],
   };
 }
 

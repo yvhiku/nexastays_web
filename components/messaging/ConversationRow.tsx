@@ -26,7 +26,7 @@ function formatRelativeTime(iso: string | null, optimisticAt?: number | null): s
   return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function ConversationRow({ item, href, optimisticAt }: Props) {
+function ConversationRowInner({ item, href, optimisticAt }: Props) {
   const { presentation, sync, lastMessage } = item;
   const unread = sync.unreadCount > 0;
   const preview = lastMessage.preview?.trim() || "—";
@@ -61,3 +61,14 @@ export function ConversationRow({ item, href, optimisticAt }: Props) {
     </Link>
   );
 }
+
+export const ConversationRow = React.memo(
+  ConversationRowInner,
+  (prev, next) =>
+    prev.href === next.href &&
+    prev.optimisticAt === next.optimisticAt &&
+    prev.item.sync.conversationVersion === next.item.sync.conversationVersion &&
+    prev.item.sync.unreadCount === next.item.sync.unreadCount &&
+    prev.item.lastMessage.at === next.item.lastMessage.at &&
+    prev.item.presentation.title === next.item.presentation.title,
+);

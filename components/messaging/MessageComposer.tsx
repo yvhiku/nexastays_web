@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef } from "react";
-import { Send } from "lucide-react";
+import React, { useCallback, useRef } from "react";
+import { Mic, Paperclip, Send, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MAX_LENGTH = 2000;
 const COUNTDOWN_THRESHOLD = 200;
+const FEATURE_VOICE_MESSAGES = process.env.NEXT_PUBLIC_FEATURE_VOICE_MESSAGES === "true";
 
 type Props = {
   value: string;
@@ -17,6 +18,9 @@ type Props = {
   readOnlyHint?: string;
   onFocus?: () => void;
   onActivity?: () => void;
+  onAttach?: () => void;
+  attachDisabled?: boolean;
+  uploadProgress?: number | null;
 };
 
 export function MessageComposer({
@@ -29,6 +33,9 @@ export function MessageComposer({
   readOnlyHint,
   onFocus,
   onActivity,
+  onAttach,
+  attachDisabled = false,
+  uploadProgress,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const remaining = MAX_LENGTH - value.length;
@@ -41,7 +48,7 @@ export function MessageComposer({
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     resize();
   }, [value, resize]);
 
@@ -61,8 +68,26 @@ export function MessageComposer({
   }
 
   return (
-    <footer className="shrink-0 z-50 border-t border-[#F7F7F7] bg-[rgba(252,249,248,0.92)] backdrop-blur-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <div className="flex items-end gap-3 max-w-2xl mx-auto w-full">
+    <footer className="shrink-0 z-50 border-t border-[#F7F7F7] bg-[rgba(252,249,248,0.92)] backdrop-blur-2xl px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      {uploadProgress != null ? (
+        <div className="mb-2 h-1 overflow-hidden rounded-full bg-nexa-bg-2 max-w-2xl mx-auto">
+          <div
+            className="h-full bg-nexa-primary transition-all"
+            style={{ width: `${uploadProgress}%` }}
+          />
+        </div>
+      ) : null}
+      <div className="flex items-end gap-2 max-w-2xl mx-auto w-full">
+        <button
+          type="button"
+          onClick={onAttach}
+          disabled={attachDisabled || disabled}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-nexa-primary hover:bg-nexa-bg-2 disabled:opacity-40"
+          aria-label="Attach"
+        >
+          <Paperclip className="h-5 w-5" />
+        </button>
+
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -78,39 +103,50 @@ export function MessageComposer({
             }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            rows={1}
             disabled={disabled}
-            className={cn(
-              "w-full resize-none rounded-full border-none bg-[#F7F7F7] px-5 py-3 pe-12 text-base text-nexa-ink",
-              "placeholder:text-nexa-ink-4 focus:outline-none focus:ring-2 focus:ring-nexa-primary/20 min-h-[48px] max-h-[120px]",
-              disabled && "opacity-60 cursor-not-allowed",
-            )}
-            aria-label={placeholder}
+            rows={1}
+            className="w-full resize-none rounded-full border border-[#F7F7F7] bg-white px-4 py-2.5 text-base text-nexa-ink placeholder:text-nexa-ink-4 focus:outline-none focus:ring-2 focus:ring-nexa-primary/20 min-h-[44px] max-h-[120px]"
           />
           {showCountdown ? (
-            <span
-              className={cn(
-                "absolute end-3 bottom-2 text-[10px] font-medium tabular-nums",
-                remaining < 20 ? "text-red-500" : "text-nexa-ink-4",
-              )}
-            >
+            <span className="absolute bottom-1 right-3 text-[10px] text-nexa-ink-4 tabular-nums">
               {remaining}
             </span>
           ) : null}
         </div>
+
+        <button
+          type="button"
+          disabled={!FEATURE_VOICE_MESSAGES}
+          title={FEATURE_VOICE_MESSAGES ? "Voice message" : "Voice messages coming soon"}
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+            FEATURE_VOICE_MESSAGES
+              ? "text-nexa-primary hover:bg-nexa-bg-2"
+              : "text-nexa-ink-4 opacity-40 cursor-not-allowed",
+          )}
+          aria-label="Voice message"
+        >
+          <Mic className="h-5 w-5" />
+        </button>
+
+        <button
+          type="button"
+          disabled
+          title="Emoji picker coming soon"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-nexa-ink-4 opacity-40"
+          aria-label="Emoji"
+        >
+          <Smile className="h-5 w-5" />
+        </button>
+
         <button
           type="button"
           onClick={onSend}
           disabled={disabled || !value.trim()}
-          className={cn(
-            "shrink-0 flex items-center justify-center w-11 h-11 rounded-full transition-all mb-0.5",
-            disabled || !value.trim()
-              ? "text-nexa-ink-4 cursor-not-allowed"
-              : "text-nexa-primary hover:bg-nexa-primary/10 active:scale-95",
-          )}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-nexa-primary text-white disabled:opacity-40 active:scale-95"
           aria-label={sendLabel}
         >
-          <Send className="h-6 w-6 fill-current" />
+          <Send className="h-5 w-5" />
         </button>
       </div>
     </footer>

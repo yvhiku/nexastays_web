@@ -1,4 +1,13 @@
-export type CardActionType =
+export type ActionKind =
+  | "COPY"
+  | "OPEN_MAPS"
+  | "OPEN_BOOKING"
+  | "OPEN_LISTING"
+  | "DOWNLOAD"
+  | "PHONE"
+  | "EMAIL"
+  | "CHECKIN"
+  | "PAYMENT"
   | "copy"
   | "deep_link"
   | "external_maps"
@@ -58,22 +67,56 @@ const linkAction: ActionHandler = (action, ctx) => {
   window.location.assign(ctx.localePath(href));
 };
 
-export const actionRegistry = {
+const phoneAction: ActionHandler = (action) => {
+  const href = hrefFor(action);
+  if (href && typeof window !== "undefined") {
+    window.location.assign(href.startsWith("tel:") ? href : `tel:${href}`);
+  }
+};
+
+const emailAction: ActionHandler = (action) => {
+  const href = hrefFor(action);
+  if (href && typeof window !== "undefined") {
+    window.location.assign(href.startsWith("mailto:") ? href : `mailto:${href}`);
+  }
+};
+
+const handlers: Record<string, ActionHandler> = {
+  COPY: copyAction,
   copy: copyAction,
-  deep_link: deepLinkAction,
-  external_maps: externalMapsAction,
   share: copyAction,
+  OPEN_MAPS: externalMapsAction,
+  external_maps: externalMapsAction,
+  OPEN_BOOKING: deepLinkAction,
+  OPEN_LISTING: deepLinkAction,
+  deep_link: deepLinkAction,
   review: deepLinkAction,
-  call: () => {},
+  CHECKIN: deepLinkAction,
+  PAYMENT: deepLinkAction,
+  DOWNLOAD: linkAction,
   download: linkAction,
   link: linkAction,
   url: linkAction,
-} satisfies Record<string, ActionHandler>;
+  PHONE: phoneAction,
+  call: phoneAction,
+  EMAIL: emailAction,
+};
 
-export function executeCardAction(
-  action: CardAction,
-  ctx: ActionContext,
-): void {
-  const handler = actionRegistry[action.type as CardActionType] ?? linkAction;
-  handler(action, ctx);
+class ActionRegistry {
+  private readonly map = new Map<string, ActionHandler>(Object.entries(handlers));
+
+  register(type: string, handler: ActionHandler): void {
+    this.map.set(type, handler);
+  }
+
+  execute(action: CardAction, ctx: ActionContext): void {
+    const handler = this.map.get(action.type) ?? this.map.get(action.type.toUpperCase()) ?? linkAction;
+    handler(action, ctx);
+  }
+}
+
+export const actionRegistry = new ActionRegistry();
+
+export function executeCardAction(action: CardAction, ctx: ActionContext): void {
+  actionRegistry.execute(action, ctx);
 }

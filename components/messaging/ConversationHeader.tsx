@@ -20,6 +20,7 @@ type Props = {
   onMuteChange: (muted: boolean) => void;
   muted: boolean;
   contextBar?: React.ReactNode;
+  toolbarExtra?: React.ReactNode;
 };
 
 export function ConversationHeader({
@@ -35,6 +36,7 @@ export function ConversationHeader({
   onMuteChange,
   muted,
   contextBar,
+  toolbarExtra,
 }: Props) {
   const { presentation, permissions } = conversation;
 
@@ -59,6 +61,7 @@ export function ConversationHeader({
             {presentation.title}
           </h1>
           <p className="text-[11px] font-bold uppercase tracking-wider text-nexa-primary truncate">
+            {presentation.counterpart.verified ? "Verified Host • " : "Host • "}
             {presentation.subtitle}
           </p>
         </div>
@@ -73,6 +76,7 @@ export function ConversationHeader({
           onSafety={onSafety}
           onMuteChange={onMuteChange}
         />
+        {toolbarExtra}
       </div>
       {contextBar}
     </header>

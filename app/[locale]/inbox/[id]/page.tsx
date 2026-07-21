@@ -4,7 +4,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorAlert } from "@/components/ui/Alert";
-import { ReservationContextBar } from "@/components/messaging/ReservationContextBar";
+import { ConversationContext } from "@/components/messaging/ConversationContext";
+import { MediaGallery } from "@/components/messaging/MediaGallery";
+import { ConversationSearchSheet } from "@/components/messaging/ConversationSearchSheet";
+import { useUploadQueue } from "@/lib/messaging/useUploadQueue";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { MessageComposer } from "@/components/messaging/MessageComposer";
 import { TimelineRenderer } from "@/components/messaging/TimelineRenderer";
@@ -73,8 +76,18 @@ function ConversationPageInner() {
   const [sending, setSending] = useState(false);
   const [muted, setMuted] = useState(false);
   const [contextCollapsed, setContextCollapsed] = useState(false);
-
+  const [gallery, setGallery] = useState<{ attachments: MessageDto["attachments"]; index: number } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const jumpToMessage = useCallback((messageId: string) => {
+    const node = scrollRef.current?.querySelector(`[data-message-id="${messageId}"]`);
+    if (node instanceof HTMLElement) {
+      node.scrollIntoView({ behavior: "smooth", block: "center" });
+      node.classList.add("ring-2", "ring-nexa-primary/40", "rounded-xl");
+      window.setTimeout(() => node.classList.remove("ring-2", "ring-nexa-primary/40", "rounded-xl"), 2000);
+    }
+  }, []);
 
   const { draft, updateDraft, discardDraft, ready: draftReady } = useConversationDraft(conversationId);
   const { scheduleRead, flushRead } = useBatchedRead(
@@ -156,6 +169,12 @@ function ConversationPageInner() {
   ]);
 
   const { bumpActivity } = useMessagingRealtime("conversation", poll, !!token && !!conversation);
+
+  const { enqueueFiles, activeProgress } = useUploadQueue(conversationId, token, (message) => {
+    setMessages((prev) => [...prev, message]);
+    requestAnimationFrame(() => scrollToBottom(true));
+    void poll();
+  });
 
   const loadOlder = async () => {
     if (!token || loadingOlder || !hasMore || messages.length === 0) return;
@@ -320,8 +339,15 @@ function ConversationPageInner() {
           setMuted(next);
           trackEvent("conversation_muted", { conversation_id: conversationId, muted: next });
         }}
+        toolbarExtra={
+          <ConversationSearchSheet
+            conversationId={conversationId}
+            token={token}
+            onJumpToMessage={jumpToMessage}
+          />
+        }
         contextBar={
-          <ReservationContextBar
+          <ConversationContext
             presentation={conversation.presentation}
             collapsed={contextCollapsed}
             localePath={localePath}
@@ -343,13 +369,38 @@ function ConversationPageInner() {
         {loadingOlder ? (
           <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
         ) : null}
+        {messages.length === 0 ? (
+          <p className="py-12 text-center text-sm text-nexa-ink-3">
+            Your conversation with {conversation.presentation.title} starts here.
+          </p>
+        ) : null}
         <TimelineRenderer
           messages={messages}
           removedLabel={t("inbox.messageRemoved")}
           presentation={conversation.presentation}
           localePath={localePath}
+          onOpenGallery={(attachments, index) => setGallery({ attachments, index })}
         />
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.length) enqueueFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+
+      <MediaGallery
+        open={!!gallery}
+        attachments={gallery?.attachments ?? []}
+        initialIndex={gallery?.index ?? 0}
+        onClose={() => setGallery(null)}
+      />
 
       {draftReady ? (
         <MessageComposer
@@ -360,6 +411,9 @@ function ConversationPageInner() {
           placeholder={t("inbox.composerPlaceholder")}
           sendLabel={t("inbox.send")}
           readOnlyHint={readOnlyHint}
+          onAttach={() => fileInputRef.current?.click()}
+          attachDisabled={!conversation.permissions.canUpload}
+          uploadProgress={activeProgress}
           onFocus={() => {
             setContextCollapsed(true);
             trackEvent("message_composer_focused", { conversation_id: conversationId });

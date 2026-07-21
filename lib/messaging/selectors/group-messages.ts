@@ -67,5 +67,14 @@ export function selectGroupedMessages(messages: MessageDto[]): MessageGroup[] {
   }
 
   if (current) groups.push(current);
+
+  for (let i = 0; i < groups.length; i++) {
+    const g = groups[i];
+    const prev = groups[i - 1];
+    if (!g.isOwn && prev && !prev.isOwn && prev.senderId === g.senderId) {
+      g.showAvatar = false;
+    }
+  }
+
   return groups;
 }

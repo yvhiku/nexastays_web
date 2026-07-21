@@ -4,6 +4,12 @@
 
 import axios, { AxiosError } from "axios";
 import {
+  normalizeMessageDto,
+  normalizeMessages,
+  type MessageDto,
+  type AttachmentDto,
+} from "./message-normalize";
+import {
   refreshToken as refreshTokenApi,
   notifyTokenRefreshed,
   notifyAuthLogout,
@@ -103,6 +109,8 @@ export interface ConversationPresentation {
   counterpart: {
     id: string;
     displayName: string;
+    verified?: boolean;
+    rating?: number | null;
   };
   listing: {
     title: string;
@@ -142,24 +150,15 @@ export interface ConversationListResponse {
   permissions: ConversationPermissions;
 }
 
-export interface MessageDto {
-  id: string;
-  conversationId: string;
-  conversationSequence: number;
-  senderId: string | null;
-  type: string;
-  body: string | null;
-  metadata: Record<string, unknown>;
-  status: string;
-  sentAt: string | null;
-  deliveredAt: string | null;
-  readAt: string | null;
-  isSystem: boolean;
-  clientMessageId: string | null;
-  createdAt: string;
-  isOwn: boolean;
-  presentationVersion: number;
-}
+export type {
+  AttachmentDto,
+  DeliveryState,
+  MessageDto,
+  MessagePayload,
+  TimelineCardPayload,
+  TextPayload,
+  MediaPayload,
+} from "./message-normalize";
 
 export interface ConversationDetailResponse {
   conversation: ConversationDomain;
@@ -190,9 +189,11 @@ export type ConversationDetail = ConversationDetailResponse & {
 };
 
 function normalizeDetail(raw: ConversationDetailResponse): ConversationDetail {
+  const timeline = normalizeMessages(raw.timeline ?? []);
   return {
     ...raw,
-    messages: raw.timeline,
+    timeline,
+    messages: timeline,
     bookingId: raw.conversation.bookingId,
     bookingStatus: raw.bookingStatus ?? undefined,
   };
@@ -246,7 +247,8 @@ export async function listMessages(
       },
     },
   );
-  return unwrap<MessagesPage>(res);
+  const page = unwrap<MessagesPage>(res);
+  return { ...page, messages: normalizeMessages(page.messages) };
 }
 
 export async function sendMessage(
@@ -263,7 +265,93 @@ export async function sendMessage(
     },
     { headers: getAuthHeaders(token) },
   );
-  return unwrap<MessageDto>(res);
+  return normalizeMessageDto(unwrap<MessageDto>(res));
+}
+
+export async function sendMessageWithAttachments(
+  conversationId: string,
+  type: "IMAGE" | "FILE",
+  attachmentIds: string[],
+  token?: string | null,
+  caption?: string,
+  clientMessageId?: string,
+): Promise<MessageDto> {
+  const res = await client.post(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/messages`,
+    {
+      type,
+      attachment_ids: attachmentIds,
+      caption,
+      ...(clientMessageId ? { client_message_id: clientMessageId } : {}),
+    },
+    { headers: getAuthHeaders(token) },
+  );
+  return normalizeMessageDto(unwrap<MessageDto>(res));
+}
+
+export async function uploadAttachment(
+  conversationId: string,
+  file: File,
+  token?: string | null,
+  onProgress?: (pct: number) => void,
+): Promise<AttachmentDto> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await client.post(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/attachments`,
+    form,
+    {
+      headers: { ...getAuthHeaders(token), "Content-Type": "multipart/form-data" },
+      onUploadProgress: (evt) => {
+        if (evt.total && onProgress) {
+          onProgress(Math.round((evt.loaded / evt.total) * 100));
+        }
+      },
+    },
+  );
+  return unwrap<AttachmentDto>(res);
+}
+
+export async function getAttachment(
+  conversationId: string,
+  attachmentId: string,
+  token?: string | null,
+): Promise<AttachmentDto> {
+  const res = await client.get(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/attachments/${encodeURIComponent(attachmentId)}`,
+    { headers: getAuthHeaders(token) },
+  );
+  return unwrap<AttachmentDto>(res);
+}
+
+export type SearchResultType = "message" | "file" | "photo" | "link" | "card";
+
+export interface ConversationSearchResult {
+  messageId: string;
+  conversationSequence: number;
+  resultType: SearchResultType;
+  highlight: string;
+  snippet: string;
+  createdAt: string;
+}
+
+export async function searchConversation(
+  conversationId: string,
+  q: string,
+  token?: string | null,
+  types?: SearchResultType[],
+): Promise<ConversationSearchResult[]> {
+  const res = await client.get(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/search`,
+    {
+      headers: getAuthHeaders(token),
+      params: {
+        q,
+        ...(types?.length ? { types: types.join(",") } : {}),
+      },
+    },
+  );
+  return unwrap<ConversationSearchResult[]>(res);
 }
 
 export async function markConversationRead(
