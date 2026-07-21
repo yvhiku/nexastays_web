@@ -2,12 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 import { SeoTrustSignals } from "@/components/seo/landing/SeoTrustSignals";
+import { SeoHeroBackground } from "@/components/seo/SeoHeroBackground";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SeoPagePayload } from "@/lib/seo/types";
-import { DESTINATION_IMAGE_BLUR } from "@/lib/destination-assets";
 import { areaLabel } from "@/components/seo/landing/utils";
 
 type Props = {
@@ -32,16 +31,7 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
   return (
     <section className="relative pt-[72px] min-h-[360px] sm:min-h-[420px] flex items-end overflow-hidden">
       {hero ? (
-        <Image
-          src={hero}
-          alt={dest!.name}
-          fill
-          priority
-          className="object-cover"
-          placeholder="blur"
-          blurDataURL={DESTINATION_IMAGE_BLUR}
-          sizes="100vw"
-        />
+        <SeoHeroBackground src={hero} alt={dest!.name} />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-nexa-primary-soft to-nexa-bg" />
       )}

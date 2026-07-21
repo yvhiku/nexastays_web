@@ -2,17 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { GeoBlock } from "@/components/seo/GeoBlock";
+import { SeoHeroBackground } from "@/components/seo/SeoHeroBackground";
 import { DestinationIntelligencePanel } from "@/components/seo/DestinationIntelligencePanel";
 import { SeoListingsGrid } from "@/components/seo/SeoListingsGrid.client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { guideTypeLabel } from "@/lib/seo/guide-api";
 import type { SeoGuidePagePayload } from "@/lib/seo/types";
 import type { StaysListing } from "@/lib/stays-types";
-import { DESTINATION_IMAGE_BLUR } from "@/lib/destination-assets";
 import { buildListingsQueryPath } from "@/lib/seo/seo-api";
 
 type Props = {
@@ -35,16 +34,7 @@ export function SeoGuidePageClient({ page, listings }: Props) {
       <main>
         <section className="relative pt-[72px] min-h-[280px] sm:min-h-[340px] flex items-end overflow-hidden">
           {hero ? (
-            <Image
-              src={hero}
-              alt={dest!.name}
-              fill
-              priority
-              className="object-cover"
-              placeholder="blur"
-              blurDataURL={DESTINATION_IMAGE_BLUR}
-              sizes="100vw"
-            />
+            <SeoHeroBackground src={hero} alt={dest!.name} />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-nexa-primary-soft to-nexa-bg" />
           )}

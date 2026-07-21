@@ -14,3 +14,8 @@ export const DESTINATION_IMAGES = {
   casablanca: "/images/assets/Casablanca-Finance-City-CFC.jpg",
   fes: "/images/assets/fes.jpg",
 } as const;
+
+/** Static files under `public/` — serve directly; Next.js optimizer is flaky for these in dev. */
+export function isLocalPublicImage(src: string): boolean {
+  return src.startsWith("/images/") || src.startsWith("/icons/");
+}
