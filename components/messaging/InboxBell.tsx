@@ -32,7 +32,7 @@ export function InboxBell({ className }: Props) {
     <Link
       href={localePath("/inbox")}
       className={cn(
-        "relative md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-nexa-ink-3 hover:bg-nexa-bg-2 active:scale-95",
+        "relative flex h-10 w-10 items-center justify-center rounded-lg text-nexa-ink-3 transition-colors hover:bg-nexa-bg-2 hover:text-nexa-primary active:scale-95",
         className,
       )}
       aria-label={t("inbox.title")}
