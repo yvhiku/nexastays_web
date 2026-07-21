@@ -50,19 +50,7 @@ import {
 import { shouldFetchAfterPush } from "@/lib/messaging/push-sync";
 import { formatUserError } from "@/lib/errors";
 import { trackEvent } from "@/lib/analytics";
-
-const OPTIMISTIC_KEY = "nexa_messaging_optimistic_activity";
-
-function setOptimisticActivity(conversationId: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const map = JSON.parse(localStorage.getItem(OPTIMISTIC_KEY) ?? "{}") as Record<string, number>;
-    map[conversationId] = Date.now();
-    localStorage.setItem(OPTIMISTIC_KEY, JSON.stringify(map));
-  } catch {
-    /* ignore */
-  }
-}
+import { setOptimisticInboxActivity } from "@/lib/messaging/inbox-optimistic";
 
 function ConversationPageInner() {
   const params = useParams();
@@ -200,7 +188,7 @@ function ConversationPageInner() {
     senderId: user?.id ?? null,
     onOptimisticMessage: (message) => {
       setMessages((prev) => [...prev, message]);
-      setOptimisticActivity(conversationId);
+      setOptimisticInboxActivity(conversationId, message.body ?? "Photo");
       bumpActivity();
       scrollToBottom(true);
       setDraftPrompt(null);
@@ -340,7 +328,7 @@ function ConversationPageInner() {
 
     setSending(true);
     setMessages((prev) => [...prev, optimistic]);
-    setOptimisticActivity(conversationId);
+    setOptimisticInboxActivity(conversationId, body);
     await discardDraft();
     bumpActivity();
     scrollToBottom(true);

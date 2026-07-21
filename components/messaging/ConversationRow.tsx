@@ -5,11 +5,12 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/avatar/UserAvatar";
 import type { ConversationListResponse } from "@/lib/messaging/messages-api";
+import { resolveInboxPreview, type OptimisticInboxEntry } from "@/lib/messaging/inbox-optimistic";
 
 type Props = {
   item: ConversationListResponse;
   href: string;
-  optimisticAt?: number | null;
+  optimistic?: OptimisticInboxEntry | null;
   isActive?: boolean;
 };
 
@@ -27,11 +28,11 @@ function formatRelativeTime(iso: string | null, optimisticAt?: number | null): s
   return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function ConversationRowInner({ item, href, optimisticAt, isActive = false }: Props) {
+function ConversationRowInner({ item, href, optimistic, isActive = false }: Props) {
   const { presentation, sync, lastMessage } = item;
   const unread = sync.unreadCount > 0;
-  const preview = lastMessage.preview?.trim() || "—";
-  const timeLabel = formatRelativeTime(lastMessage.at, optimisticAt);
+  const preview = resolveInboxPreview(lastMessage.preview, lastMessage.at, optimistic);
+  const timeLabel = formatRelativeTime(lastMessage.at, optimistic?.at ?? null);
 
   return (
     <Link
@@ -75,6 +76,9 @@ export const ConversationRow = React.memo(
     prev.optimisticAt === next.optimisticAt &&
     prev.item.sync.conversationVersion === next.item.sync.conversationVersion &&
     prev.item.sync.unreadCount === next.item.sync.unreadCount &&
+    prev.optimistic?.at === next.optimistic?.at &&
+    prev.optimistic?.preview === next.optimistic?.preview &&
+    prev.item.lastMessage.preview === next.item.lastMessage.preview &&
     prev.item.lastMessage.at === next.item.lastMessage.at &&
     prev.item.presentation.title === next.item.presentation.title,
 );

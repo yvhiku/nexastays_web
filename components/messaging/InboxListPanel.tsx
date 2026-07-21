@@ -13,23 +13,16 @@ import {
   type ConversationListItem,
   type InboxFilter,
 } from "@/lib/messaging/messages-api";
+import {
+  readOptimisticInboxMap,
+  subscribeOptimisticInbox,
+  type OptimisticInboxEntry,
+} from "@/lib/messaging/inbox-optimistic";
 import { formatUserError } from "@/lib/errors";
-
-const OPTIMISTIC_KEY = "nexa_messaging_optimistic_activity";
-
-function readOptimisticMap(): Record<string, number> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(OPTIMISTIC_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, number>) : {};
-  } catch {
-    return {};
-  }
-}
 
 function sortConversations(
   items: ConversationListItem[],
-  optimistic: Record<string, number>,
+  optimistic: Record<string, OptimisticInboxEntry>,
 ): ConversationListItem[] {
   return [...items].sort((a, b) => {
     const aUnread = a.sync.unreadCount > 0 ? 1 : 0;
@@ -37,10 +30,10 @@ function sortConversations(
     if (aUnread !== bUnread) return bUnread - aUnread;
 
     const aTime =
-      optimistic[a.conversation.id] ??
+      optimistic[a.conversation.id]?.at ??
       (a.lastMessage.at ? new Date(a.lastMessage.at).getTime() : 0);
     const bTime =
-      optimistic[b.conversation.id] ??
+      optimistic[b.conversation.id]?.at ??
       (b.lastMessage.at ? new Date(b.lastMessage.at).getTime() : 0);
     return bTime - aTime;
   });
@@ -59,10 +52,11 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
   const [items, setItems] = useState<ConversationListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [optimistic, setOptimistic] = useState<Record<string, number>>({});
+  const [optimistic, setOptimistic] = useState<Record<string, OptimisticInboxEntry>>({});
 
   useEffect(() => {
-    setOptimistic(readOptimisticMap());
+    setOptimistic(readOptimisticInboxMap());
+    return subscribeOptimisticInbox(() => setOptimistic(readOptimisticInboxMap()));
   }, []);
 
   useEffect(() => {
@@ -144,7 +138,7 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
             key={item.conversation.id}
             item={item}
             href={localePath(`/inbox/${item.conversation.id}`)}
-            optimisticAt={optimistic[item.conversation.id] ?? null}
+            optimistic={optimistic[item.conversation.id] ?? null}
             isActive={item.conversation.id === activeConversationId}
           />
         ))}
