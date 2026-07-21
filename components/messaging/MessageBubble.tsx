@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/avatar/UserAvatar";
 import type { MessageDto, SignedMedia } from "@/lib/messaging/messages-api";
 import type { MessageGroup } from "@/lib/messaging/selectors/group-messages";
 import { getMessageText, collapseDeliveryUi, resolveMessageAttachments } from "@/lib/messaging/message-payload";
+import { getMediaUploadMeta } from "@/lib/messaging/optimistic-media";
 import { ImageMessageGrid } from "./ImageMessageGrid";
 import { FileMessageRow } from "./FileMessageRow";
 
@@ -16,6 +17,12 @@ type Props = {
   counterpartName?: string;
   removedLabel?: string;
   onOpenGallery?: (attachments: MessageDto["attachments"], index: number) => void;
+  onRetryMediaUpload?: (clientMessageId: string) => void;
+  uploadLabels?: {
+    uploading: string;
+    failed: string;
+    retry: string;
+  };
 };
 
 function StatusIcon({ deliveryState }: { deliveryState: string }) {
@@ -31,6 +38,8 @@ export function MessageBubble({
   counterpartName = "Host",
   removedLabel,
   onOpenGallery,
+  onRetryMediaUpload,
+  uploadLabels,
 }: Props) {
   const last = group.messages[group.messages.length - 1];
   const time = last.sentAt ?? last.createdAt;
@@ -52,12 +61,20 @@ export function MessageBubble({
           const deleted = Boolean((message.metadata as { deletedAt?: string }).deletedAt);
           const attachments = resolveMessageAttachments(message);
           if (message.type === "IMAGE" && attachments.length > 0) {
+            const uploadMeta = getMediaUploadMeta(message);
             return (
               <ImageMessageGrid
                 key={message.id}
                 attachments={attachments}
                 caption={"caption" in message.payload ? message.payload.caption : message.body ?? undefined}
                 isOwn={group.isOwn}
+                uploadMeta={uploadMeta}
+                uploadLabels={uploadLabels}
+                onRetryUpload={
+                  message.clientMessageId && uploadMeta?.uploadState === "failed"
+                    ? () => onRetryMediaUpload?.(message.clientMessageId!)
+                    : undefined
+                }
                 onOpen={(index) => onOpenGallery?.(attachments, index)}
               />
             );
@@ -99,8 +116,11 @@ export function MessageBubble({
               <p className="text-base whitespace-pre-wrap break-words leading-relaxed">
                 {deleted ? removedLabel : getMessageText(message)}
               </p>
-              {message.deliveryState === "PENDING" && group.isOwn ? (
+              {message.deliveryState === "PENDING" && group.isOwn && !getMediaUploadMeta(message) ? (
                 <p className="mt-1 text-[10px] opacity-70">Sending…</p>
+              ) : null}
+              {message.deliveryState === "PENDING" && group.isOwn && getMediaUploadMeta(message)?.uploadState === "uploading" ? (
+                <p className="mt-1 text-[10px] opacity-70">Uploading…</p>
               ) : null}
             </div>
           );

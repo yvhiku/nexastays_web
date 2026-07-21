@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ConversationContext } from "@/components/messaging/ConversationContext";
 import { MediaGallery } from "@/components/messaging/ImageViewer";
 import { AttachmentComposer } from "@/components/messaging/AttachmentComposer";
+import { AttachmentDraftPrompt } from "@/components/messaging/AttachmentDraftPrompt";
 import { ConversationSearchSheet } from "@/components/messaging/ConversationSearchSheet";
 import { useAttachmentManager } from "@/lib/messaging/AttachmentManager";
+import { loadAttachmentDraft, clearAttachmentDraft } from "@/lib/messaging/attachment-drafts-db";
+import { shouldRefreshAttachments } from "@/lib/messaging/attachment-sync";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { MessageComposer } from "@/components/messaging/MessageComposer";
 import { TimelineRenderer } from "@/components/messaging/TimelineRenderer";
@@ -35,6 +38,7 @@ import {
 import {
   mergeMessages,
   reconcileOptimisticMessage,
+  patchOptimisticByClientId,
 } from "@/lib/messaging/selectors/reconcile-messages";
 import {
   buildOptimisticMessage,
@@ -77,6 +81,7 @@ function ConversationPageInner() {
   const [muted, setMuted] = useState(false);
   const [contextCollapsed, setContextCollapsed] = useState(false);
   const [gallery, setGallery] = useState<{ attachments: MessageDto["attachments"]; index: number } | null>(null);
+  const [draftPrompt, setDraftPrompt] = useState<{ fileCount: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -141,15 +146,25 @@ function ConversationPageInner() {
     try {
       const detail = await getConversation(conversationId, token);
       const localVersion = conversation?.sync.conversationVersion;
-      if (
+      const localAttachVersion = conversation?.sync.attachmentVersion;
+      const sameTail = detail.timeline.at(-1)?.id === messages.at(-1)?.id;
+      const skipConversation =
         localVersion != null &&
         !shouldFetchAfterPush(localVersion, detail.sync.conversationVersion) &&
-        detail.timeline.at(-1)?.id === messages.at(-1)?.id
-      ) {
-        return;
-      }
+        sameTail;
+      const refreshAttachments = shouldRefreshAttachments(
+        localAttachVersion,
+        detail.sync.attachmentVersion,
+      );
+
+      if (skipConversation && !refreshAttachments) return;
+
       setConversation(detail);
-      setMessages((prev) => mergeMessages(prev, detail.timeline ?? detail.messages));
+      setMessages((prev) =>
+        mergeMessages(prev, detail.timeline ?? detail.messages, {
+          preferIncomingAttachments: refreshAttachments,
+        }),
+      );
       setHasMore(detail.hasMore);
       if (atBottomRef.current) {
         requestAnimationFrame(() => scrollToBottom());
@@ -164,17 +179,108 @@ function ConversationPageInner() {
     scheduleRead,
     scrollToBottom,
     conversation?.sync.conversationVersion,
+    conversation?.sync.attachmentVersion,
     messages,
     atBottomRef,
   ]);
 
+  const uploadLabels = useMemo(
+    () => ({
+      uploading: t("inbox.attachmentComposer.uploading"),
+      failed: t("inbox.attachmentComposer.uploadFailed"),
+      retry: t("inbox.attachmentComposer.retry"),
+    }),
+    [t],
+  );
+
   const { bumpActivity } = useMessagingRealtime("conversation", poll, !!token && !!conversation);
 
-  const attachmentManager = useAttachmentManager(conversationId, token, (message) => {
-    setMessages((prev) => reconcileOptimisticMessage(prev, message));
-    requestAnimationFrame(() => scrollToBottom(true));
-    void poll();
+  const attachmentManager = useAttachmentManager(conversationId, token, {
+    senderId: user?.id ?? null,
+    onOptimisticMessage: (message) => {
+      setMessages((prev) => [...prev, message]);
+      setOptimisticActivity(conversationId);
+      bumpActivity();
+      scrollToBottom(true);
+    },
+    onUploadProgress: (clientMessageId, prog) => {
+      setMessages((prev) =>
+        patchOptimisticByClientId(prev, clientMessageId, {
+          metadata: {
+            uploadState: "uploading",
+            uploadProgress: prog.overallPct,
+            uploadLabel: prog.label,
+          },
+        }),
+      );
+    },
+    onMessageSent: (message) => {
+      setMessages((prev) =>
+        reconcileOptimisticMessage(prev, {
+          ...message,
+          metadata: { ...message.metadata, uploadState: "complete", uploadProgress: 100 },
+        }),
+      );
+      requestAnimationFrame(() => scrollToBottom(true));
+      void poll();
+    },
+    onSendFailed: (clientMessageId, err) => {
+      setMessages((prev) =>
+        patchOptimisticByClientId(prev, clientMessageId, {
+          metadata: {
+            uploadState: "failed",
+            uploadError: err,
+          },
+        }),
+      );
+    },
   });
+
+  useEffect(() => {
+    if (!conversationId || attachmentManager.state.isOpen) return;
+    void loadAttachmentDraft(conversationId)
+      .then((draft) => {
+        if (draft && draft.record.files.length > 0) {
+          setDraftPrompt({ fileCount: draft.record.files.length });
+        }
+      })
+      .catch(() => undefined);
+  }, [conversationId, attachmentManager.state.isOpen]);
+
+  const handleRestoreDraft = useCallback(async () => {
+    const draft = await loadAttachmentDraft(conversationId);
+    if (!draft) {
+      setDraftPrompt(null);
+      return;
+    }
+    const restored = draft.record.files.flatMap((meta) => {
+      const blob = draft.blobs.get(meta.blobKey);
+      if (!blob) return [];
+      const file = new File([blob], meta.name, {
+        type: meta.mime || (meta.kind === "image" ? "image/jpeg" : "application/pdf"),
+        lastModified: meta.lastModified,
+      });
+      return [{ id: meta.id, file, kind: meta.kind, rotation: meta.rotation, crop: meta.crop }];
+    });
+    if (!restored.length) {
+      setDraftPrompt(null);
+      return;
+    }
+    attachmentManager.restoreFromDraft(restored, draft.record.caption);
+    setDraftPrompt(null);
+  }, [conversationId, attachmentManager]);
+
+  const handleDiscardDraft = useCallback(async () => {
+    await clearAttachmentDraft(conversationId);
+    setDraftPrompt(null);
+  }, [conversationId]);
+
+  const handleRetryMediaUpload = useCallback(
+    (clientMessageId: string) => {
+      void attachmentManager.retryFailed(clientMessageId);
+    },
+    [attachmentManager],
+  );
 
   const loadOlder = async () => {
     if (!token || loadingOlder || !hasMore || messages.length === 0) return;
@@ -380,6 +486,8 @@ function ConversationPageInner() {
           presentation={conversation.presentation}
           localePath={localePath}
           onOpenGallery={(attachments, index) => setGallery({ attachments, index })}
+          onRetryMediaUpload={handleRetryMediaUpload}
+          uploadLabels={uploadLabels}
         />
       </div>
 
@@ -416,10 +524,18 @@ function ConversationPageInner() {
           retry: t("inbox.attachmentComposer.retry"),
           close: t("inbox.attachmentComposer.close"),
         }}
-        onSent={() => {
-          bumpActivity();
-          scrollToBottom(true);
+      />
+
+      <AttachmentDraftPrompt
+        open={!!draftPrompt && !attachmentManager.state.isOpen}
+        fileCount={draftPrompt?.fileCount ?? 0}
+        labels={{
+          title: t("inbox.attachmentComposer.continueEditing"),
+          continue: t("inbox.attachmentComposer.continue"),
+          discard: t("inbox.attachmentComposer.discard"),
         }}
+        onContinue={() => void handleRestoreDraft()}
+        onDiscard={() => void handleDiscardDraft()}
       />
 
       {draftReady && !attachmentManager.state.isOpen ? (

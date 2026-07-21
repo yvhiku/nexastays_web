@@ -3,16 +3,33 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import type { AttachmentDto } from "@/lib/messaging/messages-api";
+import type { MediaUploadMeta } from "@/lib/messaging/optimistic-media";
 import { ProgressiveImage, attachmentThumbUrl } from "./ProgressiveImage";
+import { MediaUploadStatus } from "./MediaUploadStatus";
 
 type Props = {
   attachments: AttachmentDto[];
   caption?: string;
   isOwn?: boolean;
+  uploadMeta?: MediaUploadMeta | null;
+  uploadLabels?: {
+    uploading: string;
+    failed: string;
+    retry: string;
+  };
   onOpen?: (index: number) => void;
+  onRetryUpload?: () => void;
 };
 
-export function ImageMessageGrid({ attachments, caption, isOwn, onOpen }: Props) {
+export function ImageMessageGrid({
+  attachments,
+  caption,
+  isOwn,
+  uploadMeta,
+  uploadLabels,
+  onOpen,
+  onRetryUpload,
+}: Props) {
   const count = attachments.length;
   const display = attachments.slice(0, 4);
   const extra = count > 4 ? count - 3 : 0;
@@ -26,12 +43,21 @@ export function ImageMessageGrid({ attachments, caption, isOwn, onOpen }: Props)
           onClick={() => onOpen?.(0)}
         />
         {caption ? <p className="mt-1 text-sm text-nexa-ink-3 px-1">{caption}</p> : null}
+        {uploadMeta && uploadLabels ? (
+          <MediaUploadStatus
+            meta={uploadMeta}
+            isOwn={isOwn}
+            labels={uploadLabels}
+            onRetry={onRetryUpload}
+          />
+        ) : null}
       </div>
     );
   }
 
   return (
-    <div className={cn("grid max-w-[280px] gap-1", count === 2 ? "grid-cols-2" : "grid-cols-2")}>
+    <div className={cn("", isOwn ? "ms-auto" : "")}>
+      <div className={cn("grid max-w-[280px] gap-1", count === 2 ? "grid-cols-2" : "grid-cols-2")}>
       {display.map((att, i) => {
         const isOverlayCell = extra > 0 && i === 3;
         return (
@@ -59,6 +85,17 @@ export function ImageMessageGrid({ attachments, caption, isOwn, onOpen }: Props)
       {caption ? (
         <p className={cn("col-span-2 text-sm text-nexa-ink-3 px-1", isOwn ? "text-right" : "")}>{caption}</p>
       ) : null}
+      {uploadMeta && uploadLabels ? (
+        <div className="col-span-2">
+          <MediaUploadStatus
+            meta={uploadMeta}
+            isOwn={isOwn}
+            labels={uploadLabels}
+            onRetry={onRetryUpload}
+          />
+        </div>
+      ) : null}
+    </div>
     </div>
   );
 }

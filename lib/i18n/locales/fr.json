@@ -631,7 +631,11 @@
       "comingSoon": "Bientôt disponible",
       "uploadProgress": "Envoi en cours",
       "retry": "Réessayer",
-      "close": "Fermer"
+      "close": "Fermer",
+      "uploading": "Envoi en cours…",
+      "uploadFailed": "Échec de l'envoi",
+      "continueEditing": "Continuer le brouillon de pièce jointe ?",
+      "continue": "Continuer"
     },
     "filters": {
       "all": "Tous",

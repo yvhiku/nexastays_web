@@ -25,6 +25,12 @@ type Props = {
   presentation: ConversationPresentation;
   localePath: (path: string) => string;
   onOpenGallery?: (attachments: AttachmentDto[], index: number) => void;
+  onRetryMediaUpload?: (clientMessageId: string) => void;
+  uploadLabels?: {
+    uploading: string;
+    failed: string;
+    retry: string;
+  };
 };
 
 function dayKey(iso: string | null): string {
@@ -49,6 +55,8 @@ export function TimelineRenderer({
   presentation,
   localePath,
   onOpenGallery,
+  onRetryMediaUpload,
+  uploadLabels,
 }: Props) {
   const bubbleMessages = messages.filter((m) => isRegistryMessageType(m.type));
   const grouped = selectGroupedMessages(bubbleMessages);
@@ -95,6 +103,8 @@ export function TimelineRenderer({
                 counterpartName: presentation.title,
                 removedLabel,
                 onOpenGallery,
+                onRetryMediaUpload,
+                uploadLabels,
               })}
             </React.Fragment>
           );

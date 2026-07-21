@@ -57,7 +57,10 @@ type AnalyticsEventName =
   | "upload_failed"
   | "retry_upload"
   | "crop_used"
-  | "rotate_used";
+  | "rotate_used"
+  | "cancel_upload"
+  | "draft_restored"
+  | "session_abandoned";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

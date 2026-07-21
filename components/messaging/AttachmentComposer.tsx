@@ -27,10 +27,9 @@ type Props = {
     retry: string;
     close: string;
   };
-  onSent?: () => void;
 };
 
-export function AttachmentComposer({ manager, labels, onSent }: Props) {
+export function AttachmentComposer({ manager, labels }: Props) {
   const { state, removeItem, updateItemCrop, rotateItem, setCaption, sendBatch, retryFailed, closeComposer } =
     manager;
   const [activeIndex, setActiveIndex] = useState(0);
@@ -59,9 +58,8 @@ export function AttachmentComposer({ manager, labels, onSent }: Props) {
 
   const handleSend = useCallback(async () => {
     await sendBatch();
-    onSent?.();
     captionRef.current?.blur();
-  }, [sendBatch, onSent]);
+  }, [sendBatch]);
 
   if (!state.isOpen || items.length === 0) return null;
 

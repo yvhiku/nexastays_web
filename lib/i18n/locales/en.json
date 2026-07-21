@@ -650,7 +650,11 @@
       "comingSoon": "Coming soon",
       "uploadProgress": "Uploading",
       "retry": "Retry",
-      "close": "Close"
+      "close": "Close",
+      "uploading": "Uploading…",
+      "uploadFailed": "Upload failed",
+      "continueEditing": "Continue editing your attachment draft?",
+      "continue": "Continue editing"
     },
     "filters": {
       "all": "All",

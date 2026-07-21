@@ -21,7 +21,28 @@ export function reconcileOptimisticMessage(
   return [...messages, persisted];
 }
 
-export function mergeMessages(existing: MessageDto[], incoming: MessageDto[]): MessageDto[] {
+export function patchOptimisticByClientId(
+  messages: MessageDto[],
+  clientMessageId: string,
+  patch: Partial<MessageDto> & { metadata?: Record<string, unknown> },
+): MessageDto[] {
+  return messages.map((m) => {
+    if (m.clientMessageId !== clientMessageId && m.id !== `optimistic_${clientMessageId}`) {
+      return m;
+    }
+    return {
+      ...m,
+      ...patch,
+      metadata: patch.metadata ? { ...m.metadata, ...patch.metadata } : m.metadata,
+    };
+  });
+}
+
+export function mergeMessages(
+  existing: MessageDto[],
+  incoming: MessageDto[],
+  options?: { preferIncomingAttachments?: boolean },
+): MessageDto[] {
   const map = new Map<string, MessageDto>();
   for (const m of existing) map.set(messageKey(m), m);
   for (const m of incoming) {
@@ -30,7 +51,11 @@ export function mergeMessages(existing: MessageDto[], incoming: MessageDto[]): M
     if (prev && prev.id.startsWith("optimistic_")) {
       map.set(key, { ...m, isOwn: prev.isOwn });
     } else if (prev) {
-      const keepPrevAttachments = prev.attachments.length > m.attachments.length;
+      const preferIncoming =
+        options?.preferIncomingAttachments ||
+        (m.attachments.length > 0 && prev.attachments.some((a) => a.id.startsWith("optimistic_")));
+      const keepPrevAttachments =
+        !preferIncoming && prev.attachments.length > m.attachments.length;
       map.set(key, keepPrevAttachments ? { ...m, attachments: prev.attachments } : m);
     } else {
       map.set(key, m);

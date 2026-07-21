@@ -631,7 +631,11 @@
       "comingSoon": "قريبًا",
       "uploadProgress": "جاري الرفع",
       "retry": "إعادة المحاولة",
-      "close": "إغلاق"
+      "close": "إغلاق",
+      "uploading": "جاري الرفع…",
+      "uploadFailed": "فشل الرفع",
+      "continueEditing": "متابعة مسودة المرفق؟",
+      "continue": "متابعة"
     },
     "filters": {
       "all": "الكل",

@@ -12,6 +12,12 @@ export type MessageRendererProps = {
   counterpartName?: string;
   removedLabel?: string;
   onOpenGallery?: (attachments: AttachmentDto[], index: number) => void;
+  onRetryMediaUpload?: (clientMessageId: string) => void;
+  uploadLabels?: {
+    uploading: string;
+    failed: string;
+    retry: string;
+  };
 };
 
 type RendererComponent = React.ComponentType<MessageRendererProps>;
@@ -40,6 +46,8 @@ function TextMessageRenderer(props: MessageRendererProps) {
       counterpartAvatar={props.counterpartAvatar}
       counterpartName={props.counterpartName}
       removedLabel={props.removedLabel}
+      uploadLabels={props.uploadLabels}
+      onRetryMediaUpload={props.onRetryMediaUpload}
     />
   );
 }
@@ -52,6 +60,8 @@ function ImageMessageRenderer(props: MessageRendererProps) {
       counterpartName={props.counterpartName}
       removedLabel={props.removedLabel}
       onOpenGallery={props.onOpenGallery}
+      uploadLabels={props.uploadLabels}
+      onRetryMediaUpload={props.onRetryMediaUpload}
     />
   );
 }
@@ -63,6 +73,8 @@ function FileMessageRenderer(props: MessageRendererProps) {
       counterpartAvatar={props.counterpartAvatar}
       counterpartName={props.counterpartName}
       removedLabel={props.removedLabel}
+      uploadLabels={props.uploadLabels}
+      onRetryMediaUpload={props.onRetryMediaUpload}
     />
   );
 }
