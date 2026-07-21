@@ -25,10 +25,39 @@ function formatRelativeTime(iso: string): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function notificationSubtitle(item: UserNotificationItem): string {
+  const data = item.data ?? {};
+
+  if (item.type === "MESSAGE_RECEIVED") {
+    const preview = typeof data.preview === "string" ? data.preview : item.body;
+    const listing = typeof data.listing_title === "string" ? data.listing_title : null;
+    if (listing && preview) {
+      const short = preview.length > 80 ? `${preview.slice(0, 80)}…` : preview;
+      return `${listing} — "${short}"`;
+    }
+    return preview || item.body;
+  }
+
+  if (item.type === "CHECKOUT_REMINDER") {
+    return item.body;
+  }
+
+  if (item.type === "REVIEW_REMINDER") {
+    return item.body;
+  }
+
+  const bookingRef =
+    typeof data.booking_reference === "string" ? data.booking_reference : null;
+  if (bookingRef) return bookingRef;
+
+  const listingTitle = typeof data.listing_title === "string" ? data.listing_title : null;
+  if (listingTitle && item.body) return item.body;
+
+  return item.body;
+}
+
 export function NotificationCard({ item, onClick, subtitle }: Props) {
-  const bookingId =
-    typeof item.data?.booking_id === "string" ? item.data.booking_id : null;
-  const line2 = subtitle ?? (bookingId ? `Booking #${bookingId.slice(0, 8).toUpperCase()}` : item.body);
+  const line2 = subtitle ?? notificationSubtitle(item);
 
   return (
     <button
