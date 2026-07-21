@@ -15,6 +15,8 @@ type Props = {
     topArea: string;
     bestMonth: string;
     topAmenities: string;
+    topPropertyType?: string;
+    verifiedPercent?: string;
     perNight: string;
   };
 };
@@ -63,6 +65,12 @@ export function DestinationIntelligencePanel({
       label: labels.topAmenities,
       value: intelligence.topAmenities.join(" · "),
     });
+  }
+  if (intelligence.topPropertyType && labels.topPropertyType) {
+    rows.push({ label: labels.topPropertyType, value: intelligence.topPropertyType });
+  }
+  if (intelligence.verifiedPercent != null && labels.verifiedPercent) {
+    rows.push({ label: labels.verifiedPercent, value: `${intelligence.verifiedPercent}%` });
   }
 
   if (rows.length === 0) return null;

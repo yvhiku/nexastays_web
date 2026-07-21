@@ -58,7 +58,7 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
   }
 
   if (page.neighborhood && page.destination) {
-    nodes.push({
+    const place: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "Place",
       name: page.neighborhood.name,
@@ -67,7 +67,11 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
         "@type": "City",
         name: page.destination.name,
       },
-    });
+    };
+    const qf = page.contentBlocks?.quick_facts;
+    if (qf?.atmosphere) place.description = qf.atmosphere;
+    if (qf?.budget) place.additionalProperty = { "@type": "PropertyValue", name: "budget", value: qf.budget };
+    nodes.push(place);
   } else if (page.destination) {
     const touristDestination: Record<string, unknown> = {
       "@context": "https://schema.org",
