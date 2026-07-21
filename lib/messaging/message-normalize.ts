@@ -2,15 +2,23 @@ export type DeliveryState = "PENDING" | "PERSISTED" | "SENT" | "DELIVERED" | "RE
 
 export interface AttachmentDto {
   id: string;
-  status: "PROCESSING" | "READY" | "FAILED";
+  status: "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
+  processingStatus?: "UPLOADING" | "PROCESSING" | "READY" | "FAILED";
+  virusScanStatus?: "PENDING" | "SAFE" | "FAILED";
+  sessionId?: string | null;
+  mediaAssetId?: string | null;
   mime: string | null;
   sizeBytes: number | null;
   width: number | null;
   height: number | null;
+  orientation?: number | null;
+  durationMs?: number | null;
+  checksum?: string | null;
   blurhash: string | null;
   originalFilename: string | null;
   thumbnail: { url: string; version: number; expiresAt: string } | null;
   full: { url: string; version: number; expiresAt: string } | null;
+  original?: { url: string; version: number; expiresAt: string } | null;
 }
 
 export interface TextPayload {

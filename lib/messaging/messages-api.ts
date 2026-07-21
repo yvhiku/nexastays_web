@@ -122,6 +122,7 @@ export interface ConversationPresentation {
 export interface ConversationSyncMeta {
   conversationVersion: number;
   snapshotVersion: number;
+  attachmentVersion?: number;
   lastMessageId: string | null;
   unreadCount: number;
   lastReadPointer: {
