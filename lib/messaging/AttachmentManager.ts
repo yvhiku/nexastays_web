@@ -611,6 +611,7 @@ export function useAttachmentManager(
     activeSendRef.current = sendSnapshot;
     void persistActiveSend(conversationId, sendSnapshot).catch(() => undefined);
 
+    void clearAttachmentDraft(conversationId).catch(() => undefined);
     hideComposer();
 
     void executeSend(sendSnapshot);

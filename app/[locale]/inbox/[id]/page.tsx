@@ -202,6 +202,7 @@ function ConversationPageInner() {
       setOptimisticActivity(conversationId);
       bumpActivity();
       scrollToBottom(true);
+      setDraftPrompt(null);
     },
     onUploadProgress: (clientMessageId, prog) => {
       setMessages((prev) =>
@@ -221,6 +222,7 @@ function ConversationPageInner() {
           metadata: { ...message.metadata, uploadState: "complete", uploadProgress: 100 },
         }),
       );
+      setDraftPrompt(null);
       requestAnimationFrame(() => scrollToBottom(true));
       void poll();
     },
@@ -238,14 +240,24 @@ function ConversationPageInner() {
 
   useEffect(() => {
     if (!conversationId || attachmentManager.state.isOpen) return;
+    if (attachmentManager.state.activeUploadClientId) {
+      setDraftPrompt(null);
+      return;
+    }
     void loadAttachmentDraft(conversationId)
       .then((draft) => {
         if (draft && draft.record.files.length > 0) {
           setDraftPrompt({ fileCount: draft.record.files.length });
+        } else {
+          setDraftPrompt(null);
         }
       })
       .catch(() => undefined);
-  }, [conversationId, attachmentManager.state.isOpen]);
+  }, [
+    conversationId,
+    attachmentManager.state.isOpen,
+    attachmentManager.state.activeUploadClientId,
+  ]);
 
   const handleRestoreDraft = useCallback(async () => {
     const draft = await loadAttachmentDraft(conversationId);
