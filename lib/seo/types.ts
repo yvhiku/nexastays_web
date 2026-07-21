@@ -1,5 +1,12 @@
 export type SeoLocale = "en" | "fr" | "ar";
 
+export type SeoPageType =
+  | "city"
+  | "property_type"
+  | "amenity"
+  | "city_property_type"
+  | "city_amenity";
+
 export type AiSnippetType =
   | "summary"
   | "price"
@@ -40,6 +47,15 @@ export interface DestinationIntelligence {
   currency: string;
 }
 
+export interface SeoExploreFiltersDto {
+  city?: string;
+  listing_type?: string;
+  amenity?: string;
+  pets_allowed?: boolean;
+  luxury_only?: boolean;
+  family_friendly?: boolean;
+}
+
 export interface SeoDestinationDto {
   id: string;
   slug: string;
@@ -58,7 +74,7 @@ export interface SeoDestinationDto {
 }
 
 export interface SeoPagePayload {
-  pageType: "city";
+  pageType: SeoPageType;
   locale: SeoLocale;
   path: string;
   title: string;
@@ -67,17 +83,21 @@ export interface SeoPagePayload {
   canonical: string;
   hreflang: Record<string, string>;
   robots: string;
-  destination: SeoDestinationDto;
+  destination: SeoDestinationDto | null;
+  filterLabel: string | null;
+  exploreFilters: SeoExploreFiltersDto;
   intelligence: DestinationIntelligence;
   geoBlocks: GeoBlockDto[];
   faq: GeoBlockDto[];
   aiSnippets: AiSnippet[];
   nearbyDestinations: SeoDestinationDto[];
   propertyTypeLinks: { slug: string; label: string; href: string }[];
+  amenityLinks: { slug: string; label: string; href: string }[];
   breadcrumbs: { name: string; path: string }[];
   indexable: boolean;
   seoScore: number;
   lastmod: string;
+  registrySlug: string;
 }
 
 export interface SitemapEntryDto {
@@ -86,3 +106,21 @@ export interface SitemapEntryDto {
   lastmod: string;
   priority: number;
 }
+
+/** Known single-segment slugs for static generation */
+export const SEO_PROPERTY_TYPE_SLUGS = [
+  "apartments",
+  "hotels",
+  "riads",
+  "villas",
+  "hostels",
+] as const;
+
+export const SEO_AMENITY_SLUGS = [
+  "pool",
+  "pet-friendly",
+  "free-parking",
+  "wifi",
+  "family",
+  "luxury",
+] as const;

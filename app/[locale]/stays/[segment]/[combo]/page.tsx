@@ -3,46 +3,60 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getServerLocale } from "@/lib/i18n/server";
 import type { SeoLocale } from "@/lib/seo/types";
-import { fetchSeoCityPage, fetchSeoDestinations, fetchCityListings } from "@/lib/seo/seo-api";
+import {
+  SEO_AMENITY_SLUGS,
+  SEO_PROPERTY_TYPE_SLUGS,
+} from "@/lib/seo/types";
+import { fetchSeoDestinations, fetchSeoPage, fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
-import { buildCityPageJsonLd } from "@/lib/seo/json-ld";
-import { SeoCityPageClient } from "@/components/seo/SeoCityPage.client";
+import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
+import { SeoLandingPageClient } from "@/components/seo/SeoLandingPage.client";
 
 export const revalidate = 86400;
 
 type Props = {
-  params: { locale: string; city: string };
+  params: { locale: string; segment: string; combo: string };
 };
 
 export async function generateStaticParams() {
   const destinations = await fetchSeoDestinations();
   const locales: SeoLocale[] = ["en", "fr", "ar"];
+  const combos = [
+    ...SEO_PROPERTY_TYPE_SLUGS.map((c) => ({ kind: "type" as const, slug: c })),
+    ...SEO_AMENITY_SLUGS.map((c) => ({ kind: "amenity" as const, slug: c })),
+  ];
   return destinations.flatMap((d) =>
-    locales.map((locale) => ({ locale, city: d.slug })),
+    locales.flatMap((locale) =>
+      combos.map(({ slug }) => ({
+        locale,
+        segment: d.slug,
+        combo: slug,
+      })),
+    ),
   );
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoCityPage(params.city, locale);
+  const page = await fetchSeoPage([params.segment, params.combo], locale);
   if (!page) return {};
   return buildSeoMetadata({
     title: page.title,
     description: page.description,
     path: page.canonical,
     locale,
-    ogImage: page.destination.heroImageUrl,
+    ogImage: page.destination?.heroImageUrl ?? undefined,
     robots: page.robots,
   });
 }
 
-export default async function SeoCityPage({ params }: Props) {
+export default async function SeoComboPage({ params }: Props) {
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoCityPage(params.city, locale);
+  const page = await fetchSeoPage([params.segment, params.combo], locale);
   if (!page) notFound();
 
-  const listings = await fetchCityListings(page.destination.searchCity);
-  const jsonLd = buildCityPageJsonLd(page);
+  const listings = await fetchSeoListings(page.exploreFilters);
+  const jsonLd = buildSeoPageJsonLd(page);
 
   return (
     <>
@@ -53,7 +67,7 @@ export default async function SeoCityPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
         />
       ))}
-      <SeoCityPageClient page={page} listings={listings} />
+      <SeoLandingPageClient page={page} listings={listings} />
     </>
   );
 }

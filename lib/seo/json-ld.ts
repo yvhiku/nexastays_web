@@ -2,7 +2,7 @@ import { getPublicSiteUrl } from "@/lib/env";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import type { SeoPagePayload } from "./types";
 
-export function buildCityPageJsonLd(page: SeoPagePayload): Record<string, unknown>[] {
+export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
   const pageUrl = `${siteUrl}${page.canonical}`;
 
@@ -37,39 +37,82 @@ export function buildCityPageJsonLd(page: SeoPagePayload): Record<string, unknow
     })),
   };
 
-  const touristDestination: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "TouristDestination",
-    name: page.destination.name,
-    url: pageUrl,
-    containedInPlace: {
-      "@type": "Country",
-      name: "Morocco",
-    },
-  };
-  if (page.destination.latitude != null && page.destination.longitude != null) {
-    touristDestination.geo = {
-      "@type": "GeoCoordinates",
-      latitude: page.destination.latitude,
-      longitude: page.destination.longitude,
+  const nodes: Record<string, unknown>[] = [organization, website, breadcrumb];
+
+  if (page.destination) {
+    const touristDestination: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      name: page.destination.name,
+      url: pageUrl,
+      containedInPlace: {
+        "@type": "Country",
+        name: "Morocco",
+      },
     };
+    if (page.destination.latitude != null && page.destination.longitude != null) {
+      touristDestination.geo = {
+        "@type": "GeoCoordinates",
+        latitude: page.destination.latitude,
+        longitude: page.destination.longitude,
+      };
+    }
+    nodes.push(touristDestination);
   }
 
-  const faq =
-    page.faq.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: page.faq.map((item) => ({
-            "@type": "Question",
-            name: item.question,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: item.answer,
-            },
-          })),
-        }
-      : null;
+  const lodgingBusiness: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: page.h1,
+    url: pageUrl,
+    description: page.description,
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "MA",
+      ...(page.destination?.name ? { addressLocality: page.destination.name } : {}),
+    },
+  };
+  if (page.intelligence.avgRating != null) {
+    lodgingBusiness.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: page.intelligence.avgRating,
+      reviewCount: page.intelligence.reviewCount,
+      bestRating: 5,
+    };
+  }
+  nodes.push(lodgingBusiness);
 
-  return [organization, website, breadcrumb, touristDestination, ...(faq ? [faq] : [])];
+  if (page.intelligence.listingCount > 0 && page.intelligence.minPrice != null) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "AggregateOffer",
+      offerCount: page.intelligence.listingCount,
+      lowPrice: page.intelligence.minPrice,
+      highPrice: page.intelligence.maxPrice ?? page.intelligence.minPrice,
+      priceCurrency: page.intelligence.currency,
+      url: pageUrl,
+    });
+  }
+
+  if (page.faq.length > 0) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: page.faq.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    });
+  }
+
+  return nodes;
+}
+
+/** @deprecated use buildSeoPageJsonLd */
+export function buildCityPageJsonLd(page: SeoPagePayload): Record<string, unknown>[] {
+  return buildSeoPageJsonLd(page);
 }
