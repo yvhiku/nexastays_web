@@ -59,7 +59,7 @@ export function buildOptimisticMessage(
     senderId,
     type: "TEXT",
     body,
-    metadata: { source: "USER", schemaVersion: 1, cardVersion: 1 },
+    metadata: { source: "USER", schemaVersion: 1, cardVersion: 1, presentationVersion: 1 },
     status: "PENDING",
     sentAt: null,
     deliveredAt: null,
@@ -68,6 +68,7 @@ export function buildOptimisticMessage(
     clientMessageId,
     createdAt: now,
     isOwn: true,
+    presentationVersion: 1,
   };
 }
 

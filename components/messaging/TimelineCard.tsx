@@ -13,14 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MessageDto } from "@/lib/messaging/messages-api";
-
-type CardAction = {
-  id: string;
-  label: string;
-  type: string;
-  value?: string;
-  url?: string;
-};
+import { executeCardAction, type CardAction } from "@/lib/messaging/actions/registry";
 
 type CardMeta = {
   schemaVersion?: number;
@@ -46,9 +39,10 @@ function iconForKind(kind?: string, type?: string) {
 
 type Props = {
   message: MessageDto;
+  localePath?: (path: string) => string;
 };
 
-export function TimelineCard({ message }: Props) {
+export function TimelineCard({ message, localePath = (p) => p }: Props) {
   const meta = (message.metadata ?? {}) as CardMeta;
   const title = meta.title ?? message.body ?? "Update";
   const body = meta.body;
@@ -95,7 +89,7 @@ export function TimelineCard({ message }: Props) {
                   ) : (
                     <Link
                       key={action.id}
-                      href={href}
+                      href={localePath(href)}
                       className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-nexa-primary text-white hover:opacity-90"
                     >
                       {action.label}
@@ -103,12 +97,14 @@ export function TimelineCard({ message }: Props) {
                   );
                 }
                 return (
-                  <span
+                  <button
                     key={action.id}
-                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-nexa-bg-2 text-nexa-ink-3"
+                    type="button"
+                    onClick={() => executeCardAction(action as CardAction, { localePath })}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-nexa-primary text-white hover:opacity-90"
                   >
                     {action.label}
-                  </span>
+                  </button>
                 );
               })}
             </div>

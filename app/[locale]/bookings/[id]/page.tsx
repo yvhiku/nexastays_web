@@ -135,7 +135,7 @@ function BookingDetailPageInner() {
     setPaymentError(null);
     try {
       const conv = await openConversationForBooking(booking.id, token);
-      router.push(localePath(`/inbox/${conv.id}`));
+      router.push(localePath(`/inbox/${conv.conversation.id}`));
     } catch (err) {
       setPaymentError(formatUserError(err) || t("inbox.emptyBody"));
     } finally {

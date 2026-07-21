@@ -1,5 +1,5 @@
 /**
- * Nexa Stays messaging API (stays service).
+ * Nexa Stays messaging API (stays service) — v3 presentation model.
  */
 
 import axios, { AxiosError } from "axios";
@@ -74,41 +74,71 @@ export interface ConversationPermissions {
   notificationLevel: "ALL" | "IMPORTANT" | "MUTED";
 }
 
-export interface ReservationSnapshot {
+export interface SignedMedia {
+  url: string;
+  version: number;
+  expiresAt: string;
+}
+
+export interface ReservationPresentation {
   listingTitle: string;
-  primaryPhotoUrl?: string | null;
-  addressDisplay?: string | null;
+  listingId: string | null;
+  coverMedia: SignedMedia | null;
+  addressDisplay: string | null;
+  city: string | null;
+  country: string | null;
   checkinDate: string;
   checkoutDate: string;
   guestCount: number;
-  hostDisplayName?: string | null;
-  guestDisplayName?: string | null;
-  bookingReference?: string | null;
+  bookingReference: string | null;
+  bookingId: string | null;
 }
 
-export interface ConversationListItem {
-  id: string;
-  type: string;
-  messagingState: string;
-  visibility: string;
-  conversationVersion: number;
-  lastMessageSequence: number;
-  unreadCount: number;
+export interface ConversationPresentation {
+  title: string;
+  subtitle: string;
+  avatar: SignedMedia | null;
+  bookingChip: string | null;
+  statusChip: string | null;
   counterpart: {
-    name: string;
-    avatarUrl?: string | null;
-    isSuperhost: boolean;
+    id: string;
+    displayName: string;
   };
   listing: {
     title: string;
     city?: string | null;
   };
+  reservation: ReservationPresentation;
+}
+
+export interface ConversationSyncMeta {
+  conversationVersion: number;
+  snapshotVersion: number;
+  lastMessageId: string | null;
+  unreadCount: number;
+  lastReadPointer: {
+    messageId: string | null;
+    readAt: string | null;
+  };
+}
+
+export interface ConversationDomain {
+  id: string;
+  type: string;
+  bookingId: string | null;
+  listingId: string | null;
+  messagingState: string;
+  visibility: string;
+}
+
+export interface ConversationListResponse {
+  conversation: ConversationDomain;
+  presentation: ConversationPresentation;
+  sync: ConversationSyncMeta;
   lastMessage: {
     preview: string | null;
     at: string | null;
-    deliveryStatus?: string;
   };
-  reservationSnapshot: ReservationSnapshot;
   permissions: ConversationPermissions;
 }
 
@@ -128,13 +158,17 @@ export interface MessageDto {
   clientMessageId: string | null;
   createdAt: string;
   isOwn: boolean;
+  presentationVersion: number;
 }
 
-export interface ConversationDetail extends ConversationListItem {
-  bookingId: string | null;
-  bookingStatus?: string | null;
-  messages: MessageDto[];
+export interface ConversationDetailResponse {
+  conversation: ConversationDomain;
+  presentation: ConversationPresentation;
+  timeline: MessageDto[];
+  permissions: ConversationPermissions;
+  sync: ConversationSyncMeta;
   hasMore: boolean;
+  bookingStatus: string | null;
 }
 
 export interface MessagesPage {
@@ -144,16 +178,36 @@ export interface MessagesPage {
 
 export type InboxFilter = "all" | "unread" | "hosts" | "support";
 
+/** Convenience alias for inbox rows */
+export type ConversationListItem = ConversationListResponse;
+
+/** Convenience alias for thread detail */
+export type ConversationDetail = ConversationDetailResponse & {
+  /** @deprecated use timeline */
+  messages: MessageDto[];
+  bookingId: string | null;
+  bookingStatus?: string | null;
+};
+
+function normalizeDetail(raw: ConversationDetailResponse): ConversationDetail {
+  return {
+    ...raw,
+    messages: raw.timeline,
+    bookingId: raw.conversation.bookingId,
+    bookingStatus: raw.bookingStatus ?? undefined,
+  };
+}
+
 export async function listConversations(
   token?: string | null,
   filter: InboxFilter = "all",
   q?: string,
-): Promise<ConversationListItem[]> {
+): Promise<ConversationListResponse[]> {
   const res = await client.get("/messaging/conversations", {
     headers: getAuthHeaders(token),
     params: { filter, ...(q?.trim() ? { q: q.trim() } : {}) },
   });
-  return unwrap<ConversationListItem[]>(res);
+  return unwrap<ConversationListResponse[]>(res);
 }
 
 export async function getUnreadConversationCount(token?: string | null): Promise<number> {
@@ -173,7 +227,7 @@ export async function getConversation(
     headers: getAuthHeaders(token),
     params: beforeSequence != null ? { before_sequence: beforeSequence } : undefined,
   });
-  return unwrap<ConversationDetail>(res);
+  return normalizeDetail(unwrap<ConversationDetailResponse>(res));
 }
 
 export async function listMessages(
@@ -270,56 +324,52 @@ export async function reportSafetyIssue(
   return unwrap<{ supportUrl: string }>(res);
 }
 
-/** Find existing thread for a booking, if any. */
 export async function getConversationByBooking(
   bookingId: string,
   token?: string | null,
-): Promise<ConversationListItem | null> {
+): Promise<ConversationListResponse | null> {
   try {
     const res = await client.get(
       `/messaging/conversations/by-booking/${encodeURIComponent(bookingId)}`,
       { headers: getAuthHeaders(token) },
     );
-    const data = unwrap<ConversationListItem | null>(res);
+    const data = unwrap<ConversationListResponse | null>(res);
     return data ?? null;
   } catch {
     return null;
   }
 }
 
-/** Create inbox thread for a confirmed booking when missing (backfill). */
 export async function ensureConversationForBooking(
   bookingId: string,
   token?: string | null,
-): Promise<ConversationListItem> {
+): Promise<ConversationListResponse> {
   const res = await client.post(
     `/messaging/conversations/ensure-for-booking/${encodeURIComponent(bookingId)}`,
     {},
     { headers: getAuthHeaders(token) },
   );
-  return unwrap<ConversationListItem>(res);
+  return unwrap<ConversationListResponse>(res);
 }
 
-/** Open or create the inbox thread for a booking. */
 export async function openConversationForBooking(
   bookingId: string,
   token?: string | null,
-): Promise<ConversationListItem> {
+): Promise<ConversationListResponse> {
   const existing = await getConversationByBooking(bookingId, token);
   if (existing) return existing;
   return ensureConversationForBooking(bookingId, token);
 }
 
-/** Resolve inbox thread for a booking via reference search or listing title fallback. */
 export async function findConversationForBooking(
   bookingId: string,
   bookingReference: string | null | undefined,
   token?: string | null,
-): Promise<ConversationListItem | null> {
+): Promise<ConversationListResponse | null> {
   try {
     return await openConversationForBooking(bookingId, token);
   } catch {
-    /* fall through to legacy search */
+    /* fall through */
   }
 
   if (bookingReference?.trim()) {
@@ -330,14 +380,5 @@ export async function findConversationForBooking(
   const byId = await listConversations(token, "all", bookingId);
   if (byId.length > 0) return byId[0];
 
-  const all = await listConversations(token, "all");
-  for (const item of all) {
-    try {
-      const detail = await getConversation(item.id, token);
-      if (detail.bookingId === bookingId) return item;
-    } catch {
-      /* skip inaccessible */
-    }
-  }
   return null;
 }

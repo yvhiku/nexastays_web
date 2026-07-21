@@ -3,8 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { UserAvatar } from "@/components/avatar/UserAvatar";
 import { ConversationMenu } from "./ConversationMenu";
-import type { ConversationDetail } from "@/lib/messaging/messages-api";
+import type { ConversationDetail, ConversationPermissions } from "@/lib/messaging/messages-api";
 
 type Props = {
   conversation: ConversationDetail;
@@ -33,6 +34,8 @@ export function ConversationHeader({
   onMuteChange,
   muted,
 }: Props) {
+  const { presentation, permissions } = conversation;
+
   return (
     <header className="sticky top-0 z-30 flex items-center gap-2 px-3 py-2.5 min-h-[56px] border-b border-nexa-line/60 bg-[rgba(253,251,252,0.95)] backdrop-blur-xl">
       <Link
@@ -42,14 +45,15 @@ export function ConversationHeader({
       >
         <ArrowLeft className="h-5 w-5" />
       </Link>
+      <UserAvatar name={presentation.title} media={presentation.avatar} size="md" />
       <div className="flex-1 min-w-0">
         <h1 className="font-[family-name:var(--font-playfair)] text-base font-bold text-nexa-ink truncate">
-          {conversation.counterpart.name}
+          {presentation.title}
         </h1>
-        <p className="text-xs text-nexa-ink-4 truncate">{conversation.listing.title}</p>
+        <p className="text-xs text-nexa-ink-4 truncate">{presentation.subtitle}</p>
       </div>
       <ConversationMenu
-        permissions={conversation.permissions}
+        permissions={permissions as ConversationPermissions}
         labels={menuLabels}
         muted={muted}
         onArchive={onArchive}

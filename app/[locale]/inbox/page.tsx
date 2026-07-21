@@ -36,12 +36,16 @@ function sortConversations(
   optimistic: Record<string, number>,
 ): ConversationListItem[] {
   return [...items].sort((a, b) => {
-    const aUnread = a.unreadCount > 0 ? 1 : 0;
-    const bUnread = b.unreadCount > 0 ? 1 : 0;
+    const aUnread = a.sync.unreadCount > 0 ? 1 : 0;
+    const bUnread = b.sync.unreadCount > 0 ? 1 : 0;
     if (aUnread !== bUnread) return bUnread - aUnread;
 
-    const aTime = optimistic[a.id] ?? (a.lastMessage.at ? new Date(a.lastMessage.at).getTime() : 0);
-    const bTime = optimistic[b.id] ?? (b.lastMessage.at ? new Date(b.lastMessage.at).getTime() : 0);
+    const aTime =
+      optimistic[a.conversation.id] ??
+      (a.lastMessage.at ? new Date(a.lastMessage.at).getTime() : 0);
+    const bTime =
+      optimistic[b.conversation.id] ??
+      (b.lastMessage.at ? new Date(b.lastMessage.at).getTime() : 0);
     return bTime - aTime;
   });
 }
@@ -144,10 +148,10 @@ function InboxPageInner() {
 
             {sorted.map((item) => (
               <ConversationRow
-                key={item.id}
+                key={item.conversation.id}
                 item={item}
-                href={localePath(`/inbox/${item.id}`)}
-                optimisticAt={optimistic[item.id] ?? null}
+                href={localePath(`/inbox/${item.conversation.id}`)}
+                optimisticAt={optimistic[item.conversation.id] ?? null}
               />
             ))}
           </div>

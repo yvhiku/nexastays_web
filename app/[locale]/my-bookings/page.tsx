@@ -60,7 +60,7 @@ function MyBookingsContent() {
       setError(null);
       try {
         const conv = await openConversationForBooking(bookingId, token);
-        router.push(localePath(`/inbox/${conv.id}`));
+        router.push(localePath(`/inbox/${conv.conversation.id}`));
       } catch (e) {
         setError(formatUserError(e) || t("inbox.emptyBody"));
       } finally {

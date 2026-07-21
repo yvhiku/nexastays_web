@@ -2,15 +2,15 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { NavBar } from "@/components/navbar/NavBar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorAlert } from "@/components/ui/Alert";
-import { BookingSummaryBar } from "@/components/messaging/BookingSummaryBar";
+import { ReservationContextBar } from "@/components/messaging/ReservationContextBar";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { MessageComposer } from "@/components/messaging/MessageComposer";
 import { TimelineRenderer } from "@/components/messaging/TimelineRenderer";
 import { useBatchedRead } from "@/components/messaging/hooks/useBatchedRead";
 import { useConversationDraft } from "@/components/messaging/hooks/useConversationDraft";
+import { useConversationScroll } from "@/components/messaging/hooks/useConversationScroll";
 import { useMessagingRealtime } from "@/components/messaging/hooks/useMessagingRealtime";
 import {
   isConversationMuted,
@@ -29,6 +29,10 @@ import {
   type ConversationDetail,
   type MessageDto,
 } from "@/lib/messaging/messages-api";
+import {
+  mergeMessages,
+  reconcileOptimisticMessage,
+} from "@/lib/messaging/selectors/reconcile-messages";
 import {
   buildOptimisticMessage,
   createClientMessageId,
@@ -53,16 +57,6 @@ function setOptimisticActivity(conversationId: string): void {
   }
 }
 
-function mergeMessages(existing: MessageDto[], incoming: MessageDto[]): MessageDto[] {
-  const map = new Map<string, MessageDto>();
-  for (const m of existing) map.set(m.clientMessageId ?? m.id, m);
-  for (const m of incoming) {
-    const key = m.clientMessageId ?? m.id;
-    map.set(key, m);
-  }
-  return [...map.values()].sort((a, b) => a.conversationSequence - b.conversationSequence);
-}
-
 function ConversationPageInner() {
   const params = useParams();
   const router = useRouter();
@@ -78,9 +72,9 @@ function ConversationPageInner() {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [contextCollapsed, setContextCollapsed] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const atBottomRef = useRef(true);
 
   const { draft, updateDraft, discardDraft, ready: draftReady } = useConversationDraft(conversationId);
   const { scheduleRead, flushRead } = useBatchedRead(
@@ -90,22 +84,25 @@ function ConversationPageInner() {
     () => trackEvent("message_read", { conversation_id: conversationId }),
   );
 
+  const { handleScroll, scrollToBottom, preserveAnchorOnPrepend, atBottomRef } =
+    useConversationScroll({
+      scrollRef,
+      messages,
+      lastReadMessageId: conversation?.sync.lastReadPointer.messageId ?? null,
+      onMarkRead: scheduleRead,
+      enabled: !!conversation && !loading,
+    });
+
   useEffect(() => {
     setMuted(isConversationMuted(conversationId));
   }, [conversationId]);
-
-  const scrollToBottom = useCallback((smooth = false) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
-  }, []);
 
   const loadConversation = useCallback(async () => {
     if (!token) return;
     try {
       const detail = await getConversation(conversationId, token);
       setConversation(detail);
-      setMessages(detail.messages);
+      setMessages(detail.timeline ?? detail.messages);
       setHasMore(detail.hasMore);
       scheduleRead();
     } catch (e) {
@@ -121,7 +118,7 @@ function ConversationPageInner() {
     void loadConversation();
     void flushOfflineQueue(token, (item, message) => {
       if (item.conversationId === conversationId) {
-        setMessages((prev) => mergeMessages(prev.filter((m) => m.id !== `optimistic_${item.clientMessageId}`), [message]));
+        setMessages((prev) => reconcileOptimisticMessage(prev, message));
       }
     });
   }, [conversationId, token, loadConversation]);
@@ -130,16 +127,16 @@ function ConversationPageInner() {
     if (!token) return;
     try {
       const detail = await getConversation(conversationId, token);
-      const localVersion = conversation?.conversationVersion;
+      const localVersion = conversation?.sync.conversationVersion;
       if (
         localVersion != null &&
-        !shouldFetchAfterPush(localVersion, detail.conversationVersion) &&
-        detail.messages.at(-1)?.id === messages.at(-1)?.id
+        !shouldFetchAfterPush(localVersion, detail.sync.conversationVersion) &&
+        detail.timeline.at(-1)?.id === messages.at(-1)?.id
       ) {
         return;
       }
       setConversation(detail);
-      setMessages((prev) => mergeMessages(prev, detail.messages));
+      setMessages((prev) => mergeMessages(prev, detail.timeline ?? detail.messages));
       setHasMore(detail.hasMore);
       if (atBottomRef.current) {
         requestAnimationFrame(() => scrollToBottom());
@@ -148,25 +145,33 @@ function ConversationPageInner() {
     } catch {
       /* silent poll failure */
     }
-  }, [conversationId, token, scheduleRead, scrollToBottom, conversation?.conversationVersion, messages]);
+  }, [
+    conversationId,
+    token,
+    scheduleRead,
+    scrollToBottom,
+    conversation?.sync.conversationVersion,
+    messages,
+    atBottomRef,
+  ]);
 
   const { bumpActivity } = useMessagingRealtime("conversation", poll, !!token && !!conversation);
-
-  useEffect(() => {
-    if (!loading && messages.length > 0) {
-      scrollToBottom();
-    }
-  }, [loading, messages.length, scrollToBottom]);
 
   const loadOlder = async () => {
     if (!token || loadingOlder || !hasMore || messages.length === 0) return;
     const firstSeq = messages[0]?.conversationSequence;
     if (firstSeq == null) return;
+    const el = scrollRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
     setLoadingOlder(true);
     try {
       const page = await listMessages(conversationId, token, 30, firstSeq);
       setMessages((prev) => mergeMessages(page.messages, prev));
       setHasMore(page.hasMore);
+      requestAnimationFrame(() => {
+        const nextHeight = el?.scrollHeight ?? 0;
+        preserveAnchorOnPrepend(nextHeight - prevHeight);
+      });
     } catch (e) {
       setError(formatUserError(e));
     } finally {
@@ -174,12 +179,11 @@ function ConversationPageInner() {
     }
   };
 
-  const handleScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  const onScroll = () => {
+    handleScroll();
     bumpActivity();
-    if (el.scrollTop < 48) {
+    const el = scrollRef.current;
+    if (el && el.scrollTop < 48) {
       void loadOlder();
     }
   };
@@ -216,12 +220,7 @@ function ConversationPageInner() {
       }
 
       const saved = await sendMessage(conversationId, body, token, clientMessageId);
-      setMessages((prev) =>
-        mergeMessages(
-          prev.filter((m) => m.id !== optimistic.id),
-          [saved],
-        ),
-      );
+      setMessages((prev) => reconcileOptimisticMessage(prev, saved));
       trackEvent("message_sent", { conversation_id: conversationId, offline: false });
       void poll();
     } catch (e) {
@@ -261,35 +260,21 @@ function ConversationPageInner() {
     reportPrompt: t("inbox.reportPrompt"),
   };
 
-  const statusLabels: Record<string, string> = {
-    "myBookings.lifecycle.ACTIVE": t("myBookings.lifecycle.ACTIVE"),
-    "myBookings.lifecycle.PENDING_PAYMENT": t("myBookings.lifecycle.PENDING_PAYMENT"),
-    "myBookings.lifecycle.COMPLETED": t("myBookings.lifecycle.COMPLETED"),
-    "myBookings.lifecycle.CANCELLED": t("myBookings.lifecycle.CANCELLED"),
-    "myBookings.lifecycle.EXPIRED": t("myBookings.lifecycle.EXPIRED"),
-  };
-
   if (loading) {
     return (
-      <>
-        <NavBar />
-        <main className="pt-[72px] min-h-screen flex items-center justify-center bg-nexa-bg-1">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nexa-primary" />
-        </main>
-      </>
+      <main className="min-h-[100dvh] flex items-center justify-center bg-nexa-bg-1">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nexa-primary" />
+      </main>
     );
   }
 
   if (error && !conversation) {
     return (
-      <>
-        <NavBar />
-        <main className="pt-[72px] min-h-screen bg-nexa-bg-1 px-4 flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <ErrorAlert error={error} />
-          </div>
-        </main>
-      </>
+      <main className="min-h-[100dvh] bg-nexa-bg-1 px-4 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <ErrorAlert error={error} />
+        </div>
+      </main>
     );
   }
 
@@ -302,90 +287,89 @@ function ConversationPageInner() {
       : undefined;
 
   return (
-    <>
-      <NavBar />
-      <main className="pt-[72px] min-h-[100dvh] bg-nexa-bg-1 flex flex-col">
-        <div className="max-w-lg mx-auto w-full flex-1 flex flex-col bg-white md:my-4 md:rounded-3xl md:border md:border-nexa-line/60 md:shadow-nexa-card overflow-hidden">
-          <ConversationHeader
-            conversation={conversation}
-            backHref={localePath("/inbox")}
-            backLabel={t("inbox.back")}
-            menuLabels={menuLabels}
-            muted={muted}
-            onArchive={() => void handleVisibility("archive")}
-            onDelete={() => void handleVisibility("delete")}
-            onReport={(reason) => {
-              if (!token) return;
-              void reportConversation(conversationId, reason, token).then(() => {
-                trackEvent("conversation_reported", { conversation_id: conversationId });
-              });
-            }}
-            onBlock={() => {
-              if (!token) return;
-              void blockConversation(conversationId, token).then(() => {
-                trackEvent("conversation_blocked", { conversation_id: conversationId });
-                void loadConversation();
-              });
-            }}
-            onSafety={() => {
-              if (!token) return;
-              void reportSafetyIssue(conversationId, token).then(({ supportUrl }) => {
-                router.push(supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl);
-              });
-            }}
-            onMuteChange={(next) => {
-              setConversationMuted(conversationId, next);
-              setMuted(next);
-              trackEvent("conversation_muted", { conversation_id: conversationId, muted: next });
-            }}
-          />
+    <main className="min-h-[100dvh] bg-nexa-bg-1 flex flex-col">
+      <div className="max-w-lg mx-auto w-full flex-1 flex flex-col bg-white md:my-4 md:rounded-3xl md:border md:border-nexa-line/60 md:shadow-nexa-card overflow-hidden">
+        <ConversationHeader
+          conversation={conversation}
+          backHref={localePath("/inbox")}
+          backLabel={t("inbox.back")}
+          menuLabels={menuLabels}
+          muted={muted}
+          onArchive={() => void handleVisibility("archive")}
+          onDelete={() => void handleVisibility("delete")}
+          onReport={(reason) => {
+            if (!token) return;
+            void reportConversation(conversationId, reason, token).then(() => {
+              trackEvent("conversation_reported", { conversation_id: conversationId });
+            });
+          }}
+          onBlock={() => {
+            if (!token) return;
+            void blockConversation(conversationId, token).then(() => {
+              trackEvent("conversation_blocked", { conversation_id: conversationId });
+              void loadConversation();
+            });
+          }}
+          onSafety={() => {
+            if (!token) return;
+            void reportSafetyIssue(conversationId, token).then(({ supportUrl }) => {
+              router.push(supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl);
+            });
+          }}
+          onMuteChange={(next) => {
+            setConversationMuted(conversationId, next);
+            setMuted(next);
+            trackEvent("conversation_muted", { conversation_id: conversationId, muted: next });
+          }}
+        />
 
-          <BookingSummaryBar
-            snapshot={conversation.reservationSnapshot}
-            bookingStatus={conversation.bookingStatus}
-            statusLabels={statusLabels}
-            labels={{
-              guests: t("inbox.guests"),
-              checkIn: t("inbox.checkIn"),
-              checkOut: t("inbox.checkOut"),
-              showDetails: t("inbox.showDetails"),
-              hideDetails: t("inbox.hideDetails"),
-            }}
-          />
+        <ReservationContextBar
+          presentation={conversation.presentation}
+          collapsedExternal={contextCollapsed}
+          localePath={localePath}
+          scrollContainerRef={scrollRef}
+        />
 
-          {error ? (
-            <div className="px-4 pt-2">
-              <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
-            </div>
-          ) : null}
-
-          <div
-            ref={scrollRef}
-            onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-3 py-2 bg-gradient-to-b from-nexa-bg-1/40 to-white"
-          >
-            {loadingOlder ? (
-              <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
-            ) : null}
-            <TimelineRenderer messages={messages} removedLabel={t("inbox.messageRemoved")} />
+        {error ? (
+          <div className="px-4 pt-2">
+            <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
           </div>
+        ) : null}
 
-          {draftReady ? (
-            <MessageComposer
-              value={draft}
-              onChange={updateDraft}
-              onSend={() => void handleSend()}
-              disabled={sending || !conversation.permissions.canSend}
-              placeholder={t("inbox.composerPlaceholder")}
-              sendLabel={t("inbox.send")}
-              readOnlyHint={readOnlyHint}
-              onFocus={() => trackEvent("message_composer_focused", { conversation_id: conversationId })}
-              onActivity={bumpActivity}
-            />
+        <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          className="flex-1 overflow-y-auto px-3 py-2 bg-gradient-to-b from-nexa-bg-1/40 to-white"
+        >
+          {loadingOlder ? (
+            <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
           ) : null}
+          <TimelineRenderer
+            messages={messages}
+            removedLabel={t("inbox.messageRemoved")}
+            presentation={conversation.presentation}
+            localePath={localePath}
+          />
         </div>
-      </main>
-    </>
+
+        {draftReady ? (
+          <MessageComposer
+            value={draft}
+            onChange={updateDraft}
+            onSend={() => void handleSend()}
+            disabled={sending || !conversation.permissions.canSend}
+            placeholder={t("inbox.composerPlaceholder")}
+            sendLabel={t("inbox.send")}
+            readOnlyHint={readOnlyHint}
+            onFocus={() => {
+              setContextCollapsed(true);
+              trackEvent("message_composer_focused", { conversation_id: conversationId });
+            }}
+            onActivity={bumpActivity}
+          />
+        ) : null}
+      </div>
+    </main>
   );
 }
 
