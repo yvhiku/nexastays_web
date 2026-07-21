@@ -17,6 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMobileSearch } from "@/components/search/MobileSearchProvider";
 import { cn } from "@/lib/utils";
+import { isMessagingThreadPath } from "@/lib/messaging/thread-routes";
 import { trackPwaPageView } from "@/lib/pwa-engagement";
 
 type Tab = {
@@ -123,6 +124,10 @@ export function MobileBottomNav() {
     ],
     [localePath],
   );
+
+  if (isMessagingThreadPath(pathname)) {
+    return null;
+  }
 
   if (isHostArea) {
     return (

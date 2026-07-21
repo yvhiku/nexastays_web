@@ -262,19 +262,19 @@ function ConversationPageInner() {
 
   if (loading) {
     return (
-      <main className="min-h-[100dvh] flex items-center justify-center bg-nexa-bg-1">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fcf9f8] md:static md:inset-auto md:min-h-[100dvh]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-nexa-primary" />
-      </main>
+      </div>
     );
   }
 
   if (error && !conversation) {
     return (
-      <main className="min-h-[100dvh] bg-nexa-bg-1 px-4 flex items-center justify-center">
+      <div className="fixed inset-0 z-[60] bg-[#fcf9f8] px-4 flex items-center justify-center md:static md:inset-auto md:min-h-[100dvh]">
         <div className="w-full max-w-md">
           <ErrorAlert error={error} />
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -287,89 +287,87 @@ function ConversationPageInner() {
       : undefined;
 
   return (
-    <main className="min-h-[100dvh] bg-nexa-bg-1 flex flex-col">
-      <div className="max-w-lg mx-auto w-full flex-1 flex flex-col bg-white md:my-4 md:rounded-3xl md:border md:border-nexa-line/60 md:shadow-nexa-card overflow-hidden">
-        <ConversationHeader
-          conversation={conversation}
-          backHref={localePath("/inbox")}
-          backLabel={t("inbox.back")}
-          menuLabels={menuLabels}
-          muted={muted}
-          onArchive={() => void handleVisibility("archive")}
-          onDelete={() => void handleVisibility("delete")}
-          onReport={(reason) => {
-            if (!token) return;
-            void reportConversation(conversationId, reason, token).then(() => {
-              trackEvent("conversation_reported", { conversation_id: conversationId });
-            });
-          }}
-          onBlock={() => {
-            if (!token) return;
-            void blockConversation(conversationId, token).then(() => {
-              trackEvent("conversation_blocked", { conversation_id: conversationId });
-              void loadConversation();
-            });
-          }}
-          onSafety={() => {
-            if (!token) return;
-            void reportSafetyIssue(conversationId, token).then(({ supportUrl }) => {
-              router.push(supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl);
-            });
-          }}
-          onMuteChange={(next) => {
-            setConversationMuted(conversationId, next);
-            setMuted(next);
-            trackEvent("conversation_muted", { conversation_id: conversationId, muted: next });
-          }}
-        />
-
-        <ReservationContextBar
-          presentation={conversation.presentation}
-          collapsedExternal={contextCollapsed}
-          localePath={localePath}
-          scrollContainerRef={scrollRef}
-        />
-
-        {error ? (
-          <div className="px-4 pt-2">
-            <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
-          </div>
-        ) : null}
-
-        <div
-          ref={scrollRef}
-          onScroll={onScroll}
-          className="flex-1 overflow-y-auto px-3 py-2 bg-gradient-to-b from-nexa-bg-1/40 to-white"
-        >
-          {loadingOlder ? (
-            <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
-          ) : null}
-          <TimelineRenderer
-            messages={messages}
-            removedLabel={t("inbox.messageRemoved")}
+    <div className="fixed inset-0 z-[60] flex flex-col bg-[#fcf9f8] md:static md:inset-auto md:min-h-[100dvh] md:max-w-2xl md:mx-auto md:w-full">
+      <ConversationHeader
+        conversation={conversation}
+        backHref={localePath("/inbox")}
+        backLabel={t("inbox.back")}
+        menuLabels={menuLabels}
+        muted={muted}
+        onArchive={() => void handleVisibility("archive")}
+        onDelete={() => void handleVisibility("delete")}
+        onReport={(reason) => {
+          if (!token) return;
+          void reportConversation(conversationId, reason, token).then(() => {
+            trackEvent("conversation_reported", { conversation_id: conversationId });
+          });
+        }}
+        onBlock={() => {
+          if (!token) return;
+          void blockConversation(conversationId, token).then(() => {
+            trackEvent("conversation_blocked", { conversation_id: conversationId });
+            void loadConversation();
+          });
+        }}
+        onSafety={() => {
+          if (!token) return;
+          void reportSafetyIssue(conversationId, token).then(({ supportUrl }) => {
+            router.push(supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl);
+          });
+        }}
+        onMuteChange={(next) => {
+          setConversationMuted(conversationId, next);
+          setMuted(next);
+          trackEvent("conversation_muted", { conversation_id: conversationId, muted: next });
+        }}
+        contextBar={
+          <ReservationContextBar
             presentation={conversation.presentation}
+            collapsed={contextCollapsed}
             localePath={localePath}
           />
-        </div>
+        }
+      />
 
-        {draftReady ? (
-          <MessageComposer
-            value={draft}
-            onChange={updateDraft}
-            onSend={() => void handleSend()}
-            disabled={sending || !conversation.permissions.canSend}
-            placeholder={t("inbox.composerPlaceholder")}
-            sendLabel={t("inbox.send")}
-            readOnlyHint={readOnlyHint}
-            onFocus={() => {
-              setContextCollapsed(true);
-              trackEvent("message_composer_focused", { conversation_id: conversationId });
-            }}
-            onActivity={bumpActivity}
-          />
+      {error ? (
+        <div className="shrink-0 px-4 pt-2 max-w-2xl mx-auto w-full">
+          <ErrorAlert error={error} compact onDismiss={() => setError(null)} />
+        </div>
+      ) : null}
+
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[#fcf9f8]"
+      >
+        {loadingOlder ? (
+          <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
         ) : null}
+        <TimelineRenderer
+          messages={messages}
+          removedLabel={t("inbox.messageRemoved")}
+          presentation={conversation.presentation}
+          localePath={localePath}
+        />
       </div>
-    </main>
+
+      {draftReady ? (
+        <MessageComposer
+          value={draft}
+          onChange={updateDraft}
+          onSend={() => void handleSend()}
+          disabled={sending || !conversation.permissions.canSend}
+          placeholder={t("inbox.composerPlaceholder")}
+          sendLabel={t("inbox.send")}
+          readOnlyHint={readOnlyHint}
+          onFocus={() => {
+            setContextCollapsed(true);
+            trackEvent("message_composer_focused", { conversation_id: conversationId });
+          }}
+          onActivity={bumpActivity}
+        />
+      ) : null}
+    </div>
   );
 }
 

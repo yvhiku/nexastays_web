@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { StaysFeeProvider } from "@/contexts/StaysFeeContext";
 import { PwaAppShell } from "@/components/pwa/PwaAppShell";
+import { LocaleShell } from "@/components/layout/LocaleShell.client";
 import { HeaderStateProvider } from "@/components/navbar/HeaderStateProvider.client";
 import { getServerLocale, getLocaleBundle } from "@/lib/i18n/server";
 import type { Locale } from "@/lib/i18n";
@@ -39,14 +40,12 @@ export default async function LocaleLayout({
       <StaysFeeProvider>
         <AuthProvider>
           <HeaderStateProvider>
-            <div
-              className={`pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-0${
-                isRtl ? ` ${notoArabic.variable} font-arabic` : ""
-              }`}
-              dir={isRtl ? "rtl" : "ltr"}
+            <LocaleShell
+              isRtl={isRtl}
+              arabicFontClass={isRtl ? `${notoArabic.variable} font-arabic` : undefined}
             >
               {children}
-            </div>
+            </LocaleShell>
             <PwaAppShell />
           </HeaderStateProvider>
         </AuthProvider>

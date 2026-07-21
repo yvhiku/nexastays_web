@@ -52,7 +52,7 @@ export function TimelineRenderer({ messages, removedLabel, presentation, localeP
   let lastDay = "";
 
   return (
-    <div className="flex flex-col gap-3 py-2">
+    <div className="flex flex-col gap-8 py-2">
       {messages.map((message) => {
         const time = message.sentAt ?? message.createdAt;
         const dk = dayKey(time);
@@ -60,8 +60,8 @@ export function TimelineRenderer({ messages, removedLabel, presentation, localeP
         if (showDay) lastDay = dk;
 
         const dayDivider = showDay && time ? (
-          <div key={`day-${dk}-${message.id}`} className="flex justify-center py-1">
-            <span className="rounded-full bg-nexa-bg-2 px-3 py-0.5 text-[10px] font-medium text-nexa-ink-4">
+          <div key={`day-${dk}-${message.id}`} className="flex justify-center my-4">
+            <span className="px-3 py-1 bg-[#f0eded] text-nexa-ink-3 text-[11px] font-bold rounded-full uppercase tracking-widest">
               {dayLabel(time)}
             </span>
           </div>

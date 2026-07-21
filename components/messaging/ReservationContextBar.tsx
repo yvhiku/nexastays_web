@@ -1,48 +1,50 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import React from "react";
 import { cn } from "@/lib/utils";
 import type { ConversationPresentation } from "@/lib/messaging/messages-api";
 import { executeCardAction } from "@/lib/messaging/actions/registry";
 
 type Props = {
   presentation: ConversationPresentation;
-  collapsedExternal?: boolean;
+  collapsed?: boolean;
   localePath: (path: string) => string;
-  scrollContainerRef?: React.RefObject<HTMLElement | null>;
 };
 
 export function ReservationContextBar({
   presentation,
-  collapsedExternal = false,
+  collapsed = false,
   localePath,
-  scrollContainerRef,
 }: Props) {
-  const [expanded, setExpanded] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const el = scrollContainerRef?.current;
-    if (!el) return;
-    const onScroll = () => setScrolled(el.scrollTop > 48);
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [scrollContainerRef]);
-
-  const collapsed = collapsedExternal || (!expanded && scrolled);
   const bookingId = presentation.reservation.bookingId;
 
   return (
     <div
       className={cn(
-        "border-b border-nexa-line/60 bg-white/95 backdrop-blur-md transition-all duration-200",
-        collapsed ? "shadow-sm" : "",
+        "border-t border-[#F7F7F7] bg-[#f6f3f2] transition-all duration-200 overflow-hidden",
+        collapsed ? "max-h-0 opacity-0 border-t-0" : "max-h-16 opacity-100",
       )}
     >
-      <div className="flex items-center gap-2 px-4 py-2.5 min-h-[48px]">
-        <p className="flex-1 min-w-0 text-xs text-nexa-ink-3 truncate">
-          {presentation.bookingChip}
+      <div className="flex items-center justify-between gap-3 px-4 py-2 max-w-2xl mx-auto w-full min-h-[40px]">
+        <p className="flex-1 min-w-0 text-sm text-nexa-ink-3 truncate">
+          <span className="font-semibold text-nexa-ink">{presentation.listing.title}</span>
+          {presentation.reservation.checkinDate && presentation.reservation.checkoutDate ? (
+            <>
+              <span className="text-nexa-ink-4 mx-1.5">•</span>
+              <span>
+                {formatShortRange(
+                  presentation.reservation.checkinDate,
+                  presentation.reservation.checkoutDate,
+                )}
+              </span>
+            </>
+          ) : null}
+          {presentation.reservation.guestCount ? (
+            <>
+              <span className="text-nexa-ink-4 mx-1.5">•</span>
+              <span>{presentation.reservation.guestCount} guests</span>
+            </>
+          ) : null}
         </p>
         {bookingId ? (
           <button
@@ -58,31 +60,24 @@ export function ReservationContextBar({
                 { localePath },
               )
             }
-            className="shrink-0 text-xs font-semibold text-nexa-primary hover:underline"
+            className="shrink-0 text-sm font-semibold text-nexa-primary hover:underline"
           >
             View booking
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="shrink-0 p-1 text-nexa-ink-4"
-          aria-expanded={expanded}
-        >
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
       </div>
-
-      {expanded ? (
-        <div className="px-4 pb-3 text-xs text-nexa-ink-3 space-y-1">
-          {presentation.reservation.addressDisplay ? (
-            <p>{presentation.reservation.addressDisplay}</p>
-          ) : null}
-          {presentation.reservation.bookingReference ? (
-            <p className="font-mono text-[11px]">{presentation.reservation.bookingReference}</p>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
+}
+
+function formatShortRange(checkin: string, checkout: string): string {
+  const inDate = new Date(checkin);
+  const outDate = new Date(checkout);
+  const sameMonth = inDate.getMonth() === outDate.getMonth();
+  const d1 = inDate.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const d2 = outDate.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: sameMonth ? undefined : "short",
+  });
+  return `${d1}–${d2}`;
 }

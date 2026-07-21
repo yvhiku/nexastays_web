@@ -61,8 +61,8 @@ export function MessageComposer({
   }
 
   return (
-    <div className="border-t border-nexa-line/60 bg-white/95 backdrop-blur-md px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <div className="flex items-end gap-2 max-w-3xl mx-auto">
+    <footer className="shrink-0 z-50 border-t border-[#F7F7F7] bg-[rgba(252,249,248,0.92)] backdrop-blur-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="flex items-end gap-3 max-w-2xl mx-auto w-full">
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -81,8 +81,8 @@ export function MessageComposer({
             rows={1}
             disabled={disabled}
             className={cn(
-              "w-full resize-none rounded-2xl border border-nexa-line/70 bg-nexa-bg-1 px-4 py-3 text-sm text-nexa-ink",
-              "placeholder:text-nexa-ink-4 focus:outline-none focus:ring-2 focus:ring-nexa-primary/25 min-h-[44px] max-h-[120px]",
+              "w-full resize-none rounded-full border-none bg-[#F7F7F7] px-5 py-3 pe-12 text-base text-nexa-ink",
+              "placeholder:text-nexa-ink-4 focus:outline-none focus:ring-2 focus:ring-nexa-primary/20 min-h-[48px] max-h-[120px]",
               disabled && "opacity-60 cursor-not-allowed",
             )}
             aria-label={placeholder}
@@ -103,16 +103,16 @@ export function MessageComposer({
           onClick={onSend}
           disabled={disabled || !value.trim()}
           className={cn(
-            "shrink-0 flex items-center justify-center w-11 h-11 rounded-full transition-all",
+            "shrink-0 flex items-center justify-center w-11 h-11 rounded-full transition-all mb-0.5",
             disabled || !value.trim()
-              ? "bg-nexa-bg-2 text-nexa-ink-4 cursor-not-allowed"
-              : "bg-nexa-primary text-white shadow-md hover:opacity-90 active:scale-95",
+              ? "text-nexa-ink-4 cursor-not-allowed"
+              : "text-nexa-primary hover:bg-nexa-primary/10 active:scale-95",
           )}
           aria-label={sendLabel}
         >
-          <Send className="h-5 w-5" />
+          <Send className="h-6 w-6 fill-current" />
         </button>
       </div>
-    </div>
+    </footer>
   );
 }

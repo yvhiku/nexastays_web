@@ -19,6 +19,7 @@ type Props = {
   onSafety: () => void;
   onMuteChange: (muted: boolean) => void;
   muted: boolean;
+  contextBar?: React.ReactNode;
 };
 
 export function ConversationHeader({
@@ -33,36 +34,47 @@ export function ConversationHeader({
   onSafety,
   onMuteChange,
   muted,
+  contextBar,
 }: Props) {
   const { presentation, permissions } = conversation;
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-2 px-3 py-2.5 min-h-[56px] border-b border-nexa-line/60 bg-[rgba(253,251,252,0.95)] backdrop-blur-xl">
-      <Link
-        href={backHref}
-        className="flex items-center justify-center w-10 h-10 rounded-lg text-nexa-ink-3 hover:bg-nexa-bg-2 shrink-0"
-        aria-label={backLabel}
-      >
-        <ArrowLeft className="h-5 w-5" />
-      </Link>
-      <UserAvatar name={presentation.title} media={presentation.avatar} size="md" />
-      <div className="flex-1 min-w-0">
-        <h1 className="font-[family-name:var(--font-playfair)] text-base font-bold text-nexa-ink truncate">
-          {presentation.title}
-        </h1>
-        <p className="text-xs text-nexa-ink-4 truncate">{presentation.subtitle}</p>
+    <header className="shrink-0 z-50 bg-[rgba(252,249,248,0.92)] backdrop-blur-xl shadow-[0_20px_20px_rgba(34,34,34,0.04)] border-b border-[#F7F7F7]">
+      <div className="flex items-center gap-2 px-4 h-16 max-w-2xl mx-auto w-full">
+        <Link
+          href={backHref}
+          className="flex items-center justify-center w-10 h-10 rounded-full text-nexa-primary hover:bg-[#F7F7F7] shrink-0 transition-colors active:scale-95"
+          aria-label={backLabel}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <UserAvatar
+          name={presentation.title}
+          media={presentation.avatar}
+          size="md"
+          className="border border-[#e0bfc1]"
+        />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-base font-semibold text-nexa-ink leading-tight truncate">
+            {presentation.title}
+          </h1>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-nexa-primary truncate">
+            {presentation.subtitle}
+          </p>
+        </div>
+        <ConversationMenu
+          permissions={permissions as ConversationPermissions}
+          labels={menuLabels}
+          muted={muted}
+          onArchive={onArchive}
+          onDelete={onDelete}
+          onReport={onReport}
+          onBlock={onBlock}
+          onSafety={onSafety}
+          onMuteChange={onMuteChange}
+        />
       </div>
-      <ConversationMenu
-        permissions={permissions as ConversationPermissions}
-        labels={menuLabels}
-        muted={muted}
-        onArchive={onArchive}
-        onDelete={onDelete}
-        onReport={onReport}
-        onBlock={onBlock}
-        onSafety={onSafety}
-        onMuteChange={onMuteChange}
-      />
+      {contextBar}
     </header>
   );
 }

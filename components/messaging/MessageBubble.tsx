@@ -46,13 +46,13 @@ export function MessageBubble({
             <div
               key={message.id}
               className={cn(
-                "rounded-2xl px-4 py-2.5 shadow-sm",
+                "rounded-2xl px-4 py-3 shadow-sm",
                 group.isOwn
-                  ? "bg-nexa-primary text-white rounded-br-md"
-                  : "bg-white border border-nexa-line/60 text-nexa-ink rounded-bl-md",
+                  ? "bg-[#c13552] text-white rounded-br-[4px]"
+                  : "bg-[#dcd9d9] border border-[#F7F7F7] text-nexa-ink rounded-bl-[4px]",
               )}
             >
-              <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+              <p className="text-base whitespace-pre-wrap break-words leading-relaxed">
                 {deleted ? removedLabel : message.body ?? ""}
               </p>
             </div>
@@ -66,7 +66,7 @@ export function MessageBubble({
               group.isOwn ? "justify-end text-nexa-ink-4" : "justify-start text-nexa-ink-4",
             )}
           >
-            <span className="text-[10px] tabular-nums">
+            <span className="text-[10px] font-bold uppercase tracking-tight tabular-nums">
               {new Date(time).toLocaleTimeString(undefined, {
                 hour: "numeric",
                 minute: "2-digit",
