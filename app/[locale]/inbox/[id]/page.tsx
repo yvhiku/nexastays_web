@@ -104,6 +104,7 @@ function ConversationPageInner() {
 
   const { handleScroll, scrollToBottom, preserveAnchorOnPrepend, atBottomRef } =
     useConversationScroll({
+      conversationId,
       scrollRef,
       messages,
       lastReadMessageId: conversation?.sync.lastReadPointer.messageId ?? null,

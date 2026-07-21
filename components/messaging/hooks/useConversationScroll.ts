@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
 type Options = {
+  conversationId: string;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   messages: { id: string; conversationSequence: number }[];
   lastReadMessageId: string | null;
@@ -10,7 +11,52 @@ type Options = {
   enabled?: boolean;
 };
 
+function scrollContainerToBottom(el: HTMLElement): void {
+  el.scrollTop = el.scrollHeight;
+}
+
+/** Keep pinned to bottom while timeline cards/images finish layout. */
+function scrollToBottomUntilStable(
+  el: HTMLElement,
+  onComplete: () => void,
+): () => void {
+  scrollContainerToBottom(el);
+
+  let stableTimer: ReturnType<typeof setTimeout> | null = null;
+  let maxTimer: ReturnType<typeof setTimeout> | null = null;
+  let observer: ResizeObserver | null = null;
+
+  const pin = () => {
+    scrollContainerToBottom(el);
+    if (stableTimer) clearTimeout(stableTimer);
+    stableTimer = setTimeout(() => {
+      scrollContainerToBottom(el);
+      observer?.disconnect();
+      onComplete();
+    }, 120);
+  };
+
+  const raf = requestAnimationFrame(pin);
+
+  observer = new ResizeObserver(pin);
+  observer.observe(el);
+
+  maxTimer = setTimeout(() => {
+    scrollContainerToBottom(el);
+    observer?.disconnect();
+    onComplete();
+  }, 2500);
+
+  return () => {
+    cancelAnimationFrame(raf);
+    observer?.disconnect();
+    if (stableTimer) clearTimeout(stableTimer);
+    if (maxTimer) clearTimeout(maxTimer);
+  };
+}
+
 export function useConversationScroll({
+  conversationId,
   scrollRef,
   messages,
   lastReadMessageId,
@@ -21,10 +67,20 @@ export function useConversationScroll({
   const initialScrollDone = useRef(false);
   const markReadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    initialScrollDone.current = false;
+    atBottomRef.current = true;
+  }, [conversationId]);
+
   const scrollToBottom = useCallback((smooth = false) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    if (smooth) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    } else {
+      scrollContainerToBottom(el);
+    }
+    atBottomRef.current = true;
   }, [scrollRef]);
 
   const scrollToFirstUnread = useCallback(() => {
@@ -49,6 +105,7 @@ export function useConversationScroll({
     const node = targetId ? el.querySelector(`[data-message-id="${targetId}"]`) : null;
     if (node instanceof HTMLElement) {
       node.scrollIntoView({ block: "center" });
+      atBottomRef.current = false;
     } else {
       scrollToBottom(false);
     }
@@ -56,9 +113,34 @@ export function useConversationScroll({
 
   useEffect(() => {
     if (!enabled || initialScrollDone.current || messages.length === 0) return;
-    initialScrollDone.current = true;
-    requestAnimationFrame(() => scrollToFirstUnread());
-  }, [enabled, messages.length, scrollToFirstUnread]);
+
+    let cancelled = false;
+    let cleanupStable: (() => void) | undefined;
+    let raf = 0;
+
+    const attempt = () => {
+      if (cancelled || initialScrollDone.current) return;
+      const el = scrollRef.current;
+      if (!el) {
+        raf = requestAnimationFrame(attempt);
+        return;
+      }
+      cleanupStable = scrollToBottomUntilStable(el, () => {
+        if (!cancelled) {
+          initialScrollDone.current = true;
+          atBottomRef.current = true;
+        }
+      });
+    };
+
+    attempt();
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      cleanupStable?.();
+    };
+  }, [enabled, messages.length, scrollRef, conversationId]);
 
   useEffect(() => {
     if (!enabled || !onMarkRead) return;
@@ -81,6 +163,7 @@ export function useConversationScroll({
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop += prependedHeight;
+    atBottomRef.current = false;
   }, [scrollRef]);
 
   return {
