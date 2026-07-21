@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3005",
+    "dev": "node scripts/dev-safe.mjs",
+    "dev:quick": "next dev -p 3005",
+    "clean:next": "node -e \"const fs=require('fs');['.next','node_modules/.cache'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true})}catch{}})\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

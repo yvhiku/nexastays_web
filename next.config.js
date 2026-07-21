@@ -57,6 +57,17 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // PPR requires Next.js canary — static shell + Suspense streaming is used instead (see HomePage.server.tsx).
+  experimental: {
+    // Avoid huge lucide vendor chunks that often go stale in dev on Windows.
+    optimizePackageImports: ["lucide-react", "framer-motion"],
+  },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Filesystem webpack cache + Windows file locks → missing ./8948.js / vendor-chunks/*.js
+      config.cache = { type: "memory" };
+    }
+    return config;
+  },
   images: {
     remotePatterns: [
       {
@@ -129,8 +140,8 @@ const nextConfig = {
 
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
-  // Disable only when explicitly opted out. Stale SW in dev is handled by NexaDebugBoot recovery.
-  disable: process.env.NEXT_PUBLIC_DISABLE_PWA === "true",
+  // Skip PWA webpack work in dev — reduces cache corruption; SW recovery stays in NexaDebugBoot.
+  disable: process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_DISABLE_PWA === "true",
   register: true,
   fallbacks: {
     document: "/offline.html",
