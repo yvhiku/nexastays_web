@@ -527,6 +527,8 @@
     "comingSoon": "Bientôt disponible",
     "paymentNotAvailable": "Le paiement en ligne n'est pas encore disponible. Votre réservation est enregistrée et pourra être payée dès l'activation des paiements.",
     "cardIntegrationPending": "Les paiements par carte nécessitent l'intégration CMI ou Payzone.",
+    "mockPaymentHint": "Mode test : le paiement est simulé. Aucune carte réelle n'est débitée.",
+    "simulatePayment": "Simuler le paiement",
     "processing": "Traitement…",
     "cardFailed": "Paiement par carte échoué",
     "walletFailed": "Paiement par portefeuille échoué",

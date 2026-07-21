@@ -527,6 +527,8 @@
     "comingSoon": "Coming soon",
     "paymentNotAvailable": "Online payment is not available yet. Your booking is saved and will be payable once payment goes live.",
     "cardIntegrationPending": "Card payments require CMI or Payzone integration.",
+    "mockPaymentHint": "Test mode: payment is simulated. No real card is charged.",
+    "simulatePayment": "Simulate payment",
     "processing": "Processing…",
     "cardFailed": "Card payment failed",
     "walletFailed": "Wallet payment failed",

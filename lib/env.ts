@@ -41,3 +41,9 @@ export function getPublicSiteUrl(): string {
 export function getApiBaseUrl(): string {
   return getIdentityApiBaseUrl();
 }
+
+/** When "mock", card checkout simulates success (no CMI/Payzone redirect). */
+export function isMockPaymentProvider(): boolean {
+  const provider = process.env.NEXT_PUBLIC_STAYS_PAYMENT_PROVIDER ?? "mock";
+  return provider === "mock";
+}

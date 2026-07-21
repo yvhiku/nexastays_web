@@ -527,6 +527,8 @@
     "comingSoon": "قريباً",
     "paymentNotAvailable": "الدفع الإلكتروني غير متاح بعد. تم حفظ حجزك وسيكون قابلاً للدفع عند تفعيل الدفع.",
     "cardIntegrationPending": "يتطلب الدفع بالبطاقة تكامل CMI أو Payzone.",
+    "mockPaymentHint": "وضع الاختبار: الدفع محاكى. لن يتم خصم أي بطاقة حقيقية.",
+    "simulatePayment": "محاكاة الدفع",
     "processing": "جاري المعالجة…",
     "cardFailed": "فشل الدفع بالبطاقة",
     "walletFailed": "فشل الدفع بالمحفظة",

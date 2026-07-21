@@ -8,7 +8,13 @@ import { Footer } from "@/components/footer/Footer";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
-import { cancelBooking, createPaymentIntent, getBooking } from "@/lib/stays-api";
+import {
+  cancelBooking,
+  createPaymentIntent,
+  getBooking,
+  simulateCardPayment,
+} from "@/lib/stays-api";
+import { isMockPaymentProvider } from "@/lib/env";
 import { formatUserError } from "@/lib/errors";
 import { formatLocalDateOnly } from "@/lib/booking-dates";
 import { getCurrentConsents, acceptMandatoryConsents } from "@/lib/consent-api";
@@ -175,6 +181,7 @@ function BookingDetailPageInner() {
   const paid = ["CONFIRMED", "CHECKED_IN", "COMPLETED"].includes(booking.status);
   const isHostView = booking.viewer_role === "HOST";
   const canStartPayment = booking.status === "PAYMENT_PENDING" && consentAccepted === true;
+  const mockPayment = isMockPaymentProvider();
 
   const handleCardPayment = async () => {
     if (!token) return;
@@ -195,10 +202,16 @@ function BookingDetailPageInner() {
         token,
         `web-card-${booking.id}`,
       );
-      if (!intent.redirect_url) {
-        throw new Error(t("bookings.cardIntegrationPending"));
+      if (intent.provider === "mock" && intent.provider_intent_id) {
+        await simulateCardPayment(intent.provider_intent_id);
+        reloadBooking();
+        return;
       }
-      window.location.assign(intent.redirect_url);
+      if (intent.redirect_url) {
+        window.location.assign(intent.redirect_url);
+        return;
+      }
+      throw new Error(t("bookings.cardIntegrationPending"));
     } catch (err) {
       setPaymentError(formatUserError(err) || t("bookings.cardFailed"));
     } finally {
@@ -493,7 +506,11 @@ function BookingDetailPageInner() {
                   )}
                   <h4 className="text-sm font-semibold text-nexa-ink mb-3">{t("bookings.payNow")}</h4>
                   <div className="mb-4 p-4 bg-nexa-bg-2 border border-nexa-line rounded-xl">
-                    <p className="text-sm text-nexa-ink-3">{t("bookings.cardIntegrationPending")}</p>
+                    <p className="text-sm text-nexa-ink-3">
+                      {mockPayment
+                        ? t("bookings.mockPaymentHint")
+                        : t("bookings.cardIntegrationPending")}
+                    </p>
                   </div>
                   {paymentError && (
                     <ErrorAlert
@@ -509,7 +526,11 @@ function BookingDetailPageInner() {
                       disabled={!canStartPayment || creatingPayment}
                       className="w-full justify-center"
                     >
-                      {creatingPayment ? t("bookings.processing") : t("bookings.payWithCard")}
+                      {creatingPayment
+                        ? t("bookings.processing")
+                        : mockPayment
+                          ? t("bookings.simulatePayment")
+                          : t("bookings.payWithCard")}
                     </Button>
                     <Button
                       variant="outline"
