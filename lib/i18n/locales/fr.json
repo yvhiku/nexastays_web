@@ -26,6 +26,18 @@
     "staysHubTitle": "Séjours au Maroc | Nexa Stays",
     "staysHubDescription": "Parcourez des séjours vérifiés au Maroc — Marrakech, Casablanca, Agadir, Fès et plus.",
     "staysHubHeading": "Séjours à travers le Maroc",
+    "guidesHubTitle": "Guides de voyage au Maroc | Nexa Stays",
+    "guidesHubDescription": "Guides par ville, conseils saisonniers et expériences au Maroc — alimentés par les données Nexa Stays.",
+    "guidesHubHeading": "Guides de voyage au Maroc",
+    "guideForCity": "Planifiez votre voyage à {city} avec des séjours vérifiés.",
+    "relatedGuides": "Guides associés",
+    "browseStaysIn": "Séjours à {city}",
+    "guideType": {
+      "travel": "Guides de voyage",
+      "experience": "Expériences",
+      "seasonal": "Saisonnier",
+      "event": "Événements & fêtes"
+    },
     "browseListings": "Parcourir les annonces",
     "viewAll": "Tout voir",
     "featuredInCity": "Séjours à la une à {city}",

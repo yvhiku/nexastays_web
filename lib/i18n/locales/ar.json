@@ -26,6 +26,18 @@
     "staysHubTitle": "إقامات في المغرب | Nexa Stays",
     "staysHubDescription": "تصفح إقامات موثقة في المغرب — مراكش، الدار البيضاء، أكادير، فاس والمزيد.",
     "staysHubHeading": "إقامات في جميع أنحاء المغرب",
+    "guidesHubTitle": "دلائل السفر في المغرب | Nexa Stays",
+    "guidesHubDescription": "أدلة المدن ونصائح موسمية وتخطيط التجارب في المغرب — مدعومة ببيانات Nexa Stays.",
+    "guidesHubHeading": "دلائل السفر في المغرب",
+    "guideForCity": "خطط لرحلتك إلى {city} مع إقامات موثقة.",
+    "relatedGuides": "أدلة ذات صلة",
+    "browseStaysIn": "تصفح الإقامات في {city}",
+    "guideType": {
+      "travel": "أدلة السفر",
+      "experience": "تجارب",
+      "seasonal": "موسمي",
+      "event": "مناسبات وأعياد"
+    },
     "browseListings": "تصفح الإعلانات",
     "viewAll": "عرض الكل",
     "featuredInCity": "إقامات مميزة في {city}",

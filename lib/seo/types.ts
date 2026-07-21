@@ -7,7 +7,10 @@ export type SeoPageType =
   | "city_property_type"
   | "city_amenity"
   | "city_neighborhood"
-  | "landmark";
+  | "landmark"
+  | "guide";
+
+export type SeoGuideType = "travel" | "experience" | "seasonal" | "event";
 
 export type SeoRelationType =
   | "near"
@@ -147,6 +150,42 @@ export interface SitemapEntryDto {
   locale: string;
   lastmod: string;
   priority: number;
+}
+
+export interface SeoGuideSummaryDto {
+  slug: string;
+  guideType: SeoGuideType;
+  title: string;
+  description: string;
+  destinationSlug: string | null;
+  destinationName: string | null;
+  href: string;
+  seoScore: number;
+}
+
+export interface SeoGuidePagePayload {
+  pageType: "guide";
+  locale: SeoLocale;
+  slug: string;
+  guideType: SeoGuideType;
+  path: string;
+  title: string;
+  description: string;
+  h1: string;
+  canonical: string;
+  hreflang: Record<string, string>;
+  robots: string;
+  bodyHtml: string;
+  geoBlocks: GeoBlockDto[];
+  destination: SeoDestinationDto | null;
+  intelligence: DestinationIntelligence | null;
+  relatedGuides: SeoGuideSummaryDto[];
+  cityGuideLink: { slug: string; href: string; label: string } | null;
+  exploreFilters: SeoExploreFiltersDto;
+  breadcrumbs: { name: string; path: string }[];
+  indexable: boolean;
+  seoScore: number;
+  lastmod: string;
 }
 
 /** Known single-segment slugs for static generation */

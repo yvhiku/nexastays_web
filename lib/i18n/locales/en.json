@@ -26,6 +26,18 @@
     "staysHubTitle": "Stays in Morocco | Nexa Stays",
     "staysHubDescription": "Browse verified stays across Morocco — Marrakech, Casablanca, Agadir, Fes, and more.",
     "staysHubHeading": "Stays across Morocco",
+    "guidesHubTitle": "Morocco Travel Guides | Nexa Stays",
+    "guidesHubDescription": "City travel guides, seasonal tips, and experience planning for Morocco — powered by live Nexa Stays marketplace data.",
+    "guidesHubHeading": "Morocco travel guides",
+    "guideForCity": "Plan your trip to {city} with verified stays and local insights.",
+    "relatedGuides": "Related guides",
+    "browseStaysIn": "Browse stays in {city}",
+    "guideType": {
+      "travel": "Travel guides",
+      "experience": "Experiences",
+      "seasonal": "Seasonal",
+      "event": "Events & holidays"
+    },
     "browseListings": "Browse listings",
     "viewAll": "View all",
     "featuredInCity": "Featured stays in {city}",
