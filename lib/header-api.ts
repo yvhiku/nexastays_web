@@ -18,16 +18,35 @@ const EMPTY: HeaderState = {
   hostMode: false,
 };
 
+function parseUnreadCount(payload: unknown): number | null {
+  if (!payload || typeof payload !== "object") return null;
+  if ("data" in payload) {
+    const inner = (payload as { data: unknown }).data;
+    if (inner && typeof inner === "object" && "count" in inner) {
+      const count = (inner as { count: unknown }).count;
+      return typeof count === "number" && Number.isFinite(count) ? count : null;
+    }
+  }
+  if ("count" in payload) {
+    const count = (payload as { count: unknown }).count;
+    return typeof count === "number" && Number.isFinite(count) ? count : null;
+  }
+  return null;
+}
+
 export async function getHeaderState(token: string): Promise<HeaderState> {
   try {
-    const res = await fetch(`${getIdentityApiBaseUrl()}/users/me/header`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return EMPTY;
-    const data = (await res.json()) as Partial<HeaderState>;
+    const base = getIdentityApiBaseUrl();
+    const headers = { Authorization: `Bearer ${token}` };
+    const [headerRes, unreadRes] = await Promise.all([
+      fetch(`${base}/users/me/header`, { headers, cache: "no-store" }),
+      fetch(`${base}/users/me/notifications/unread-count`, { headers, cache: "no-store" }),
+    ]);
+    if (!headerRes.ok) return EMPTY;
+    const data = (await headerRes.json()) as Partial<HeaderState>;
+    const freshUnread = unreadRes.ok ? parseUnreadCount(await unreadRes.json()) : null;
     return {
-      notificationCount: data.notificationCount ?? 0,
+      notificationCount: freshUnread ?? data.notificationCount ?? 0,
       inboxCount: data.inboxCount ?? 0,
       avatar: data.avatar ?? null,
       hostMode: data.hostMode ?? false,

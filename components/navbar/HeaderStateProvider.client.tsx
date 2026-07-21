@@ -18,6 +18,7 @@ const POLL_MS = 60_000;
 
 type HeaderStateContextValue = HeaderState & {
   refresh: () => Promise<void>;
+  setNotificationCount: (count: number) => void;
   pollingActive: boolean;
 };
 
@@ -58,6 +59,13 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     const next = await getHeaderState(token);
     if (mountedRef.current) setState(next);
   }, [isAuthenticated, token, tokenType]);
+
+  const setNotificationCount = useCallback((count: number) => {
+    setState((prev) => ({
+      ...prev,
+      notificationCount: Math.max(0, count),
+    }));
+  }, []);
 
   const canPoll =
     ready &&
@@ -102,9 +110,10 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     () => ({
       ...state,
       refresh,
+      setNotificationCount,
       pollingActive: canPoll,
     }),
-    [state, refresh, canPoll],
+    [state, refresh, setNotificationCount, canPoll],
   );
 
   return (
@@ -121,6 +130,7 @@ export function useHeaderState(): HeaderStateContextValue {
       avatar: null,
       hostMode: false,
       refresh: async () => {},
+      setNotificationCount: () => {},
       pollingActive: false,
     };
   }

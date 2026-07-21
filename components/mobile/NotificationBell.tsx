@@ -24,14 +24,18 @@ function formatBadge(count: number): string {
 export function NotificationBell({ className }: Props) {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const { notificationCount, refresh } = useHeaderState();
+  const { notificationCount, refresh, setNotificationCount } = useHeaderState();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const feed = useNotificationsFeed(open, () => setOpen(false));
 
-  const handleUnreadChange = useCallback(() => {
-    void refresh();
-  }, [refresh]);
+  const handleUnreadChange = useCallback(
+    (count: number) => {
+      setNotificationCount(count);
+      void refresh();
+    },
+    [refresh, setNotificationCount],
+  );
 
   useEffect(() => {
     feed.setOnUnreadChange(handleUnreadChange);
