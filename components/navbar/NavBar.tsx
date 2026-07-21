@@ -82,18 +82,12 @@ export const NavBar = () => {
       );
     }
 
-    if (id === "inbox") {
-      const inboxHref = localePath("/inbox");
-      return pathname === inboxHref || pathname.startsWith(`${inboxHref}/`);
-    }
-
     return pathname === fullHref || pathname.startsWith(`${fullHref}/`);
   };
 
   const visibleNavLinks = isAuthenticated
     ? [
         navLinks[0],
-        { href: "/inbox", labelKey: "inbox.title", id: "inbox" as const },
         { href: "/host/dashboard", labelKey: "nav.hostDashboard", id: "hostDashboard" as const },
         ...navLinks.slice(2),
       ]
