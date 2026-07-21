@@ -28,6 +28,14 @@ export function getAttachmentIds(message: MessageDto): string[] {
   return meta.attachment_ids ?? message.attachments?.map((a) => a.id) ?? [];
 }
 
+export function resolveMessageAttachments(message: MessageDto): MessageDto["attachments"] {
+  if (message.attachments.length > 0) return message.attachments;
+  if ("attachments" in message.payload && message.payload.attachments?.length) {
+    return message.payload.attachments;
+  }
+  return [];
+}
+
 export function collapseDeliveryUi(state: string): "none" | "sent" | "read" {
   if (state === "READ") return "read";
   if (state === "DELIVERED" || state === "SENT" || state === "PERSISTED") return "sent";

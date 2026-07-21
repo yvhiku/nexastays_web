@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/avatar/UserAvatar";
 import type { MessageDto, SignedMedia } from "@/lib/messaging/messages-api";
 import type { MessageGroup } from "@/lib/messaging/selectors/group-messages";
-import { getMessageText, collapseDeliveryUi } from "@/lib/messaging/message-payload";
+import { getMessageText, collapseDeliveryUi, resolveMessageAttachments } from "@/lib/messaging/message-payload";
 import { ImageMessageGrid } from "./ImageMessageGrid";
 import { FileMessageRow } from "./FileMessageRow";
 
@@ -50,24 +50,40 @@ export function MessageBubble({
       <div className={cn("flex max-w-[85%] flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
         {group.messages.map((message) => {
           const deleted = Boolean((message.metadata as { deletedAt?: string }).deletedAt);
-          if (message.type === "IMAGE" && message.attachments.length > 0) {
+          const attachments = resolveMessageAttachments(message);
+          if (message.type === "IMAGE" && attachments.length > 0) {
             return (
               <ImageMessageGrid
                 key={message.id}
-                attachments={message.attachments}
+                attachments={attachments}
                 caption={"caption" in message.payload ? message.payload.caption : message.body ?? undefined}
                 isOwn={group.isOwn}
-                onOpen={(index) => onOpenGallery?.(message.attachments, index)}
+                onOpen={(index) => onOpenGallery?.(attachments, index)}
               />
             );
           }
-          if (message.type === "FILE" && message.attachments.length > 0) {
+          if (message.type === "FILE" && attachments.length > 0) {
             return (
               <FileMessageRow
                 key={message.id}
-                attachment={message.attachments[0]}
+                attachment={attachments[0]}
                 isOwn={group.isOwn}
               />
+            );
+          }
+          if ((message.type === "IMAGE" || message.type === "FILE") && !deleted) {
+            return (
+              <div
+                key={message.id}
+                className={cn(
+                  "rounded-2xl px-4 py-3 shadow-sm text-sm",
+                  group.isOwn
+                    ? "bg-[#c13552] text-white rounded-br-[4px]"
+                    : "bg-[#eceaea] border border-[#F7F7F7] text-nexa-ink rounded-bl-[4px]",
+                )}
+              >
+                {message.type === "IMAGE" ? "Photo" : "File"}
+              </div>
             );
           }
           return (

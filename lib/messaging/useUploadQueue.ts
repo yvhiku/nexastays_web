@@ -50,12 +50,23 @@ export function useUploadQueue(
     if (processingRef.current || !token) return;
     processingRef.current = true;
     try {
-      let pending = items.filter((i) => i.status === "queued");
-      while (pending.length > 0) {
-        const item = pending[0];
-        setItems((prev) =>
-          prev.map((x) => (x.id === item.id ? { ...x, status: "uploading", progress: 0 } : x)),
-        );
+      while (true) {
+        let nextItem: UploadQueueItem | undefined;
+        setItems((prev) => {
+          nextItem = prev.find((i) => i.status === "queued");
+          if (!nextItem) return prev;
+          return prev.map((x) =>
+            x.id === nextItem!.id ? { ...x, status: "uploading", progress: 0 } : x,
+          );
+        });
+        if (!nextItem) break;
+
+        const item = nextItem;
+        const clientMessageId = createClientMessageId();
+        const previewUrl = item.file.type.startsWith("image/")
+          ? URL.createObjectURL(item.file)
+          : undefined;
+
         try {
           const compressed = await compressImage(item.file);
           const attachment = await uploadAttachment(conversationId, compressed, token, (pct) => {
@@ -70,7 +81,6 @@ export function useUploadQueue(
           );
 
           const type = compressed.type.startsWith("image/") ? "IMAGE" : "FILE";
-          const clientMessageId = createClientMessageId();
           const message = await sendMessageWithAttachments(
             conversationId,
             type,
@@ -79,9 +89,11 @@ export function useUploadQueue(
             undefined,
             clientMessageId,
           );
+          if (previewUrl) URL.revokeObjectURL(previewUrl);
           onMessageSent?.(message);
           setItems((prev) => prev.filter((x) => x.id !== item.id));
         } catch (e) {
+          if (previewUrl) URL.revokeObjectURL(previewUrl);
           setItems((prev) =>
             prev.map((x) =>
               x.id === item.id
@@ -91,12 +103,11 @@ export function useUploadQueue(
           );
           break;
         }
-        pending = items.filter((i) => i.status === "queued");
       }
     } finally {
       processingRef.current = false;
     }
-  }, [token, conversationId, items, compressImage, onMessageSent]);
+  }, [token, conversationId, compressImage, onMessageSent]);
 
   const enqueueFiles = useCallback(
     (files: FileList | File[]) => {

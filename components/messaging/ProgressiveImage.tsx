@@ -14,39 +14,34 @@ type Props = {
 
 export function ProgressiveImage({ src, alt = "", className, onClick }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el || !src) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "120px" },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    setLoaded(false);
+    setFailed(false);
   }, [src]);
 
   return (
     <div ref={ref} className={cn("relative overflow-hidden bg-nexa-bg-2", className)} onClick={onClick}>
-      {visible && src ? (
+      {src && !failed ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={alt}
           onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
           className={cn(
             "h-full w-full object-cover transition-opacity duration-300",
             loaded ? "opacity-100" : "opacity-0",
           )}
         />
       ) : null}
+      {(!src || failed) && (
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-nexa-ink-4">
+          Photo
+        </div>
+      )}
     </div>
   );
 }

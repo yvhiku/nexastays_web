@@ -171,7 +171,7 @@ function ConversationPageInner() {
   const { bumpActivity } = useMessagingRealtime("conversation", poll, !!token && !!conversation);
 
   const { enqueueFiles, activeProgress } = useUploadQueue(conversationId, token, (message) => {
-    setMessages((prev) => [...prev, message]);
+    setMessages((prev) => reconcileOptimisticMessage(prev, message));
     requestAnimationFrame(() => scrollToBottom(true));
     void poll();
   });

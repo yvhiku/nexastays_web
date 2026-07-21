@@ -12,5 +12,6 @@ export {
   getMessageText,
   getCardPayload,
   getAttachmentIds,
+  resolveMessageAttachments,
   collapseDeliveryUi,
 } from "./message-payload-helpers";

@@ -29,6 +29,9 @@ export function mergeMessages(existing: MessageDto[], incoming: MessageDto[]): M
     const prev = map.get(key);
     if (prev && prev.id.startsWith("optimistic_")) {
       map.set(key, { ...m, isOwn: prev.isOwn });
+    } else if (prev) {
+      const keepPrevAttachments = prev.attachments.length > m.attachments.length;
+      map.set(key, keepPrevAttachments ? { ...m, attachments: prev.attachments } : m);
     } else {
       map.set(key, m);
     }

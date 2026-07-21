@@ -131,7 +131,12 @@ export function normalizeMessageDto(raw: Partial<MessageDto>): MessageDto {
     createdAt: raw.createdAt ?? new Date().toISOString(),
     isOwn: raw.isOwn ?? false,
     presentationVersion: raw.presentationVersion ?? 1,
-    attachments: raw.attachments ?? [],
+    attachments:
+      raw.attachments?.length
+        ? raw.attachments
+        : ("attachments" in payload && payload.attachments?.length
+            ? payload.attachments
+            : []),
   };
 }
 
