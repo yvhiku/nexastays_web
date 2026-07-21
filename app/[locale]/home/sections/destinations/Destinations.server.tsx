@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Locale } from "@/lib/i18n";
 import { getServerTranslations } from "@/lib/i18n/server";
-import { DESTINATION_IMAGES, DESTINATION_IMAGE_BLUR } from "@/lib/destination-assets";
+import { DESTINATION_IMAGES } from "@/lib/destination-assets";
 import { Button } from "@/components/ui/button";
 
 const destinations = [
@@ -79,15 +79,14 @@ export function DestinationsSection({ locale }: Props) {
                 dest.span === 2 ? "sm:row-span-2 sm:min-h-[440px]" : ""
               }`}
             >
-              <Link href={localePath(`/stays/${dest.slug}`)}>
+              <Link href={localePath(`/stays/${dest.slug}`)} className="block h-full">
                 <div className="relative h-[220px] min-h-[220px] sm:h-full">
                   <Image
                     src={dest.img}
                     alt={t(dest.titleKey)}
                     fill
                     priority={dest.priority}
-                    placeholder="blur"
-                    blurDataURL={DESTINATION_IMAGE_BLUR}
+                    unoptimized
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover"
                   />

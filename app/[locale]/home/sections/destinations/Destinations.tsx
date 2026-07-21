@@ -46,12 +46,16 @@ export const DestinationsSection = () => {
                 dest.span === 2 ? "sm:row-span-2 sm:min-h-[440px]" : ""
               }`}
             >
-              <Link href={localePath(`/listings?city=${encodeURIComponent(dest.city)}`)}>
+              <Link
+                href={localePath(`/listings?city=${encodeURIComponent(dest.city)}`)}
+                className="block h-full"
+              >
                 <div className="relative h-[220px] min-h-[220px] sm:h-full">
                   <Image
                     src={dest.img}
                     alt={t(dest.titleKey)}
                     fill
+                    unoptimized
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover"
                   />
