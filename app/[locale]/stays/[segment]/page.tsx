@@ -7,6 +7,7 @@ import {
   SEO_AMENITY_SLUGS,
   SEO_PROPERTY_TYPE_SLUGS,
 } from "@/lib/seo/types";
+import { SEO_LANDMARK_URL_SLUGS } from "@/lib/seo/catalog";
 import { fetchSeoDestinations, fetchSeoPage, fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
@@ -30,7 +31,10 @@ export async function generateStaticParams() {
   const amenityParams = SEO_AMENITY_SLUGS.flatMap((segment) =>
     locales.map((locale) => ({ locale, segment })),
   );
-  return [...cityParams, ...typeParams, ...amenityParams];
+  const landmarkParams = SEO_LANDMARK_URL_SLUGS.flatMap((segment) =>
+    locales.map((locale) => ({ locale, segment })),
+  );
+  return [...cityParams, ...typeParams, ...amenityParams, ...landmarkParams];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

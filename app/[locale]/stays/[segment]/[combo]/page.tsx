@@ -7,6 +7,7 @@ import {
   SEO_AMENITY_SLUGS,
   SEO_PROPERTY_TYPE_SLUGS,
 } from "@/lib/seo/types";
+import { SEO_NEIGHBORHOODS_BY_CITY } from "@/lib/seo/catalog";
 import { fetchSeoDestinations, fetchSeoPage, fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
@@ -21,19 +22,30 @@ type Props = {
 export async function generateStaticParams() {
   const destinations = await fetchSeoDestinations();
   const locales: SeoLocale[] = ["en", "fr", "ar"];
-  const combos = [
-    ...SEO_PROPERTY_TYPE_SLUGS.map((c) => ({ kind: "type" as const, slug: c })),
-    ...SEO_AMENITY_SLUGS.map((c) => ({ kind: "amenity" as const, slug: c })),
+  const typeAmenityCombos = [
+    ...SEO_PROPERTY_TYPE_SLUGS.map((slug) => ({ slug, kind: "filter" as const })),
+    ...SEO_AMENITY_SLUGS.map((slug) => ({ slug, kind: "filter" as const })),
   ];
-  return destinations.flatMap((d) =>
+  const filterParams = destinations.flatMap((d) =>
     locales.flatMap((locale) =>
-      combos.map(({ slug }) => ({
+      typeAmenityCombos.map(({ slug }) => ({
         locale,
         segment: d.slug,
         combo: slug,
       })),
     ),
   );
+  const neighborhoodParams = destinations.flatMap((d) => {
+    const neighborhoods = SEO_NEIGHBORHOODS_BY_CITY[d.slug] ?? [];
+    return locales.flatMap((locale) =>
+      neighborhoods.map((nb) => ({
+        locale,
+        segment: d.slug,
+        combo: nb.slug,
+      })),
+    );
+  });
+  return [...filterParams, ...neighborhoodParams];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -152,6 +152,26 @@ export function SeoLandingPageClient({ page, listings }: Props) {
             />
           )}
 
+          {(page.relatedDestinations ?? []).length > 0 && (
+            <SeoInternalLinkGrid
+              title={t("seo.relatedDestinations")}
+              links={(page.relatedDestinations ?? []).map((d) => ({
+                href: d.href,
+                label: d.name,
+              }))}
+            />
+          )}
+
+          {(page.neighborhoodLinks ?? []).length > 0 && (
+            <SeoInternalLinkGrid
+              title={t("seo.neighborhoods")}
+              links={(page.neighborhoodLinks ?? []).map((l) => ({
+                href: l.href,
+                label: l.label,
+              }))}
+            />
+          )}
+
           {page.propertyTypeLinks.length > 0 && (
             <SeoInternalLinkGrid
               title={t("seo.propertyTypes")}

@@ -35,6 +35,8 @@
     "nearbyDestinations": "Destinations à proximité",
     "propertyTypes": "Par type de logement",
     "amenities": "Par équipement",
+    "neighborhoods": "Par quartier",
+    "relatedDestinations": "Destinations associées",
     "intelligenceTitle": "{city} — données du marché",
     "intelligenceForCity": "{city} — données du marché",
     "intelligenceGeneric": "Données du marché en direct",

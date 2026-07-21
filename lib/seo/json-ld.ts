@@ -39,7 +39,36 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
 
   const nodes: Record<string, unknown>[] = [organization, website, breadcrumb];
 
-  if (page.destination) {
+  if (page.landmark) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "TouristAttraction",
+      name: page.landmark.name,
+      url: pageUrl,
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: page.landmark.latitude,
+        longitude: page.landmark.longitude,
+      },
+      containedInPlace: {
+        "@type": "City",
+        name: page.landmark.searchCity,
+      },
+    });
+  }
+
+  if (page.neighborhood && page.destination) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "Place",
+      name: page.neighborhood.name,
+      url: pageUrl,
+      containedInPlace: {
+        "@type": "City",
+        name: page.destination.name,
+      },
+    });
+  } else if (page.destination) {
     const touristDestination: Record<string, unknown> = {
       "@context": "https://schema.org",
       "@type": "TouristDestination",

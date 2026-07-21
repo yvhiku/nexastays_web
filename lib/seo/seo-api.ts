@@ -62,9 +62,13 @@ function exploreFiltersToParams(filters: SeoExploreFiltersDto): URLSearchParams 
   if (filters.city) q.set("city", filters.city);
   if (filters.listing_type) q.set("listing_type", filters.listing_type);
   if (filters.amenity) q.set("amenity", filters.amenity);
+  if (filters.neighborhood) q.set("neighborhood", filters.neighborhood);
   if (filters.pets_allowed) q.set("pets_allowed", "true");
   if (filters.luxury_only) q.set("luxury_only", "true");
   if (filters.family_friendly) q.set("family_friendly", "true");
+  if (filters.near_lat != null) q.set("near_lat", String(filters.near_lat));
+  if (filters.near_lng != null) q.set("near_lng", String(filters.near_lng));
+  if (filters.near_radius_km != null) q.set("near_radius_km", String(filters.near_radius_km));
   return q;
 }
 

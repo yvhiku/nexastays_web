@@ -35,6 +35,8 @@
     "nearbyDestinations": "وجهات قريبة",
     "propertyTypes": "حسب نوع الإقامة",
     "amenities": "حسب المرافق",
+    "neighborhoods": "حسب الحي",
+    "relatedDestinations": "وجهات ذات صلة",
     "intelligenceTitle": "{city} — إحصاءات السوق",
     "intelligenceForCity": "{city} — إحصاءات السوق",
     "intelligenceGeneric": "إحصاءات السوق المباشرة",

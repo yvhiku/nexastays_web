@@ -35,6 +35,8 @@
     "nearbyDestinations": "Nearby destinations",
     "propertyTypes": "Browse by property type",
     "amenities": "Browse by amenity",
+    "neighborhoods": "Browse by neighborhood",
+    "relatedDestinations": "Related destinations",
     "intelligenceTitle": "{city} — live marketplace insights",
     "intelligenceForCity": "{city} — live marketplace insights",
     "intelligenceGeneric": "Live marketplace insights",
