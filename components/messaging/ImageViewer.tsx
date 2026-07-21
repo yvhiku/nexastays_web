@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { AttachmentDto } from "@/lib/messaging/messages-api";
 import { attachmentFullUrl, attachmentThumbUrl } from "./ProgressiveImage";
 import { useFocusTrap } from "./hooks/useFocusTrap";
+import { downloadAttachmentFile } from "@/lib/messaging/download-attachment";
 
 type Props = {
   attachments: AttachmentDto[];
@@ -23,6 +24,7 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
   const [fullReady, setFullReady] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const dragging = useRef(false);
   const lastPoint = useRef({ x: 0, y: 0 });
   const pinchStart = useRef<{ distance: number; scale: number } | null>(null);
@@ -156,11 +158,20 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
 
   const downloadUrl = fullUrl ?? displayUrl;
 
-  const download = () => {
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = current.originalFilename ?? "image";
-    a.click();
+  const download = async () => {
+    if (!downloadUrl || downloading) return;
+    setDownloading(true);
+    try {
+      await downloadAttachmentFile(
+        downloadUrl,
+        current.originalFilename ?? "nexa-photo",
+        current.mime,
+      );
+    } catch {
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const share = async () => {
@@ -190,8 +201,13 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
           <button type="button" onClick={() => void share()} aria-label="Share">
             <Share2 className="h-5 w-5" />
           </button>
-          <button type="button" onClick={download} aria-label="Download">
-            <Download className="h-5 w-5" />
+          <button
+            type="button"
+            onClick={() => void download()}
+            disabled={downloading}
+            aria-label="Download"
+          >
+            <Download className={cn("h-5 w-5", downloading && "opacity-50")} />
           </button>
         </div>
       </div>
@@ -218,6 +234,7 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
         <img
           src={displayUrl}
           alt={current.originalFilename ?? "Attachment"}
+          crossOrigin="anonymous"
           draggable={false}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

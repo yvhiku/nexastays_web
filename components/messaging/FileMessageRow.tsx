@@ -4,8 +4,8 @@ import React from "react";
 import { FileText, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AttachmentDto } from "@/lib/messaging/messages-api";
-import { executeCardAction } from "@/lib/messaging/actions/registry";
 import { attachmentFullUrl } from "./ProgressiveImage";
+import { downloadAttachmentFile } from "@/lib/messaging/download-attachment";
 
 type Props = {
   attachment: AttachmentDto;
@@ -59,12 +59,11 @@ export function FileMessageRow({ attachment, isOwn }: Props) {
       {url ? (
         <button
           type="button"
-          onClick={() =>
-            executeCardAction(
-              { id: "download", label: "Download", type: "DOWNLOAD", url },
-              { localePath: (p) => p },
-            )
-          }
+          onClick={() => {
+            void downloadAttachmentFile(url, name, attachment.mime).catch(() => {
+              window.open(url, "_blank", "noopener,noreferrer");
+            });
+          }}
           className="shrink-0 text-xs font-semibold underline"
         >
           Download
