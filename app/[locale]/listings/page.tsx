@@ -23,8 +23,12 @@ import {
   SearchBar,
   pushRecentSearch,
   searchBarValueFromSearchParams,
-  searchBarValueToParams,
   type SearchBarValue,
+  exploreFiltersToSearchParams,
+  mergeExploreFilters,
+  exploreFiltersToApiParams,
+  searchParamsToExploreFilters,
+  type ExploreFilters,
 } from "@/components/search";
 import { findDestinationById, findDestinationByCity } from "@/lib/search-destinations";
 import { ExploreMap, type ExploreMapHandle } from "@/components/explore/ExploreMap";
@@ -42,7 +46,6 @@ import {
 import { getCityContextByCity, slugifyNeighborhood } from "@/lib/explore-city-context";
 import { parseExploreLayout, type ExploreLayout } from "@/lib/explore-layout";
 import { parseNeighborhood } from "@/lib/listing-location";
-import { sanitizeCityInput, sanitizeDateInput, sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
 
 const LISTING_TYPES = ["APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"] as const;
@@ -65,25 +68,36 @@ export default function ListingsPage() {
   const loadingMoreLock = useRef(false);
   const exploreMapRef = useRef<ExploreMapHandle | null>(null);
   const lastMapBoundsRef = useRef<MapBounds | null>(null);
-  const city = sanitizeCityInput(searchParams.get("city") || "");
-  const checkin = sanitizeDateInput(searchParams.get("checkin_date") || "");
-  const checkout = sanitizeDateInput(searchParams.get("checkout_date") || "");
-  const guests = sanitizeGuestCount(searchParams.get("guests") || "");
-  const verifiedOnly = searchParams.get("verified_walkthrough_only") === "true";
-  const instantOnly = searchParams.get("instant_booking_only") === "true";
-  const listingTypeParam = (searchParams.get("listing_type") || "all").toUpperCase();
+
+  const exploreFilters = useMemo(
+    () => searchParamsToExploreFilters(searchParams),
+    [searchParams],
+  );
+
+  const city = exploreFilters.city ?? "";
+  const checkin = exploreFilters.checkin_date ?? "";
+  const checkout = exploreFilters.checkout_date ?? "";
+  const guests = exploreFilters.guests;
+  const verifiedOnly = exploreFilters.verified_walkthrough_only ?? false;
+  const instantOnly = exploreFilters.instant_booking_only ?? false;
+  const listingTypeRaw = exploreFilters.listing_type?.toUpperCase() ?? "all";
   const selectedType = LISTING_TYPES.includes(
-    listingTypeParam as (typeof LISTING_TYPES)[number],
+    listingTypeRaw as (typeof LISTING_TYPES)[number],
   )
-    ? listingTypeParam
+    ? listingTypeRaw
     : "all";
-  const sortParam = (searchParams.get("sort") || "newest").toLowerCase();
-  const selectedSort: SortOption = SORT_OPTIONS.includes(
-    sortParam as SortOption,
-  )
+  const sortParam = (exploreFilters.sort ?? "newest").toLowerCase();
+  const selectedSort: SortOption = SORT_OPTIONS.includes(sortParam as SortOption)
     ? (sortParam as SortOption)
     : "newest";
-  const neighborhoodParam = (searchParams.get("neighborhood") || "").trim();
+  const neighborhoodParam = exploreFilters.neighborhood ?? "";
+  const hasSeoFilters = Boolean(
+    exploreFilters.amenity ||
+      exploreFilters.pets_allowed ||
+      exploreFilters.luxury_only ||
+      exploreFilters.family_friendly ||
+      (exploreFilters.near_lat != null && exploreFilters.near_lng != null),
+  );
   const collectionId = searchParams.get("collection");
   const activeCollection = getCollectionById(collectionId);
   const layout = parseExploreLayout(searchParams.get("layout"));
@@ -102,20 +116,11 @@ export default function ListingsPage() {
 
   const exploreParams = useMemo((): SearchListingsParams => {
     return {
-      city: city || undefined,
-      checkin_date: checkin || undefined,
-      checkout_date: checkout || undefined,
-      guests,
-      verified_walkthrough_only: verifiedOnly || undefined,
-      instant_booking_only: instantOnly || undefined,
-      listing_type:
-        selectedType === "all"
-          ? undefined
-          : (selectedType as "APARTMENT" | "HOTEL" | "RIAD" | "VILLA" | "HOSTEL"),
+      ...exploreFiltersToApiParams(exploreFilters),
       limit: 24,
       sort: selectedSort,
     };
-  }, [city, checkin, checkout, guests, verifiedOnly, instantOnly, selectedType, selectedSort]);
+  }, [exploreFilters, selectedSort]);
 
   useEffect(() => {
     let cancelled = false;
@@ -230,33 +235,56 @@ export default function ListingsPage() {
     collection?: string | null;
     neighborhood?: string | null;
     layout?: ExploreLayout;
+    explore?: Partial<ExploreFilters>;
   }) => {
-    const next: SearchBarValue = {
+    const nextSearch: SearchBarValue = {
       ...searchDraft,
       ...overrides?.search,
     };
     if (overrides?.listingType != null) {
-      next.listingType = overrides.listingType;
+      nextSearch.listingType = overrides.listingType;
     }
-    const nextCollection =
-      overrides && "collection" in overrides
-        ? overrides.collection
-        : collectionId;
+
+    const listingTypeOverride = overrides?.listingType ?? nextSearch.listingType;
+    const guestTotal = nextSearch.adults + nextSearch.children;
+
     const nextNeighborhood =
       overrides && "neighborhood" in overrides
-        ? overrides.neighborhood
-        : neighborhoodParam || null;
-    const params = searchBarValueToParams(next, {
-      verified: overrides?.verified ?? verifiedOnly,
-      instant: overrides?.instant ?? instantOnly,
+        ? overrides.neighborhood ?? undefined
+        : exploreFilters.neighborhood;
+
+    const mergedFilters = mergeExploreFilters(exploreFilters, {
+      city: nextSearch.city || undefined,
+      checkin_date: nextSearch.checkin || undefined,
+      checkout_date: nextSearch.checkout || undefined,
+      guests: guestTotal > 0 ? guestTotal : undefined,
+      listing_type:
+        listingTypeOverride && listingTypeOverride !== "all"
+          ? listingTypeOverride
+          : undefined,
+      verified_walkthrough_only: overrides?.verified ?? verifiedOnly,
+      instant_booking_only: overrides?.instant ?? instantOnly,
       sort: overrides?.sort ?? selectedSort,
-      collection: nextCollection,
       neighborhood: nextNeighborhood,
+      ...overrides?.explore,
     });
+
+    const params = exploreFiltersToSearchParams(mergedFilters);
+
+    if (nextSearch.adults > 0) params.set("adults", String(nextSearch.adults));
+    if (nextSearch.children > 0) params.set("children", String(nextSearch.children));
+    if (nextSearch.infants > 0) params.set("infants", String(nextSearch.infants));
+    if (nextSearch.pets > 0) params.set("pets", String(nextSearch.pets));
+
+    const nextCollection =
+      overrides && "collection" in overrides ? overrides.collection : collectionId;
+    if (nextCollection) params.set("collection", nextCollection);
+
     const nextLayout = overrides?.layout ?? layout;
     if (nextLayout === "map" || nextLayout === "split") {
       params.set("layout", nextLayout);
     }
+
     return params;
   };
 
@@ -301,10 +329,8 @@ export default function ListingsPage() {
       guests: next.adults + next.children || null,
     });
     navigateWithParams(
-      searchBarValueToParams(next, {
-        verified: verifiedOnly,
-        instant: instantOnly,
-        sort: selectedSort,
+      buildListingsParams({
+        search: next,
         collection: null,
         neighborhood: null,
       }),
@@ -332,12 +358,15 @@ export default function ListingsPage() {
       };
       setSearchDraft(cleared);
       navigateWithParams(
-        searchBarValueToParams(cleared, {
-          verified: verifiedOnly,
-          instant: instantOnly,
-          sort: selectedSort,
+        buildListingsParams({
+          search: cleared,
           collection: null,
           neighborhood: null,
+          explore: {
+            city: undefined,
+            neighborhood: undefined,
+            listing_type: undefined,
+          },
         }),
       );
       return;
@@ -355,12 +384,21 @@ export default function ListingsPage() {
     };
     setSearchDraft(next);
     navigateWithParams(
-      searchBarValueToParams(next, {
-        verified: f.verified_walkthrough_only ?? verifiedOnly,
-        instant: f.instant_booking_only ?? instantOnly,
-        sort: selectedSort,
+      buildListingsParams({
+        search: next,
         collection: col.id,
         neighborhood: null,
+        explore: {
+          city: nextCity || undefined,
+          listing_type: f.listing_type,
+          verified_walkthrough_only: f.verified_walkthrough_only,
+          instant_booking_only: f.instant_booking_only,
+          neighborhood: undefined,
+          pets_allowed: undefined,
+          luxury_only: undefined,
+          family_friendly: undefined,
+          amenity: undefined,
+        },
       }),
     );
   };
@@ -398,20 +436,17 @@ export default function ListingsPage() {
       destinationId: null,
     };
     setSearchDraft(next);
-    const params = searchBarValueToParams(next, {
-      verified: verifiedOnly,
-      instant: instantOnly,
-      sort: selectedSort,
-      collection: null,
-      neighborhood: null,
-    });
-    params.delete("city");
-    params.delete("neighborhood");
-    params.delete("collection");
-    if (layout === "map" || layout === "split") {
-      params.set("layout", layout);
-    }
-    navigateWithParams(params);
+    navigateWithParams(
+      buildListingsParams({
+        search: next,
+        neighborhood: null,
+        collection: null,
+        explore: {
+          city: undefined,
+          neighborhood: undefined,
+        },
+      }),
+    );
   };
 
   const onQuickFilterToggle = (id: string) => {
@@ -454,14 +489,7 @@ export default function ListingsPage() {
     return Array.from(set);
   }, [listings]);
 
-  const displayListings = useMemo(() => {
-    if (!neighborhoodParam || !city) return listings;
-    return listings.filter(
-      (l) =>
-        slugifyNeighborhood(parseNeighborhood(l)) ===
-        slugifyNeighborhood(neighborhoodParam),
-    );
-  }, [listings, neighborhoodParam, city]);
+  const displayListings = listings;
 
   const isInitialLoading = isLoading && listings.length === 0;
   const isRevalidating = isLoading && listings.length > 0;
@@ -678,7 +706,8 @@ export default function ListingsPage() {
                     Boolean(city) ||
                     Boolean(guests) ||
                     Boolean(checkin) ||
-                    Boolean(checkout)) && (
+                    Boolean(checkout) ||
+                    hasSeoFilters) && (
                     <Button
                       type="button"
                       variant="outline"

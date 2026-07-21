@@ -39,10 +39,9 @@ import type {
   ReviewSort,
 } from "./stays-types";
 import {
-  sanitizeCityInput,
-  sanitizeDateInput,
-  sanitizeGuestCount,
-} from "./input-sanitize";
+  exploreFiltersToApiParams,
+  type ExploreFilters,
+} from "@/lib/search/explore-filter-utils";
 import { getStaysApiBaseUrl } from "./env";
 
 const API_BASE = getStaysApiBaseUrl();
@@ -153,23 +152,28 @@ function handleError(err: unknown): never {
 }
 
 function buildExploreQuery(params: SearchListingsParams): URLSearchParams {
+  const apiFilters = exploreFiltersToApiParams(params as ExploreFilters);
   const q = new URLSearchParams();
-  const city = params.city ? sanitizeCityInput(params.city) : "";
-  const checkin = params.checkin_date ? sanitizeDateInput(params.checkin_date) : "";
-  const checkout = params.checkout_date ? sanitizeDateInput(params.checkout_date) : "";
-  const guests = params.guests != null ? sanitizeGuestCount(params.guests) : undefined;
-  if (city) q.set("city", city);
-  if (checkin) q.set("checkin_date", checkin);
-  if (checkout) q.set("checkout_date", checkout);
-  if (guests != null) q.set("guests", String(guests));
-  if (params.verified_walkthrough_only != null)
-    q.set("verified_walkthrough_only", String(params.verified_walkthrough_only));
-  if (params.instant_booking_only != null)
-    q.set("instant_booking_only", String(params.instant_booking_only));
-  if (params.listing_type) q.set("listing_type", params.listing_type);
+  if (apiFilters.city) q.set("city", apiFilters.city);
+  if (apiFilters.neighborhood) q.set("neighborhood", apiFilters.neighborhood);
+  if (apiFilters.amenity) q.set("amenity", apiFilters.amenity);
+  if (apiFilters.pets_allowed) q.set("pets_allowed", "true");
+  if (apiFilters.luxury_only) q.set("luxury_only", "true");
+  if (apiFilters.family_friendly) q.set("family_friendly", "true");
+  if (apiFilters.near_lat != null) q.set("near_lat", String(apiFilters.near_lat));
+  if (apiFilters.near_lng != null) q.set("near_lng", String(apiFilters.near_lng));
+  if (apiFilters.near_radius_km != null) {
+    q.set("near_radius_km", String(apiFilters.near_radius_km));
+  }
+  if (apiFilters.checkin_date) q.set("checkin_date", apiFilters.checkin_date);
+  if (apiFilters.checkout_date) q.set("checkout_date", apiFilters.checkout_date);
+  if (apiFilters.guests != null) q.set("guests", String(apiFilters.guests));
+  if (apiFilters.verified_walkthrough_only) q.set("verified_walkthrough_only", "true");
+  if (apiFilters.instant_booking_only) q.set("instant_booking_only", "true");
+  if (apiFilters.listing_type) q.set("listing_type", apiFilters.listing_type);
+  if (apiFilters.sort) q.set("sort", apiFilters.sort);
   if (params.limit != null) q.set("limit", String(params.limit));
   if (params.cursor) q.set("cursor", params.cursor);
-  if (params.sort) q.set("sort", params.sort);
   if (params.north != null) q.set("north", String(params.north));
   if (params.south != null) q.set("south", String(params.south));
   if (params.east != null) q.set("east", String(params.east));

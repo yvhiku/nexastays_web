@@ -13,3 +13,13 @@ export { pushRecentSearch, getRecentSearches } from "./search-recent";
 export { formatGuestSummary } from "./guest-summary";
 export { MobileSearchSheet } from "./MobileSearchSheet";
 export { SearchFlow } from "./SearchFlow";
+export {
+  EXPLORE_FILTER_VERSION,
+  buildListingsPath,
+  exploreFiltersToApiParams,
+  exploreFiltersToSearchParams,
+  mergeExploreFilters,
+  normalizeExploreFilters,
+  searchParamsToExploreFilters,
+  type ExploreFilters,
+} from "@/lib/search/explore-filter-utils";

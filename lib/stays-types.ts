@@ -2,6 +2,14 @@
 
 export interface SearchListingsParams {
   city?: string;
+  neighborhood?: string;
+  amenity?: string;
+  pets_allowed?: boolean;
+  luxury_only?: boolean;
+  family_friendly?: boolean;
+  near_lat?: number;
+  near_lng?: number;
+  near_radius_km?: number;
   checkin_date?: string;
   checkout_date?: string;
   guests?: number;

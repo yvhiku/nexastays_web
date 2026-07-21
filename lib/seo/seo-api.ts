@@ -1,4 +1,10 @@
 import { getStaysApiBaseUrl } from "@/lib/env";
+import {
+  buildListingsPath,
+  exploreFiltersToApiParams,
+  normalizeExploreFilters,
+  type ExploreFilters,
+} from "@/lib/search/explore-filter-utils";
 import { exploreCardToListing } from "@/lib/stays-api";
 import type { ExploreListEnvelope } from "@/lib/stays-types";
 import type { StaysListing } from "@/lib/stays-types";
@@ -57,26 +63,25 @@ export async function fetchSeoSitemapEntries(): Promise<SitemapEntryDto[]> {
   return (await seoFetch<SitemapEntryDto[]>("/stays/seo/registry/sitemap", 3600)) ?? [];
 }
 
-function exploreFiltersToParams(filters: SeoExploreFiltersDto): URLSearchParams {
-  const q = new URLSearchParams({ limit: "12" });
-  if (filters.city) q.set("city", filters.city);
-  if (filters.listing_type) q.set("listing_type", filters.listing_type);
-  if (filters.amenity) q.set("amenity", filters.amenity);
-  if (filters.neighborhood) q.set("neighborhood", filters.neighborhood);
-  if (filters.pets_allowed) q.set("pets_allowed", "true");
-  if (filters.luxury_only) q.set("luxury_only", "true");
-  if (filters.family_friendly) q.set("family_friendly", "true");
-  if (filters.near_lat != null) q.set("near_lat", String(filters.near_lat));
-  if (filters.near_lng != null) q.set("near_lng", String(filters.near_lng));
-  if (filters.near_radius_km != null) q.set("near_radius_km", String(filters.near_radius_km));
-  return q;
+function seoFiltersToExploreFilters(filters: SeoExploreFiltersDto): ExploreFilters {
+  return normalizeExploreFilters(filters as ExploreFilters);
 }
 
 export async function fetchSeoListings(
   filters: SeoExploreFiltersDto,
 ): Promise<StaysListing[]> {
   const base = getStaysApiBaseUrl().replace(/\/$/, "");
-  const q = exploreFiltersToParams(filters);
+  const apiParams = exploreFiltersToApiParams(seoFiltersToExploreFilters(filters));
+  const q = new URLSearchParams();
+  for (const [key, value] of Object.entries(apiParams)) {
+    if (value == null) continue;
+    if (typeof value === "boolean") {
+      if (value) q.set(key, "true");
+    } else {
+      q.set(key, String(value));
+    }
+  }
+  q.set("limit", "12");
   try {
     const res = await fetch(`${base}/stays/explore?${q.toString()}`, {
       next: { revalidate: 3600 },
@@ -94,9 +99,9 @@ export async function fetchCityListings(searchCity: string): Promise<StaysListin
   return fetchSeoListings({ city: searchCity });
 }
 
+/** Build listings path from SEO explore filters (canonical ExploreFilters transport). */
 export function buildListingsQueryPath(filters: SeoExploreFiltersDto): string {
-  const q = exploreFiltersToParams(filters);
-  q.delete("limit");
-  const qs = q.toString();
-  return qs ? `/listings?${qs}` : "/listings";
+  return buildListingsPath(seoFiltersToExploreFilters(filters));
 }
+
+export { buildListingsPath };
