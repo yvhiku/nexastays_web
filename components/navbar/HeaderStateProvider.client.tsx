@@ -9,7 +9,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHeaderState, type HeaderState } from "@/lib/header-api";
 import { runAfterIdle } from "@/lib/defer-after-idle";
@@ -25,7 +24,6 @@ type HeaderStateContextValue = HeaderState & {
 const HeaderStateContext = createContext<HeaderStateContextValue | null>(null);
 
 export function HeaderStateProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const { isAuthenticated, token, tokenType, ready } = useAuth();
   const [state, setState] = useState<HeaderState>({
     notificationCount: 0,
@@ -94,13 +92,10 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     };
   }, [canPoll, refresh]);
 
-  const onInboxRoute =
-    pathname.includes("/inbox") || pathname.includes("/bookings/");
-
   useMessagingRealtime(
     "inbox",
     refresh,
-    canPoll && onInboxRoute,
+    canPoll,
   );
 
   const value = useMemo(

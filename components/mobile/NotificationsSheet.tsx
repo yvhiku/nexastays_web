@@ -109,16 +109,15 @@ export function NotificationsSheet({ open, onOpenChange, onUnreadChange }: Props
       try {
         await markNotificationRead(item.id, token);
         trackEvent("notification_mark_read", { notification_id: item.id });
-        setItems((prev) =>
-          prev.map((n) =>
+        setItems((prev) => {
+          const next = prev.map((n) =>
             n.id === item.id
               ? { ...n, is_read: true, read_at: new Date().toISOString() }
               : n,
-          ),
-        );
-        onUnreadChangeRef.current?.(
-          items.filter((n) => n.id !== item.id && !n.is_read).length,
-        );
+          );
+          onUnreadChangeRef.current?.(next.filter((n) => !n.is_read).length);
+          return next;
+        });
       } catch {
         /* navigation still proceeds */
       }
