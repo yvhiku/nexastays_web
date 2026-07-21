@@ -363,8 +363,7 @@ export function useAttachmentManager(
       let uploadFile = item.file;
       if (item.kind === "image") {
         const processed = await processImageFile(item.file, {
-          crop: item.crop,
-          rotation: item.rotation,
+          rotation: item.rotation || undefined,
         });
         uploadFile = processed.file;
       }

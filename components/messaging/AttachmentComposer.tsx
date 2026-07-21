@@ -31,7 +31,7 @@ type Props = {
 };
 
 export function AttachmentComposer({ manager, labels }: Props) {
-  const { state, removeItem, updateItemCrop, rotateItem, setCaption, sendBatch, retryFailed, closeComposer } =
+  const { state, removeItem, rotateItem, setCaption, sendBatch, retryFailed, closeComposer } =
     manager;
   const [activeIndex, setActiveIndex] = useState(0);
   const captionRef = useRef<HTMLTextAreaElement>(null);
@@ -100,7 +100,6 @@ export function AttachmentComposer({ manager, labels }: Props) {
               removeItem(active.id);
               if (items.length <= 1) closeComposer();
             }}
-            onCropChange={(crop, rotation) => updateItemCrop(active.id, crop, rotation)}
             onRotate={() => rotateItem(active.id)}
             labels={{
               remove: labels.remove,

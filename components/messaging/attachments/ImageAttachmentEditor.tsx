@@ -1,49 +1,30 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
-import Cropper, { type Area } from "react-easy-crop";
+import React from "react";
 import { RotateCw, X } from "lucide-react";
 import type { AttachmentEditorProps } from "@/lib/messaging/attachments/registry";
-import type { CropArea } from "@/lib/messaging/image-pipeline";
-
-function areaToCrop(area: Area): CropArea {
-  return { x: area.x, y: area.y, width: area.width, height: area.height };
-}
 
 export function ImageAttachmentEditor({
   item,
   onRemove,
-  onCropChange,
   onRotate,
   labels,
 }: AttachmentEditorProps) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-
-  const onCropComplete = useCallback(
-    (_: Area, pixels: Area) => {
-      setCroppedAreaPixels(pixels);
-      onCropChange?.(areaToCrop(pixels), item.rotation);
-    },
-    [item.rotation, onCropChange],
-  );
-
   return (
     <div className="relative flex h-full flex-col bg-black">
-      <div className="relative flex-1 min-h-0">
-        <Cropper
-          image={item.previewUrl}
-          crop={crop}
-          zoom={zoom}
-          rotation={item.rotation}
-          aspect={undefined}
-          onCropChange={setCrop}
-          onZoomChange={setZoom}
-          onCropComplete={onCropComplete}
+      <div className="relative flex flex-1 min-h-0 items-center justify-center px-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.previewUrl}
+          alt=""
+          className="max-h-full max-w-full object-contain"
+          style={{
+            transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined,
+            transition: "transform 0.2s ease-out",
+          }}
         />
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={onRemove}
@@ -52,16 +33,7 @@ export function ImageAttachmentEditor({
         >
           <X className="h-5 w-5" />
         </button>
-        <input
-          type="range"
-          min={1}
-          max={3}
-          step={0.05}
-          value={zoom}
-          onChange={(e) => setZoom(Number(e.target.value))}
-          className="flex-1 accent-white"
-          aria-label={labels.crop}
-        />
+        <div className="flex-1" />
         <button
           type="button"
           onClick={onRotate}
