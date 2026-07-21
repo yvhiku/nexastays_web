@@ -5,6 +5,7 @@
 
 import axios from "axios";
 import { getIdentityApiBaseUrl } from "./env";
+import { isJwtExpired } from "./jwt-utils";
 import { unwrapResponse } from "./api-client";
 import { normalizeError } from "./api-client";
 import { normalizePhone, validateImageFile } from "./validators";
@@ -47,6 +48,9 @@ export async function getCurrentUser(
 ): Promise<GetCurrentUserResult> {
   const token = getJwt();
   if (!token) {
+    return { ok: false, kind: "UNAUTHORIZED" };
+  }
+  if (isJwtExpired(token)) {
     return { ok: false, kind: "UNAUTHORIZED" };
   }
   try {

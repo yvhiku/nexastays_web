@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { refreshToken as refreshTokenApi } from "@/lib/auth-api";
-import { getIdentityApiBaseUrl } from "@/lib/env";
+import { hydrateAuthSession, fetchCurrentUserWithJwt } from "@/lib/auth-session";
 import { runAfterIdle } from "@/lib/defer-after-idle";
 
 const AUTH_TOKEN_REFRESHED = "nexa:auth:token-refreshed";
@@ -54,31 +54,11 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/** Fetch current user when we have JWT. Returns user or null; status 401 means token is invalid. */
-async function fetchCurrentUser(
-  baseUrl: string,
-  jwt: string
-): Promise<{ user: User | null; status?: number }> {
-  try {
-    const res = await fetch(`${baseUrl}/users/me`, {
-      headers: { Authorization: `Bearer ${jwt}` },
-    });
-    if (!res.ok) return { user: null, status: res.status };
-    const data = await res.json();
-    return { user: data?.id ? data : null };
-  } catch {
-    return { user: null };
-  }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [tokenType, setTokenType] = useState<TokenType>("none");
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
-
-  const apiBase =
-    typeof window !== "undefined" ? getIdentityApiBaseUrl() : "";
 
   const clearStoredTokens = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -95,7 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined") return;
     let cancelled = false;
     const jwt = localStorage.getItem(JWT_KEY);
-    const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
     const otp = localStorage.getItem(OTP_SESSION_KEY);
 
     if (jwt) {
@@ -113,50 +92,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setReady(true);
 
-    async function hydrateAuth() {
-      if (jwt) {
-        const { user: u, status } = await fetchCurrentUser(apiBase, jwt);
-        if (cancelled) return;
-        if (status === 401 && refresh) {
-          try {
-            const tokens = await refreshTokenApi(refresh);
-            if (cancelled) return;
-            localStorage.setItem(JWT_KEY, tokens.access_token);
-            if (tokens.refresh_token) {
-              localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-            }
-            setToken(tokens.access_token);
-            const { user: u2, status: s2 } = await fetchCurrentUser(
-              apiBase,
-              tokens.access_token,
-            );
-            if (cancelled) return;
-            if (s2 === 401) {
-              clearStoredTokens();
-            } else {
-              setUser(u2 ?? null);
-            }
-          } catch {
-            if (!cancelled) clearStoredTokens();
-          }
-        } else if (status === 401) {
-          clearStoredTokens();
-        } else if (u) {
-          setUser(u);
-        } else {
-          setUser(null);
-        }
-      }
-    }
-
     runAfterIdle(() => {
-      void hydrateAuth();
+      void (async () => {
+        const result = await hydrateAuthSession();
+        if (cancelled) return;
+        if (result.cleared || !result.accessToken) {
+          if (result.cleared) clearStoredTokens();
+          return;
+        }
+        setToken(result.accessToken);
+        setTokenType("jwt");
+        setUser(result.user);
+      })();
     });
 
     return () => {
       cancelled = true;
     };
-  }, [apiBase, clearStoredTokens]);
+  }, [clearStoredTokens]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -188,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(accessToken);
     setTokenType("jwt");
     setUser(null);
-    fetchCurrentUser(getIdentityApiBaseUrl(), accessToken).then(({ user: u, status }) => {
+    fetchCurrentUserWithJwt(accessToken).then(({ user: u, status }) => {
       if (status === 401 && typeof window !== "undefined") {
         localStorage.removeItem(JWT_KEY);
         localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -225,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     const jwt = tokenType === "jwt" ? token : null;
     if (!jwt) return;
-    const { user: u, status } = await fetchCurrentUser(apiBase, jwt);
+    const { user: u, status } = await fetchCurrentUserWithJwt(jwt);
     if (status === 401 && typeof window !== "undefined") {
       const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
       if (refresh) {
@@ -236,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
           }
           setToken(tokens.access_token);
-          const { user: u2 } = await fetchCurrentUser(apiBase, tokens.access_token);
+          const { user: u2 } = await fetchCurrentUserWithJwt(tokens.access_token);
           setUser(u2 ?? null);
           return;
         } catch {
@@ -247,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setUser(u ?? null);
     }
-  }, [apiBase, token, tokenType, clearStoredTokens]);
+  }, [token, tokenType, clearStoredTokens]);
 
   /** Legacy: treats token as JWT if userId looks like UUID, else OTP session */
   const setAuth = useCallback((t: string, userId: string) => {
