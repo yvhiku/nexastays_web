@@ -188,7 +188,12 @@ function ConversationPageInner() {
     senderId: user?.id ?? null,
     onOptimisticMessage: (message) => {
       setMessages((prev) => [...prev, message]);
-      setOptimisticInboxActivity(conversationId, message.body ?? "Photo");
+      setOptimisticInboxActivity(
+        conversationId,
+        message.type === "IMAGE"
+          ? "You sent a photo"
+          : message.body?.trim() || "You sent a file",
+      );
       bumpActivity();
       scrollToBottom(true);
       setDraftPrompt(null);

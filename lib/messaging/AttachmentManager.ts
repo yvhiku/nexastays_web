@@ -667,7 +667,7 @@ export function useAttachmentManager(
         { uploadState: "uploading", uploadProgress: 0, uploadLabel: "Uploading voice note…" },
       );
       callbacks.onOptimisticMessage?.(optimistic);
-      setOptimisticInboxActivity(conversationId, "Voice message");
+      setOptimisticInboxActivity(conversationId, "You sent a voice message");
 
       const sendSnapshot: ActiveSend = {
         clientMessageId,
