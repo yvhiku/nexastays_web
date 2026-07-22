@@ -16,7 +16,7 @@ export const GUIDE_CATALOG: GuideDefinition[] = [
     titleKey: "guidance.welcomeTitle",
     bodyKey: "guidance.welcomeBody",
     primaryKey: "guidance.continue",
-    secondaryKey: "guidance.notNow",
+    secondaryKey: "guidance.skip",
   },
   {
     id: "search_fab",
