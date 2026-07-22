@@ -64,3 +64,17 @@ export function getCollectionById(id: string | null | undefined) {
   if (!id) return null;
   return EXPLORE_COLLECTIONS.find((c) => c.id === id) ?? null;
 }
+
+/** Contextual collections — city-tagged items surface first. */
+export function getCollectionsForContext(city?: string, limit = 6): ExploreCollection[] {
+  const normalized = city?.trim();
+  const items = [...EXPLORE_COLLECTIONS];
+  if (normalized) {
+    items.sort((a, b) => {
+      const aMatch = a.filters.city?.toLowerCase() === normalized.toLowerCase() ? 1 : 0;
+      const bMatch = b.filters.city?.toLowerCase() === normalized.toLowerCase() ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }
+  return items.slice(0, limit);
+}

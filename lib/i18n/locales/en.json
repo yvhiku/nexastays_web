@@ -248,7 +248,18 @@
     "exploreCityCta": "Explore {city}",
     "allInCity": "All {city}",
     "allAreas": "Entire city",
-    "clearCity": "Discover Morocco"
+    "clearCity": "Discover Morocco",
+    "continueBrowsing": "Continue browsing",
+    "destinationsTitle": "Explore destinations",
+    "collectionInCity": "Stays in {city}",
+    "collectionStaysCount": "{count} stays",
+    "collectionFromPrice": "From {price} {currency}/night",
+    "openMap": "Map"
+  },
+  "searchSheet": {
+    "recent": "Recent",
+    "popular": "Popular",
+    "collections": "Collections"
   },
   "searchBar": {
     "where": "Where",
@@ -501,6 +512,7 @@
     "applyFilters": "Apply Filters",
     "staysFound": "{count} stays found",
     "showingMatches": "Showing {count} matches",
+    "verifiedStaysCount": "{count} verified stays",
     "endOfResults": "You've reached the end",
     "loadMore": "Load more",
     "sortBy": "Sort by",

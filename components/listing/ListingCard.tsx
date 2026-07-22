@@ -49,6 +49,7 @@ export interface ListingCardProps {
   t: (key: string) => string;
   tf?: (key: string, vars: Record<string, string | number>) => string;
   localePath: (path: string) => string;
+  density?: "default" | "compact";
 }
 
 export function ListingCard({
@@ -63,6 +64,7 @@ export function ListingCard({
   t,
   tf,
   localePath,
+  density = "default",
 }: ListingCardProps) {
   const router = useRouter();
   const price = listing.rate_plan?.base_price ?? 0;
@@ -179,8 +181,8 @@ export function ListingCard({
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 font-sans">
-        <div className="mb-1 flex items-start justify-between gap-3">
+      <div className={cn("font-sans", density === "compact" ? "p-3.5 sm:p-4" : "p-4 sm:p-5")}>
+        <div className={cn("mb-1 flex items-start justify-between gap-3", density === "compact" && "mb-0.5")}>
         <p className="text-xs font-medium text-nexa-ink-4 tracking-wider">
             {getShortLocationLabel(listing)}
           </p>
@@ -207,7 +209,10 @@ export function ListingCard({
             {title}
           </h3>
         </Link>
-        <p className="text-sm text-nexa-ink-3 line-clamp-2 mb-4 min-h-[2.5rem] leading-relaxed">
+        <p className={cn(
+          "text-sm text-nexa-ink-3 line-clamp-2 leading-relaxed",
+          density === "compact" ? "mb-3 min-h-[2.25rem]" : "mb-4 min-h-[2.5rem]",
+        )}>
           {listing.description?.trim()
             ? description
             : getShortLocationLabel(listing)}

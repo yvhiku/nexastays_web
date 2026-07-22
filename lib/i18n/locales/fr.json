@@ -248,7 +248,18 @@
     "exploreCityCta": "Explorer {city}",
     "allInCity": "Tout {city}",
     "allAreas": "Ville entière",
-    "clearCity": "Découvrir le Maroc"
+    "clearCity": "Découvrir le Maroc",
+    "continueBrowsing": "Continuer la navigation",
+    "destinationsTitle": "Explorer les destinations",
+    "collectionInCity": "Séjours à {city}",
+    "collectionStaysCount": "{count} séjours",
+    "collectionFromPrice": "À partir de {price} {currency}/nuit",
+    "openMap": "Carte"
+  },
+  "searchSheet": {
+    "recent": "Récent",
+    "popular": "Populaire",
+    "collections": "Collections"
   },
   "searchBar": {
     "where": "Où",
@@ -501,6 +512,7 @@
     "applyFilters": "Appliquer les filtres",
     "staysFound": "{count} séjours trouvés",
     "showingMatches": "{count} correspondances affichées",
+    "verifiedStaysCount": "{count} séjours vérifiés",
     "endOfResults": "Fin des résultats",
     "loadMore": "Charger plus",
     "sortBy": "Trier par",

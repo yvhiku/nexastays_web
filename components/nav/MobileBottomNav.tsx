@@ -58,12 +58,12 @@ export function MobileBottomNav() {
     () => [
       {
         id: "explore",
-        href: localePath("/"),
+        href: localePath("/listings"),
         labelKey: "pwa.navExplore",
         icon: Compass,
         match: (p) => {
           const bare = p.replace(/^\/(en|fr|ar)/, "") || "/";
-          return bare === "/" || bare === "";
+          return bare === "/listings" || bare.startsWith("/listings");
         },
       },
       {

@@ -20,6 +20,8 @@ export type DestinationContextProps = {
   t: (key: string) => string;
   tf?: (key: string, vars?: Record<string, string | number>) => string;
   className?: string;
+  /** Hide hero headline — neighborhood/city chips only (mobile feed). */
+  chipsOnly?: boolean;
 };
 
 export function DestinationContext({
@@ -33,6 +35,7 @@ export function DestinationContext({
   t,
   tf,
   className,
+  chipsOnly,
 }: DestinationContextProps) {
   const ctx = getCityContextByCity(city);
 
@@ -44,6 +47,7 @@ export function DestinationContext({
   );
 
   if (!city) {
+    if (chipsOnly) return null;
     return (
       <section className={cn("mb-6 sm:mb-7 min-w-0", className)}>
         <h1 className="font-display text-xl sm:text-2xl font-semibold text-nexa-ink mb-1">
@@ -78,31 +82,35 @@ export function DestinationContext({
 
   return (
     <section className={cn("mb-6 sm:mb-7 min-w-0", className)}>
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
-        <h1 className="font-display text-xl sm:text-2xl font-semibold text-nexa-ink">
-          {title}
-        </h1>
-        <button
-          type="button"
-          onClick={onClearCity}
-          className="shrink-0 text-xs font-semibold text-nexa-ink-4 hover:text-nexa-primary transition-colors underline-offset-2 hover:underline mt-1"
-        >
-          {t("explore.clearCity")}
-        </button>
-      </div>
-      <p className="text-sm text-nexa-ink-3 mb-3 max-w-2xl">{subtitle}</p>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-nexa-ink-4 mb-4">
-        {matchCount != null && (
-          <span>
-            {matchCount} {t("explore.staysWord")}
-          </span>
-        )}
-        {neighborhoodCount != null && neighborhoodCount > 0 && (
-          <span>
-            {neighborhoodCount} {t("explore.neighborhoodsWord")}
-          </span>
-        )}
-      </div>
+      {!chipsOnly && (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+            <h1 className="font-display text-xl sm:text-2xl font-semibold text-nexa-ink">
+              {title}
+            </h1>
+            <button
+              type="button"
+              onClick={onClearCity}
+              className="shrink-0 text-xs font-semibold text-nexa-ink-4 hover:text-nexa-primary transition-colors underline-offset-2 hover:underline mt-1"
+            >
+              {t("explore.clearCity")}
+            </button>
+          </div>
+          <p className="text-sm text-nexa-ink-3 mb-3 max-w-2xl">{subtitle}</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-nexa-ink-4 mb-4">
+            {matchCount != null && (
+              <span>
+                {matchCount} {t("explore.staysWord")}
+              </span>
+            )}
+            {neighborhoodCount != null && neighborhoodCount > 0 && (
+              <span>
+                {neighborhoodCount} {t("explore.neighborhoodsWord")}
+              </span>
+            )}
+          </div>
+        </>
+      )}
       {(chips.length > 0 || ctx) && (
         <div className="flex flex-wrap gap-2">
           <button

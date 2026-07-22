@@ -248,7 +248,18 @@
     "exploreCityCta": "استكشف {city}",
     "allInCity": "كل {city}",
     "allAreas": "المدينة كلها",
-    "clearCity": "اكتشف المغرب"
+    "clearCity": "اكتشف المغرب",
+    "continueBrowsing": "متابعة التصفح",
+    "destinationsTitle": "استكشف الوجهات",
+    "collectionInCity": "إقامات في {city}",
+    "collectionStaysCount": "{count} إقامة",
+    "collectionFromPrice": "من {price} {currency}/ليلة",
+    "openMap": "خريطة"
+  },
+  "searchSheet": {
+    "recent": "الأخيرة",
+    "popular": "الأكثر شعبية",
+    "collections": "المجموعات"
   },
   "searchBar": {
     "where": "الوجهة",
@@ -501,6 +512,7 @@
     "applyFilters": "تطبيق الفلاتر",
     "staysFound": "{count} إقامات",
     "showingMatches": "عرض {count} نتيجة",
+    "verifiedStaysCount": "{count} إقامة موثقة",
     "endOfResults": "وصلت إلى النهاية",
     "loadMore": "تحميل المزيد",
     "sortBy": "ترتيب حسب",

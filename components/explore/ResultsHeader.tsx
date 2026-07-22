@@ -20,6 +20,9 @@ export type ResultsHeaderProps = {
   tf: (key: string, vars?: Record<string, string | number>) => string;
   className?: string;
   leading?: React.ReactNode;
+  /** Compact mobile row — hides layout toggle and uses verified-stays copy when set. */
+  compact?: boolean;
+  verifiedOnly?: boolean;
 };
 
 export function ResultsHeader({
@@ -36,41 +39,53 @@ export function ResultsHeader({
   tf,
   className,
   leading,
+  compact,
+  verifiedOnly,
 }: ResultsHeaderProps) {
+  const countLabel =
+    isLoading && matchCount === 0
+      ? t("common.loading")
+      : isRevalidating
+        ? (
+          <>
+            <span
+              className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
+              aria-hidden
+            />
+            {compact && verifiedOnly
+              ? tf("listings.verifiedStaysCount", { count: matchCount })
+              : tf("listings.showingMatches", { count: matchCount })}
+          </>
+        )
+        : matchCount === 0
+          ? t("listings.noStaysFound")
+          : compact && verifiedOnly
+            ? tf("listings.verifiedStaysCount", { count: matchCount })
+            : tf("listings.showingMatches", { count: matchCount });
+
   return (
     <div
       className={cn(
         "flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 w-full",
+        compact && "flex-nowrap gap-2",
         className,
       )}
     >
       {leading}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] text-nexa-ink-4 min-w-0">
-        <span className="inline-flex items-center gap-2 whitespace-nowrap">
-          {isLoading && matchCount === 0
-            ? t("common.loading")
-            : isRevalidating
-              ? (
-                <>
-                  <span
-                    className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
-                    aria-hidden
-                  />
-                  {tf("listings.showingMatches", { count: matchCount })}
-                </>
-              )
-              : matchCount === 0
-                ? t("listings.noStaysFound")
-                : tf("listings.showingMatches", { count: matchCount })}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] text-nexa-ink-4 min-w-0 flex-1">
+        <span className="inline-flex items-center gap-2 whitespace-nowrap truncate">
+          {countLabel}
         </span>
-        {!isLoading && matchCount > 0 && (
+        {!compact && !isLoading && matchCount > 0 && (
           <span className="hidden sm:inline whitespace-nowrap">{updatedLabel}</span>
         )}
       </div>
-      <label className="inline-flex items-center gap-2 text-[0.8rem] text-nexa-ink-3">
-        <span className="hidden sm:inline whitespace-nowrap">
-          {t("listings.sortBy")}
-        </span>
+      <label className="inline-flex items-center gap-2 text-[0.8rem] text-nexa-ink-3 shrink-0">
+        {!compact && (
+          <span className="hidden sm:inline whitespace-nowrap">
+            {t("listings.sortBy")}
+          </span>
+        )}
         <NexaSelect
           variant="pill"
           value={sort}
@@ -79,6 +94,7 @@ export function ResultsHeader({
           options={sortOptions}
         />
       </label>
+      {!compact && (
       <div
         className="inline-flex rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto"
         role="group"
@@ -112,6 +128,7 @@ export function ResultsHeader({
         </button>
         {/* split reserved — not shown in Phase 1 */}
       </div>
+      )}
     </div>
   );
 }

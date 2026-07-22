@@ -47,6 +47,9 @@ import { getCityContextByCity, slugifyNeighborhood } from "@/lib/explore-city-co
 import { parseExploreLayout, type ExploreLayout } from "@/lib/explore-layout";
 import { parseNeighborhood } from "@/lib/listing-location";
 import { trackEvent } from "@/lib/analytics";
+import { getExploreMode } from "@/lib/explore-mode";
+import { recordExploreRecentSearch } from "@/lib/explore-recent-searches";
+import { ExploreFeed } from "@/components/explore/feed/ExploreFeed";
 
 const LISTING_TYPES = ["APARTMENT", "HOTEL", "RIAD", "VILLA", "HOSTEL"] as const;
 const SORT_OPTIONS = ["newest", "rating", "price_desc", "price_asc"] as const;
@@ -101,6 +104,10 @@ export default function ListingsPage() {
   const collectionId = searchParams.get("collection");
   const activeCollection = getCollectionById(collectionId);
   const layout = parseExploreLayout(searchParams.get("layout"));
+  const exploreMode = useMemo(
+    () => getExploreMode(exploreFilters),
+    [exploreFilters],
+  );
 
   const urlSearch = useMemo(
     () => searchBarValueFromSearchParams(searchParams),
@@ -322,6 +329,8 @@ export default function ListingsPage() {
         city: dest.resolveCity,
       });
     }
+    const label = dest?.label || next.city.trim() || t("searchBar.searchMorocco");
+    recordExploreRecentSearch(next, label);
     trackEvent("search_submitted", {
       city: next.city || null,
       checkin: next.checkin || null,
@@ -597,7 +606,7 @@ export default function ListingsPage() {
           </aside>
 
           <div className="bg-nexa-bg min-w-0 w-full max-w-full">
-            <div className="bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 lg:px-6 xl:px-8 min-w-0 w-full">
+            <div className="hidden xl:block bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 lg:px-6 xl:px-8 min-w-0 w-full">
               <div className="flex flex-col gap-3 min-w-0 w-full">
                 <SearchBar
                   value={searchDraft}
@@ -659,7 +668,76 @@ export default function ListingsPage() {
               </div>
             </div>
 
-            <div className="p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8 min-w-0 w-full max-w-full">
+            <div className="xl:hidden">
+              {layout !== "map" && layout !== "split" ? (
+                <ExploreFeed
+                  mode={exploreMode}
+                  filters={exploreFilters}
+                  searchDraft={searchDraft}
+                  listings={displayListings}
+                  hasMore={hasMore}
+                  isLoading={isLoading}
+                  isLoadingMore={isLoadingMore}
+                  isRevalidating={isRevalidating}
+                  error={
+                    error ? (
+                      <ErrorAlert
+                        error={error}
+                        className="mb-4"
+                        onDismiss={() => setError(null)}
+                      />
+                    ) : null
+                  }
+                  verifiedOnly={verifiedOnly}
+                  instantOnly={instantOnly}
+                  selectedType={selectedType}
+                  selectedSort={selectedSort}
+                  layout={layout}
+                  activeCollection={activeCollection}
+                  city={city}
+                  checkin={checkin}
+                  checkout={checkout}
+                  guests={guests}
+                  neighborhoodDisplay={neighborhoodDisplay || undefined}
+                  neighborhoodCount={cityContext?.neighborhoods.length}
+                  updatedLabel={updatedLabel}
+                  sortOptions={[
+                    { value: "newest", label: t("listings.sortNewest") },
+                    { value: "rating", label: t("listings.sortTopRated") },
+                    {
+                      value: "price_desc",
+                      label: t("listings.sortMostExpensive"),
+                    },
+                    {
+                      value: "price_asc",
+                      label: t("listings.sortCheapest"),
+                    },
+                  ]}
+                  onSearch={commitSearch}
+                  onQuickFilterToggle={onQuickFilterToggle}
+                  onSortChange={(next) => {
+                    const sort = SORT_OPTIONS.includes(next as SortOption)
+                      ? (next as SortOption)
+                      : "newest";
+                    navigateWithParams(buildListingsParams({ sort }));
+                  }}
+                  onOpenFilters={() => setMobileFiltersOpen(true)}
+                  onSelectCollection={applyCollection}
+                  onSelectCity={onSelectCity}
+                  onSelectNeighborhood={onSelectNeighborhood}
+                  onClearCity={onClearCity}
+                  onLoadMore={loadMore}
+                  onOpenMap={() => setLayout("map")}
+                  loadMoreRef={loadMoreRef}
+                  t={t}
+                  tf={tf}
+                  locale={locale}
+                  localePath={localePath}
+                />
+              ) : null}
+            </div>
+
+            <div className="hidden xl:block p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8 min-w-0 w-full max-w-full">
               {layout !== "map" && layout !== "split" && (
                 <DestinationContext
                   city={city}
@@ -826,6 +904,78 @@ export default function ListingsPage() {
               )}
 
               <TrustStrip localePath={localePath} t={t} className="mt-2" />
+            </div>
+
+            <div className="xl:hidden p-4 sm:p-5 min-w-0 w-full max-w-full">
+              {(layout === "map" || layout === "split") && (
+                <>
+                  {error && (
+                    <ErrorAlert
+                      error={error}
+                      className="mb-6"
+                      onDismiss={() => setError(null)}
+                    />
+                  )}
+                  <div
+                    className="mb-9 min-w-0 relative"
+                    aria-busy={isRevalidating || mapLoading}
+                  >
+                    {(mapLoading || isRevalidating) && (
+                      <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm inline-flex items-center gap-2">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
+                          aria-hidden
+                        />
+                        {t("common.loading")}
+                      </p>
+                    )}
+                    <ExploreMapCanvas
+                      city={city}
+                      neighborhood={neighborhoodDisplay || undefined}
+                      listings={mapPins.length > 0 ? mapPins : displayListings}
+                      onSelectNeighborhood={onSelectNeighborhood}
+                      onSelectCity={onSelectCity}
+                      onClearCity={onClearCity}
+                      t={t}
+                      tf={tf}
+                    >
+                      <ExploreMap
+                        ref={exploreMapRef}
+                        listings={mapPins.length > 0 ? mapPins : displayListings}
+                        localePath={localePath}
+                        checkin={checkin || undefined}
+                        checkout={checkout || undefined}
+                        guests={guests}
+                        city={city}
+                        preferListingsCenter={Boolean(city)}
+                        emptyTitle={t("explore.mapEmptyTitle")}
+                        emptyMessage={t("explore.mapEmptyMessage")}
+                        viewStayLabel={t("listings.viewDetails")}
+                        exploreThisAreaLabel={t("explore.exploreThisArea")}
+                        myLocationLabel={t("explore.myLocation")}
+                        resetViewLabel={t("explore.resetView")}
+                        zoomOutLabel={t("explore.zoomOut")}
+                        currentlyExploringLabel={t("explore.currentlyExploring")}
+                        staysWord={t("explore.staysWord")}
+                        exploreCityLabel={
+                          city
+                            ? tf("explore.exploreCityCta", { city })
+                            : t("explore.discoverMorocco")
+                        }
+                        onBoundsChange={handleMapBounds}
+                        onSelectCity={onSelectCity}
+                      />
+                    </ExploreMapCanvas>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLayout("list")}
+                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg"
+                  >
+                    {t("listings.listView")}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

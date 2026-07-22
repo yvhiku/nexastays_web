@@ -8,6 +8,16 @@ import { SearchPreview } from "./sections/search/SearchPreview.server";
 import { SearchHomeGate } from "./sections/search/SearchHomeGate.client";
 import { MarketingSections } from "./Marketing.server";
 import { DeferredHomeClient } from "./Deferred.client";
+import { HomeEntryRouter } from "./HomeEntryRouter.client";
+import { CompactHomeMarketing } from "./CompactHomeMarketing.client";
+
+function HomeEntryFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center pt-[72px]">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-nexa-primary border-t-transparent" />
+    </div>
+  );
+}
 
 export const revalidate = 3600;
 
@@ -22,19 +32,25 @@ export default async function HomePage({ params }: Props) {
   return (
     <>
       <NavBar />
-      <main>
-        <HeroSection locale={locale} />
-        <Suspense fallback={<SearchPreview t={t} />}>
-          <SearchHomeGate>
-            <SearchPreview t={t} />
-          </SearchHomeGate>
-        </Suspense>
-        <Suspense fallback={null}>
-          <DeferredHomeClient />
-        </Suspense>
-        <MarketingSections locale={locale} />
-      </main>
-      <FooterSection locale={locale} />
+      <Suspense fallback={<HomeEntryFallback />}>
+        <HomeEntryRouter>
+          <main>
+            <HeroSection locale={locale} />
+            <Suspense fallback={<SearchPreview t={t} />}>
+              <SearchHomeGate>
+                <SearchPreview t={t} />
+              </SearchHomeGate>
+            </Suspense>
+            <Suspense fallback={null}>
+              <DeferredHomeClient />
+            </Suspense>
+            <CompactHomeMarketing>
+              <MarketingSections locale={locale} />
+            </CompactHomeMarketing>
+          </main>
+          <FooterSection locale={locale} />
+        </HomeEntryRouter>
+      </Suspense>
     </>
   );
 }
