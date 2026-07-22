@@ -269,6 +269,7 @@
     "searchDestinations": "Rechercher une destination",
     "clearWhere": "Effacer la destination",
     "searchMorocco": "Rechercher au Maroc",
+    "collapsedSummary": "{where} • {when} • {guests}",
     "addDates": "Ajouter des dates",
     "addGuests": "Ajouter des voyageurs",
     "whereAreYouGoing": "Où allez-vous ?",

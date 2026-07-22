@@ -269,6 +269,7 @@
     "searchDestinations": "ابحث عن وجهة",
     "clearWhere": "مسح الوجهة",
     "searchMorocco": "ابحث في المغرب",
+    "collapsedSummary": "{where} • {when} • {guests}",
     "addDates": "أضف التواريخ",
     "addGuests": "أضف الضيوف",
     "whereAreYouGoing": "إلى أين تذهب؟",

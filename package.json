@@ -19,7 +19,7 @@
     "verify:pwa-assets": "npx --yes tsx scripts/verify-pwa-assets.ts",
     "generate:pwa": "npm run generate:pwa-icons && npm run verify:pwa-assets",
     "measure:homepage": "node scripts/measure-homepage.mjs",
-    "test": "npx --yes tsx --test lib/messaging/__tests__/*.test.ts",
+    "test": "npx --yes tsx --test lib/messaging/__tests__/*.test.ts lib/__tests__/*.test.ts",
     "test:messaging": "npm run test"
   },
   "dependencies": {
