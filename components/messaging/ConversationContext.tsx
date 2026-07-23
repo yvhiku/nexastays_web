@@ -34,7 +34,7 @@ export function ConversationContext({
   bookingStatus,
   canReview = false,
 }: Props) {
-  const { t, locale } = useLanguage();
+  const { t, tf, locale } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const bookingId = presentation.reservation.bookingId;
   const coverUrl = presentation.reservation.coverMedia?.url ?? null;
@@ -84,7 +84,7 @@ export function ConversationContext({
             <p className="text-sm font-semibold text-nexa-ink truncate">{presentation.listing.title}</p>
             {isPostStay && postStayEndsAt ? (
               <p className="text-xs text-nexa-ink-3">
-                {t("inbox.conversationAvailableUntil", {
+                {tf("inbox.conversationAvailableUntil", {
                   date: formatAvailableUntil(postStayEndsAt, locale),
                 })}
               </p>
