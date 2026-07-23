@@ -8,9 +8,10 @@ const SearchInteractive = lazy(() =>
 
 type Props = {
   children: React.ReactNode;
+  variant?: "standalone" | "hero";
 };
 
-export function SearchHomeGate({ children }: Props) {
+export function SearchHomeGate({ children, variant = "standalone" }: Props) {
   const [active, setActive] = useState(false);
 
   const activate = useCallback(() => {
@@ -20,7 +21,7 @@ export function SearchHomeGate({ children }: Props) {
   if (active) {
     return (
       <Suspense fallback={children}>
-        <SearchInteractive />
+        <SearchInteractive variant={variant} />
       </Suspense>
     );
   }

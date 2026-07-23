@@ -12,7 +12,7 @@ import {
 import { findDestinationById } from "@/lib/search-destinations";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-export const SearchSection = () => {
+export function SearchSection({ variant = "standalone" }: { variant?: "standalone" | "hero" }) {
   const { t, tf, locale, localePath } = useLanguage();
   const router = useRouter();
   const [value, setValue] = useState<SearchBarValue>(DEFAULT_SEARCH_BAR_VALUE);
@@ -32,21 +32,23 @@ export const SearchSection = () => {
     router.push(localePath(`/listings?${params.toString()}`));
   };
 
-  return (
-    <section className="py-10 sm:py-14 md:py-16 bg-nexa-bg-2 border-b border-nexa-line">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-        <SearchBar
-          value={value}
-          onChange={setValue}
-          onSearch={(v) => navigateWith(v)}
-          t={t}
-          tf={tf}
-          locale={locale}
-          variant="home"
-        />
-        <p className="text-center text-sm text-nexa-ink-4 max-w-[640px] mx-auto mt-4">
-          {t("home.search.helperText")}
-        </p>
+  const isHero = variant === "hero";
+
+  const inner = (
+    <>
+      <SearchBar
+        value={value}
+        onChange={setValue}
+        onSearch={(v) => navigateWith(v)}
+        t={t}
+        tf={tf}
+        locale={locale}
+        variant="home"
+      />
+      <p className="text-center text-sm text-nexa-ink-4 max-w-[640px] mx-auto mt-4">
+        {t("home.search.helperText")}
+      </p>
+      {!isHero && (
         <div className="flex gap-2.5 flex-wrap justify-center mt-5">
           <button
             type="button"
@@ -63,6 +65,22 @@ export const SearchSection = () => {
             📋 {t("home.search.controlledListings")}
           </button>
         </div>
+      )}
+    </>
+  );
+
+  if (isHero) {
+    return (
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <section className="py-10 sm:py-14 md:py-16 bg-nexa-bg-2 border-b border-nexa-line">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+        {inner}
       </div>
     </section>
   );

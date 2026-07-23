@@ -35,12 +35,23 @@ export default async function HomePage({ params }: Props) {
       <Suspense fallback={<HomeEntryFallback />}>
         <HomeEntryRouter>
           <main>
-            <HeroSection locale={locale} />
-            <Suspense fallback={<SearchPreview t={t} />}>
-              <SearchHomeGate>
-                <SearchPreview t={t} />
-              </SearchHomeGate>
-            </Suspense>
+            <HeroSection
+              locale={locale}
+              embedSearch={
+                <Suspense fallback={<SearchPreview t={t} variant="hero" />}>
+                  <SearchHomeGate variant="hero">
+                    <SearchPreview t={t} variant="hero" />
+                  </SearchHomeGate>
+                </Suspense>
+              }
+            />
+            <div className="lg:hidden">
+              <Suspense fallback={<SearchPreview t={t} />}>
+                <SearchHomeGate>
+                  <SearchPreview t={t} />
+                </SearchHomeGate>
+              </Suspense>
+            </div>
             <Suspense fallback={null}>
               <DeferredHomeClient />
             </Suspense>
