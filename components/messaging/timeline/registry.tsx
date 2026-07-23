@@ -31,6 +31,7 @@ export type CardProps = {
   localePath: (path: string) => string;
   presentation?: ConversationPresentation;
   coverUrl?: string | null;
+  viewerRole?: "guest" | "host";
 };
 
 type CardComponent = React.ComponentType<CardProps>;

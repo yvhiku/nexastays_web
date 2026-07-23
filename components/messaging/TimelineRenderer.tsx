@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { ConversationPresentation, MessageDto, AttachmentDto } from "@/lib/messaging/messages-api";
+import type { ConversationPresentation, MessageDto, AttachmentDto, ConversationPermissions } from "@/lib/messaging/messages-api";
 import { selectGroupedMessages } from "@/lib/messaging/selectors/group-messages";
 import { messageRendererRegistry, isRegistryMessageType } from "./MessageRendererRegistry";
 import { renderTimelineCard, resolveCardKind } from "./timeline/registry";
@@ -23,6 +23,7 @@ type Props = {
   messages: MessageDto[];
   removedLabel: string;
   presentation: ConversationPresentation;
+  permissions?: ConversationPermissions;
   localePath: (path: string) => string;
   onOpenGallery?: (attachments: AttachmentDto[], index: number) => void;
   onRetryMediaUpload?: (clientMessageId: string) => void;
@@ -53,6 +54,7 @@ export function TimelineRenderer({
   messages,
   removedLabel,
   presentation,
+  permissions,
   localePath,
   onOpenGallery,
   onRetryMediaUpload,
@@ -124,6 +126,9 @@ export function TimelineRenderer({
                   localePath,
                   presentation,
                   coverUrl,
+                  viewerRole:
+                    permissions?.viewerRole ??
+                    (permissions?.canReview ? "guest" : "host"),
                 })}
               </div>
             </React.Fragment>

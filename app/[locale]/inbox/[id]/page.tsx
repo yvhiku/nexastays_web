@@ -495,6 +495,7 @@ function ConversationPageInner() {
           messages={messages}
           removedLabel={t("inbox.messageRemoved")}
           presentation={conversation.presentation}
+          permissions={conversation.permissions}
           localePath={localePath}
           onOpenGallery={(attachments, index) => setGallery({ attachments, index })}
           onRetryMediaUpload={handleRetryMediaUpload}

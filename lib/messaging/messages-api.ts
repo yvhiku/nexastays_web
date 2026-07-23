@@ -74,6 +74,7 @@ export interface ConversationPermissions {
   canReport: boolean;
   canBlock: boolean;
   canReview: boolean;
+  viewerRole?: "guest" | "host";
   isReadOnly: boolean;
   canArchive: boolean;
   canDelete: boolean;
