@@ -134,7 +134,7 @@ export const NavBar = () => {
 
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <LanguagePill />
-          <div className="hidden xl:block">
+          <div className="hidden md:block">
             <LanguageSelector />
           </div>
           <InboxBell />

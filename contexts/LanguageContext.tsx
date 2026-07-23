@@ -104,10 +104,15 @@ export function LanguageProvider({
         document.cookie = `nexa_locale=${newLocale};path=/;max-age=${60 * 60 * 24 * 365}`;
       }
       const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
-      const newPath = pathWithoutLocale === "/" ? `/${newLocale}` : `/${newLocale}${pathWithoutLocale.startsWith("/") ? pathWithoutLocale : "/" + pathWithoutLocale}`;
-      router.push(newPath);
+      const newPath =
+        pathWithoutLocale === "/"
+          ? `/${newLocale}`
+          : `/${newLocale}${pathWithoutLocale.startsWith("/") ? pathWithoutLocale : "/" + pathWithoutLocale}`;
+      const qs =
+        typeof window !== "undefined" ? window.location.search.replace(/^\?/, "") : "";
+      router.push(qs ? `${newPath}?${qs}` : newPath);
     },
-    [locale, pathname, router]
+    [locale, pathname, router],
   );
 
   const localePath = useCallback(

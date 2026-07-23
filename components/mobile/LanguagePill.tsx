@@ -24,7 +24,7 @@ export function LanguagePill({ className }: Props) {
           "inline-flex h-9 min-w-[2.5rem] items-center justify-center rounded-full",
           "border border-nexa-line bg-white/80 px-2.5 text-xs font-semibold tracking-wide text-nexa-ink",
           "hover:border-nexa-primary/40 hover:text-nexa-primary active:scale-95",
-          "xl:hidden",
+          "md:hidden",
           className,
         )}
         aria-label={t("common.language")}

@@ -25,6 +25,8 @@ type Props = {
   /** When false, omit default bottom padding (caller pins CTA). */
   padded?: boolean;
   closeOnEscape?: boolean;
+  /** When true (default), sheet is hidden from md breakpoint up — use mobile-only sheets. */
+  mobileOnly?: boolean;
 };
 
 /**
@@ -41,6 +43,7 @@ export function BottomSheet({
   height,
   padded = true,
   closeOnEscape = true,
+  mobileOnly = true,
 }: Props) {
   const { t } = useLanguage();
   const { entered, close } = useBottomSheet({ open, onOpenChange, closeOnEscape });
@@ -54,7 +57,12 @@ export function BottomSheet({
 
   return createPortal(
     <div
-      className={cn("fixed inset-0 md:hidden", zIndexClassName, className)}
+      className={cn(
+        "fixed inset-0",
+        mobileOnly && "md:hidden",
+        zIndexClassName,
+        className,
+      )}
       role="dialog"
       aria-modal="true"
       aria-label={ariaLabel ?? t("common.menu")}
