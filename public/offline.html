@@ -36,19 +36,14 @@
         box-shadow: 0 4px 20px rgba(26, 17, 24, 0.07);
         text-align: center;
       }
-      .mark {
+      .logo {
         width: 64px;
         height: 64px;
         margin: 0 auto 16px;
         border-radius: 16px;
-        background: linear-gradient(135deg, #e8507a, #c93a62);
-        color: #fff;
-        font-family: Georgia, serif;
-        font-size: 32px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        border: 2px solid #f8e8ed;
+        object-fit: cover;
+        display: block;
       }
       h1 { font-size: 1.35rem; margin: 0 0 8px; }
       p { margin: 0 0 10px; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
@@ -89,7 +84,7 @@
   </head>
   <body>
     <main class="card">
-      <div class="mark" aria-hidden="true">N</div>
+      <img class="logo" src="/images/nexastays.png" alt="Nexa Stays" width="64" height="64" />
       <h1>No internet connection</h1>
       <p>You can still open stays you viewed recently.</p>
       <div class="actions">
