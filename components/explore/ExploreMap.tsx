@@ -69,6 +69,8 @@ export interface ExploreMapProps {
   currentlyExploringLabel?: string;
   staysWord?: string;
   exploreCityLabel?: string;
+  /** Full-width explore canvas vs sticky split panel. */
+  sizeVariant?: "default" | "panel";
   /** Called when user explores (initial, CTA, or programmatic). */
   onBoundsChange?: (bounds: MapBounds) => void;
   onSelectCity?: (city: string) => void;
@@ -145,6 +147,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       currentlyExploringLabel = "Currently exploring",
       staysWord = "stays",
       exploreCityLabel,
+      sizeVariant = "default",
       onBoundsChange,
       onSelectCity,
     },
@@ -543,10 +546,18 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     return (
       <div
         className={cn(
-          "nexa-explore-map relative z-0 isolate overflow-hidden rounded-[20px] sm:rounded-3xl border border-nexa-line shadow-lg",
+          "nexa-explore-map relative z-0 isolate overflow-hidden border border-nexa-line shadow-lg",
+          sizeVariant === "panel"
+            ? "h-full rounded-none border-0 shadow-none"
+            : "rounded-[20px] sm:rounded-3xl",
         )}
       >
-        <div className="relative h-[min(72vh,580px)] w-full">
+        <div
+          className={cn(
+            "relative w-full",
+            sizeVariant === "panel" ? "h-full min-h-[480px]" : "h-[min(72vh,580px)]",
+          )}
+        >
           <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
           {(locating || !ready) && (
             <div className="absolute inset-0 z-[400] flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">

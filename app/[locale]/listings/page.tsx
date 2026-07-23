@@ -31,8 +31,7 @@ import {
   type ExploreFilters,
 } from "@/components/search";
 import { findDestinationById, findDestinationByCity } from "@/lib/search-destinations";
-import { ExploreMap, type ExploreMapHandle } from "@/components/explore/ExploreMap";
-import { ExploreMapCanvas } from "@/components/explore/ExploreMapCanvas";
+import { type ExploreMapHandle } from "@/components/explore/ExploreMap";
 import { DestinationContext } from "@/components/explore/DestinationContext";
 import { ExploreCollections } from "@/components/explore/ExploreCollections";
 import { QuickFilters } from "@/components/explore/QuickFilters";
@@ -44,7 +43,8 @@ import {
   type ExploreCollection,
 } from "@/lib/explore-collections";
 import { getCityContextByCity, slugifyNeighborhood } from "@/lib/explore-city-context";
-import { parseExploreLayout, type ExploreLayout } from "@/lib/explore-layout";
+import { resolveExploreLayout, showsExploreMap, type ExploreLayout } from "@/lib/explore-layout";
+import { ListingsMapPanel } from "@/components/explore/ListingsMapPanel";
 import { parseNeighborhood } from "@/lib/listing-location";
 import { trackEvent } from "@/lib/analytics";
 import { getExploreMode } from "@/lib/explore-mode";
@@ -103,7 +103,9 @@ export default function ListingsPage() {
   );
   const collectionId = searchParams.get("collection");
   const activeCollection = getCollectionById(collectionId);
-  const layout = parseExploreLayout(searchParams.get("layout"));
+  const rawLayoutParam = searchParams.get("layout");
+  const [viewport, setViewport] = useState<"mobile" | "desktop">("mobile");
+  const effectiveLayout = resolveExploreLayout(rawLayoutParam, viewport);
   const exploreMode = useMemo(
     () => getExploreMode(exploreFilters),
     [exploreFilters],
@@ -120,6 +122,14 @@ export default function ListingsPage() {
   useEffect(() => {
     setSearchDraft(urlSearch);
   }, [urlSearch]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1280px)");
+    const update = () => setViewport(mq.matches ? "desktop" : "mobile");
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const exploreParams = useMemo((): SearchListingsParams => {
     return {
@@ -188,7 +198,7 @@ export default function ListingsPage() {
   }, [exploreParams, hasMore, nextCursor, isLoadingMore, t]);
 
   useEffect(() => {
-    if (layout !== "list" || !hasMore) return;
+    if (effectiveLayout === "map" || !hasMore) return;
     const el = loadMoreRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
@@ -201,7 +211,7 @@ export default function ListingsPage() {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [layout, hasMore, loadMore, listings.length]);
+  }, [effectiveLayout, hasMore, loadMore, listings.length]);
 
   const handleMapBounds = useCallback(
     async (bounds: MapBounds) => {
@@ -227,11 +237,11 @@ export default function ListingsPage() {
   }, [exploreParams]);
 
   useEffect(() => {
-    if (layout !== "map" && layout !== "split") return;
+    if (!showsExploreMap(effectiveLayout)) return;
     const bounds = lastMapBoundsRef.current;
     if (!bounds) return;
     void handleMapBounds(bounds);
-  }, [exploreParams, layout, handleMapBounds]);
+  }, [exploreParams, effectiveLayout, handleMapBounds]);
 
   const buildListingsParams = (overrides?: {
     search?: Partial<SearchBarValue>;
@@ -241,7 +251,7 @@ export default function ListingsPage() {
     sort?: SortOption;
     collection?: string | null;
     neighborhood?: string | null;
-    layout?: ExploreLayout;
+    layout?: ExploreLayout | null;
     explore?: Partial<ExploreFilters>;
   }) => {
     const nextSearch: SearchBarValue = {
@@ -287,9 +297,12 @@ export default function ListingsPage() {
       overrides && "collection" in overrides ? overrides.collection : collectionId;
     if (nextCollection) params.set("collection", nextCollection);
 
-    const nextLayout = overrides?.layout ?? layout;
-    if (nextLayout === "map" || nextLayout === "split") {
-      params.set("layout", nextLayout);
+    if (overrides && "layout" in overrides) {
+      if (overrides.layout === "map" || overrides.layout === "list") {
+        params.set("layout", overrides.layout);
+      }
+    } else if (rawLayoutParam === "map" || rawLayoutParam === "list") {
+      params.set("layout", rawLayoutParam);
     }
 
     return params;
@@ -481,7 +494,23 @@ export default function ListingsPage() {
   };
 
   const setLayout = (next: ExploreLayout) => {
-    navigateWithParams(buildListingsParams({ layout: next === "list" ? "list" : next }));
+    if (viewport === "desktop") {
+      if (next === "list") {
+        navigateWithParams(
+          buildListingsParams({
+            layout: effectiveLayout === "map" ? null : "list",
+          }),
+        );
+        return;
+      }
+      if (next === "map") {
+        navigateWithParams(buildListingsParams({ layout: "map" }));
+        return;
+      }
+    }
+    navigateWithParams(
+      buildListingsParams({ layout: next === "map" ? "map" : null }),
+    );
   };
 
   const cityContext = useMemo(
@@ -499,6 +528,26 @@ export default function ListingsPage() {
   }, [listings]);
 
   const displayListings = listings;
+  const mapListings = mapPins.length > 0 ? mapPins : displayListings;
+
+  const mapLabels = useMemo(
+    () => ({
+      loading: t("common.loading"),
+      emptyTitle: t("explore.mapEmptyTitle"),
+      emptyMessage: t("explore.mapEmptyMessage"),
+      viewStay: t("listings.viewDetails"),
+      exploreThisArea: t("explore.exploreThisArea"),
+      myLocation: t("explore.myLocation"),
+      resetView: t("explore.resetView"),
+      zoomOut: t("explore.zoomOut"),
+      currentlyExploring: t("explore.currentlyExploring"),
+      staysWord: t("explore.staysWord"),
+      exploreCity: city
+        ? tf("explore.exploreCityCta", { city })
+        : t("explore.discoverMorocco"),
+    }),
+    [t, tf, city],
+  );
 
   const isInitialLoading = isLoading && listings.length === 0;
   const isRevalidating = isLoading && listings.length > 0;
@@ -638,7 +687,7 @@ export default function ListingsPage() {
                       : "newest";
                     navigateWithParams(buildListingsParams({ sort }));
                   }}
-                  layout={layout}
+                  layout={effectiveLayout}
                   onLayoutChange={setLayout}
                   sortOptions={[
                     { value: "newest", label: t("listings.sortNewest") },
@@ -669,7 +718,7 @@ export default function ListingsPage() {
             </div>
 
             <div className="xl:hidden">
-              {layout !== "map" && layout !== "split" ? (
+              {effectiveLayout !== "map" ? (
                 <ExploreFeed
                   mode={exploreMode}
                   filters={exploreFilters}
@@ -692,7 +741,7 @@ export default function ListingsPage() {
                   instantOnly={instantOnly}
                   selectedType={selectedType}
                   selectedSort={selectedSort}
-                  layout={layout}
+                  layout={effectiveLayout}
                   activeCollection={activeCollection}
                   city={city}
                   checkin={checkin}
@@ -738,28 +787,27 @@ export default function ListingsPage() {
             </div>
 
             <div className="hidden xl:block p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8 min-w-0 w-full max-w-full">
-              {layout !== "map" && layout !== "split" && (
-                <DestinationContext
-                  city={city}
-                  neighborhood={neighborhoodDisplay || undefined}
-                  neighborhoodCount={cityContext?.neighborhoods.length}
-                  matchCount={
-                    isInitialLoading ? undefined : displayListings.length
-                  }
-                  onSelectNeighborhood={onSelectNeighborhood}
-                  onSelectCity={onSelectCity}
-                  onClearCity={onClearCity}
-                  t={t}
-                  tf={tf}
-                />
-              )}
-
-              {layout !== "map" && layout !== "split" && (
-                <ExploreCollections
-                  activeId={activeCollection?.id ?? null}
-                  onSelect={applyCollection}
-                  t={t}
-                />
+              {effectiveLayout !== "map" && (
+                <>
+                  <DestinationContext
+                    city={city}
+                    neighborhood={neighborhoodDisplay || undefined}
+                    neighborhoodCount={cityContext?.neighborhoods.length}
+                    matchCount={
+                      isInitialLoading ? undefined : displayListings.length
+                    }
+                    onSelectNeighborhood={onSelectNeighborhood}
+                    onSelectCity={onSelectCity}
+                    onClearCity={onClearCity}
+                    t={t}
+                    tf={tf}
+                  />
+                  <ExploreCollections
+                    activeId={activeCollection?.id ?? null}
+                    onSelect={applyCollection}
+                    t={t}
+                  />
+                </>
               )}
 
               {error && (
@@ -796,118 +844,136 @@ export default function ListingsPage() {
                     </Button>
                   )}
                 </div>
-              ) : layout === "map" || layout === "split" ? (
-                <div
-                  className="mb-9 min-w-0 relative"
-                  aria-busy={isRevalidating || mapLoading}
-                >
-                  {(mapLoading || isRevalidating) && (
-                    <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm inline-flex items-center gap-2">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
-                        aria-hidden
-                      />
-                      {t("common.loading")}
-                    </p>
-                  )}
-                  <ExploreMapCanvas
-                    city={city}
-                    neighborhood={neighborhoodDisplay || undefined}
-                    listings={mapPins.length > 0 ? mapPins : displayListings}
-                    onSelectNeighborhood={onSelectNeighborhood}
-                    onSelectCity={onSelectCity}
-                    onClearCity={onClearCity}
-                    t={t}
-                    tf={tf}
-                  >
-                    <ExploreMap
-                      ref={exploreMapRef}
-                      listings={mapPins.length > 0 ? mapPins : displayListings}
-                      localePath={localePath}
-                      checkin={checkin || undefined}
-                      checkout={checkout || undefined}
-                      guests={guests}
-                      city={city}
-                      preferListingsCenter={Boolean(city)}
-                      emptyTitle={t("explore.mapEmptyTitle")}
-                      emptyMessage={t("explore.mapEmptyMessage")}
-                      viewStayLabel={t("listings.viewDetails")}
-                      exploreThisAreaLabel={t("explore.exploreThisArea")}
-                      myLocationLabel={t("explore.myLocation")}
-                      resetViewLabel={t("explore.resetView")}
-                      zoomOutLabel={t("explore.zoomOut")}
-                      currentlyExploringLabel={t("explore.currentlyExploring")}
-                      staysWord={t("explore.staysWord")}
-                      exploreCityLabel={
-                        city
-                          ? tf("explore.exploreCityCta", { city })
-                          : t("explore.discoverMorocco")
-                      }
-                      onBoundsChange={handleMapBounds}
-                      onSelectCity={onSelectCity}
-                    />
-                  </ExploreMapCanvas>
-                </div>
+              ) : effectiveLayout === "map" ? (
+                <ListingsMapPanel
+                  variant="full"
+                  showHeader
+                  mapRef={exploreMapRef}
+                  listings={mapListings}
+                  localePath={localePath}
+                  checkin={checkin || undefined}
+                  checkout={checkout || undefined}
+                  guests={guests}
+                  city={city}
+                  neighborhood={neighborhoodDisplay || undefined}
+                  mapLoading={mapLoading}
+                  isRevalidating={isRevalidating}
+                  onSelectNeighborhood={onSelectNeighborhood}
+                  onSelectCity={onSelectCity}
+                  onClearCity={onClearCity}
+                  onBoundsChange={handleMapBounds}
+                  t={t}
+                  tf={tf}
+                  labels={mapLabels}
+                />
               ) : (
-                <>
-                  <div
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"
-                    aria-busy={isRevalidating}
-                  >
-                    {displayListings.map((l) => (
-                      <ListingCard
-                        key={l.id}
-                        listing={l}
+                <div
+                  className={cn(
+                    effectiveLayout === "split" &&
+                      "grid grid-cols-[minmax(0,1fr)_minmax(400px,44%)] items-start gap-0",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <div
+                      className={cn(
+                        "grid gap-4 mb-4",
+                        effectiveLayout === "split"
+                          ? "grid-cols-1 2xl:grid-cols-2"
+                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+                      )}
+                      aria-busy={isRevalidating}
+                    >
+                      {displayListings.map((l) => (
+                        <ListingCard
+                          key={l.id}
+                          listing={l}
+                          checkin={checkin || undefined}
+                          checkout={checkout || undefined}
+                          guests={guests}
+                          city={city || undefined}
+                          verifiedWalkthroughOnly={verifiedOnly}
+                          instantBookingOnly={instantOnly}
+                          listingType={selectedType}
+                          t={t}
+                          tf={tf}
+                          localePath={localePath}
+                        />
+                      ))}
+                    </div>
+                    <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
+                    {isLoadingMore && (
+                      <div
+                        className={cn(
+                          "mb-6 grid grid-cols-1 gap-4",
+                          effectiveLayout === "split"
+                            ? "2xl:grid-cols-2"
+                            : "sm:grid-cols-2 lg:grid-cols-3",
+                        )}
+                        aria-busy="true"
+                      >
+                        <ListingCardSkeleton />
+                        <div className={effectiveLayout === "split" ? "hidden 2xl:block" : "hidden sm:block"}>
+                          <ListingCardSkeleton />
+                        </div>
+                        {effectiveLayout !== "split" && (
+                          <div className="hidden lg:block">
+                            <ListingCardSkeleton />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {hasMore && (
+                      <div className="mb-9 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => void loadMore()}
+                          disabled={isLoadingMore}
+                          className="rounded-xl border border-nexa-line bg-white px-5 py-2.5 text-sm font-semibold text-nexa-ink-2 transition hover:border-nexa-primary/40 hover:text-nexa-primary disabled:opacity-50"
+                        >
+                          {t("listings.loadMore")}
+                        </button>
+                      </div>
+                    )}
+                    {!hasMore && displayListings.length > 0 && (
+                      <p className="mb-9 text-center text-sm text-nexa-ink-4">
+                        {t("listings.endOfResults")}
+                      </p>
+                    )}
+                  </div>
+                  {effectiveLayout === "split" && (
+                    <aside className="sticky top-[72px] h-[calc(100vh-72px)] border-l border-nexa-line bg-white">
+                      <ListingsMapPanel
+                        variant="panel"
+                        showHeader={false}
+                        mapRef={exploreMapRef}
+                        listings={mapListings}
+                        localePath={localePath}
                         checkin={checkin || undefined}
                         checkout={checkout || undefined}
                         guests={guests}
-                        city={city || undefined}
-                        verifiedWalkthroughOnly={verifiedOnly}
-                        instantBookingOnly={instantOnly}
-                        listingType={selectedType}
+                        city={city}
+                        neighborhood={neighborhoodDisplay || undefined}
+                        mapLoading={mapLoading}
+                        isRevalidating={isRevalidating}
+                        onSelectNeighborhood={onSelectNeighborhood}
+                        onSelectCity={onSelectCity}
+                        onClearCity={onClearCity}
+                        onBoundsChange={handleMapBounds}
                         t={t}
                         tf={tf}
-                        localePath={localePath}
+                        labels={mapLabels}
+                        className="h-full mb-0"
                       />
-                    ))}
-                  </div>
-                  <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
-                  {isLoadingMore && (
-                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
-                      <ListingCardSkeleton />
-                      <div className="hidden sm:block">
-                        <ListingCardSkeleton />
-                      </div>
-                      <div className="hidden lg:block">
-                        <ListingCardSkeleton />
-                      </div>
-                    </div>
+                    </aside>
                   )}
-                  {hasMore && (
-                    <div className="mb-9 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => void loadMore()}
-                        disabled={isLoadingMore}
-                        className="rounded-xl border border-nexa-line bg-white px-5 py-2.5 text-sm font-semibold text-nexa-ink-2 transition hover:border-nexa-primary/40 hover:text-nexa-primary disabled:opacity-50"
-                      >
-                        {t("listings.loadMore")}
-                      </button>
-                    </div>
-                  )}
-                  {!hasMore && displayListings.length > 0 && (
-                    <p className="mb-9 text-center text-sm text-nexa-ink-4">
-                      {t("listings.endOfResults")}
-                    </p>
-                  )}
-                </>
+                </div>
               )}
 
               <TrustStrip localePath={localePath} t={t} className="mt-2" />
             </div>
 
             <div className="xl:hidden p-4 sm:p-5 min-w-0 w-full max-w-full">
-              {(layout === "map" || layout === "split") && (
+              {effectiveLayout === "map" && (
                 <>
                   {error && (
                     <ErrorAlert
@@ -916,57 +982,27 @@ export default function ListingsPage() {
                       onDismiss={() => setError(null)}
                     />
                   )}
-                  <div
-                    className="mb-9 min-w-0 relative"
-                    aria-busy={isRevalidating || mapLoading}
-                  >
-                    {(mapLoading || isRevalidating) && (
-                      <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm inline-flex items-center gap-2">
-                        <span
-                          className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
-                          aria-hidden
-                        />
-                        {t("common.loading")}
-                      </p>
-                    )}
-                    <ExploreMapCanvas
-                      city={city}
-                      neighborhood={neighborhoodDisplay || undefined}
-                      listings={mapPins.length > 0 ? mapPins : displayListings}
-                      onSelectNeighborhood={onSelectNeighborhood}
-                      onSelectCity={onSelectCity}
-                      onClearCity={onClearCity}
-                      t={t}
-                      tf={tf}
-                    >
-                      <ExploreMap
-                        ref={exploreMapRef}
-                        listings={mapPins.length > 0 ? mapPins : displayListings}
-                        localePath={localePath}
-                        checkin={checkin || undefined}
-                        checkout={checkout || undefined}
-                        guests={guests}
-                        city={city}
-                        preferListingsCenter={Boolean(city)}
-                        emptyTitle={t("explore.mapEmptyTitle")}
-                        emptyMessage={t("explore.mapEmptyMessage")}
-                        viewStayLabel={t("listings.viewDetails")}
-                        exploreThisAreaLabel={t("explore.exploreThisArea")}
-                        myLocationLabel={t("explore.myLocation")}
-                        resetViewLabel={t("explore.resetView")}
-                        zoomOutLabel={t("explore.zoomOut")}
-                        currentlyExploringLabel={t("explore.currentlyExploring")}
-                        staysWord={t("explore.staysWord")}
-                        exploreCityLabel={
-                          city
-                            ? tf("explore.exploreCityCta", { city })
-                            : t("explore.discoverMorocco")
-                        }
-                        onBoundsChange={handleMapBounds}
-                        onSelectCity={onSelectCity}
-                      />
-                    </ExploreMapCanvas>
-                  </div>
+                  <ListingsMapPanel
+                    variant="full"
+                    showHeader
+                    mapRef={exploreMapRef}
+                    listings={mapListings}
+                    localePath={localePath}
+                    checkin={checkin || undefined}
+                    checkout={checkout || undefined}
+                    guests={guests}
+                    city={city}
+                    neighborhood={neighborhoodDisplay || undefined}
+                    mapLoading={mapLoading}
+                    isRevalidating={isRevalidating}
+                    onSelectNeighborhood={onSelectNeighborhood}
+                    onSelectCity={onSelectCity}
+                    onClearCity={onClearCity}
+                    onBoundsChange={handleMapBounds}
+                    t={t}
+                    tf={tf}
+                    labels={mapLabels}
+                  />
                   <button
                     type="button"
                     onClick={() => setLayout("list")}

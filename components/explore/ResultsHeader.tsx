@@ -126,7 +126,6 @@ export function ResultsHeader({
           <MapIcon className="h-3.5 w-3.5" aria-hidden />
           <span className="hidden sm:inline">{t("listings.mapView")}</span>
         </button>
-        {/* split reserved — not shown in Phase 1 */}
       </div>
       )}
     </div>
