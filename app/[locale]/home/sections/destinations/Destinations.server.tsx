@@ -55,13 +55,18 @@ const destinations = [
 
 type Props = {
   locale: Locale;
+  variant?: "default" | "afterSearch";
 };
 
-export function DestinationsSection({ locale }: Props) {
+export function DestinationsSection({ locale, variant = "default" }: Props) {
   const { t, localePath } = getServerTranslations(locale);
+  const sectionClass =
+    variant === "afterSearch"
+      ? "pt-10 pb-14 sm:pt-12 sm:pb-16 md:pb-20"
+      : "py-16 sm:py-20 md:py-24";
 
   return (
-    <section className="py-16 sm:py-20 md:py-24">
+    <section className={sectionClass}>
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
         <div className="text-center mb-9">
           <span className="block text-xs font-semibold tracking-[0.12em] uppercase text-nexa-primary mb-3">

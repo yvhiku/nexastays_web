@@ -4,6 +4,7 @@ import { FooterSection } from "@/components/footer/Footer.server";
 import { getServerLocale, getServerTranslations } from "@/lib/i18n/server";
 import type { Locale } from "@/lib/i18n";
 import { HeroSection } from "./sections/hero/Hero.server";
+import { DestinationsSection } from "./sections/destinations/Destinations.server";
 import { SearchPreview } from "./sections/search/SearchPreview.server";
 import { SearchHomeGate } from "./sections/search/SearchHomeGate.client";
 import { MarketingSections } from "./Marketing.server";
@@ -44,6 +45,7 @@ export default async function HomePage({ params }: Props) {
                   </SearchHomeGate>
                 </Suspense>
               }
+              afterSearch={<DestinationsSection locale={locale} variant="afterSearch" />}
             />
             <div className="lg:hidden">
               <Suspense fallback={<SearchPreview t={t} />}>
@@ -51,6 +53,9 @@ export default async function HomePage({ params }: Props) {
                   <SearchPreview t={t} />
                 </SearchHomeGate>
               </Suspense>
+            </div>
+            <div className="lg:hidden">
+              <DestinationsSection locale={locale} variant="afterSearch" />
             </div>
             <Suspense fallback={null}>
               <DeferredHomeClient />

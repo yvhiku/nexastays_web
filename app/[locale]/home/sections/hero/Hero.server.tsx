@@ -7,9 +7,10 @@ import { HeroVisual } from "./HeroVisualLazy.client";
 type Props = {
   locale: Locale;
   embedSearch?: React.ReactNode;
+  afterSearch?: React.ReactNode;
 };
 
-export function HeroSection({ locale, embedSearch }: Props) {
+export function HeroSection({ locale, embedSearch, afterSearch }: Props) {
   const copy = getServerTranslations(locale);
 
   return (
@@ -19,7 +20,10 @@ export function HeroSection({ locale, embedSearch }: Props) {
           {embedSearch}
         </div>
       ) : null}
-      <div className="grid grid-cols-1 md:grid-cols-2 items-center relative md:min-h-0 lg:min-h-[calc(100vh-72px-120px)] lg:max-h-none">
+      {afterSearch ? (
+        <div className="hidden lg:block relative z-10">{afterSearch}</div>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-2 items-center relative md:min-h-0 lg:min-h-0">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_100%_50%,rgba(232,80,122,0.06)_0%,transparent_70%)] pointer-events-none rtl:[background:radial-gradient(ellipse_60%_80%_at_0%_50%,rgba(232,80,122,0.06)_0%,transparent_70%)]" />
       <div>
         <HeroContent copy={copy} />
