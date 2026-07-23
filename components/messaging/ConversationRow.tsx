@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/avatar/UserAvatar";
 import type { ConversationListResponse } from "@/lib/messaging/messages-api";
 import { resolveInboxPreview, type OptimisticInboxEntry } from "@/lib/messaging/inbox-optimistic";
+import { resolveRoleAwareInboxPreview } from "@/lib/messaging/inbox-preview";
 
 type Props = {
   item: ConversationListResponse;
@@ -29,9 +30,14 @@ function formatRelativeTime(iso: string | null, optimisticAt?: number | null): s
 }
 
 function ConversationRowInner({ item, href, optimistic, isActive = false }: Props) {
-  const { presentation, sync, lastMessage } = item;
+  const { presentation, sync, lastMessage, permissions } = item;
   const unread = sync.unreadCount > 0;
-  const preview = resolveInboxPreview(lastMessage.preview, lastMessage.at, optimistic);
+  const viewerRole =
+    permissions.viewerRole ?? (permissions.canReview ? "guest" : "host");
+  const preview = resolveRoleAwareInboxPreview(
+    resolveInboxPreview(lastMessage.preview, lastMessage.at, optimistic),
+    viewerRole,
+  );
   const timeLabel = formatRelativeTime(lastMessage.at, optimistic?.at ?? null);
 
   return (
