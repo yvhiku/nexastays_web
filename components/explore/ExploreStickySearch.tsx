@@ -46,7 +46,7 @@ export function ExploreStickySearch({
   return (
     <div
       className={cn(
-        "sticky top-[72px] z-40 border-b border-nexa-line bg-white/95 backdrop-blur-sm px-4",
+        "sticky top-[72px] z-layer-sticky border-b border-nexa-line bg-white/95 backdrop-blur-sm px-4",
         "transition-[height,padding,opacity] ease-out motion-reduce:transition-none",
         compact ? "py-2" : "py-3",
         className,

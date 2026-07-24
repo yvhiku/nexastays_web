@@ -10,6 +10,7 @@ import {
   type SavedListingSnapshot,
 } from "@/lib/saved-listings";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Props = {
   snapshot: SavedListingSnapshot;
@@ -29,8 +30,9 @@ export function SavedOnboardingSheet({ snapshot, onClose }: Props) {
   }, []);
 
   return (
+    <OverlayPortal layer="drawer">
     <div
-      className="fixed inset-0 z-[75] flex items-end justify-center sm:items-center"
+      className="fixed inset-0 z-layer-drawer flex items-end justify-center sm:items-center"
       role="dialog"
       aria-modal
       aria-label={t("saved.onboardingTitle")}
@@ -43,7 +45,7 @@ export function SavedOnboardingSheet({ snapshot, onClose }: Props) {
       />
       <div
         className={cn(
-          "relative z-10 w-full max-w-md rounded-t-[28px] sm:rounded-[28px]",
+          "relative z-layer-content w-full max-w-md rounded-t-[28px] sm:rounded-[28px]",
           "border border-white/40 bg-white p-6 shadow-nexa-lg",
           "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
         )}
@@ -95,5 +97,6 @@ export function SavedOnboardingSheet({ snapshot, onClose }: Props) {
         </button>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

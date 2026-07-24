@@ -33,7 +33,7 @@ export function GuestSheet({
         if (!next) onClose();
       }}
       height="guests"
-      zIndexClassName="z-[70]"
+      layer="drawer"
       ariaLabel={t("searchBar.whoComing")}
       padded={false}
     >

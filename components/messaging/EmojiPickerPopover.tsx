@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { AnchoredOverlayPortal } from "@/components/ui/OverlayPortal";
 
 const EMOJIS = [
   "😀", "😂", "😊", "😍", "🥰", "😘", "😎", "🤗",
@@ -16,9 +17,10 @@ type Props = {
   onClose: () => void;
   onPick: (emoji: string) => void;
   className?: string;
+  anchor: React.RefObject<HTMLElement>;
 };
 
-export function EmojiPickerPopover({ open, onClose, onPick, className }: Props) {
+export function EmojiPickerPopover({ open, onClose, onPick, className, anchor }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,31 +37,33 @@ export function EmojiPickerPopover({ open, onClose, onPick, className }: Props) 
   if (!open) return null;
 
   return (
-    <div
-      ref={ref}
-      className={cn(
-        "absolute bottom-full right-0 z-50 mb-2 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-nexa-line bg-white p-3 shadow-lg",
-        className,
-      )}
-      role="listbox"
-      aria-label="Emoji picker"
+    <AnchoredOverlayPortal
+      anchor={anchor}
+      layer="popover"
+      side="top"
+      align="end"
+      minWidth={288}
+      maxWidth={288}
+      className={cn("rounded-2xl border border-nexa-line bg-white p-3 shadow-lg", className)}
     >
-      <div className="grid grid-cols-8 gap-1">
-        {EMOJIS.map((emoji) => (
-          <button
-            key={emoji}
-            type="button"
-            role="option"
-            onClick={() => {
-              onPick(emoji);
-              onClose();
-            }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-nexa-bg-2 active:scale-95"
-          >
-            {emoji}
-          </button>
-        ))}
+      <div ref={ref} role="listbox" aria-label="Emoji picker">
+        <div className="grid grid-cols-8 gap-1">
+          {EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              role="option"
+              onClick={() => {
+                onPick(emoji);
+                onClose();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-nexa-bg-2 active:scale-95"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </AnchoredOverlayPortal>
   );
 }

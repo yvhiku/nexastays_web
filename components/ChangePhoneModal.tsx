@@ -10,6 +10,7 @@ import { changePhone } from "@/lib/kyc-api";
 import { formatUserError } from "@/lib/errors";
 import { normalizePhone } from "@/lib/validators";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Step = "current_otp" | "new_phone" | "new_otp" | "done";
 
@@ -103,7 +104,8 @@ export function ChangePhoneModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <OverlayPortal layer="modal">
+    <div className="fixed inset-0 z-layer-modal flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md bg-white rounded-[22px] shadow-xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nexa-line">
           <h2 className="text-lg font-semibold text-nexa-ink">Change phone number</h2>
@@ -234,5 +236,6 @@ export function ChangePhoneModal({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

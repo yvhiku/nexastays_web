@@ -5,6 +5,7 @@ import Image from "next/image";
 import { isStandaloneDisplay } from "@/lib/pwa-engagement";
 import { PWA_LOGO } from "@/lib/pwa-assets";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 const SPLASH_KEY = "nexa-pwa-splash-shown";
 const MIN_MS = 500;
@@ -73,9 +74,10 @@ export function PwaSplash() {
   if (!visible) return null;
 
   return (
+    <OverlayPortal layer="modal">
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-300",
+        "fixed inset-0 z-layer-modal flex items-center justify-center bg-black transition-opacity duration-300",
         fading ? "opacity-0" : "opacity-100",
       )}
       aria-hidden
@@ -97,5 +99,6 @@ export function PwaSplash() {
         />
       </div>
     </div>
+    </OverlayPortal>
   );
 }

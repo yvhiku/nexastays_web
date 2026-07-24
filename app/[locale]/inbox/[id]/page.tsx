@@ -2,10 +2,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { ErrorAlert } from "@/components/ui/Alert";
-import { ConversationContext } from "@/components/messaging/ConversationContext";
 import { ArchivedThreadBanner } from "@/components/messaging/ArchivedThreadBanner";
-import { MediaGallery } from "@/components/messaging/ImageViewer";
 import { AttachmentComposer } from "@/components/messaging/AttachmentComposer";
 import { AttachmentDraftPrompt } from "@/components/messaging/AttachmentDraftPrompt";
 import { ConversationSearchSheet } from "@/components/messaging/ConversationSearchSheet";
@@ -52,6 +51,119 @@ import { shouldFetchAfterPush } from "@/lib/messaging/push-sync";
 import { formatUserError } from "@/lib/errors";
 import { trackEvent } from "@/lib/analytics";
 import { setOptimisticInboxActivity } from "@/lib/messaging/inbox-optimistic";
+import { BookingContextStrip } from "@/components/messaging/BookingContextStrip";
+import {
+  ConversationSkeleton,
+  ContextPanelSkeleton,
+  MessagingEmptyState,
+} from "@/components/messaging/MessagingStates";
+import { BottomSheet } from "@/components/mobile/BottomSheet";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { PanelRightOpen, WifiOff } from "lucide-react";
+import { useFocusTrap } from "@/components/messaging/hooks/useFocusTrap";
+import { InboxListPanel } from "@/components/messaging/InboxListPanel";
+
+const MediaGallery = dynamic(
+  () => import("@/components/messaging/ImageViewer").then((module) => module.MediaGallery),
+  { ssr: false },
+);
+
+const MessagingContextPanel = dynamic(
+  () =>
+    import("@/components/messaging/MessagingContextPanel").then(
+      (module) => module.MessagingContextPanel,
+    ),
+  {
+    ssr: false,
+    loading: () => <ContextPanelSkeleton />,
+  },
+);
+
+function TabletContextDrawer({
+  ariaLabel,
+  closeLabel,
+  onClose,
+  children,
+}: {
+  ariaLabel: string;
+  closeLabel: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref);
+  return (
+    <div
+      ref={ref}
+      className="fixed inset-0 hidden md:block xl:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label={ariaLabel}
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        className="absolute inset-0 bg-nexa-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label={closeLabel}
+      />
+      <div className="absolute inset-y-0 end-0 w-[min(380px,calc(100vw-48px))] shadow-2xl">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ConversationListDrawer({
+  activeConversationId,
+  ariaLabel,
+  closeLabel,
+  onClose,
+}: {
+  activeConversationId: string;
+  ariaLabel: string;
+  closeLabel: string;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref);
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="fixed inset-0 lg:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label={ariaLabel}
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        className="absolute inset-0 bg-nexa-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label={closeLabel}
+      />
+      <div
+        className="absolute inset-y-0 start-0 w-[min(360px,calc(100vw-24px))] bg-white shadow-2xl"
+        onClickCapture={(event) => {
+          const target = event.target;
+          if (target instanceof Element && target.closest("[data-conversation-row]")) {
+            onClose();
+          }
+        }}
+      >
+        <InboxListPanel activeConversationId={activeConversationId} />
+      </div>
+    </div>
+  );
+}
 
 function ConversationPageInner() {
   const params = useParams();
@@ -67,12 +179,21 @@ function ConversationPageInner() {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [online, setOnline] = useState(true);
   const [muted, setMuted] = useState(false);
   const [contextCollapsed, setContextCollapsed] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
+  const [mobileContext, setMobileContext] = useState(false);
+  const [conversationListOpen, setConversationListOpen] = useState(false);
+  const [contextWidth, setContextWidth] = useState(320);
   const [gallery, setGallery] = useState<{ attachments: MessageDto["attachments"]; index: number } | null>(null);
   const [draftPrompt, setDraftPrompt] = useState<{ fileCount: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const threadWorkspaceRef = useRef<HTMLDivElement>(null);
+  const contextTriggerRef = useRef<HTMLElement | null>(null);
+  const galleryTriggerRef = useRef<HTMLElement | null>(null);
+  const conversationListTriggerRef = useRef<HTMLElement | null>(null);
 
   const jumpToMessage = useCallback((messageId: string) => {
     const node = scrollRef.current?.querySelector(`[data-message-id="${messageId}"]`);
@@ -104,6 +225,120 @@ function ConversationPageInner() {
   useEffect(() => {
     setMuted(isConversationMuted(conversationId));
   }, [conversationId]);
+
+  useEffect(() => {
+    const syncOnlineState = () => setOnline(navigator.onLine);
+    syncOnlineState();
+    window.addEventListener("online", syncOnlineState);
+    window.addEventListener("offline", syncOnlineState);
+    return () => {
+      window.removeEventListener("online", syncOnlineState);
+      window.removeEventListener("offline", syncOnlineState);
+    };
+  }, []);
+
+  useEffect(() => {
+    const storedWidth = Number(localStorage.getItem("nexa_messaging_context_width"));
+    const storedCollapsed = localStorage.getItem("nexa_messaging_context_collapsed");
+    if (Number.isFinite(storedWidth) && storedWidth >= 280 && storedWidth <= 400) {
+      setContextWidth(storedWidth);
+    }
+    setContextCollapsed(storedCollapsed === "1");
+  }, []);
+
+  const maximumContextWidth = useCallback(() => {
+    const workspaceWidth =
+      threadWorkspaceRef.current?.getBoundingClientRect().width ??
+      (typeof window === "undefined" ? 1143 : window.innerWidth);
+    return Math.max(280, Math.min(400, Math.floor(workspaceWidth * 0.35)));
+  }, []);
+
+  useEffect(() => {
+    const keepConversationDominant = () => {
+      setContextWidth((width) => Math.min(width, maximumContextWidth()));
+    };
+    keepConversationDominant();
+    window.addEventListener("resize", keepConversationDominant);
+    return () => window.removeEventListener("resize", keepConversationDominant);
+  }, [maximumContextWidth]);
+
+  const setDesktopContextCollapsed = (collapsed: boolean) => {
+    setContextCollapsed(collapsed);
+    localStorage.setItem("nexa_messaging_context_collapsed", collapsed ? "1" : "0");
+  };
+
+  const openContext = () => {
+    if (window.matchMedia("(min-width: 1280px)").matches) {
+      setDesktopContextCollapsed(false);
+      return;
+    }
+    contextTriggerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setMobileContext(window.matchMedia("(max-width: 767px)").matches);
+    setContextOpen(true);
+  };
+
+  const setResponsiveContextOpen = useCallback((open: boolean) => {
+    setContextOpen(open);
+    if (!open) {
+      requestAnimationFrame(() => contextTriggerRef.current?.focus());
+    }
+  }, []);
+
+  const closeConversationList = useCallback(() => {
+    setConversationListOpen(false);
+    requestAnimationFrame(() => conversationListTriggerRef.current?.focus());
+  }, []);
+
+  useEffect(() => {
+    if (!contextOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setResponsiveContextOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [contextOpen, setResponsiveContextOpen]);
+
+  const startContextResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    const startX = event.clientX;
+    const startWidth = contextWidth;
+    const rtl = document.documentElement.dir === "rtl";
+    const onMove = (moveEvent: PointerEvent) => {
+      const movement = moveEvent.clientX - startX;
+      const next = Math.min(
+        maximumContextWidth(),
+        Math.max(280, startWidth + (rtl ? movement : -movement)),
+      );
+      setContextWidth(next);
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      setContextWidth((width) => {
+        localStorage.setItem("nexa_messaging_context_width", String(width));
+        return width;
+      });
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+
+  const resizeContextByKeyboard = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const rtl = document.documentElement.dir === "rtl";
+    const direction =
+      event.key === "ArrowLeft"
+        ? (rtl ? -16 : 16)
+        : (rtl ? 16 : -16);
+    setContextWidth((width) => {
+      const next = Math.min(maximumContextWidth(), Math.max(280, width + direction));
+      localStorage.setItem("nexa_messaging_context_width", String(next));
+      return next;
+    });
+  };
 
   const loadConversation = useCallback(async () => {
     if (!token) return;
@@ -393,16 +628,12 @@ function ConversationPageInner() {
   };
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fcf9f8] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-nexa-primary" />
-      </div>
-    );
+    return <ConversationSkeleton />;
   }
 
   if (error && !conversation) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#fcf9f8] px-4 lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
+      <div className="fixed inset-0 z-layer-drawer flex items-center justify-center bg-[linear-gradient(180deg,#fdfbfc,#fbf4f7)] px-4 lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
         <div className="w-full max-w-md">
           <ErrorAlert error={error} />
         </div>
@@ -419,11 +650,22 @@ function ConversationPageInner() {
       : undefined;
 
   return (
-    <div className="fixed inset-0 z-[60] flex h-[100dvh] flex-col bg-[#fcf9f8] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0">
+    <div
+      ref={threadWorkspaceRef}
+      className="fixed inset-0 z-layer-drawer flex h-[100dvh] bg-[linear-gradient(180deg,#fdfbfc,#fbf5f8)] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0"
+    >
+      <div className="flex min-w-0 flex-1 flex-col">
       <ConversationHeader
         conversation={conversation}
         backHref={localePath("/inbox")}
         backLabel={t("inbox.back")}
+        onBack={() => {
+          conversationListTriggerRef.current =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null;
+          setConversationListOpen(true);
+        }}
         menuLabels={menuLabels}
         muted={muted}
         onArchive={() => void handleVisibility("archive")}
@@ -460,14 +702,9 @@ function ConversationPageInner() {
           />
         }
         contextBar={
-          <ConversationContext
-            presentation={conversation.presentation}
-            collapsed={contextCollapsed}
-            localePath={localePath}
-            messagingState={conversation.conversation.messagingState}
-            postStayEndsAt={conversation.conversation.postStayEndsAt}
-            bookingStatus={conversation.bookingStatus ?? null}
-            canReview={conversation.permissions.canReview}
+          <BookingContextStrip
+            conversation={conversation}
+            onOpenContext={openContext}
           />
         }
       />
@@ -481,15 +718,17 @@ function ConversationPageInner() {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 bg-[#fcf9f8]"
+        className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_50%_0%,rgba(253,240,243,0.72),transparent_30%),linear-gradient(180deg,#fdfbfc,#fbf6f8)] px-4 py-4"
       >
         {loadingOlder ? (
           <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
         ) : null}
         {messages.length === 0 ? (
-          <p className="py-12 text-center text-sm text-nexa-ink-3">
-            {t("inbox.emptyThread").replace("{name}", conversation.presentation.title)}
-          </p>
+          <MessagingEmptyState
+            title={t("inbox.emptyThreadTitle")}
+            body={t("inbox.emptyThread").replace("{name}", conversation.presentation.title)}
+            className="min-h-[320px]"
+          />
         ) : null}
         <TimelineRenderer
           messages={messages}
@@ -497,7 +736,13 @@ function ConversationPageInner() {
           presentation={conversation.presentation}
           permissions={conversation.permissions}
           localePath={localePath}
-          onOpenGallery={(attachments, index) => setGallery({ attachments, index })}
+          onOpenGallery={(attachments, index) => {
+            galleryTriggerRef.current =
+              document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+            setGallery({ attachments, index });
+          }}
           onRetryMediaUpload={handleRetryMediaUpload}
           uploadLabels={uploadLabels}
         />
@@ -519,7 +764,10 @@ function ConversationPageInner() {
         open={!!gallery}
         attachments={gallery?.attachments ?? []}
         initialIndex={gallery?.index ?? 0}
-        onClose={() => setGallery(null)}
+        onClose={() => {
+          setGallery(null);
+          requestAnimationFrame(() => galleryTriggerRef.current?.focus());
+        }}
       />
 
       <AttachmentComposer
@@ -531,7 +779,6 @@ function ConversationPageInner() {
           remove: t("inbox.attachmentComposer.remove"),
           rotate: t("inbox.attachmentComposer.rotate"),
           crop: t("inbox.attachmentComposer.crop"),
-          comingSoon: t("inbox.attachmentComposer.comingSoon"),
           uploadProgress: t("inbox.attachmentComposer.uploadProgress"),
           retry: t("inbox.attachmentComposer.retry"),
           close: t("inbox.attachmentComposer.close"),
@@ -575,16 +822,106 @@ function ConversationPageInner() {
             cancelLabel={t("common.cancel")}
             readOnlyHint={readOnlyHint}
             onAttach={() => fileInputRef.current?.click()}
+            onFilesDropped={(files) => attachmentManager.stageFiles(files)}
+            dropLabel={t("inbox.dropFiles")}
             attachDisabled={!conversation.permissions.canUpload}
             uploadProgress={attachmentManager.state.progress?.overallPct ?? null}
             onFocus={() => {
-              setContextCollapsed(true);
               trackEvent("message_composer_focused", { conversation_id: conversationId });
             }}
             onActivity={bumpActivity}
           />
         </>
       ) : null}
+
+      {!online ? (
+        <div
+          className="flex shrink-0 items-center justify-center gap-2 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-900"
+          role="status"
+        >
+          <WifiOff className="h-3.5 w-3.5" aria-hidden />
+          <span>{t("inbox.offline")}</span>
+        </div>
+      ) : null}
+      </div>
+
+      <aside
+        className="relative hidden min-h-0 shrink-0 bg-[#fffafb] xl:flex"
+        style={{ width: contextCollapsed ? 56 : contextWidth }}
+        aria-label={t("inbox.context.title")}
+      >
+        {contextCollapsed ? (
+          <button
+            type="button"
+            onClick={() => setDesktopContextCollapsed(false)}
+            className="flex h-full w-14 items-start justify-center border-s border-nexa-primary/10 bg-[linear-gradient(180deg,#fffafb,#fdf4f7)] pt-5 text-nexa-primary/70 transition-[background-color,color] hover:bg-nexa-primary-soft hover:text-nexa-primary"
+            aria-label={t("inbox.context.open")}
+          >
+            <PanelRightOpen className="h-5 w-5" />
+          </button>
+        ) : (
+          <>
+            <div
+              role="separator"
+              aria-label={t("inbox.context.resize")}
+              aria-orientation="vertical"
+              tabIndex={0}
+              onPointerDown={startContextResize}
+              onKeyDown={resizeContextByKeyboard}
+              aria-valuemin={280}
+              aria-valuemax={maximumContextWidth()}
+              aria-valuenow={contextWidth}
+              className="absolute inset-y-0 start-0 z-layer-content w-2 -translate-x-1/2 cursor-col-resize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 rtl:translate-x-1/2"
+            />
+            <MessagingContextPanel
+              conversation={conversation}
+              className="w-full shadow-[-16px_0_32px_rgba(26,17,24,0.035)]"
+              onClose={() => setDesktopContextCollapsed(true)}
+            />
+          </>
+        )}
+      </aside>
+
+      {contextOpen && !mobileContext ? (
+        <OverlayPortal layer="drawer">
+          <TabletContextDrawer
+            ariaLabel={t("inbox.context.title")}
+            closeLabel={t("common.close")}
+            onClose={() => setResponsiveContextOpen(false)}
+          >
+            <MessagingContextPanel
+              conversation={conversation}
+              onClose={() => setResponsiveContextOpen(false)}
+            />
+          </TabletContextDrawer>
+        </OverlayPortal>
+      ) : null}
+
+      {conversationListOpen ? (
+        <OverlayPortal layer="drawer">
+          <ConversationListDrawer
+            activeConversationId={conversationId}
+            ariaLabel={t("inbox.title")}
+            closeLabel={t("common.close")}
+            onClose={closeConversationList}
+          />
+        </OverlayPortal>
+      ) : null}
+
+      <BottomSheet
+        open={contextOpen && mobileContext}
+        onOpenChange={setResponsiveContextOpen}
+        ariaLabel={t("inbox.context.title")}
+        layer="drawer"
+        height="full"
+        padded={false}
+      >
+        <MessagingContextPanel
+          conversation={conversation}
+          className="-mx-4 min-h-0"
+          onClose={() => setResponsiveContextOpen(false)}
+        />
+      </BottomSheet>
     </div>
   );
 }

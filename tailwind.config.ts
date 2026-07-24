@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { LAYERS, LAYER_CLASS } from "./lib/ui/layers";
 
 const config: Config = {
   darkMode: ["class"],
@@ -6,9 +7,25 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: Object.values(LAYER_CLASS),
   theme: {
     extend: {
+      zIndex: {
+        "layer-base": String(LAYERS.base),
+        "layer-content": String(LAYERS.content),
+        "layer-header": String(LAYERS.header),
+        "layer-sticky": String(LAYERS.sticky),
+        "layer-dropdown": String(LAYERS.dropdown),
+        "layer-popover": String(LAYERS.popover),
+        "layer-date-picker": String(LAYERS.datePicker),
+        "layer-command-palette": String(LAYERS.commandPalette),
+        "layer-drawer": String(LAYERS.drawer),
+        "layer-modal": String(LAYERS.modal),
+        "layer-toast": String(LAYERS.toast),
+        "layer-tooltip": String(LAYERS.tooltip),
+      },
       fontFamily: {
         display: ["var(--font-playfair)", "Georgia", "serif"],
         sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],

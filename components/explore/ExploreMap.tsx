@@ -546,7 +546,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     return (
       <div
         className={cn(
-          "nexa-explore-map relative z-0 isolate overflow-hidden border border-nexa-line shadow-lg",
+          "nexa-explore-map relative z-layer-base isolate overflow-hidden border border-nexa-line shadow-lg",
           sizeVariant === "panel"
             ? "h-full rounded-none border-0 shadow-none"
             : "rounded-[20px] sm:rounded-3xl",
@@ -560,7 +560,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
         >
           <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
           {(locating || !ready) && (
-            <div className="absolute inset-0 z-[400] flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
+            <div className="absolute inset-0 z-layer-content flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
               {locating ? "Finding your location…" : "Loading map…"}
             </div>
           )}
@@ -568,7 +568,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
           {/* Compass */}
           <div
             className={cn(
-              "pointer-events-none absolute left-3 top-3 z-[450] flex h-9 w-9 items-center justify-center rounded-full text-[0.7rem] font-bold text-nexa-ink",
+              "pointer-events-none absolute left-3 top-3 z-layer-content flex h-9 w-9 items-center justify-center rounded-full text-[0.7rem] font-bold text-nexa-ink",
               GLASS,
             )}
             aria-hidden
@@ -577,7 +577,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
           </div>
 
           {/* Glass controls */}
-          <div className="absolute right-3 top-3 z-[450] flex flex-col items-center gap-2">
+          <div className="absolute right-3 top-3 z-layer-content flex flex-col items-center gap-2">
             <div className={cn("flex flex-col overflow-hidden rounded-full", GLASS)}>
               <button
                 type="button"
@@ -625,7 +625,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
 
           {/* Currently exploring chip */}
           {exploringName && (
-            <div className="absolute inset-x-0 top-3 z-[450] flex justify-center px-4 pointer-events-none">
+            <div className="absolute inset-x-0 top-3 z-layer-content flex justify-center px-4 pointer-events-none">
               <div
                 key={exploringKey}
                 className={cn(
@@ -641,7 +641,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
 
           {/* Empty state */}
           {ready && mappable.length === 0 && (
-            <div className="absolute inset-x-0 top-1/2 z-[450] flex -translate-y-1/2 justify-center px-4">
+            <div className="absolute inset-x-0 top-1/2 z-layer-content flex -translate-y-1/2 justify-center px-4">
               <div
                 className={cn(
                   "max-w-sm rounded-3xl px-5 py-4 text-center shadow-md",
@@ -679,7 +679,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
         {selected && (
           <div
             className={cn(
-              "absolute bottom-4 left-4 right-4 z-[500] mx-auto max-w-md overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.88] p-0 shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
+              "absolute bottom-4 left-4 right-4 z-layer-content mx-auto max-w-md overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.88] p-0 shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
               previewEnter
                 ? "translate-y-0 opacity-100"
                 : "translate-y-3 opacity-0",

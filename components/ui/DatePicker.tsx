@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { LAYERS } from "@/lib/ui/layers";
 import { Calendar as CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -235,7 +236,7 @@ export function DatePicker({
           top: pos.top,
           left: pos.left,
           width: pos.width,
-          zIndex: 1000,
+          zIndex: LAYERS.datePicker,
         }}
         className="rounded-2xl border border-nexa-line bg-white p-3 shadow-nexa-lg"
       >

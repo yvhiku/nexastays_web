@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageCircle } from "lucide-react";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxFilters } from "@/components/messaging/InboxFilters";
@@ -19,6 +18,8 @@ import {
   type OptimisticInboxEntry,
 } from "@/lib/messaging/inbox-optimistic";
 import { formatUserError } from "@/lib/errors";
+import { groupConversations } from "@/lib/messaging/selectors/group-conversations";
+import { MessagingEmptyState } from "@/components/messaging/MessagingStates";
 
 function sortConversations(
   items: ConversationListItem[],
@@ -85,11 +86,34 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
   useMessagingRealtime("inbox", load, !!token);
 
   const sorted = useMemo(() => sortConversations(items, optimistic), [items, optimistic]);
+  const sections = useMemo(
+    () => groupConversations(sorted, optimistic),
+    [sorted, optimistic],
+  );
+
+  const onListKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    const rows = Array.from(
+      event.currentTarget.querySelectorAll<HTMLAnchorElement>("[data-conversation-row]"),
+    );
+    if (rows.length === 0) return;
+    const active = document.activeElement as HTMLAnchorElement | null;
+    const currentIndex = rows.indexOf(active!);
+    const nextIndex =
+      event.key === "ArrowDown"
+        ? Math.min(currentIndex + 1, rows.length - 1)
+        : Math.max(currentIndex < 0 ? rows.length - 1 : currentIndex - 1, 0);
+    event.preventDefault();
+    rows[nextIndex]?.focus();
+  };
+
+  const sectionLabel = (id: string) =>
+    t(`inbox.sections.${id}`);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white">
-      <div className="flex items-center justify-between border-b border-[#F7F7F7] px-4 py-4">
-        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-semibold text-nexa-ink">
+    <div className="flex h-full min-h-0 flex-col bg-[linear-gradient(180deg,#fff_0%,#fefbfc_100%)]">
+      <div className="flex h-14 items-end justify-between px-5 pb-2">
+        <h2 className="font-display text-[22px] font-semibold leading-none text-nexa-ink drop-shadow-[0_1px_0_rgba(255,255,255,0.9)]">
           {t("inbox.title")}
         </h2>
       </div>
@@ -115,33 +139,50 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto pb-3"
+        onKeyDown={onListKeyDown}
+        aria-label={t("inbox.title")}
+      >
         {loading && sorted.length === 0 ? (
-          <ul className="divide-y divide-nexa-line/40" aria-hidden>
-            {[0, 1, 2, 3].map((i) => (
-              <li key={i} className="mx-4 my-2 h-[72px] animate-pulse rounded-xl bg-nexa-bg-2/50" />
-            ))}
-          </ul>
+          <>
+            <span className="sr-only" role="status">{t("inbox.loadingInbox")}</span>
+            <ul className="space-y-2 px-2" aria-hidden>
+              {[0, 1, 2, 3].map((i) => (
+                <li key={i} className="h-16 animate-pulse rounded-xl bg-nexa-bg-2/60" />
+              ))}
+            </ul>
+          </>
         ) : null}
 
         {!loading && sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-nexa-primary-soft">
-              <MessageCircle className="h-6 w-6 text-nexa-primary" />
-            </div>
-            <p className="text-sm font-semibold text-nexa-ink">{t("inbox.emptyTitle")}</p>
-            <p className="mt-1 max-w-xs text-xs text-nexa-ink-4">{t("inbox.emptyBody")}</p>
-          </div>
+          <MessagingEmptyState
+            title={debouncedQuery ? t("inbox.emptySearchTitle") : t("inbox.emptyTitle")}
+            body={debouncedQuery ? t("inbox.emptySearchBody") : t("inbox.emptyBody")}
+            search={Boolean(debouncedQuery)}
+          />
         ) : null}
 
-        {sorted.map((item) => (
-          <ConversationRow
-            key={item.conversation.id}
-            item={item}
-            href={localePath(`/inbox/${item.conversation.id}`)}
-            optimistic={optimistic[item.conversation.id] ?? null}
-            isActive={item.conversation.id === activeConversationId}
-          />
+        {sections.map((section) => (
+          <section key={section.id} aria-labelledby={`inbox-section-${section.id}`}>
+            <h3
+              id={`inbox-section-${section.id}`}
+              className="sticky top-0 z-layer-content bg-white/90 px-5 pb-1 pt-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-nexa-primary/70 backdrop-blur-xl"
+            >
+              {sectionLabel(section.id)}
+            </h3>
+            <div className="space-y-1">
+              {section.items.map((item) => (
+                <ConversationRow
+                  key={item.conversation.id}
+                  item={item}
+                  href={localePath(`/inbox/${item.conversation.id}`)}
+                  optimistic={optimistic[item.conversation.id] ?? null}
+                  isActive={item.conversation.id === activeConversationId}
+                />
+              ))}
+            </div>
+          </section>
         ))}
       </div>
     </div>

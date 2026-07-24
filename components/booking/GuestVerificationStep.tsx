@@ -12,6 +12,7 @@ import {
 import type { GuestIdentityFormData } from "@/lib/booking-verification-types";
 import type { CreateBookingOccupantDto } from "@/lib/stays-types";
 import { Shield, X, BadgeCheck } from "lucide-react";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 interface GuestVerificationStepProps {
   open: boolean;
@@ -136,7 +137,8 @@ export function GuestVerificationStep({
   const additionalGuests = guests.slice(1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+    <OverlayPortal layer="modal">
+    <div className="fixed inset-0 z-layer-modal flex items-center justify-center p-4 bg-black/50">
       <div
         className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         role="dialog"
@@ -247,5 +249,6 @@ export function GuestVerificationStep({
         </form>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

@@ -20,7 +20,7 @@ export function LanguageSheet({ open, onOpenChange }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       ariaLabel={t("common.language")}
-      zIndexClassName="z-[80]"
+      layer="drawer"
     >
       <SheetHeader title={t("common.language")} onClose={() => onOpenChange(false)} />
       <ul className="space-y-1 pb-2" role="listbox" aria-label={t("common.language")}>

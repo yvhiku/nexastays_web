@@ -99,7 +99,7 @@ export function ListingsMapPanel({
       aria-busy={isRevalidating || mapLoading}
     >
       {(mapLoading || isRevalidating) && (
-        <p className="absolute left-3 top-3 z-[460] rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm inline-flex items-center gap-2">
+        <p className="absolute left-3 top-3 z-layer-content rounded-lg bg-white/95 px-2.5 py-1 text-[0.7rem] font-medium text-nexa-ink-4 shadow-sm inline-flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded-full border-2 border-nexa-primary border-t-transparent animate-spin"
             aria-hidden

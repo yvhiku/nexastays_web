@@ -47,7 +47,7 @@ export function ExploreFeedRail({
       className={cn(
         className,
         animate &&
-          "transition-[opacity,transform] duration-[250ms] ease-out motion-reduce:transition-none",
+          "transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
         animate && (visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"),
       )}
     >

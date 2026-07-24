@@ -8,6 +8,7 @@ import { findDestinationById } from "@/lib/search-destinations";
 import { DestinationPanel, stayTypeLabel } from "./DestinationField";
 import { DateRangePanel } from "./DateRangeField";
 import { GuestsPanel } from "./GuestsField";
+import { AnchoredOverlayPortal } from "@/components/ui/OverlayPortal";
 import { formatDateRangeSummary, formatGuestSummary } from "./guest-summary";
 import type { SearchBarValue, SearchOpenField } from "./types";
 
@@ -44,6 +45,10 @@ export function SearchBar({
   const [open, setOpen] = useState<SearchOpenField>(null);
   const [destQuery, setDestQuery] = useState("");
   const rootRef = useRef<HTMLFormElement>(null);
+  const whereRef = useRef<HTMLDivElement>(null);
+  const whenRef = useRef<HTMLDivElement>(null);
+  const guestsRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
 
   const patch = (partial: Partial<SearchBarValue>) =>
@@ -54,6 +59,7 @@ export function SearchBar({
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (rootRef.current?.contains(target)) return;
+      if (panelRef.current?.contains(target)) return;
       setOpen(null);
     };
     const onKeyDown = (event: KeyboardEvent) => {
@@ -115,7 +121,7 @@ export function SearchBar({
       className={cn(
         "relative text-left px-4 sm:px-5 py-3.5 min-h-[64px] transition-all duration-200 rounded-2xl sm:rounded-full",
         open === field
-          ? "bg-white shadow-nexa-md z-10 scale-[1.02]"
+          ? "bg-white shadow-nexa-md z-layer-content scale-[1.02]"
           : "hover:bg-nexa-bg-2/80",
       )}
     >
@@ -156,7 +162,7 @@ export function SearchBar({
           open && "sm:divide-x-0",
         )}
       >
-        <div className="flex-1 min-w-0 sm:basis-[32%] relative">
+        <div ref={whereRef} className="flex-1 min-w-0 sm:basis-[32%] relative">
           {fieldBtn(
             "where",
             t("searchBar.where"),
@@ -178,73 +184,81 @@ export function SearchBar({
                 patch({ city: "", destinationId: null });
                 setDestQuery("");
               }}
-              className="absolute end-2 top-1/2 -translate-y-1/2 z-20 rounded-full p-1.5 text-nexa-ink-4 hover:bg-nexa-bg-2 hover:text-nexa-ink"
+              className="absolute end-2 top-1/2 -translate-y-1/2 z-layer-content rounded-full p-1.5 text-nexa-ink-4 hover:bg-nexa-bg-2 hover:text-nexa-ink"
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>
           )}
           {open === "where" && (
-            <div
-              id={panelId}
-              role="dialog"
-              aria-label={t("searchBar.where")}
-              className="absolute left-0 right-0 sm:left-0 sm:right-auto top-full mt-2 z-50 rounded-2xl border border-nexa-line bg-white shadow-nexa-lg"
+            <AnchoredOverlayPortal
+              anchor={whereRef}
+              layer="dropdown"
+              align="start"
+              minWidth={320}
+              maxWidth={420}
+              className="rounded-2xl border border-nexa-line bg-white shadow-nexa-lg"
             >
-              <DestinationPanel
-                query={destQuery}
-                onQueryChange={setDestQuery}
-                listingType={value.listingType}
-                onSelectDestination={onSelectDestination}
-                onListingTypeChange={(listingType) => patch({ listingType })}
-                t={t}
-              />
-            </div>
+              <div ref={panelRef} id={panelId} role="dialog" aria-label={t("searchBar.where")}>
+                <DestinationPanel
+                  query={destQuery}
+                  onQueryChange={setDestQuery}
+                  listingType={value.listingType}
+                  onSelectDestination={onSelectDestination}
+                  onListingTypeChange={(listingType) => patch({ listingType })}
+                  t={t}
+                />
+              </div>
+            </AnchoredOverlayPortal>
           )}
         </div>
 
         <div className="hidden sm:block w-px self-stretch bg-nexa-line my-3" aria-hidden />
 
-        <div className="flex-1 min-w-0 sm:basis-[28%] relative">
+        <div ref={whenRef} className="flex-1 min-w-0 sm:basis-[28%] relative">
           {fieldBtn("when", t("searchBar.when"), whenLabel, whenHasValue)}
           {open === "when" && (
-            <div
-              id={panelId}
-              role="dialog"
-              aria-label={t("searchBar.when")}
-              className="absolute left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0 top-full mt-2 z-50 w-[min(100vw-1.5rem,640px)] rounded-2xl border border-nexa-line bg-white shadow-nexa-lg"
+            <AnchoredOverlayPortal
+              anchor={whenRef}
+              layer="datePicker"
+              align="center"
+              minWidth={320}
+              maxWidth={640}
+              className="rounded-2xl border border-nexa-line bg-white shadow-nexa-lg"
             >
-              <DateRangePanel
-                checkin={value.checkin}
-                checkout={value.checkout}
-                onChange={({ checkin, checkout }) =>
-                  patch({ checkin, checkout })
-                }
-                onComplete={() => setOpen("guests")}
-                min={todayISO()}
-                locale={locale}
-                clearLabel={t("home.search.clearDate")}
-              />
-            </div>
+              <div ref={panelRef} id={panelId} role="dialog" aria-label={t("searchBar.when")}>
+                <DateRangePanel
+                  checkin={value.checkin}
+                  checkout={value.checkout}
+                  onChange={({ checkin, checkout }) =>
+                    patch({ checkin, checkout })
+                  }
+                  onComplete={() => setOpen("guests")}
+                  min={todayISO()}
+                  locale={locale}
+                  clearLabel={t("home.search.clearDate")}
+                />
+              </div>
+            </AnchoredOverlayPortal>
           )}
         </div>
 
         <div className="hidden sm:block w-px self-stretch bg-nexa-line my-3" aria-hidden />
 
-        <div className="flex-1 min-w-0 sm:basis-[28%] relative">
+        <div ref={guestsRef} className="flex-1 min-w-0 sm:basis-[28%] relative">
           {fieldBtn("guests", t("searchBar.who"), guestsLabel, guestsHasValue)}
           {open === "guests" && (
-            <div
-              id={panelId}
-              role="dialog"
-              aria-label={t("searchBar.who")}
-              className="absolute right-0 left-0 sm:left-auto top-full mt-2 z-50 rounded-2xl border border-nexa-line bg-white shadow-nexa-lg"
+            <AnchoredOverlayPortal
+              anchor={guestsRef}
+              layer="popover"
+              align="end"
+              minWidth={300}
+              maxWidth={380}
+              className="rounded-2xl border border-nexa-line bg-white shadow-nexa-lg"
             >
-              <GuestsPanel
-                value={value}
-                onChange={patch}
-                t={t}
-              />
-            </div>
+              <div ref={panelRef} id={panelId} role="dialog" aria-label={t("searchBar.who")}>
+                <GuestsPanel value={value} onChange={patch} t={t} />
+              </div>
+            </AnchoredOverlayPortal>
           )}
         </div>
 

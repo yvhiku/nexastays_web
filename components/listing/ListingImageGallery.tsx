@@ -145,7 +145,7 @@ export function ListingImageGallery({
                   goPrev();
                 }}
                 className={cn(
-                  "absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-nexa-ink transition-all",
+                  "absolute left-2 top-1/2 -translate-y-1/2 z-layer-content w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-nexa-ink transition-all",
                   arrowsOnHover ? "opacity-0 group-hover:opacity-100" : "hover:scale-110",
                 )}
                 aria-label="Previous image"
@@ -160,7 +160,7 @@ export function ListingImageGallery({
                   goNext();
                 }}
                 className={cn(
-                  "absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-nexa-ink transition-all",
+                  "absolute right-2 top-1/2 -translate-y-1/2 z-layer-content w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center text-nexa-ink transition-all",
                   arrowsOnHover ? "opacity-0 group-hover:opacity-100" : "hover:scale-110",
                 )}
                 aria-label="Next image"
@@ -170,7 +170,7 @@ export function ListingImageGallery({
             </>
           )}
           {showDots && (
-            <div className="absolute bottom-2 left-0 right-0 z-20 flex justify-center gap-1 pointer-events-none">
+            <div className="absolute bottom-2 left-0 right-0 z-layer-content flex justify-center gap-1 pointer-events-none">
               {items.map((_, i) => (
                 <button
                   key={i}

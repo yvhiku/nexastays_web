@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   exploreCardToListing,
@@ -1006,7 +1007,7 @@ export default function ListingsPage() {
                   <button
                     type="button"
                     onClick={() => setLayout("list")}
-                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 inline-flex items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg"
+                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky inline-flex items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg"
                   >
                     {t("listings.listView")}
                   </button>
@@ -1017,9 +1018,10 @@ export default function ListingsPage() {
         </div>
 
         {/* Mobile filters drawer */}
+        <OverlayPortal layer="drawer">
         <div
           className={cn(
-            "fixed inset-0 z-50 xl:hidden transition-opacity duration-300",
+            "fixed inset-0 z-layer-drawer xl:hidden transition-opacity duration-300",
             mobileFiltersOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           aria-hidden={!mobileFiltersOpen}
@@ -1105,6 +1107,7 @@ export default function ListingsPage() {
             </Button>
           </div>
         </div>
+        </OverlayPortal>
       </main>
       <Footer />
     </>

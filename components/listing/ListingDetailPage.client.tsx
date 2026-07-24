@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -38,6 +38,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useStaysFees } from "@/contexts/StaysFeeContext";
 import { calculateBookingFees } from "@/lib/stays-fees";
 import { GuestVerificationStep } from "@/components/booking/GuestVerificationStep";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import {
   addDaysToDateString,
   bookingNights,
@@ -847,7 +848,7 @@ export function ListingDetailPageClient() {
         </div>
 
         {/* Mobile sticky booking bar */}
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-nexa-line px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex items-center justify-between gap-3">
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-layer-sticky bg-white/95 backdrop-blur border-t border-nexa-line px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="font-bold text-base sm:text-lg truncate">
               {price} <span className="text-sm font-normal text-nexa-ink-4">{currency}/night</span>
@@ -881,8 +882,9 @@ export function ListingDetailPageClient() {
 
       {/* Fullscreen gallery */}
       {fullscreenImage && (
+        <OverlayPortal layer="modal">
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90"
+          className="fixed inset-0 z-layer-modal flex items-center justify-center bg-black/90"
           onClick={() => setFullscreenImage(null)}
           role="button"
           tabIndex={0}
@@ -892,7 +894,7 @@ export function ListingDetailPageClient() {
           <button
             type="button"
             onClick={() => setFullscreenImage(null)}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            className="absolute top-4 right-4 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
             aria-label="Close"
           >
             <X className="h-6 w-6" />
@@ -906,7 +908,7 @@ export function ListingDetailPageClient() {
                   const next = (fullscreenIndex - 1 + photoUrls.length) % photoUrls.length;
                   openGalleryAt(next);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
                 aria-label="Previous"
               >
                 <ChevronLeft className="h-8 w-8" />
@@ -918,7 +920,7 @@ export function ListingDetailPageClient() {
                   const next = (fullscreenIndex + 1) % photoUrls.length;
                   openGalleryAt(next);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
                 aria-label="Next"
               >
                 <ChevronRight className="h-8 w-8" />
@@ -936,6 +938,7 @@ export function ListingDetailPageClient() {
             onClick={(e) => e.stopPropagation()}
           />
         </div>
+        </OverlayPortal>
       )}
 
       <Footer />

@@ -52,7 +52,7 @@ export function ConversationSearchSheet({ conversationId, token, onJumpToMessage
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-10 items-center justify-center rounded-full text-nexa-ink-3 hover:bg-[#F7F7F7]"
+        className="flex h-10 w-10 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none"
         aria-label="Search conversation"
       >
         <Search className="h-5 w-5" />
@@ -69,7 +69,7 @@ export function ConversationSearchSheet({ conversationId, token, onJumpToMessage
               void runSearch(next, filter);
             }}
             placeholder="Search messages, files, photos…"
-            className="mt-3 w-full rounded-xl border border-nexa-line px-3 py-2 text-sm"
+            className="mt-3 w-full rounded-2xl border border-nexa-primary/15 bg-white px-4 py-3 text-sm text-nexa-ink shadow-[0_5px_16px_rgba(90,44,65,0.08)] placeholder:text-nexa-ink-4 focus:border-nexa-primary/35 focus:outline-none focus:ring-2 focus:ring-nexa-primary/20"
           />
           <div className="mt-3 flex flex-wrap gap-2">
             {FILTERS.map((f) => (
@@ -80,15 +80,15 @@ export function ConversationSearchSheet({ conversationId, token, onJumpToMessage
                   setFilter(f.id);
                   void runSearch(q, f.id);
                 }}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  filter === f.id ? "bg-nexa-primary text-white" : "bg-nexa-bg-2 text-nexa-ink-3"
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow,transform] active:scale-95 motion-reduce:transition-none ${
+                  filter === f.id ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a)] text-white shadow-nexa-sm" : "border-nexa-line/70 bg-white text-nexa-ink-3 hover:border-nexa-primary/20 hover:text-nexa-primary hover:shadow-sm"
                 }`}
               >
                 {f.label}
               </button>
             ))}
           </div>
-          <ul className="mt-4 max-h-[50dvh] overflow-y-auto divide-y divide-nexa-line/50">
+          <ul className="mt-4 max-h-[50dvh] space-y-2 overflow-y-auto">
             {loading ? (
               <li className="py-4 text-center text-sm text-nexa-ink-3">Searching…</li>
             ) : results.length === 0 ? (
@@ -98,7 +98,7 @@ export function ConversationSearchSheet({ conversationId, token, onJumpToMessage
                 <li key={`${r.messageId}-${r.resultType}`}>
                   <button
                     type="button"
-                    className="w-full py-3 text-left"
+                    className="w-full rounded-2xl border border-nexa-line/70 bg-white px-4 py-3 text-left shadow-[0_3px_12px_rgba(85,43,62,0.05)] transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-nexa-primary/20 hover:shadow-nexa-sm active:translate-y-0 motion-reduce:transition-none"
                     onClick={() => {
                       onJumpToMessage(r.messageId);
                       setOpen(false);

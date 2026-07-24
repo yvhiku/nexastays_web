@@ -26,7 +26,7 @@ export function GuidanceProgressDots({ step, total, className, label }: Props) {
           <span
             key={i}
             className={cn(
-              "h-2 w-2 rounded-full transition-all duration-[250ms]",
+              "h-2 w-2 rounded-full transition-all duration-300",
               active ? "bg-nexa-primary" : "bg-nexa-line",
             )}
           />

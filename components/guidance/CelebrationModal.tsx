@@ -98,7 +98,7 @@ export function CelebrationModal({ guideId, onPrimary, onSecondary }: Props) {
                 ? { duration: 6, repeat: Infinity, ease: "easeInOut" }
                 : { duration: 0.55, ease: [0.16, 1, 0.3, 1] }
             }
-            className="relative z-10 h-48 w-48"
+            className="relative z-layer-content h-48 w-48"
           >
             <Image
               src={def.asset ?? "/guidance/save.png"}

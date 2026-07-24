@@ -7,6 +7,7 @@ import type { AttachmentDto } from "@/lib/messaging/messages-api";
 import { attachmentFullUrl, attachmentThumbUrl } from "./ProgressiveImage";
 import { useFocusTrap } from "./hooks/useFocusTrap";
 import { downloadAttachmentFile } from "@/lib/messaging/download-attachment";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Props = {
   attachments: AttachmentDto[];
@@ -183,9 +184,10 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
   };
 
   return (
+    <OverlayPortal layer="modal">
     <div
       ref={dialogRef}
-      className="fixed inset-0 z-[100] flex flex-col bg-black/95"
+      className="fixed inset-0 z-layer-modal flex flex-col bg-black/95"
       role="dialog"
       aria-modal="true"
       aria-label={`Image ${index + 1} of ${attachments.length}`}
@@ -224,7 +226,7 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
           <button
             type="button"
             onClick={goPrev}
-            className="absolute left-2 z-10 rounded-full bg-white/10 p-2 text-white"
+            className="absolute left-2 z-layer-content rounded-full bg-white/10 p-2 text-white"
             aria-label="Previous image"
           >
             <ChevronLeft className="h-6 w-6" />
@@ -254,7 +256,7 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
           <button
             type="button"
             onClick={goNext}
-            className="absolute right-2 z-10 rounded-full bg-white/10 p-2 text-white"
+            className="absolute right-2 z-layer-content rounded-full bg-white/10 p-2 text-white"
             aria-label="Next image"
           >
             <ChevronRight className="h-6 w-6" />
@@ -262,6 +264,7 @@ export function ImageViewer({ attachments, initialIndex = 0, open, onClose }: Pr
         ) : null}
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 

@@ -36,7 +36,7 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
         <div className="absolute inset-0 bg-gradient-to-br from-nexa-primary-soft to-nexa-bg" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-nexa-ink/80 via-nexa-ink/40 to-transparent" />
-      <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-10 w-full">
+      <div className="relative z-layer-content max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-10 w-full">
         <nav aria-label="Breadcrumb" className="text-xs text-white/80 mb-4 flex flex-wrap gap-1">
           {page.breadcrumbs.map((crumb, i) => (
             <span key={crumb.path} className="inline-flex items-center gap-1">

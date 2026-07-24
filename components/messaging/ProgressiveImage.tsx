@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { AttachmentDto } from "@/lib/messaging/messages-api";
+import { ImageOff } from "lucide-react";
 
 type Props = {
   src: string | null;
@@ -56,7 +57,7 @@ export function ProgressiveImage({
   const shouldLoad = src && inView && !failed;
 
   return (
-    <div ref={ref} className={cn("relative overflow-hidden bg-nexa-bg-2", className)} onClick={onClick}>
+    <div ref={ref} className={cn("relative overflow-hidden bg-[linear-gradient(145deg,#fdf0f3,#f8e9ee)]", className)} onClick={onClick}>
       {shouldLoad ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -72,11 +73,14 @@ export function ProgressiveImage({
           )}
         />
       ) : null}
-      {(!src || failed || (shouldLoad && !loaded)) && (
-        <div className="absolute inset-0 flex items-center justify-center text-xs text-nexa-ink-4">
-          Photo
+      {shouldLoad && !loaded ? (
+        <div className="absolute inset-0 animate-pulse bg-[linear-gradient(110deg,#f8e9ee_20%,#fff5f7_42%,#f8e9ee_64%)]" aria-hidden />
+      ) : null}
+      {!src || failed ? (
+        <div className="absolute inset-0 flex items-center justify-center text-nexa-primary/45" aria-hidden>
+          <ImageOff className="h-5 w-5" />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

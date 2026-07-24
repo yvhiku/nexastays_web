@@ -116,11 +116,11 @@ export function SearchFlow({
         }}
         height="summary"
         padded={false}
-        zIndexClassName="z-[65]"
+        layer="drawer"
         ariaLabel={t("pwa.navSearch")}
         closeOnEscape={activeStep === null}
         contentClassName={cn(
-          "transition-[transform,opacity] duration-[220ms] ease-out",
+          "transition-[transform,opacity] duration-200 ease-out",
           enteredRoot ? "scale-100 opacity-100" : "scale-[0.98] opacity-95",
         )}
       >

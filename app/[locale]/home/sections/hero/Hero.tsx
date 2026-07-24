@@ -14,7 +14,7 @@ export const HeroSection = () => {
   return (
     <section className="min-h-0 md:min-h-screen pt-[72px] grid grid-cols-1 md:grid-cols-2 items-center overflow-hidden relative">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_100%_50%,rgba(232,80,122,0.06)_0%,transparent_70%)] pointer-events-none rtl:[background:radial-gradient(ellipse_60%_80%_at_0%_50%,rgba(232,80,122,0.06)_0%,transparent_70%)]" />
-      <div className="p-6 sm:p-10 md:p-14 lg:p-16 xl:p-20 xl:ps-16 relative z-10">
+      <div className="p-6 sm:p-10 md:p-14 lg:p-16 xl:p-20 xl:ps-16 relative z-layer-content">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

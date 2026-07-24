@@ -7,10 +7,10 @@ import type { useAttachmentManager } from "@/lib/messaging/AttachmentManager";
 import {
   getAttachmentKind,
   getAttachmentKindDef,
-  listAttachmentKinds,
 } from "@/lib/messaging/attachments/registry";
 import { useFocusTrap } from "./hooks/useFocusTrap";
 import "./attachments/register-defaults";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Manager = ReturnType<typeof useAttachmentManager>;
 
@@ -23,7 +23,6 @@ type Props = {
     remove: string;
     rotate: string;
     crop: string;
-    comingSoon: string;
     uploadProgress: string;
     retry: string;
     close: string;
@@ -67,9 +66,10 @@ export function AttachmentComposer({ manager, labels }: Props) {
   if (!state.isOpen || items.length === 0) return null;
 
   return (
+    <OverlayPortal layer="modal">
     <div
       ref={trapRef}
-      className="fixed inset-0 z-[90] flex flex-col bg-black"
+      className="fixed inset-0 z-layer-modal flex flex-col bg-black"
       role="dialog"
       aria-modal="true"
       aria-label="Attachment composer"
@@ -105,7 +105,6 @@ export function AttachmentComposer({ manager, labels }: Props) {
               remove: labels.remove,
               rotate: labels.rotate,
               crop: labels.crop,
-              comingSoon: labels.comingSoon,
             }}
           />
         ) : null}
@@ -178,19 +177,8 @@ export function AttachmentComposer({ manager, labels }: Props) {
           disabled={state.isSending}
           className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-nexa-primary/40"
         />
-        <div className="mt-2 flex gap-2 overflow-x-auto">
-          {listAttachmentKinds()
-            .filter((k) => !k.enabled)
-            .map((k) => (
-              <span
-                key={k.kind}
-                className="shrink-0 rounded-full bg-white/5 px-3 py-1 text-[11px] text-white/40"
-              >
-                {k.kind} — {labels.comingSoon}
-              </span>
-            ))}
-        </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

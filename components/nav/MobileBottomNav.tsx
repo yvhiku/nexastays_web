@@ -132,7 +132,7 @@ export function MobileBottomNav() {
   if (isHostArea) {
     return (
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 px-3 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-layer-header px-3 md:hidden"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         dir={isRtl ? "rtl" : "ltr"}
         aria-label={t("pwa.navAria")}
@@ -171,7 +171,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 px-3 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-layer-header px-3 md:hidden"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       dir={isRtl ? "rtl" : "ltr"}
       aria-label={t("pwa.navAria")}
@@ -236,7 +236,7 @@ export function MobileBottomNav() {
           data-nexa-search-fab=""
           aria-label={t("pwa.navSearch")}
           className={cn(
-            "absolute left-1/2 top-0 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-[18px] items-center justify-center",
+            "absolute left-1/2 top-0 z-layer-content flex h-14 w-14 -translate-x-1/2 -translate-y-[18px] items-center justify-center",
             "rounded-full text-white shadow-[0_8px_24px_rgba(232,80,122,0.45)]",
             "bg-gradient-to-br from-[#FF5A7D] to-[#FF7D9D]",
             "transition-transform duration-200 active:scale-110",

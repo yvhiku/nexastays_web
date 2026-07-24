@@ -27,6 +27,7 @@ import { BookingCard } from "@/components/bookings/BookingCard";
 import { BookingFiltersPanel } from "@/components/bookings/BookingFiltersPanel";
 import { BookingListSkeleton } from "@/components/bookings/BookingCardSkeleton";
 import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import { openConversationForBooking } from "@/lib/messaging/messages-api";
 import {
   CalendarCheck,
@@ -285,7 +286,8 @@ function MyBookingsContent() {
       </div>
 
       {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+        <OverlayPortal layer="drawer">
+        <div className="fixed inset-0 z-layer-drawer lg:hidden" role="dialog" aria-modal="true">
           <button
             type="button"
             className="absolute inset-0 bg-black/40"
@@ -321,6 +323,7 @@ function MyBookingsContent() {
             />
           </div>
         </div>
+        </OverlayPortal>
       )}
 
       <CancelBookingDialog

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import type { ConversationPresentation, MessageDto, AttachmentDto, ConversationPermissions } from "@/lib/messaging/messages-api";
 import { selectGroupedMessages } from "@/lib/messaging/selectors/group-messages";
 import { messageRendererRegistry, isRegistryMessageType } from "./MessageRendererRegistry";
@@ -60,14 +60,23 @@ export function TimelineRenderer({
   onRetryMediaUpload,
   uploadLabels,
 }: Props) {
-  const bubbleMessages = messages.filter((m) => isRegistryMessageType(m.type));
-  const grouped = selectGroupedMessages(bubbleMessages);
+  const groupedByFirstMessage = useMemo(() => {
+    const bubbleMessages = messages.filter((message) =>
+      isRegistryMessageType(message.type),
+    );
+    const index = new Map<string, ReturnType<typeof selectGroupedMessages>[number]>();
+    for (const group of selectGroupedMessages(bubbleMessages)) {
+      const firstId = group.messages[0]?.id;
+      if (firstId) index.set(firstId, group);
+    }
+    return index;
+  }, [messages]);
 
   let lastDay = "";
   let lastIncomingSender: string | null = null;
 
   return (
-    <div className="flex flex-col gap-4 py-2">
+    <div className="flex flex-col gap-2 py-1">
       {messages.map((message) => {
         const time = message.sentAt ?? message.createdAt;
         const dk = dayKey(time);
@@ -75,16 +84,18 @@ export function TimelineRenderer({
         if (showDay) lastDay = dk;
 
         const dayDivider = showDay && time ? (
-          <div key={`day-${dk}-${message.id}`} className="flex justify-center my-3">
-            <span className="px-3 py-1 bg-[#f0eded] text-nexa-ink-3 text-[11px] font-bold rounded-full uppercase tracking-widest">
+          <div key={`day-${dk}-${message.id}`} className="my-3 flex items-center gap-3 px-8">
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent to-nexa-primary/20" aria-hidden />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-nexa-primary/70">
               {dayLabel(time)}
             </span>
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent to-nexa-primary/20" aria-hidden />
           </div>
         ) : null;
 
         if (isRegistryMessageType(message.type)) {
-          const group = grouped.find((g) => g.messages.some((m) => m.id === message.id));
-          if (!group || group.messages[0]?.id !== message.id) {
+          const group = groupedByFirstMessage.get(message.id);
+          if (!group) {
             return dayDivider;
           }
 
@@ -120,7 +131,10 @@ export function TimelineRenderer({
           return (
             <React.Fragment key={message.id}>
               {dayDivider}
-              <div data-message-id={message.id}>
+              <div
+                data-message-id={message.id}
+                style={{ contentVisibility: "auto", containIntrinsicSize: "40px" }}
+              >
                 {renderTimelineCard({
                   message,
                   localePath,

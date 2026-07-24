@@ -8,7 +8,7 @@ type Props = {
 export function HeroContent({ copy }: Props) {
   const { t } = copy;
   return (
-    <div className="p-6 sm:p-10 md:p-14 lg:p-16 xl:p-20 xl:ps-16 pb-0 relative z-10">
+    <div className="p-6 sm:p-10 md:p-14 lg:p-16 xl:p-20 xl:ps-16 pb-0 relative z-layer-content">
       <div className="inline-flex items-center gap-2 bg-nexa-primary-soft border border-nexa-primary/20 rounded-full py-1.5 px-4 text-xs font-semibold text-nexa-primary mb-8">
         <span className="w-1.5 h-1.5 rounded-full bg-nexa-primary" />
         {t("home.hero.badge")}
@@ -33,7 +33,7 @@ export function HeroTrust({ copy }: Props) {
   ];
 
   return (
-    <div className="flex gap-6 flex-wrap pt-7 border-t border-nexa-line px-6 sm:px-10 md:px-14 lg:px-16 xl:px-20 xl:ps-16 pb-6 sm:pb-10 md:pb-14 lg:pb-16 xl:pb-20 relative z-10">
+    <div className="flex gap-6 flex-wrap pt-7 border-t border-nexa-line px-6 sm:px-10 md:px-14 lg:px-16 xl:px-20 xl:ps-16 pb-6 sm:pb-10 md:pb-14 lg:pb-16 xl:pb-20 relative z-layer-content">
       {trustItems.map((item) => (
         <div key={item} className="flex items-center gap-1.5 text-sm text-nexa-ink-4">
           <span className="text-nexa-primary">✓</span> {item}

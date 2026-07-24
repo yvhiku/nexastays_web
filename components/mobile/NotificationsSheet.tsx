@@ -27,7 +27,7 @@ export function NotificationsSheet({ open, onOpenChange, onUnreadChange }: Props
       open={open}
       onOpenChange={onOpenChange}
       ariaLabel={t("pwa.notifications")}
-      zIndexClassName="z-[80]"
+      layer="drawer"
       height="full"
       padded={false}
       contentClassName="max-h-[88dvh]"

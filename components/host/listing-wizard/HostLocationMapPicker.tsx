@@ -292,7 +292,7 @@ export function HostLocationMapPicker({
       <div className="relative h-[240px] overflow-hidden rounded-xl border border-nexa-line">
         <div ref={mapEl} className="h-full w-full bg-nexa-bg-2" />
         {(locating || !ready) && (
-          <div className="absolute inset-0 z-[400] flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
+          <div className="absolute inset-0 z-layer-content flex items-center justify-center bg-nexa-bg-2/90 text-sm text-nexa-ink-4">
             {locating ? "Finding your location…" : "Loading map…"}
           </div>
         )}

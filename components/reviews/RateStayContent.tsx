@@ -277,7 +277,7 @@ export function RateStayContent({
   if (success) {
     const celebration = (
       <div
-        className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-[rgba(253,251,252,0.96)] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))] backdrop-blur-md"
+        className="fixed inset-0 z-layer-modal flex flex-col items-center justify-center bg-[rgba(253,251,252,0.96)] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))] backdrop-blur-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-celebration-title"

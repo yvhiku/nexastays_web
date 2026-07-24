@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import type { WizardStepDef } from "@/lib/host-listing-wizard/form-types";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 export function ListingWizardShell({
   brandTitle,
@@ -147,7 +148,7 @@ export function ListingWizardShell({
           <div className="mx-auto max-w-[720px]">{children}</div>
         </div>
 
-        <div className="sticky bottom-0 z-30 border-t border-nexa-line/80 bg-white/90 px-4 py-3 shadow-[0_-8px_30px_rgba(26,17,24,0.06)] backdrop-blur-md sm:px-8">
+        <div className="sticky bottom-0 z-layer-sticky border-t border-nexa-line/80 bg-white/90 px-4 py-3 shadow-[0_-8px_30px_rgba(26,17,24,0.06)] backdrop-blur-md sm:px-8">
           <div className="mx-auto flex max-w-[720px] flex-wrap items-center justify-between gap-3">
             <Button variant="ghost" onClick={onBack} disabled={stepIndex === 0 || continuing}>
               {backLabel}
@@ -164,7 +165,7 @@ export function ListingWizardShell({
         </div>
       </div>
 
-      <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 lg:hidden">
+      <div className="fixed bottom-6 left-1/2 z-layer-sticky -translate-x-1/2 lg:hidden">
         <button
           type="button"
           onClick={() => onMobileOpenChange(true)}
@@ -175,9 +176,10 @@ export function ListingWizardShell({
         </button>
       </div>
 
+      <OverlayPortal layer="drawer">
       <div
         className={cn(
-          "fixed inset-0 z-50 transition-opacity lg:hidden",
+          "fixed inset-0 z-layer-drawer transition-opacity lg:hidden",
           mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -191,6 +193,7 @@ export function ListingWizardShell({
           {sidebar}
         </div>
       </div>
+      </OverlayPortal>
     </main>
   );
 }

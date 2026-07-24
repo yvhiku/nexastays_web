@@ -170,7 +170,7 @@ export function GetAppBanner() {
     <>
       <div
         className={cn(
-          "fixed inset-x-0 top-0 z-[60] md:hidden",
+          "fixed inset-x-0 top-0 z-layer-drawer md:hidden",
           "border-b border-nexa-line bg-white",
           "pt-[env(safe-area-inset-top)]",
         )}
@@ -223,7 +223,7 @@ export function GetAppBanner() {
         </div>
       </div>
 
-      <BottomSheet open={iosSheet} onOpenChange={setIosSheet} ariaLabel={t("pwa.installIosSubtitle")} zIndexClassName="z-[80]">
+      <BottomSheet open={iosSheet} onOpenChange={setIosSheet} ariaLabel={t("pwa.installIosSubtitle")} layer="drawer">
         <SheetHeader title={t("pwa.getAppTitle")} onClose={() => setIosSheet(false)} />
         <p className="mb-4 text-sm text-nexa-ink-3">{t("pwa.installIosSubtitle")}</p>
         <ol className="mb-4 space-y-3">
@@ -264,7 +264,7 @@ export function GetAppBanner() {
         open={androidHelp}
         onOpenChange={setAndroidHelp}
         ariaLabel={t("pwa.installAndroidLead")}
-        zIndexClassName="z-[80]"
+        layer="drawer"
       >
         <SheetHeader title={t("pwa.getAppTitle")} onClose={() => setAndroidHelp(false)} />
         <p className="mb-3 text-sm text-nexa-ink-3">{t("pwa.androidMenuHint")}</p>

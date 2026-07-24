@@ -11,6 +11,7 @@ import {
   watchForWaiting,
 } from "@/lib/pwa-sw-update";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 const FALLBACK_RELOAD_MS = 2000;
 
@@ -56,8 +57,9 @@ export function SwUpdateBanner() {
   if (!waiting) return null;
 
   return (
+    <OverlayPortal layer="toast">
     <div
-      className="fixed inset-x-0 z-[70] flex justify-center px-3 nexa-sw-update-banner"
+      className="fixed inset-x-0 z-layer-toast flex justify-center px-3 nexa-sw-update-banner"
       role="status"
       aria-live="polite"
     >
@@ -110,5 +112,6 @@ export function SwUpdateBanner() {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

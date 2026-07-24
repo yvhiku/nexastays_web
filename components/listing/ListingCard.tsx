@@ -140,7 +140,7 @@ export function ListingCard({
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 pointer-events-none rounded-t-2xl" />
 
-        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 z-10">
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 z-layer-content">
           <span className="inline-flex px-2.5 py-1 rounded-full text-[0.65rem] font-semibold uppercase tracking-wide bg-white/95 text-nexa-ink shadow-sm font-sans">
             {listingTypeLabel(listing.listing_type)}
           </span>
@@ -152,11 +152,11 @@ export function ListingCard({
               city: listing.city,
               imageUrl: cover ? coverSrc : undefined,
             }}
-            className="relative z-20"
+            className="relative z-layer-content"
           />
         </div>
 
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 z-10 pointer-events-none">
+        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 z-layer-content pointer-events-none">
           {/* Ranking badges reserved (Recommended / Best Value / …) — Phase 2 */}
           <div className="flex flex-wrap items-center gap-1.5 min-h-[1.5rem]">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.65rem] font-semibold bg-white/95 text-nexa-ink shadow-sm font-sans">

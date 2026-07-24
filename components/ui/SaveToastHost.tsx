@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SAVE_TOAST_EVENT, type SaveToastDetail } from "@/lib/save-toast";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 const TOAST_MS = 3200;
 
@@ -34,9 +35,10 @@ export function SaveToastHost() {
   if (!toast) return null;
 
   return (
+    <OverlayPortal layer="toast">
     <div
       className={cn(
-        "fixed inset-x-0 z-[75] flex justify-center px-3 md:px-6 pointer-events-none",
+        "fixed inset-x-0 z-layer-toast flex justify-center px-3 md:px-6 pointer-events-none",
         "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] md:bottom-6",
         "animate-in fade-in slide-in-from-bottom-3 duration-200",
       )}
@@ -48,5 +50,6 @@ export function SaveToastHost() {
         <p className="text-sm font-medium">{toast.message}</p>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { NexaSelect } from "@/components/ui/NexaSelect";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import {
   getHostVerification,
   submitHostVerification,
@@ -503,7 +504,7 @@ export default function HostPage() {
         </aside>
 
         {/* Mobile steps button */}
-        <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+        <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-layer-sticky">
           <button
             onClick={() => setMobileStepsOpen(true)}
             className="flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-nexa-ink text-white shadow-lg font-semibold text-sm"
@@ -514,9 +515,10 @@ export default function HostPage() {
         </div>
 
         {/* Mobile steps drawer */}
+        <OverlayPortal layer="drawer">
         <div
           className={cn(
-            "fixed inset-0 z-50 lg:hidden transition-opacity duration-300",
+            "fixed inset-0 z-layer-drawer lg:hidden transition-opacity duration-300",
             mobileStepsOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           aria-hidden={!mobileStepsOpen}
@@ -531,6 +533,7 @@ export default function HostPage() {
             {stepsContent}
           </div>
         </div>
+        </OverlayPortal>
 
         <div className="bg-nexa-bg py-8 sm:py-10 lg:py-12 px-4 sm:px-6 md:px-10 lg:px-20 pb-20 lg:pb-16">
           <div className="max-w-[600px]">

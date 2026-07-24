@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 export type SavedToastState =
   | { kind: "saved" }
@@ -21,9 +22,10 @@ export function SavedToast({ toast, onDismiss }: Props) {
   if (!toast) return null;
 
   return (
+    <OverlayPortal layer="toast">
     <div
       className={cn(
-        "fixed inset-x-0 z-[70] flex justify-center px-3 md:px-6",
+        "fixed inset-x-0 z-layer-toast flex justify-center px-3 md:px-6",
         "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] md:bottom-6",
         "animate-in fade-in slide-in-from-bottom-3 duration-200",
       )}
@@ -65,5 +67,6 @@ export function SavedToast({ toast, onDismiss }: Props) {
         )}
       </div>
     </div>
+    </OverlayPortal>
   );
 }

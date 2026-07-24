@@ -15,7 +15,6 @@ export interface AttachmentEditorProps {
     remove: string;
     rotate: string;
     crop: string;
-    comingSoon: string;
   };
 }
 

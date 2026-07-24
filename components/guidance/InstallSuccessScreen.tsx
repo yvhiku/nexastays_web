@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Zap, Bookmark, WifiOff, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { GUIDE_BY_ID } from "@/components/guidance/guidance-config";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Props = {
   onContinue: () => void;
@@ -31,7 +32,8 @@ export function InstallSuccessScreen({ onContinue }: Props) {
   ] as const;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f9] px-6 py-12">
+    <OverlayPortal layer="modal">
+    <div className="fixed inset-0 z-layer-modal flex flex-col items-center justify-center bg-[#fff7f9] px-6 py-12">
       <div className="flex w-full max-w-md flex-col items-center space-y-8 text-center">
         <motion.div
           initial={reduce ? false : { scale: 0.8, opacity: 0 }}
@@ -72,5 +74,6 @@ export function InstallSuccessScreen({ onContinue }: Props) {
         </button>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

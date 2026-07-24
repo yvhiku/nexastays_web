@@ -24,7 +24,7 @@ export function MediaUploadStatus({ meta, isOwn, labels, onRetry }: Props) {
         role="alert"
         className={cn(
           "mt-1 flex items-center gap-2 rounded-lg px-2 py-1 text-xs",
-          isOwn ? "justify-end text-red-200" : "text-red-600 bg-red-50",
+          isOwn ? "justify-end text-red-100" : "border border-red-100 bg-red-50 text-red-600",
         )}
       >
         <span>{meta.uploadError ?? labels.failed}</span>
@@ -51,9 +51,9 @@ export function MediaUploadStatus({ meta, isOwn, labels, onRetry }: Props) {
         <span>{meta.uploadLabel ?? labels.uploading}</span>
         <span className="tabular-nums">{meta.uploadProgress}%</span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-black/10">
+      <div className="h-1 overflow-hidden rounded-full bg-nexa-primary/10">
         <div
-          className="h-full bg-nexa-primary transition-all duration-200"
+          className="h-full bg-[linear-gradient(90deg,#f4809a,#e8507a,#c93a62)] transition-all duration-200"
           style={{ width: `${Math.max(4, meta.uploadProgress)}%` }}
         />
       </div>

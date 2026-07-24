@@ -42,7 +42,7 @@ export function DateSheet({
         if (!next) onClose();
       }}
       height="full"
-      zIndexClassName="z-[70]"
+      layer="drawer"
       ariaLabel={t("searchBar.whenQuestion")}
       padded
     >

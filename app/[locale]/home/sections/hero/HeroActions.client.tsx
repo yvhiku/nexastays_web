@@ -8,7 +8,7 @@ export function HeroActions() {
   const { t, localePath } = useLanguage();
 
   return (
-    <div className="flex flex-wrap gap-3.5 mb-10 px-6 sm:px-10 md:px-14 lg:px-16 xl:px-20 xl:ps-16 relative z-10">
+    <div className="flex flex-wrap gap-3.5 mb-10 px-6 sm:px-10 md:px-14 lg:px-16 xl:px-20 xl:ps-16 relative z-layer-content">
       <Button size="lg" asChild>
         <Link href={localePath("/listings")}>{t("home.hero.searchStays")}</Link>
       </Button>

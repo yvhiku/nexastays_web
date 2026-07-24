@@ -16,6 +16,7 @@ import { InboxBell } from "@/components/messaging/InboxBell";
 import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { useHeaderState } from "@/components/navbar/HeaderStateProvider.client";
+import { AnchoredOverlayPortal, OverlayPortal } from "@/components/ui/OverlayPortal";
 
 const navLinks = [
   { href: "/listings", labelKey: "nav.stays", id: "listings" },
@@ -34,10 +35,15 @@ export const NavBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const showBecomeHostLink = pollingActive ? !hostMode : true;
   const menuRef = useRef<HTMLDivElement>(null);
+  const profilePanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        !profilePanelRef.current?.contains(e.target as Node)
+      ) {
         setProfileOpen(false);
       }
     };
@@ -95,7 +101,7 @@ export const NavBar = () => {
 
   return (
     <>
-      <nav className="fixed inset-x-0 z-50 top-[var(--nexa-app-banner-h,0px)] h-[calc(72px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip nexa-top-nav">
+      <nav className="fixed inset-x-0 z-layer-header top-[var(--nexa-app-banner-h,0px)] h-[calc(72px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip nexa-top-nav">
       <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0">
         <Link
           href={localePath("/")}
@@ -156,7 +162,15 @@ export const NavBar = () => {
                 <ChevronDown className={cn("h-4 w-4 transition-transform hidden md:inline", profileOpen && "rotate-180")} />
               </button>
               {profileOpen && (
-                <div className="absolute end-0 top-full mt-2 w-52 py-1 bg-white rounded-lg shadow-lg border border-nexa-line z-50">
+                <AnchoredOverlayPortal
+                  anchor={menuRef}
+                  layer="dropdown"
+                  align="end"
+                  minWidth={208}
+                  maxWidth={208}
+                  className="py-1 bg-white rounded-lg shadow-lg border border-nexa-line"
+                >
+                <div ref={profilePanelRef}>
                   <Link
                     href={localePath("/profile")}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-nexa-ink hover:bg-nexa-bg-2"
@@ -209,6 +223,7 @@ export const NavBar = () => {
                     {t("common.signOut")}
                   </button>
                 </div>
+                </AnchoredOverlayPortal>
               )}
             </div>
           ) : (
@@ -228,9 +243,10 @@ export const NavBar = () => {
     </nav>
 
       {/* Mobile / tablet menu overlay */}
+    <OverlayPortal layer="drawer">
     <div
       className={cn(
-        "fixed inset-0 z-[1100] hidden md:block xl:hidden transition-opacity duration-300",
+        "fixed inset-0 z-layer-drawer hidden md:block xl:hidden transition-opacity duration-300",
         mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       aria-hidden={!mobileMenuOpen}
@@ -331,6 +347,7 @@ export const NavBar = () => {
         </nav>
       </div>
     </div>
+    </OverlayPortal>
     </>
   );
 };

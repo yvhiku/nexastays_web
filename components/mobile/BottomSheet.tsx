@@ -10,6 +10,8 @@ import {
   SEARCH_SHEET_HEIGHT,
   type SearchSheetHeight,
 } from "@/components/search/SearchAnimations";
+import { LAYER_CLASS, type LayerName } from "@/lib/ui/layers";
+import { useFocusTrap } from "@/components/messaging/hooks/useFocusTrap";
 
 type Props = {
   open: boolean;
@@ -19,7 +21,7 @@ type Props = {
   ariaLabel?: string;
   className?: string;
   contentClassName?: string;
-  zIndexClassName?: string;
+  layer?: LayerName;
   /** Height preset for search flow sheets. */
   height?: SearchSheetHeight;
   /** When false, omit default bottom padding (caller pins CTA). */
@@ -39,7 +41,7 @@ export function BottomSheet({
   ariaLabel,
   className,
   contentClassName,
-  zIndexClassName = "z-[65]",
+  layer = "drawer",
   height,
   padded = true,
   closeOnEscape = true,
@@ -48,6 +50,8 @@ export function BottomSheet({
   const { t } = useLanguage();
   const { entered, close } = useBottomSheet({ open, onOpenChange, closeOnEscape });
   const [mounted, setMounted] = React.useState(false);
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  useFocusTrap(open && mounted, dialogRef);
 
   React.useEffect(() => {
     setMounted(true);
@@ -57,10 +61,11 @@ export function BottomSheet({
 
   return createPortal(
     <div
+      ref={dialogRef}
       className={cn(
         "fixed inset-0",
         mobileOnly && "md:hidden",
-        zIndexClassName,
+        LAYER_CLASS[layer],
         className,
       )}
       role="dialog"
@@ -69,8 +74,9 @@ export function BottomSheet({
     >
       <button
         type="button"
+        tabIndex={-1}
         className={cn(
-          "absolute inset-0 bg-black/40 transition-opacity duration-[250ms] motion-reduce:transition-none",
+          "absolute inset-0 bg-black/40 transition-opacity duration-300 motion-reduce:transition-none",
           entered ? "opacity-100" : "opacity-0",
         )}
         aria-label={t("common.close")}
@@ -82,7 +88,7 @@ export function BottomSheet({
           "border border-white/40 bg-white/[0.96] backdrop-blur-2xl shadow-nexa-lg",
           "pt-3 px-4",
           padded && "pb-[max(1rem,env(safe-area-inset-bottom))]",
-          "transition-transform duration-[250ms] ease-out motion-reduce:transition-none",
+          "transition-transform duration-300 ease-out motion-reduce:transition-none",
           height ? SEARCH_SHEET_HEIGHT[height] : "max-h-[88dvh] overflow-y-auto",
           entered ? "translate-y-0" : "translate-y-full",
           contentClassName,

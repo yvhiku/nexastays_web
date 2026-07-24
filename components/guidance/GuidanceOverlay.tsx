@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Props = {
   children: React.ReactNode;
@@ -64,9 +65,10 @@ export function GuidanceOverlay({
   }, [onBackdropClick]);
 
   return (
+    <OverlayPortal layer="modal">
     <div
       ref={rootRef}
-      className={cn("fixed inset-0 z-[120] flex", className)}
+      className={cn("fixed inset-0 z-layer-modal flex", className)}
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledBy}
@@ -80,9 +82,10 @@ export function GuidanceOverlay({
         )}
         onClick={onBackdropClick}
       />
-      <div className="relative z-10 flex w-full flex-col" aria-live="polite">
+      <div className="relative z-layer-content flex w-full flex-col" aria-live="polite">
         {children}
       </div>
     </div>
+    </OverlayPortal>
   );
 }

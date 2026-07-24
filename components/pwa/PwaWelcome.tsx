@@ -8,6 +8,7 @@ import {
   isStandaloneDisplay,
   markPwaWelcomeSeen,
 } from "@/lib/pwa-engagement";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 /** One-time welcome after opening the installed / standalone app. */
 export function PwaWelcome() {
@@ -28,7 +29,8 @@ export function PwaWelcome() {
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 p-4 sm:items-center">
+    <OverlayPortal layer="modal">
+    <div className="fixed inset-0 z-layer-modal flex items-end justify-center bg-black/40 p-4 sm:items-center">
       <div
         className="w-full max-w-md rounded-2xl border border-nexa-line bg-white p-6 shadow-nexa-lg"
         role="dialog"
@@ -57,5 +59,6 @@ export function PwaWelcome() {
         </button>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { LAYERS } from "@/lib/ui/layers";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -127,7 +128,7 @@ export function NexaSelect({
           top: pos.top,
           left: pos.left,
           width: pos.width,
-          zIndex: 1000,
+          zIndex: LAYERS.dropdown,
         }}
         className="max-h-64 overflow-y-auto rounded-2xl border border-nexa-line bg-white py-1.5 shadow-nexa-lg"
       >

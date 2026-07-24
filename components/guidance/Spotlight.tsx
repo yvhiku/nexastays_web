@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { GUIDE_BY_ID } from "@/components/guidance/guidance-config";
 import type { GuideId } from "@/lib/guidance-types";
 import { cn } from "@/lib/utils";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Props = {
   guideId: Extract<GuideId, "search_fab" | "saved_tab" | "trips_tab">;
@@ -88,8 +89,9 @@ export function Spotlight({ guideId, onPrimary, onNotNow, onTargetReady }: Props
       : "bottom-24";
 
   return (
+    <OverlayPortal layer="modal">
     <div
-      className="fixed inset-0 z-[85]"
+      className="fixed inset-0 z-layer-modal"
       role="dialog"
       aria-modal
       aria-labelledby={titleId}
@@ -126,7 +128,7 @@ export function Spotlight({ guideId, onPrimary, onNotNow, onTargetReady }: Props
         />
       ) : null}
 
-      <div className={cn("absolute left-6 right-6 z-10", cardBottom)}>
+      <div className={cn("absolute left-6 right-6 z-layer-content", cardBottom)}>
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -159,5 +161,6 @@ export function Spotlight({ guideId, onPrimary, onNotNow, onTargetReady }: Props
         </motion.div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

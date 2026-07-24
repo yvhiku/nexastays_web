@@ -9,6 +9,7 @@ import { BottomSheet } from "@/components/mobile/BottomSheet";
 import { NotificationsPanelContent } from "@/components/mobile/NotificationsPanelContent";
 import { useNotificationsFeed } from "@/components/mobile/useNotificationsFeed";
 import { useHeaderState } from "@/components/navbar/HeaderStateProvider.client";
+import { AnchoredOverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Props = {
   className?: string;
@@ -27,6 +28,7 @@ export function NotificationBell({ className }: Props) {
   const { notificationCount, refresh, setNotificationCount } = useHeaderState();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const feed = useNotificationsFeed(open, () => setOpen(false));
 
   const handleUnreadChange = useCallback(
@@ -43,7 +45,11 @@ export function NotificationBell({ className }: Props) {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        !panelRef.current?.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -93,16 +99,23 @@ export function NotificationBell({ className }: Props) {
       </button>
 
       {open ? (
-        <div className="absolute end-0 top-full z-50 mt-2 hidden w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-nexa-line bg-white shadow-lg md:block">
-          {panel}
-        </div>
+        <AnchoredOverlayPortal
+          anchor={menuRef}
+          layer="dropdown"
+          align="end"
+          minWidth={320}
+          maxWidth={384}
+          className="hidden overflow-hidden rounded-xl border border-nexa-line bg-white shadow-lg md:block"
+        >
+          <div ref={panelRef}>{panel}</div>
+        </AnchoredOverlayPortal>
       ) : null}
 
       <BottomSheet
         open={open}
         onOpenChange={setOpen}
         ariaLabel={t("pwa.notifications")}
-        zIndexClassName="z-[80]"
+        layer="drawer"
         height="full"
         padded={false}
         contentClassName="max-h-[88dvh]"

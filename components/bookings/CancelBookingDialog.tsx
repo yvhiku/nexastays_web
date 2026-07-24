@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StaysBooking } from "@/lib/stays-types";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 function hoursUntil(dateOnly: string): number {
   const [y, m, d] = dateOnly.split("-").map(Number);
@@ -54,7 +55,8 @@ export function CancelBookingDialog({
   if (!open || !booking) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+    <OverlayPortal layer="modal">
+    <div className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
       <button
         type="button"
         className="absolute inset-0 bg-black/45"
@@ -123,5 +125,6 @@ export function CancelBookingDialog({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

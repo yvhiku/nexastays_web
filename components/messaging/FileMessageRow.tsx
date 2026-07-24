@@ -34,8 +34,8 @@ export function FileMessageRow({ attachment, isOwn }: Props) {
     return (
       <div
         className={cn(
-          "flex min-w-[220px] max-w-[280px] items-center gap-3 rounded-2xl border px-3 py-2",
-          isOwn ? "border-white/20 bg-[#c13552] text-white" : "border-nexa-line bg-white text-nexa-ink",
+          "flex min-w-[220px] max-w-[280px] items-center gap-3 rounded-2xl border px-3 py-2 shadow-[0_6px_17px_rgba(79,39,57,0.10)]",
+          isOwn ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f06f91,#e8507a_55%,#c93a62)] text-white" : "border-nexa-line/80 bg-[linear-gradient(145deg,#fff,#fbf5f7)] text-nexa-ink",
         )}
       >
         <Mic className="h-5 w-5 shrink-0 opacity-80" aria-hidden />
@@ -47,8 +47,8 @@ export function FileMessageRow({ attachment, isOwn }: Props) {
   return (
     <div
       className={cn(
-        "flex max-w-[280px] items-center gap-3 rounded-2xl border px-3 py-2",
-        isOwn ? "border-white/20 bg-[#c13552] text-white" : "border-nexa-line bg-white text-nexa-ink",
+        "flex max-w-[280px] items-center gap-3 rounded-2xl border px-3 py-2 shadow-[0_6px_17px_rgba(79,39,57,0.10)]",
+        isOwn ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f06f91,#e8507a_55%,#c93a62)] text-white" : "border-nexa-line/80 bg-[linear-gradient(145deg,#fff,#fbf5f7)] text-nexa-ink",
       )}
     >
       <FileText className="h-8 w-8 shrink-0 opacity-80" aria-hidden />

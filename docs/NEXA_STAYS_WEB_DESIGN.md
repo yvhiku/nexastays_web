@@ -167,7 +167,7 @@ Variants: `error` | `success` | `warning` | `info` — soft gradient panels with
 ### Navigation
 
 - Desktop: sticky bar, display wordmark, underline active link in primary
-- Mobile: full-screen drawer **`z-[1100]`** (must sit above Leaflet panes ~400–1000)
+- Mobile: full-screen drawer uses the shared **`drawer`** layer and a body portal.
 - Menu CTA: primary filled pill / rounded-xl
 
 ### Map (Explore) — discovery canvas (Phase 1 freeze)
@@ -271,7 +271,7 @@ First viewport should stay one composition: brand/nav, search, and explore conte
 
 ## 9. Accessibility & i18n
 
-- Skip link in root layout (`focus:z-[100]`)
+- Skip link in root layout (`focus:z-layer-modal`)
 - Focus rings: `ring-nexa-primary/20`–`/40`
 - Min touch size 44×44 where possible  
 - Copy via `t` / `tf` locale keys (`lib/i18n/locales/{en,fr,ar}.json`) — no hard-coded user-facing English in components when a key exists  

@@ -32,7 +32,7 @@ function StatusIcon({ deliveryState }: { deliveryState: string }) {
   return null;
 }
 
-export function MessageBubble({
+function MessageBubbleInner({
   group,
   counterpartAvatar,
   counterpartName = "Host",
@@ -48,15 +48,16 @@ export function MessageBubble({
   return (
     <div
       data-message-id={anchorId}
-      className={cn("flex w-full gap-2 animate-in fade-in slide-in-from-bottom-1 duration-200", group.isOwn ? "justify-end" : "justify-start")}
+      className={cn("flex w-full gap-2 animate-in fade-in slide-in-from-bottom-1 duration-200 motion-reduce:animate-none", group.isOwn ? "justify-end" : "justify-start")}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "72px" }}
     >
       {!group.isOwn && group.showAvatar ? (
-        <UserAvatar name={counterpartName} media={counterpartAvatar} size="sm" className="mt-1" />
+        <UserAvatar name={counterpartName} media={counterpartAvatar} size="sm" className="mt-1 ring-2 ring-white shadow-nexa-sm" />
       ) : !group.isOwn ? (
         <div className="w-8 shrink-0" aria-hidden />
       ) : null}
 
-      <div className={cn("flex max-w-[85%] flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
+      <div className={cn("flex max-w-[78%] flex-col gap-1", group.isOwn ? "items-end" : "items-start")}>
         {group.messages.map((message) => {
           const deleted = Boolean((message.metadata as { deletedAt?: string }).deletedAt);
           const attachments = resolveMessageAttachments(message);
@@ -93,10 +94,10 @@ export function MessageBubble({
               <div
                 key={message.id}
                 className={cn(
-                  "rounded-2xl px-4 py-3 shadow-sm text-sm",
+                  "rounded-2xl border px-3.5 py-2.5 text-sm transition-[box-shadow,transform] duration-200 motion-reduce:transition-none hover:-translate-y-px",
                   group.isOwn
-                    ? "bg-[#c13552] text-white rounded-br-[4px]"
-                    : "bg-[#eceaea] border border-[#F7F7F7] text-nexa-ink rounded-bl-[4px]",
+                    ? "rounded-br-[5px] border-nexa-primary/20 bg-[linear-gradient(135deg,#f06f91,#e8507a_55%,#c93a62)] text-white shadow-[0_7px_18px_rgba(201,58,98,0.20)]"
+                    : "rounded-bl-[5px] border-nexa-line/80 bg-[linear-gradient(145deg,#fff,#fbf5f7)] text-nexa-ink shadow-[0_5px_16px_rgba(77,42,58,0.08)]",
                 )}
               >
                 {message.type === "IMAGE" ? "Photo" : "File"}
@@ -107,13 +108,13 @@ export function MessageBubble({
             <div
               key={message.id}
               className={cn(
-                "rounded-2xl px-4 py-3 shadow-sm",
+                "rounded-2xl border px-3.5 py-2.5 transition-[box-shadow,transform] duration-200 motion-reduce:transition-none hover:-translate-y-px",
                 group.isOwn
-                  ? "bg-[#c13552] text-white rounded-br-[4px]"
-                  : "bg-[#eceaea] border border-[#F7F7F7] text-nexa-ink rounded-bl-[4px]",
+                  ? "rounded-br-[5px] border-nexa-primary/20 bg-[linear-gradient(135deg,#f06f91,#e8507a_55%,#c93a62)] text-white shadow-[0_7px_18px_rgba(201,58,98,0.20)]"
+                  : "rounded-bl-[5px] border-nexa-line/80 bg-[linear-gradient(145deg,#fff,#fbf5f7)] text-nexa-ink shadow-[0_5px_16px_rgba(77,42,58,0.08)]",
               )}
             >
-              <p className="text-base whitespace-pre-wrap break-words leading-relaxed">
+              <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">
                 {deleted ? removedLabel : getMessageText(message)}
               </p>
               {message.deliveryState === "PENDING" && group.isOwn && !getMediaUploadMeta(message) ? (
@@ -128,7 +129,7 @@ export function MessageBubble({
 
         {group.showTimestamp && time ? (
           <div className={cn("flex items-center gap-1 px-1", group.isOwn ? "justify-end" : "justify-start")}>
-            <span className="text-[10px] font-bold uppercase tracking-tight tabular-nums text-nexa-ink-4">
+            <span className="text-[10px] font-semibold uppercase tracking-tight tabular-nums text-nexa-ink-3">
               {new Date(time).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
             </span>
             {group.showStatus && group.isOwn ? (
@@ -140,3 +141,22 @@ export function MessageBubble({
     </div>
   );
 }
+
+export const MessageBubble = React.memo(
+  MessageBubbleInner,
+  (previous, next) =>
+    previous.group.isOwn === next.group.isOwn &&
+    previous.group.showAvatar === next.group.showAvatar &&
+    previous.group.showTimestamp === next.group.showTimestamp &&
+    previous.group.showStatus === next.group.showStatus &&
+    previous.group.messages.length === next.group.messages.length &&
+    previous.group.messages.every(
+      (message, index) => message === next.group.messages[index],
+    ) &&
+    previous.counterpartAvatar?.version === next.counterpartAvatar?.version &&
+    previous.counterpartName === next.counterpartName &&
+    previous.removedLabel === next.removedLabel &&
+    previous.uploadLabels?.uploading === next.uploadLabels?.uploading &&
+    previous.uploadLabels?.failed === next.uploadLabels?.failed &&
+    previous.uploadLabels?.retry === next.uploadLabels?.retry,
+);

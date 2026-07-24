@@ -6,11 +6,13 @@ import { ArrowLeft } from "lucide-react";
 import { UserAvatar } from "@/components/avatar/UserAvatar";
 import { ConversationMenu } from "./ConversationMenu";
 import type { ConversationDetail, ConversationPermissions } from "@/lib/messaging/messages-api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   conversation: ConversationDetail;
   backHref: string;
   backLabel: string;
+  onBack?: () => void;
   menuLabels: React.ComponentProps<typeof ConversationMenu>["labels"];
   onArchive: () => void;
   onDelete: () => void;
@@ -27,6 +29,7 @@ export function ConversationHeader({
   conversation,
   backHref,
   backLabel,
+  onBack,
   menuLabels,
   onArchive,
   onDelete,
@@ -39,30 +42,47 @@ export function ConversationHeader({
   toolbarExtra,
 }: Props) {
   const { presentation, permissions } = conversation;
+  const { t } = useLanguage();
+  const counterpartRole =
+    permissions.viewerRole === "host"
+      ? t("inbox.guestRole")
+      : presentation.counterpart.verified
+        ? t("inbox.verifiedHostRole")
+        : t("inbox.hostRole");
 
   return (
-    <header className="shrink-0 z-50 bg-[rgba(252,249,248,0.92)] backdrop-blur-xl shadow-[0_20px_20px_rgba(34,34,34,0.04)] border-b border-[#F7F7F7]">
+    <header className="z-layer-header shrink-0 border-b border-nexa-primary/10 bg-[rgba(255,252,253,0.96)] shadow-[0_12px_34px_rgba(112,55,79,0.07)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-none items-center gap-2 px-4 lg:max-w-none">
-        <Link
-          href={backHref}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-colors hover:bg-[#F7F7F7] active:scale-95 lg:hidden"
-          aria-label={backLabel}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:hidden"
+            aria-label={backLabel}
+          >
+            <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+          </button>
+        ) : (
+          <Link
+            href={backHref}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:hidden"
+            aria-label={backLabel}
+          >
+            <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+          </Link>
+        )}
         <UserAvatar
           name={presentation.title}
           media={presentation.avatar}
           size="md"
-          className="border border-[#e0bfc1]"
+          className="border-2 border-white ring-1 ring-nexa-primary/20 shadow-[0_5px_16px_rgba(96,44,68,0.18)]"
         />
         <div className="flex-1 min-w-0">
-          <h1 className="text-base font-semibold text-nexa-ink leading-tight truncate">
+          <h1 className="truncate text-base font-bold leading-tight text-nexa-ink">
             {presentation.title}
           </h1>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-nexa-primary truncate">
-            {presentation.counterpart.verified ? "Verified Host • " : "Host • "}
-            {presentation.subtitle}
+          <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-nexa-primary/80">
+            {counterpartRole} · {presentation.subtitle}
           </p>
         </div>
         <ConversationMenu

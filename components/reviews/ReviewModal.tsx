@@ -15,6 +15,7 @@ import {
   getReviewMediaUrl,
 } from "@/lib/stays-api";
 import type { StaysReviewDetail } from "@/lib/stays-types";
+import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 const MAX_COMMENT = 1000;
 const MAX_PHOTOS = 5;
@@ -122,8 +123,9 @@ export function ReviewModal({
   };
 
   return (
+    <OverlayPortal layer="modal">
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="review-modal-title"
@@ -135,7 +137,7 @@ export function ReviewModal({
         aria-label="Close"
       />
       <div className="relative w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white dark:bg-nexa-ink shadow-2xl border border-nexa-line/40">
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-nexa-line/40 bg-white/95 dark:bg-nexa-ink backdrop-blur">
+        <div className="sticky top-0 z-layer-content flex items-center justify-between px-6 py-4 border-b border-nexa-line/40 bg-white/95 dark:bg-nexa-ink backdrop-blur">
           <div>
             <h2
               id="review-modal-title"
@@ -272,5 +274,6 @@ export function ReviewModal({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

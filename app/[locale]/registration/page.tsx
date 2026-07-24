@@ -319,7 +319,7 @@ export default function RegistrationPage() {
       <main className="pt-[72px] min-h-screen grid grid-cols-1 lg:grid-cols-2">
         <div className="order-2 lg:order-1 bg-gradient-to-br from-nexa-primary to-nexa-primary-dark flex items-center justify-center p-6 sm:p-10 md:p-14 lg:p-16 xl:p-20 xl:pl-16 relative overflow-hidden min-h-[40vh] lg:min-h-[calc(100vh-72px)]">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2" />
-          <div className="relative z-10 max-w-[400px]">
+          <div className="relative z-layer-content max-w-[400px]">
             <Link
               href="/"
               className="flex items-center gap-2.5 mb-12 cursor-pointer hover:opacity-90"
@@ -373,13 +373,13 @@ export default function RegistrationPage() {
                   className={cn(
                     "flex-1 text-center relative",
                     i < steps.length - 1 &&
-                      "after:content-[''] after:absolute after:top-4 after:left-1/2 after:right-[-50%] after:h-0.5 after:bg-nexa-line after:z-0",
+                      "after:content-[''] after:absolute after:top-4 after:left-1/2 after:right-[-50%] after:h-0.5 after:bg-nexa-line after:z-layer-base",
                     step > s.id && "after:bg-nexa-primary"
                   )}
                 >
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2 relative z-10 transition-all",
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2 relative z-layer-content transition-all",
                       step > s.id
                         ? "border-nexa-primary bg-nexa-primary text-white"
                         : step === s.id
