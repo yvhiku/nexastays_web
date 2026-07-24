@@ -5,6 +5,11 @@ import type { ConversationPresentation, MessageDto, AttachmentDto, ConversationP
 import { selectGroupedMessages } from "@/lib/messaging/selectors/group-messages";
 import { messageRendererRegistry, isRegistryMessageType } from "./MessageRendererRegistry";
 import { renderTimelineCard, resolveCardKind } from "./timeline/registry";
+import {
+  selectTimelinePresentation,
+} from "@/lib/messaging/selectors/timeline-presentation";
+import { BookingLifecycleCard } from "./timeline/BookingLifecycleCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const CARD_TYPES = new Set([
   "SYSTEM_EVENT",
@@ -40,14 +45,28 @@ function dayKey(iso: string | null): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-function dayLabel(iso: string): string {
+function dayLabel(
+  iso: string,
+  locale: string,
+  todayLabel: string,
+  yesterdayLabel: string,
+): string {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (dayKey(iso) === dayKey(today.toISOString())) return "Today";
-  if (dayKey(iso) === dayKey(yesterday.toISOString())) return "Yesterday";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const weekday = d.toLocaleDateString(locale, { weekday: "long" });
+  if (dayKey(iso) === dayKey(today.toISOString())) {
+    return `${todayLabel} · ${weekday}`;
+  }
+  if (dayKey(iso) === dayKey(yesterday.toISOString())) {
+    return `${yesterdayLabel} · ${weekday}`;
+  }
+  return d.toLocaleDateString(locale, {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export function TimelineRenderer({
@@ -60,6 +79,11 @@ export function TimelineRenderer({
   onRetryMediaUpload,
   uploadLabels,
 }: Props) {
+  const { t, locale } = useLanguage();
+  const presentationItems = useMemo(
+    () => selectTimelinePresentation(messages),
+    [messages],
+  );
   const groupedByFirstMessage = useMemo(() => {
     const bubbleMessages = messages.filter((message) =>
       isRegistryMessageType(message.type),
@@ -76,22 +100,41 @@ export function TimelineRenderer({
   let lastIncomingSender: string | null = null;
 
   return (
-    <div className="flex flex-col gap-2 py-1">
-      {messages.map((message) => {
+    <div className="flex flex-col gap-3 py-2">
+      {presentationItems.map((item) => {
+        const message = item.message;
         const time = message.sentAt ?? message.createdAt;
         const dk = dayKey(time);
         const showDay = dk && dk !== lastDay;
         if (showDay) lastDay = dk;
 
         const dayDivider = showDay && time ? (
-          <div key={`day-${dk}-${message.id}`} className="my-3 flex items-center gap-3 px-8">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent to-nexa-primary/20" aria-hidden />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-nexa-primary/70">
-              {dayLabel(time)}
+          <div key={`day-${dk}-${message.id}`} className="my-5 flex justify-center">
+            <span className="rounded-full border border-nexa-line/60 bg-nexa-bg-2/90 px-4 py-2 text-xs font-medium text-nexa-ink-3 shadow-[0_3px_10px_rgba(78,42,58,0.045)] backdrop-blur">
+              {dayLabel(
+                time,
+                locale,
+                t("inbox.timeline.today"),
+                t("inbox.timeline.yesterday"),
+              )}
             </span>
-            <span className="h-px flex-1 bg-gradient-to-l from-transparent to-nexa-primary/20" aria-hidden />
           </div>
         ) : null;
+
+        if (item.kind === "booking-summary") {
+          return (
+            <React.Fragment key={message.id}>
+              {dayDivider}
+              <div data-message-id={message.id} className="px-0 py-3 sm:px-4">
+                <BookingLifecycleCard
+                  messages={item.sourceMessages}
+                  presentation={presentation}
+                  localePath={localePath}
+                />
+              </div>
+            </React.Fragment>
+          );
+        }
 
         if (isRegistryMessageType(message.type)) {
           const group = groupedByFirstMessage.get(message.id);
@@ -133,7 +176,8 @@ export function TimelineRenderer({
               {dayDivider}
               <div
                 data-message-id={message.id}
-                style={{ contentVisibility: "auto", containIntrinsicSize: "40px" }}
+                className="px-0 py-3 sm:px-4"
+                style={{ contentVisibility: "auto", containIntrinsicSize: "132px" }}
               >
                 {renderTimelineCard({
                   message,

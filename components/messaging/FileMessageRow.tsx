@@ -34,12 +34,12 @@ export function FileMessageRow({ attachment, isOwn }: Props) {
     return (
       <div
         className={cn(
-          "flex min-w-[220px] max-w-[280px] items-center gap-3 rounded-2xl border px-3 py-2 shadow-[0_6px_17px_rgba(79,39,57,0.10)]",
+          "flex w-full min-w-0 max-w-[280px] items-center gap-2 rounded-2xl border px-3 py-2 shadow-[0_6px_17px_rgba(79,39,57,0.10)] sm:gap-3",
           isOwn ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f06f91,#e8507a_55%,#c93a62)] text-white" : "border-nexa-line/80 bg-[linear-gradient(145deg,#fff,#fbf5f7)] text-nexa-ink",
         )}
       >
         <Mic className="h-5 w-5 shrink-0 opacity-80" aria-hidden />
-        <audio controls preload="metadata" src={url} className="h-9 min-w-0 flex-1 max-w-[200px]" />
+        <audio controls preload="metadata" src={url} className="h-9 min-w-0 max-w-[200px] flex-1" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export function FileMessageRow({ attachment, isOwn }: Props) {
   return (
     <div
       className={cn(
-        "flex max-w-[280px] items-center gap-3 rounded-2xl border px-3 py-2 shadow-[0_6px_17px_rgba(79,39,57,0.10)]",
+        "flex w-full min-w-0 max-w-[280px] items-center gap-2 rounded-2xl border px-3 py-2 shadow-[0_6px_17px_rgba(79,39,57,0.10)] sm:gap-3",
         isOwn ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f06f91,#e8507a_55%,#c93a62)] text-white" : "border-nexa-line/80 bg-[linear-gradient(145deg,#fff,#fbf5f7)] text-nexa-ink",
       )}
     >
@@ -64,7 +64,7 @@ export function FileMessageRow({ attachment, isOwn }: Props) {
               window.open(url, "_blank", "noopener,noreferrer");
             });
           }}
-          className="shrink-0 text-xs font-semibold underline"
+          className="min-h-11 shrink-0 text-xs font-semibold underline"
         >
           Download
         </button>

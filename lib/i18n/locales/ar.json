@@ -764,6 +764,23 @@
       "yesterday": "أمس",
       "earlier": "سابقًا"
     },
+    "timeline": {
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "updateTitle": "تحديث الإقامة",
+      "bookingTitle": "تم تأكيد حجزك",
+      "bookingBody": "كل شيء جاهز لإقامتك.",
+      "checkinTitle": "تفاصيل وصولك",
+      "checkinBody": "كل ما تحتاجه لتسجيل وصول سلس.",
+      "checkoutTitle": "شكرًا لإقامتك معنا",
+      "checkoutBody": "نأمل أن تكون قد استمتعت برحلتك.",
+      "reviewTitle": "شارك تجربتك",
+      "reviewBody": "ساعد المسافرين القادمين في اكتشاف إقامتهم المثالية.",
+      "paymentTitle": "تحديث الدفع",
+      "paymentBody": "تم تحديث حالة دفع حجزك.",
+      "supportTitle": "نحن هنا لمساعدتك",
+      "supportBody": "دعم Nexa Stays متاح لمساعدتك في هذا الحجز."
+    },
     "context": {
       "eyebrow": "سياق الإقامة",
       "title": "سياق الحجز",
@@ -774,6 +791,7 @@
       "review": "التقييم",
       "dispute": "النزاع",
       "support": "الدعم",
+      "bookingOverview": "نظرة عامة على الحجز",
       "bookingTitle": "تفاصيل الحجز",
       "checkinTitle": "تفاصيل تسجيل الوصول",
       "paymentTitle": "حالة الدفع",

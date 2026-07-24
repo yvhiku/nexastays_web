@@ -22,6 +22,7 @@ export function AiCardStub({ message, localePath }: CardProps) {
       time={message.sentAt ?? message.createdAt}
       action={payload?.actions?.[0]}
       localePath={localePath}
+      tone="support"
     />
   );
 }

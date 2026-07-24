@@ -14,6 +14,7 @@ import type { MessageDto } from "@/lib/messaging/messages-api";
 import type { CardAction } from "@/lib/messaging/actions/registry";
 import { getCardPayload } from "@/lib/messaging/message-payload";
 import { CompactTimelineMilestone } from "./timeline/CompactTimelineMilestone";
+import type { MilestoneTone } from "./timeline/CompactTimelineMilestone";
 
 function iconForKind(kind?: string, type?: string) {
   const value = (kind ?? type ?? "").toLowerCase();
@@ -24,6 +25,17 @@ function iconForKind(kind?: string, type?: string) {
   if (value.includes("payment") || value.includes("pay")) return CreditCard;
   if (value.includes("booking") || value.includes("confirmed")) return CalendarCheck;
   return BadgeCheck;
+}
+
+function toneForKind(kind?: string, type?: string): MilestoneTone {
+  const value = (kind ?? type ?? "").toLowerCase();
+  if (value.includes("checkin") || value.includes("location") || value.includes("wifi")) return "checkin";
+  if (value.includes("checkout")) return "checkout";
+  if (value.includes("review")) return "review";
+  if (value.includes("payment") || value.includes("pay")) return "payment";
+  if (value.includes("support") || value.includes("dispute") || value.includes("ai")) return "support";
+  if (value.includes("booking") || value.includes("property") || value.includes("confirmed")) return "booking";
+  return "neutral";
 }
 
 type Props = {
@@ -48,6 +60,7 @@ export function TimelineCard({ message, localePath = (path) => path }: Props) {
       time={message.sentAt ?? message.createdAt}
       action={(payload?.actions ?? meta.actions ?? [])[0]}
       localePath={localePath}
+      tone={toneForKind(payload?.kind ?? meta.kind, message.type)}
     />
   );
 }

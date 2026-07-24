@@ -83,14 +83,14 @@ export function ConversationMenu({
   }, []);
 
   const itemClass =
-    "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-nexa-ink transition-colors hover:bg-nexa-primary-soft/70 hover:text-nexa-primary text-start";
+    "flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-nexa-ink transition-colors hover:bg-nexa-primary-soft/70 hover:text-nexa-primary text-start";
 
   return (
     <div className="relative shrink-0" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-10 w-10 items-center justify-center rounded-full text-nexa-ink-3 transition-[background-color,color,transform] hover:bg-nexa-primary-soft hover:text-nexa-primary active:scale-95 motion-reduce:transition-none"
+        className="flex h-11 w-11 items-center justify-center rounded-full text-nexa-ink-3 transition-[background-color,color,transform] hover:bg-nexa-primary-soft hover:text-nexa-primary active:scale-95 motion-reduce:transition-none lg:h-10 lg:w-10"
         aria-label={labels.menu}
         aria-expanded={open}
       >

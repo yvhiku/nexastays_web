@@ -38,7 +38,7 @@ export function ImageMessageGrid({
 
   if (count === 1) {
     return (
-      <div className={cn("max-w-[260px]", isOwn ? "ms-auto" : "")}>
+      <div className={cn("w-full max-w-[260px]", isOwn ? "ms-auto" : "")}>
         <button
           type="button"
           onClick={() => onOpen?.(0)}
@@ -65,8 +65,8 @@ export function ImageMessageGrid({
   }
 
   return (
-    <div className={cn("", isOwn ? "ms-auto" : "")}>
-      <div className={cn("grid max-w-[280px] gap-1", count === 2 ? "grid-cols-2" : "grid-cols-2")}>
+    <div className={cn("w-full max-w-[280px]", isOwn ? "ms-auto" : "")}>
+      <div className="grid w-full grid-cols-2 gap-1">
       {display.map((att, i) => {
         const isOverlayCell = extra > 0 && i === 3;
         return (

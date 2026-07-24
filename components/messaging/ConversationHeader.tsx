@@ -51,13 +51,13 @@ export function ConversationHeader({
         : t("inbox.hostRole");
 
   return (
-    <header className="z-layer-header shrink-0 border-b border-nexa-primary/10 bg-[rgba(255,252,253,0.96)] shadow-[0_12px_34px_rgba(112,55,79,0.07)] backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-none items-center gap-2 px-4 lg:max-w-none">
+    <header className="z-layer-header min-w-0 shrink-0 overflow-x-hidden border-b border-nexa-primary/10 bg-[rgba(255,252,253,0.96)] shadow-[0_12px_34px_rgba(112,55,79,0.07)] backdrop-blur-xl">
+      <div className="mx-auto flex h-16 min-w-0 w-full max-w-none items-center gap-1.5 px-2 sm:gap-2 sm:px-4 lg:max-w-none">
         {onBack ? (
           <button
             type="button"
             onClick={onBack}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:hidden"
             aria-label={backLabel}
           >
             <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
@@ -65,7 +65,7 @@ export function ConversationHeader({
         ) : (
           <Link
             href={backHref}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:hidden"
             aria-label={backLabel}
           >
             <ArrowLeft className="h-5 w-5 rtl:rotate-180" />

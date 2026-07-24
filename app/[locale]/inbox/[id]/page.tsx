@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { ArchivedThreadBanner } from "@/components/messaging/ArchivedThreadBanner";
 import { AttachmentComposer } from "@/components/messaging/AttachmentComposer";
@@ -80,88 +81,134 @@ const MessagingContextPanel = dynamic(
 );
 
 function TabletContextDrawer({
+  open,
   ariaLabel,
   closeLabel,
   onClose,
   children,
 }: {
+  open: boolean;
   ariaLabel: string;
   closeLabel: string;
   onClose: () => void;
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useFocusTrap(true, ref);
+  const reduceMotion = useReducedMotion();
+  const { isRtl } = useLanguage();
+  useFocusTrap(open, ref);
   return (
-    <div
-      ref={ref}
-      className="fixed inset-0 hidden md:block xl:hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-label={ariaLabel}
-    >
-      <button
-        type="button"
-        tabIndex={-1}
-        className="absolute inset-0 bg-nexa-ink/30 backdrop-blur-sm"
-        onClick={onClose}
-        aria-label={closeLabel}
-      />
-      <div className="absolute inset-y-0 end-0 w-[min(380px,calc(100vw-48px))] shadow-2xl">
-        {children}
-      </div>
-    </div>
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          ref={ref}
+          className="fixed inset-0 hidden overflow-hidden md:block lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={ariaLabel}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.18 }}
+        >
+          <button
+            type="button"
+            tabIndex={-1}
+            className="absolute inset-0 bg-nexa-ink/30 backdrop-blur-sm"
+            onClick={onClose}
+            aria-label={closeLabel}
+          />
+          <motion.div
+            initial={reduceMotion ? false : { x: isRtl ? "-100%" : "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: isRtl ? "-100%" : "100%" }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: "spring", stiffness: 360, damping: 34 }
+            }
+            className="absolute inset-y-0 end-0 w-[min(380px,calc(100vw-48px))] max-w-full shadow-2xl"
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 
 function ConversationListDrawer({
+  open,
   activeConversationId,
   ariaLabel,
   closeLabel,
   onClose,
 }: {
+  open: boolean;
   activeConversationId: string;
   ariaLabel: string;
   closeLabel: string;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useFocusTrap(true, ref);
+  const reduceMotion = useReducedMotion();
+  const { isRtl } = useLanguage();
+  useFocusTrap(open, ref);
   useEffect(() => {
+    if (!open) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [onClose]);
+  }, [onClose, open]);
 
   return (
-    <div
-      ref={ref}
-      className="fixed inset-0 lg:hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-label={ariaLabel}
-    >
-      <button
-        type="button"
-        tabIndex={-1}
-        className="absolute inset-0 bg-nexa-ink/30 backdrop-blur-sm"
-        onClick={onClose}
-        aria-label={closeLabel}
-      />
-      <div
-        className="absolute inset-y-0 start-0 w-[min(360px,calc(100vw-24px))] bg-white shadow-2xl"
-        onClickCapture={(event) => {
-          const target = event.target;
-          if (target instanceof Element && target.closest("[data-conversation-row]")) {
-            onClose();
-          }
-        }}
-      >
-        <InboxListPanel activeConversationId={activeConversationId} />
-      </div>
-    </div>
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          ref={ref}
+          className="fixed inset-0 hidden overflow-hidden md:block lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={ariaLabel}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.18 }}
+        >
+          <button
+            type="button"
+            tabIndex={-1}
+            className="absolute inset-0 bg-nexa-ink/30 backdrop-blur-sm"
+            onClick={onClose}
+            aria-label={closeLabel}
+          />
+          <motion.div
+            initial={reduceMotion ? false : { x: isRtl ? "100%" : "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: isRtl ? "100%" : "-100%" }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: "spring", stiffness: 360, damping: 34 }
+            }
+            className="absolute inset-y-0 start-0 w-[min(360px,calc(100vw-48px))] max-w-full bg-white shadow-2xl"
+            onClickCapture={(event) => {
+              const target = event.target;
+              if (
+                target instanceof Element &&
+                target.closest("[data-conversation-row]")
+              ) {
+                onClose();
+              }
+            }}
+          >
+            <InboxListPanel activeConversationId={activeConversationId} />
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 
@@ -238,10 +285,30 @@ function ConversationPageInner() {
   }, []);
 
   useEffect(() => {
+    const syncResponsiveOverlays = () => {
+      const width = window.innerWidth;
+      if (width >= 1024) {
+        setContextOpen(false);
+        setConversationListOpen(false);
+        return;
+      }
+      setMobileContext(width < 768);
+      if (width < 768) {
+        setConversationListOpen(false);
+      }
+    };
+    syncResponsiveOverlays();
+    window.addEventListener("resize", syncResponsiveOverlays);
+    return () => window.removeEventListener("resize", syncResponsiveOverlays);
+  }, []);
+
+  useEffect(() => {
     const storedWidth = Number(localStorage.getItem("nexa_messaging_context_width"));
     const storedCollapsed = localStorage.getItem("nexa_messaging_context_collapsed");
-    if (Number.isFinite(storedWidth) && storedWidth >= 280 && storedWidth <= 400) {
+    if (Number.isFinite(storedWidth) && storedWidth >= 320 && storedWidth <= 420) {
       setContextWidth(storedWidth);
+    } else {
+      setContextWidth(window.innerWidth >= 1440 ? 360 : 320);
     }
     setContextCollapsed(storedCollapsed === "1");
   }, []);
@@ -250,7 +317,7 @@ function ConversationPageInner() {
     const workspaceWidth =
       threadWorkspaceRef.current?.getBoundingClientRect().width ??
       (typeof window === "undefined" ? 1143 : window.innerWidth);
-    return Math.max(280, Math.min(400, Math.floor(workspaceWidth * 0.35)));
+    return Math.max(320, Math.min(420, Math.floor(workspaceWidth * 0.35)));
   }, []);
 
   useEffect(() => {
@@ -268,7 +335,8 @@ function ConversationPageInner() {
   };
 
   const openContext = () => {
-    if (window.matchMedia("(min-width: 1280px)").matches) {
+    setConversationListOpen(false);
+    if (window.matchMedia("(min-width: 1024px)").matches) {
       setDesktopContextCollapsed(false);
       return;
     }
@@ -292,6 +360,19 @@ function ConversationPageInner() {
     requestAnimationFrame(() => conversationListTriggerRef.current?.focus());
   }, []);
 
+  const openConversationList = useCallback(() => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      router.push(localePath("/inbox"));
+      return;
+    }
+    setContextOpen(false);
+    conversationListTriggerRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setConversationListOpen(true);
+  }, [localePath, router]);
+
   useEffect(() => {
     if (!contextOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -309,7 +390,7 @@ function ConversationPageInner() {
       const movement = moveEvent.clientX - startX;
       const next = Math.min(
         maximumContextWidth(),
-        Math.max(280, startWidth + (rtl ? movement : -movement)),
+        Math.max(320, startWidth + (rtl ? movement : -movement)),
       );
       setContextWidth(next);
     };
@@ -334,7 +415,7 @@ function ConversationPageInner() {
         ? (rtl ? -16 : 16)
         : (rtl ? 16 : -16);
     setContextWidth((width) => {
-      const next = Math.min(maximumContextWidth(), Math.max(280, width + direction));
+      const next = Math.min(maximumContextWidth(), Math.max(320, width + direction));
       localStorage.setItem("nexa_messaging_context_width", String(next));
       return next;
     });
@@ -652,20 +733,14 @@ function ConversationPageInner() {
   return (
     <div
       ref={threadWorkspaceRef}
-      className="fixed inset-0 z-layer-drawer flex h-[100dvh] bg-[linear-gradient(180deg,#fdfbfc,#fbf5f8)] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0"
+      className="fixed inset-0 z-layer-drawer flex h-[100dvh] min-w-0 overflow-hidden overflow-x-hidden bg-[linear-gradient(180deg,#fdfbfc,#fbf5f8)] lg:static lg:inset-auto lg:z-auto lg:h-full lg:min-h-0"
     >
       <div className="flex min-w-0 flex-1 flex-col">
       <ConversationHeader
         conversation={conversation}
         backHref={localePath("/inbox")}
         backLabel={t("inbox.back")}
-        onBack={() => {
-          conversationListTriggerRef.current =
-            document.activeElement instanceof HTMLElement
-              ? document.activeElement
-              : null;
-          setConversationListOpen(true);
-        }}
+        onBack={openConversationList}
         menuLabels={menuLabels}
         muted={muted}
         onArchive={() => void handleVisibility("archive")}
@@ -718,7 +793,7 @@ function ConversationPageInner() {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_50%_0%,rgba(253,240,243,0.72),transparent_30%),linear-gradient(180deg,#fdfbfc,#fbf6f8)] px-4 py-4"
+        className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(253,240,243,0.72),transparent_30%),linear-gradient(180deg,#fdfbfc,#fbf6f8)] px-3 py-4 sm:px-4"
       >
         {loadingOlder ? (
           <p className="text-center text-xs text-nexa-ink-4 py-2">{t("inbox.loadingOlder")}</p>
@@ -846,7 +921,7 @@ function ConversationPageInner() {
       </div>
 
       <aside
-        className="relative hidden min-h-0 shrink-0 bg-[#fffafb] xl:flex"
+        className="relative hidden min-h-0 shrink-0 bg-[#fffafb] lg:flex"
         style={{ width: contextCollapsed ? 56 : contextWidth }}
         aria-label={t("inbox.context.title")}
       >
@@ -868,7 +943,7 @@ function ConversationPageInner() {
               tabIndex={0}
               onPointerDown={startContextResize}
               onKeyDown={resizeContextByKeyboard}
-              aria-valuemin={280}
+              aria-valuemin={320}
               aria-valuemax={maximumContextWidth()}
               aria-valuenow={contextWidth}
               className="absolute inset-y-0 start-0 z-layer-content w-2 -translate-x-1/2 cursor-col-resize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 rtl:translate-x-1/2"
@@ -882,31 +957,31 @@ function ConversationPageInner() {
         )}
       </aside>
 
-      {contextOpen && !mobileContext ? (
-        <OverlayPortal layer="drawer">
-          <TabletContextDrawer
-            ariaLabel={t("inbox.context.title")}
-            closeLabel={t("common.close")}
-            onClose={() => setResponsiveContextOpen(false)}
-          >
+      <OverlayPortal layer="drawer">
+        <TabletContextDrawer
+          open={contextOpen && !mobileContext}
+          ariaLabel={t("inbox.context.title")}
+          closeLabel={t("common.close")}
+          onClose={() => setResponsiveContextOpen(false)}
+        >
+          {contextOpen && !mobileContext ? (
             <MessagingContextPanel
               conversation={conversation}
               onClose={() => setResponsiveContextOpen(false)}
             />
-          </TabletContextDrawer>
-        </OverlayPortal>
-      ) : null}
+          ) : null}
+        </TabletContextDrawer>
+      </OverlayPortal>
 
-      {conversationListOpen ? (
-        <OverlayPortal layer="drawer">
-          <ConversationListDrawer
-            activeConversationId={conversationId}
-            ariaLabel={t("inbox.title")}
-            closeLabel={t("common.close")}
-            onClose={closeConversationList}
-          />
-        </OverlayPortal>
-      ) : null}
+      <OverlayPortal layer="drawer">
+        <ConversationListDrawer
+          open={conversationListOpen}
+          activeConversationId={conversationId}
+          ariaLabel={t("inbox.title")}
+          closeLabel={t("common.close")}
+          onClose={closeConversationList}
+        />
+      </OverlayPortal>
 
       <BottomSheet
         open={contextOpen && mobileContext}

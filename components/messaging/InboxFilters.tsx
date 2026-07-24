@@ -53,14 +53,14 @@ export function InboxFilters({ filter, onFilterChange, query, onQueryChange, lab
           />
         </div>
       </div>
-      <div className="flex gap-1.5 overflow-x-auto px-4 pb-2 scrollbar-none">
+      <div className="flex flex-wrap gap-1.5 overflow-x-hidden px-4 pb-2">
         {FILTERS.map((f) => (
           <button
             key={f}
             type="button"
             onClick={() => onFilterChange(f)}
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-[background-color,color,border-color,box-shadow,transform] duration-200 motion-reduce:transition-none active:scale-95",
+              "min-h-11 shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-[background-color,color,border-color,box-shadow,transform] duration-200 motion-reduce:transition-none active:scale-95 lg:min-h-0",
               filter === f
                 ? "border-nexa-primary/25 bg-[linear-gradient(135deg,#fdf0f3,#fde5eb)] text-nexa-primary shadow-nexa-sm"
                 : "border-transparent text-nexa-ink-3 hover:border-nexa-line hover:bg-white hover:text-nexa-primary hover:shadow-sm",

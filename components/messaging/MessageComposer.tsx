@@ -121,7 +121,7 @@ export function MessageComposer({
 
   return (
     <footer
-      className="relative shrink-0 bg-gradient-to-t from-[#fdf7f9] via-[#fdf9fa]/96 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3"
+      className="relative min-w-0 shrink-0 overflow-x-hidden bg-gradient-to-t from-[#fdf7f9] via-[#fdf9fa]/96 to-transparent px-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-4"
       onDragEnter={(event) => {
         if (!disabled && !attachDisabled && event.dataTransfer.types.includes("Files")) {
           event.preventDefault();
@@ -174,19 +174,19 @@ export function MessageComposer({
       ) : null}
 
       {voice.recording ? (
-        <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-[28px] border border-nexa-primary/15 bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(113,51,78,0.15)] backdrop-blur-xl">
+        <div className="mx-auto flex min-w-0 max-w-3xl items-center gap-1.5 rounded-[28px] border border-nexa-primary/15 bg-white/95 p-1.5 shadow-[0_14px_38px_rgba(113,51,78,0.15)] backdrop-blur-xl sm:gap-2">
           <button
             type="button"
             onClick={() => voice.cancel()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:h-10 lg:w-10"
             aria-label={cancelLabel}
           >
             <Trash2 className="h-5 w-5" />
           </button>
 
-          <div className="flex min-h-10 flex-1 items-center gap-3 px-2">
+          <div className="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-1 sm:gap-3 sm:px-2 lg:min-h-10">
             <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500" aria-hidden />
-            <span className="text-sm font-medium text-nexa-ink">{recordingLabel}</span>
+            <span className="min-w-0 truncate text-sm font-medium text-nexa-ink">{recordingLabel}</span>
             <span className="ms-auto tabular-nums text-sm text-nexa-ink-3">
               {voice.formatTime(voice.seconds)}
             </span>
@@ -196,19 +196,19 @@ export function MessageComposer({
             type="button"
             onClick={() => void handleVoiceSend()}
             disabled={disabled}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] text-white shadow-[0_6px_16px_rgba(232,80,122,0.28)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_21px_rgba(232,80,122,0.34)] active:scale-95 disabled:opacity-40 motion-reduce:transition-none"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] text-white shadow-[0_6px_16px_rgba(232,80,122,0.28)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_21px_rgba(232,80,122,0.34)] active:scale-95 disabled:opacity-40 motion-reduce:transition-none lg:h-10 lg:w-10"
             aria-label={sendLabel}
           >
             <Send className="h-5 w-5" />
           </button>
         </div>
       ) : (
-        <div className="mx-auto flex max-w-3xl items-end gap-1 rounded-[28px] border border-nexa-primary/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(255,249,251,0.96))] p-1.5 shadow-[0_14px_38px_rgba(113,51,78,0.15)] backdrop-blur-xl transition-[border-color,box-shadow,transform] focus-within:border-nexa-primary/30 focus-within:shadow-[0_17px_46px_rgba(137,54,89,0.19)] motion-reduce:transition-none">
+        <div className="mx-auto flex min-w-0 max-w-3xl items-end gap-0.5 rounded-[28px] border border-nexa-primary/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(255,249,251,0.96))] p-1.5 shadow-[0_14px_38px_rgba(113,51,78,0.15)] backdrop-blur-xl transition-[border-color,box-shadow,transform] focus-within:border-nexa-primary/30 focus-within:shadow-[0_17px_46px_rgba(137,54,89,0.19)] motion-reduce:transition-none sm:gap-1">
           <button
             type="button"
             onClick={onAttach}
             disabled={attachDisabled || disabled}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 disabled:opacity-40 motion-reduce:transition-none"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 disabled:opacity-40 motion-reduce:transition-none lg:h-10 lg:w-10"
             aria-label="Attach"
           >
             <Plus className="h-6 w-6 stroke-[2.5]" />
@@ -239,14 +239,14 @@ export function MessageComposer({
                 placeholder={placeholder}
                 disabled={disabled}
                 rows={1}
-                className="max-h-[120px] min-h-10 w-full resize-none bg-transparent py-2.5 ps-2 pe-10 text-[15px] leading-5 text-nexa-ink placeholder:text-nexa-ink-4 focus:outline-none"
+                className="max-h-[120px] min-h-11 w-full resize-none bg-transparent py-3 ps-1.5 pe-12 text-[15px] leading-5 text-nexa-ink placeholder:text-nexa-ink-4 focus:outline-none sm:ps-2 lg:min-h-10 lg:py-2.5"
               />
               <button
                 ref={emojiAnchorRef}
                 type="button"
                 onClick={() => setEmojiOpen((open) => !open)}
                 disabled={disabled}
-                className="absolute bottom-0.5 end-0.5 flex h-9 w-9 items-center justify-center rounded-full text-nexa-primary/80 transition-[background-color,color,transform] hover:bg-nexa-primary-soft hover:text-nexa-primary active:scale-95 disabled:opacity-40 motion-reduce:transition-none"
+                className="absolute bottom-0 end-0 flex h-11 w-11 items-center justify-center rounded-full text-nexa-primary/80 transition-[background-color,color,transform] hover:bg-nexa-primary-soft hover:text-nexa-primary active:scale-95 disabled:opacity-40 motion-reduce:transition-none lg:bottom-0.5 lg:end-0.5 lg:h-9 lg:w-9"
                 aria-label="Emoji"
                 aria-expanded={emojiOpen}
               >
@@ -265,7 +265,7 @@ export function MessageComposer({
               type="button"
               onClick={onSend}
               disabled={disabled}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] text-white shadow-[0_6px_16px_rgba(232,80,122,0.28)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_21px_rgba(232,80,122,0.34)] active:scale-95 disabled:opacity-40 motion-reduce:transition-none"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] text-white shadow-[0_6px_16px_rgba(232,80,122,0.28)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_21px_rgba(232,80,122,0.34)] active:scale-95 disabled:opacity-40 motion-reduce:transition-none lg:h-10 lg:w-10"
               aria-label={sendLabel}
             >
               <Send className="h-5 w-5" />
@@ -276,7 +276,7 @@ export function MessageComposer({
               onClick={() => void handleVoiceTap()}
               disabled={disabled || !onVoiceRecorded}
               className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors active:scale-95 disabled:opacity-40",
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors active:scale-95 disabled:opacity-40 lg:h-10 lg:w-10",
                 "text-nexa-primary hover:bg-nexa-primary-soft",
               )}
               aria-label={voiceLabel}

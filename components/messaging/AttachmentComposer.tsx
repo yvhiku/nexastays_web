@@ -74,8 +74,13 @@ export function AttachmentComposer({ manager, labels }: Props) {
       aria-modal="true"
       aria-label="Attachment composer"
     >
-      <div className="flex items-center justify-between px-4 py-3 text-white">
-        <button type="button" onClick={closeComposer} aria-label={labels.close}>
+      <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-3 text-white sm:px-4">
+        <button
+          type="button"
+          onClick={closeComposer}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-white/10"
+          aria-label={labels.close}
+        >
           <X className="h-6 w-6" />
         </button>
         <span className="text-sm font-medium tabular-nums">
@@ -85,7 +90,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
           type="button"
           onClick={() => void handleSend()}
           disabled={state.isSending}
-          className="flex items-center gap-1 rounded-full bg-nexa-primary px-4 py-2 text-sm font-semibold disabled:opacity-50"
+          className="flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-nexa-primary px-4 py-2 text-sm font-semibold disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           {labels.send}
@@ -111,7 +116,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
       </div>
 
       {items.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto px-4 py-2">
+        <div className="flex max-h-32 flex-wrap justify-center gap-2 overflow-x-hidden overflow-y-auto px-4 py-2">
           {items.map((item, idx) => (
             <button
               key={item.id}

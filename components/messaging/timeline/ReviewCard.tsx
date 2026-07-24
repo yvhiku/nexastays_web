@@ -102,6 +102,7 @@ export function ReviewCard({ message, localePath, presentation, viewerRole }: Ca
       time={message.sentAt ?? message.createdAt}
       action={actions[0]}
       localePath={localePath}
+      tone="review"
     />
   );
 }

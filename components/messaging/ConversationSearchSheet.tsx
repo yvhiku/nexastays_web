@@ -52,7 +52,7 @@ export function ConversationSearchSheet({ conversationId, token, onJumpToMessage
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-10 w-10 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none"
+        className="flex h-11 w-11 items-center justify-center rounded-full text-nexa-primary transition-[background-color,transform] hover:bg-nexa-primary-soft active:scale-95 motion-reduce:transition-none lg:h-10 lg:w-10"
         aria-label="Search conversation"
       >
         <Search className="h-5 w-5" />
@@ -80,7 +80,7 @@ export function ConversationSearchSheet({ conversationId, token, onJumpToMessage
                   setFilter(f.id);
                   void runSearch(q, f.id);
                 }}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow,transform] active:scale-95 motion-reduce:transition-none ${
+                className={`min-h-11 rounded-full border px-3 py-1.5 text-xs font-semibold transition-[background-color,border-color,box-shadow,transform] active:scale-95 motion-reduce:transition-none ${
                   filter === f.id ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a)] text-white shadow-nexa-sm" : "border-nexa-line/70 bg-white text-nexa-ink-3 hover:border-nexa-primary/20 hover:text-nexa-primary hover:shadow-sm"
                 }`}
               >

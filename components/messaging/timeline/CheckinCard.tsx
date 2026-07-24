@@ -29,6 +29,8 @@ export function CheckinCard({ message, localePath }: CardProps) {
       time={message.sentAt ?? message.createdAt}
       action={meta.actions[0]}
       localePath={localePath}
+      tone="checkin"
+      size="featured"
     />
   );
 }

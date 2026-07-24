@@ -764,6 +764,23 @@
       "yesterday": "Hier",
       "earlier": "Plus tôt"
     },
+    "timeline": {
+      "today": "Aujourd’hui",
+      "yesterday": "Hier",
+      "updateTitle": "Actualité du séjour",
+      "bookingTitle": "Votre réservation est confirmée",
+      "bookingBody": "Tout est prêt pour votre séjour.",
+      "checkinTitle": "Les détails de votre arrivée",
+      "checkinBody": "Tout ce qu’il vous faut pour une arrivée sereine.",
+      "checkoutTitle": "Merci d’avoir séjourné avec nous",
+      "checkoutBody": "Nous espérons que vous avez apprécié votre voyage.",
+      "reviewTitle": "Partagez votre expérience",
+      "reviewBody": "Aidez les futurs voyageurs à trouver leur séjour idéal.",
+      "paymentTitle": "Actualité du paiement",
+      "paymentBody": "Le statut du paiement de votre réservation a été mis à jour.",
+      "supportTitle": "Nous sommes là pour vous",
+      "supportBody": "L’assistance Nexa Stays est disponible pour cette réservation."
+    },
     "context": {
       "eyebrow": "Contexte du séjour",
       "title": "Contexte de la réservation",
@@ -774,6 +791,7 @@
       "review": "Avis",
       "dispute": "Litige",
       "support": "Assistance",
+      "bookingOverview": "Aperçu de la réservation",
       "bookingTitle": "Détails de la réservation",
       "checkinTitle": "Détails d’arrivée",
       "paymentTitle": "Statut du paiement",

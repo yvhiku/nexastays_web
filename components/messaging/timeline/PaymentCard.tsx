@@ -22,6 +22,7 @@ export function PaymentCard({ message, localePath }: CardProps) {
       time={message.sentAt ?? message.createdAt}
       action={actions[0]}
       localePath={localePath}
+      tone="payment"
     />
   );
 }

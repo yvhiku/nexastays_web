@@ -23,6 +23,8 @@ export function BookingCard({ message, localePath }: CardProps) {
       time={message.sentAt ?? message.createdAt}
       action={(payload?.actions ?? meta.actions ?? [])[0]}
       localePath={localePath}
+      tone="booking"
+      size="featured"
     />
   );
 }

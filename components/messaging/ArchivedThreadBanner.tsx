@@ -38,7 +38,7 @@ export function ArchivedThreadBanner({
               { localePath },
             )
           }
-          className="inline-flex items-center rounded-full border border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(232,80,122,0.24)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(232,80,122,0.30)] active:scale-[0.98] motion-reduce:transition-none"
+          className="inline-flex min-h-11 items-center rounded-full border border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(232,80,122,0.24)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_22px_rgba(232,80,122,0.30)] active:scale-[0.98] motion-reduce:transition-none"
         >
           {contactSupportLabel}
         </button>
@@ -56,7 +56,7 @@ export function ArchivedThreadBanner({
                 { localePath },
               )
             }
-            className="inline-flex items-center rounded-full border border-nexa-primary/20 bg-white px-4 py-2 text-sm font-semibold text-nexa-primary shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-nexa-primary/35 hover:shadow-nexa-sm active:scale-[0.98] motion-reduce:transition-none"
+            className="inline-flex min-h-11 items-center rounded-full border border-nexa-primary/20 bg-white px-4 py-2 text-sm font-semibold text-nexa-primary shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-nexa-primary/35 hover:shadow-nexa-sm active:scale-[0.98] motion-reduce:transition-none"
           >
             {viewReservationLabel}
           </button>

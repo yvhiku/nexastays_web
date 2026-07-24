@@ -119,17 +119,22 @@ function BookingModule({
       <h3 className="font-display text-[24px] font-semibold leading-tight text-nexa-ink">
         {module.title}
       </h3>
-      {status ? (
-        <span className="mt-3 inline-flex rounded-full border border-nexa-primary/15 bg-nexa-primary-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-nexa-primary shadow-[0_2px_8px_rgba(232,80,122,0.07)]">
-          {status}
-        </span>
-      ) : null}
-      <dl className="mt-7 space-y-5 text-sm">
+      <dl className="mt-7 space-y-5 rounded-[22px] border border-nexa-primary/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(253,243,246,0.82))] p-5 text-sm shadow-[0_10px_28px_rgba(91,45,65,0.08)]">
+        <div className="flex items-start justify-between gap-3">
+          <dt className="font-display text-lg font-semibold text-nexa-ink">
+            {t("inbox.context.bookingOverview")}
+          </dt>
+          {status ? (
+            <dd className="inline-flex shrink-0 rounded-full border border-nexa-primary/15 bg-nexa-primary-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-nexa-primary shadow-[0_2px_8px_rgba(232,80,122,0.07)]">
+              {status}
+            </dd>
+          ) : null}
+        </div>
         <div className="flex gap-3.5">
-          <CalendarDays className="box-content h-4 w-4 shrink-0 rounded-xl bg-nexa-primary-soft p-2 text-nexa-primary" />
+          <CalendarDays className="box-content h-4 w-4 shrink-0 rounded-xl border border-nexa-primary/10 bg-white p-2 text-nexa-primary shadow-sm" />
           <div>
             <dt className="font-semibold text-nexa-ink">{t("inbox.duration")}</dt>
-            <dd className="mt-1 text-nexa-ink-2">
+            <dd className="mt-1 leading-6 text-nexa-ink-2">
               {formatDate(snapshot.checkinDate, locale)} –{" "}
               {formatDate(snapshot.checkoutDate, locale)}
             </dd>
@@ -137,7 +142,7 @@ function BookingModule({
         </div>
         {Number(snapshot.guestCount) > 0 ? (
           <div className="flex gap-3.5">
-            <Users className="box-content h-4 w-4 shrink-0 rounded-xl bg-nexa-primary-soft p-2 text-nexa-primary" />
+            <Users className="box-content h-4 w-4 shrink-0 rounded-xl border border-nexa-primary/10 bg-white p-2 text-nexa-primary shadow-sm" />
             <div>
               <dt className="font-semibold text-nexa-ink">{t("inbox.guests")}</dt>
               <dd className="mt-1 text-nexa-ink-2">
@@ -148,10 +153,10 @@ function BookingModule({
         ) : null}
         {location ? (
           <div className="flex gap-3.5">
-            <MapPin className="box-content h-4 w-4 shrink-0 rounded-xl bg-nexa-primary-soft p-2 text-nexa-primary" />
+            <MapPin className="box-content h-4 w-4 shrink-0 rounded-xl border border-nexa-primary/10 bg-white p-2 text-nexa-primary shadow-sm" />
             <div>
               <dt className="font-semibold text-nexa-ink">{t("inbox.location")}</dt>
-              <dd className="mt-1 text-nexa-ink-2">{location}</dd>
+              <dd className="mt-1 leading-6 text-nexa-ink-2">{location}</dd>
             </div>
           </div>
         ) : null}
@@ -326,11 +331,11 @@ export function MessagingContextPanel({
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 flex-col border-s border-nexa-primary/10 bg-[linear-gradient(180deg,#fffafb_0%,#fdf7f9_38%,#fff_100%)] shadow-[-18px_0_42px_rgba(102,49,72,0.09)]",
+        "flex h-full min-h-0 min-w-0 flex-col overflow-x-hidden border-s border-nexa-primary/10 bg-[linear-gradient(180deg,#fffafb_0%,#fdf7f9_38%,#fff_100%)] shadow-[-18px_0_42px_rgba(102,49,72,0.09)]",
         className,
       )}
     >
-      <div className="flex shrink-0 items-start justify-between bg-[radial-gradient(circle_at_top_right,rgba(244,128,154,0.16),transparent_52%)] px-6 pb-5 pt-6">
+      <div className="flex shrink-0 items-start justify-between bg-[radial-gradient(circle_at_top_right,rgba(244,128,154,0.16),transparent_52%)] px-4 pb-5 pt-6 sm:px-6">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-nexa-primary">
             {t("inbox.context.eyebrow")}
@@ -352,7 +357,7 @@ export function MessagingContextPanel({
       </div>
 
       <div
-        className="flex shrink-0 gap-2 overflow-x-auto border-b border-nexa-primary/10 px-6 pb-3 scrollbar-none"
+        className="flex shrink-0 flex-wrap gap-2 overflow-x-hidden border-b border-nexa-primary/10 px-4 pb-3 sm:px-6"
         role="tablist"
         aria-label={t("inbox.context.title")}
       >
@@ -371,7 +376,7 @@ export function MessagingContextPanel({
               onClick={() => setSelectedId(module.id)}
               onKeyDown={(event) => navigateTabs(event, index)}
               className={cn(
-                "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 active:scale-95",
+                "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 active:scale-95 lg:min-h-9",
                 active
                   ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a)] text-white shadow-[0_5px_14px_rgba(232,80,122,0.24)]"
                   : "border-nexa-line/70 bg-white/70 text-nexa-ink-3 hover:border-nexa-primary/20 hover:bg-white hover:text-nexa-primary hover:shadow-sm",
@@ -395,8 +400,12 @@ export function MessagingContextPanel({
             initial={{ opacity: 0, x: reduceMotion ? 0 : 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: reduceMotion ? 0 : -6 }}
-            transition={{ duration: reduceMotion ? 0 : 0.16, ease: "easeOut" }}
-            className="m-4 min-h-0 flex-1 overflow-y-auto rounded-[28px] border border-white bg-white/92 px-6 pb-8 pt-6 shadow-[0_16px_44px_rgba(83,42,61,0.10)] backdrop-blur-xl"
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: "spring", stiffness: 340, damping: 30 }
+            }
+            className="m-3 min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden rounded-[28px] border border-white bg-white/92 px-4 pb-8 pt-6 shadow-[0_16px_44px_rgba(83,42,61,0.10)] backdrop-blur-xl sm:m-4 sm:px-6"
           >
             {SelectedModule ? (
               <SelectedModule module={selected} conversation={conversation} />

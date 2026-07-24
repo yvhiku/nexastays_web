@@ -42,12 +42,12 @@ export function EmojiPickerPopover({ open, onClose, onPick, className, anchor }:
       layer="popover"
       side="top"
       align="end"
-      minWidth={288}
+      minWidth={260}
       maxWidth={288}
       className={cn("rounded-2xl border border-nexa-line bg-white p-3 shadow-lg", className)}
     >
       <div ref={ref} role="listbox" aria-label="Emoji picker">
-        <div className="grid grid-cols-8 gap-1">
+        <div className="grid grid-cols-5 gap-1 sm:grid-cols-8">
           {EMOJIS.map((emoji) => (
             <button
               key={emoji}
@@ -57,7 +57,7 @@ export function EmojiPickerPopover({ open, onClose, onPick, className, anchor }:
                 onPick(emoji);
                 onClose();
               }}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-xl hover:bg-nexa-bg-2 active:scale-95"
+              className="flex h-11 w-full items-center justify-center rounded-lg text-xl hover:bg-nexa-bg-2 active:scale-95 sm:h-9"
             >
               {emoji}
             </button>

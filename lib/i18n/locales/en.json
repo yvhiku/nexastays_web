@@ -783,6 +783,23 @@
       "yesterday": "Yesterday",
       "earlier": "Earlier"
     },
+    "timeline": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "updateTitle": "Stay update",
+      "bookingTitle": "Your booking is confirmed",
+      "bookingBody": "Everything is ready for your stay.",
+      "checkinTitle": "Your arrival details",
+      "checkinBody": "Everything you need for a smooth check-in.",
+      "checkoutTitle": "Thanks for staying with us",
+      "checkoutBody": "We hope you enjoyed your trip.",
+      "reviewTitle": "Share your experience",
+      "reviewBody": "Help future travelers discover their perfect stay.",
+      "paymentTitle": "Payment update",
+      "paymentBody": "Your reservation payment status has been updated.",
+      "supportTitle": "We’re here to help",
+      "supportBody": "Nexa Stays support is available for this reservation."
+    },
     "context": {
       "eyebrow": "Stay context",
       "title": "Booking context",
@@ -793,6 +810,7 @@
       "review": "Review",
       "dispute": "Dispute",
       "support": "Support",
+      "bookingOverview": "Booking overview",
       "bookingTitle": "Booking details",
       "checkinTitle": "Check-in details",
       "paymentTitle": "Payment status",

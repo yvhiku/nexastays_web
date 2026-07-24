@@ -1,14 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Eye, EyeOff, Wifi } from "lucide-react";
-import { executeCardAction, type CardAction } from "@/lib/messaging/actions/registry";
+import { ArrowRight, Copy, Eye, EyeOff, Wifi } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  executeCardAction,
+  type CardAction,
+} from "@/lib/messaging/actions/registry";
 import { getCardPayload } from "@/lib/messaging/message-payload";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { CardProps } from "./registry";
 
 export function WifiCard({ message, localePath }: CardProps) {
   const { t } = useLanguage();
+  const reduceMotion = useReducedMotion();
   const payload = getCardPayload(message);
   const meta = message.metadata as {
     title?: string;
@@ -25,50 +30,71 @@ export function WifiCard({ message, localePath }: CardProps) {
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div className="mx-auto flex w-full max-w-xl items-center gap-2 py-0.5">
-      <span className="h-px flex-1 bg-gradient-to-r from-transparent to-nexa-primary/25" aria-hidden />
-      <div className="flex max-w-[78%] items-center gap-1.5 text-center">
-        <Wifi className="h-3.5 w-3.5 shrink-0 text-nexa-primary drop-shadow-[0_2px_4px_rgba(232,80,122,0.18)]" aria-hidden />
-        <div className="min-w-0">
-          <p className="truncate text-xs font-semibold text-nexa-ink-2">
+    <motion.article
+      initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={reduceMotion ? undefined : { y: -2 }}
+      transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+      className="mx-auto w-full max-w-[560px] rounded-[24px] border border-sky-200/70 bg-[linear-gradient(145deg,#fff,#f6fbff)] p-4 shadow-[0_7px_22px_rgba(40,116,166,0.07)] transition-shadow duration-150 hover:shadow-[0_11px_28px_rgba(40,116,166,0.10)] motion-reduce:transition-none sm:p-5"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "180px" }}
+    >
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm">
+          <Wifi className="h-5 w-5" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[17px] font-semibold leading-6 text-nexa-ink md:text-lg">
             {payload?.title ?? meta.title ?? t("inbox.wifi")}
-          </p>
-          {ssid ? <p className="truncate text-[10px] text-nexa-ink-4">{ssid}</p> : null}
+          </h3>
+          {ssid ? (
+            <p className="mt-2 truncate text-[13px] font-medium text-nexa-ink-3">
+              {ssid}
+            </p>
+          ) : null}
           {password ? (
-            <div className="mt-1 flex items-center justify-center gap-1">
-              <code className="max-w-28 truncate text-[10px] text-nexa-ink-4">
+            <div className="mt-4 flex items-center gap-2 rounded-2xl border border-sky-100 bg-white/85 p-2.5 shadow-sm">
+              <code className="min-w-0 flex-1 truncate px-1 text-sm font-semibold tracking-[0.12em] text-nexa-ink">
                 {revealed ? password : "••••••••"}
               </code>
               <button
                 type="button"
                 onClick={() => setRevealed((value) => !value)}
-                className="rounded-md p-1 text-nexa-ink-4 hover:text-nexa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40"
-                aria-label={revealed ? t("inbox.hideWifiPassword") : t("inbox.showWifiPassword")}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sky-700 transition-[background-color,transform] hover:bg-sky-50 active:scale-95 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50 lg:h-9 lg:w-9"
+                aria-label={
+                  revealed
+                    ? t("inbox.hideWifiPassword")
+                    : t("inbox.showWifiPassword")
+                }
               >
-                {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {revealed ? (
+                  <EyeOff className="h-4 w-4" aria-hidden />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden />
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => void navigator.clipboard?.writeText(password)}
-                className="rounded-md p-1 text-nexa-ink-4 hover:text-nexa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sky-700 transition-[background-color,transform] hover:bg-sky-50 active:scale-95 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50 lg:h-9 lg:w-9"
                 aria-label={t("inbox.copyWifiPassword")}
               >
-                <Copy className="h-3.5 w-3.5" />
+                <Copy className="h-4 w-4" aria-hidden />
               </button>
             </div>
           ) : null}
           {actions[0] ? (
-            <button
+            <motion.button
               type="button"
+              whileTap={reduceMotion ? undefined : { scale: 0.98 }}
               onClick={() => executeCardAction(actions[0], { localePath })}
-              className="rounded-full bg-nexa-primary-soft px-2 py-0.5 text-[11px] font-semibold text-nexa-primary shadow-[0_2px_7px_rgba(232,80,122,0.08)] transition-[background-color,transform] hover:bg-[#fbe3e9] active:scale-95 motion-reduce:transition-none"
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-sky-200 bg-white px-4 text-sm font-semibold text-sky-700 shadow-sm transition-[background-color,box-shadow] hover:bg-sky-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50 lg:min-h-10"
             >
               {actions[0].label}
-            </button>
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
+            </motion.button>
           ) : null}
         </div>
       </div>
-      <span className="h-px flex-1 bg-gradient-to-l from-transparent to-nexa-primary/25" aria-hidden />
-    </div>
+    </motion.article>
   );
 }
