@@ -7,7 +7,6 @@ import { SeoTrustSignals } from "@/components/seo/landing/SeoTrustSignals";
 import { SeoHeroBackground } from "@/components/seo/SeoHeroBackground";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SeoPagePayload } from "@/lib/seo/types";
-import { areaLabel } from "@/components/seo/landing/utils";
 
 type Props = {
   page: SeoPagePayload;
@@ -19,7 +18,6 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
   const { t, tf, localePath } = useLanguage();
   const dest = page.destination;
   const hero = dest?.heroImageUrl ?? null;
-  const area = areaLabel(page);
   const intel = page.intelligence;
   const badge = page.contentBlocks?.quick_facts?.atmosphere;
 

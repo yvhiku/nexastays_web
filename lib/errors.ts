@@ -145,11 +145,8 @@ export function toAppError(err: unknown): AppError {
       return {
         kind: "server",
         title: "Something went wrong on our side",
-        message:
-          apiMsg ||
-          "We’re having trouble completing that request. Please try again shortly.",
+        message: "We’re having trouble completing that request. Please try again shortly.",
         status,
-        details: e.response?.data,
       };
     }
 

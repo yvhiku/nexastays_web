@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Bookmark } from "lucide-react";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/saved-listings";
 import { cn } from "@/lib/utils";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useModalDialog } from "@/components/ui/useModalDialog";
 
 type Props = {
   snapshot: SavedListingSnapshot;
@@ -19,19 +20,17 @@ type Props = {
 
 export function SavedOnboardingSheet({ snapshot, onClose }: Props) {
   const { t, localePath } = useLanguage();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalDialog(true, dialogRef, onClose);
 
   useEffect(() => {
     markSavedOnboardingSeen();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
   }, []);
 
   return (
     <OverlayPortal layer="drawer">
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-layer-drawer flex items-end justify-center sm:items-center"
       role="dialog"
       aria-modal
@@ -91,7 +90,7 @@ export function SavedOnboardingSheet({ snapshot, onClose }: Props) {
         <button
           type="button"
           onClick={onClose}
-          className="mt-2 flex h-11 w-full items-center justify-center text-sm font-medium text-nexa-ink-3"
+          className="mt-2 flex h-12 w-full items-center justify-center text-sm font-medium text-nexa-ink-3"
         >
           {t("saved.continueExploring")}
         </button>

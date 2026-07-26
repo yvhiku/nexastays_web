@@ -15,12 +15,13 @@ type Props = {
 export function NotificationsSheet({ open, onOpenChange, onUnreadChange }: Props) {
   const { t } = useLanguage();
   const feed = useNotificationsFeed(open, () => onOpenChange(false));
+  const setOnUnreadChange = feed.setOnUnreadChange;
 
   useEffect(() => {
     if (onUnreadChange) {
-      feed.setOnUnreadChange(onUnreadChange);
+      setOnUnreadChange(onUnreadChange);
     }
-  }, [onUnreadChange, feed.setOnUnreadChange]);
+  }, [onUnreadChange, setOnUnreadChange]);
 
   return (
     <BottomSheet

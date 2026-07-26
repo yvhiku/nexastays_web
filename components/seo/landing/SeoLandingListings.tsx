@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import { SeoListingsGrid } from "@/components/seo/SeoListingsGrid.client";
 import { SeoTrustSignalsLight } from "@/components/seo/landing/SeoTrustSignals";
 import { formatLastmod } from "@/components/seo/landing/utils";
@@ -26,7 +25,7 @@ export function SeoLandingListings({
   city,
   emptyMessage,
   sortLabels,
-  locale,
+  locale: _locale,
 }: Props) {
   const [sort, setSort] = useState<SortKey>("recommended");
 

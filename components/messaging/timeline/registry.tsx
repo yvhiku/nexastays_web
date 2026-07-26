@@ -32,6 +32,7 @@ export type CardProps = {
   presentation?: ConversationPresentation;
   coverUrl?: string | null;
   viewerRole?: "guest" | "host";
+  messages?: MessageDto[];
 };
 
 type CardComponent = React.ComponentType<CardProps>;

@@ -24,7 +24,7 @@ function baseMessage(overrides: Partial<MessageDto> = {}): MessageDto {
     type: "TEXT",
     body: "hello",
     metadata: {},
-    payload: {},
+    payload: { text: "hello" },
     status: "SENT",
     deliveryState: "SENT",
     sentAt: null,
@@ -143,5 +143,50 @@ describe("mergeMessages", () => {
     });
     const merged = mergeMessages([existing], [incoming], { preferIncomingAttachments: true });
     assert.equal(merged[0].attachments[0].id, "real-att-1");
+  });
+
+  it("preserves unchanged message and array identity across full realtime snapshots", () => {
+    const existing = baseMessage();
+    const incoming = baseMessage({ metadata: {}, payload: { text: "hello" } });
+    const existingMessages = [existing];
+    const merged = mergeMessages(existingMessages, [incoming]);
+    assert.equal(merged, existingMessages);
+    assert.equal(merged[0], existing);
+  });
+
+  it("keeps stable attachment URLs when only delivery state changes", () => {
+    const attachment = {
+      id: "att-1",
+      status: "READY",
+      mime: "image/jpeg",
+      sizeBytes: 100,
+      width: 800,
+      height: 600,
+      blurhash: null,
+      originalFilename: "stay.jpg",
+      thumbnail: { url: "https://media/old-token", version: 1, expiresAt: "2026-07-27" },
+      full: { url: "https://media/full-old", version: 1, expiresAt: "2026-07-27" },
+    } as MessageDto["attachments"][0];
+    const existing = baseMessage({
+      type: "IMAGE",
+      attachments: [attachment],
+      payload: { attachmentIds: ["att-1"], attachments: [attachment] },
+    });
+    const refreshedAttachment = {
+      ...attachment,
+      thumbnail: { ...attachment.thumbnail!, url: "https://media/new-token" },
+      full: { ...attachment.full!, url: "https://media/full-new" },
+    };
+    const incoming = baseMessage({
+      type: "IMAGE",
+      deliveryState: "READ",
+      readAt: "2026-01-01T00:01:00.000Z",
+      attachments: [refreshedAttachment],
+      payload: { attachmentIds: ["att-1"], attachments: [refreshedAttachment] },
+    });
+    const merged = mergeMessages([existing], [incoming]);
+    assert.equal(merged[0].attachments, existing.attachments);
+    assert.equal(merged[0].attachments[0].thumbnail?.url, "https://media/old-token");
+    assert.equal(merged[0].deliveryState, "READ");
   });
 });

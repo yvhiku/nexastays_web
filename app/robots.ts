@@ -3,26 +3,27 @@ import { getPublicSiteUrl } from "@/lib/env";
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = getPublicSiteUrl();
+  const privateSegments = [
+    "bookings",
+    "my-bookings",
+    "profile",
+    "inbox",
+    "login",
+    "registration",
+    "saved-listings",
+    "host/dashboard",
+    "host/listings",
+  ];
+  const localizedPrivatePaths = ["en", "fr", "ar"].flatMap((locale) =>
+    privateSegments.map((segment) => `/${locale}/${segment}`),
+  );
 
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/en", "/fr", "/ar", "/en/listings", "/fr/listings", "/ar/listings", "/en/stays", "/fr/stays", "/ar/stays"],
-        disallow: [
-          "/en/bookings",
-          "/fr/bookings",
-          "/ar/bookings",
-          "/en/my-bookings",
-          "/fr/my-bookings",
-          "/ar/my-bookings",
-          "/en/profile",
-          "/fr/profile",
-          "/ar/profile",
-          "/en/host/dashboard",
-          "/fr/host/dashboard",
-          "/ar/host/dashboard",
-        ],
+        allow: "/",
+        disallow: ["/api/", "/_next/", ...localizedPrivatePaths],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

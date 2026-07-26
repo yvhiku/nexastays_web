@@ -5,6 +5,7 @@
 import { sendMessage, type MessageDto } from "./messages-api";
 
 const QUEUE_KEY = "nexa_messaging_offline_queue";
+let activeFlush: Promise<void> | null = null;
 
 export interface QueuedMessage {
   conversationId: string;
@@ -96,21 +97,33 @@ export async function flushOfflineQueue(
   onSent?: (item: QueuedMessage, message: MessageDto) => void,
 ): Promise<void> {
   if (!token) return;
-  const queue = readQueue();
-  for (const item of queue) {
-    try {
-      const message = await sendMessage(
-        item.conversationId,
-        item.body,
-        token,
-        item.clientMessageId,
-      );
-      dequeueOffline(item.clientMessageId);
-      onSent?.(item, message);
-    } catch {
-      break;
+
+  // React Strict Mode, reconnect events, and multiple mounted inbox surfaces
+  // can request a flush at the same time. Only one caller may POST the shared
+  // localStorage queue; client_message_id remains the server-side safety net.
+  if (activeFlush) return activeFlush;
+
+  activeFlush = (async () => {
+    const queue = readQueue();
+    for (const item of queue) {
+      try {
+        const message = await sendMessage(
+          item.conversationId,
+          item.body,
+          token,
+          item.clientMessageId,
+        );
+        dequeueOffline(item.clientMessageId);
+        onSent?.(item, message);
+      } catch {
+        break;
+      }
     }
-  }
+  })().finally(() => {
+    activeFlush = null;
+  });
+
+  return activeFlush;
 }
 
 export function isOnline(): boolean {

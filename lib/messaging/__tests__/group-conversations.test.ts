@@ -76,3 +76,20 @@ test("sorts each section by latest effective activity", () => {
     ["newer", "older"],
   );
 });
+
+test("groups archived conversations separately", () => {
+  const archived = item("archived", "2026-07-24T12:00:00Z");
+  archived.conversation.visibility = "ARCHIVED";
+  archived.conversation.messagingState = "ARCHIVED";
+
+  const sections = groupConversations(
+    [item("active", "2026-07-24T13:00:00Z"), archived],
+    {},
+    new Date("2026-07-24T15:00:00Z"),
+  );
+
+  assert.deepEqual(
+    sections.map((section) => section.id),
+    ["today", "archived"],
+  );
+});

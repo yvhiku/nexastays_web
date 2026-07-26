@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const LOCALES = ["en", "fr", "ar"] as const;
 const DEFAULT_LOCALE = "en";
 const LOCALE_COOKIE = "nexa_locale";
+const PRIVATE_ROUTE =
+  /^\/(?:en|fr|ar)\/(?:bookings(?:\/|$)|my-bookings(?:\/|$)|profile(?:\/|$)|inbox(?:\/|$)|login(?:\/|$)|registration(?:\/|$)|saved-listings(?:\/|$)|host\/(?:dashboard|listings)(?:\/|$))/;
 
 /** Browser / crawler probes — never locale-redirect; return 404 immediately. */
 const PROBE_PATH =
@@ -42,7 +44,15 @@ export function middleware(request: NextRequest) {
   const pathnameHasLocale = LOCALES.some((loc) => pathname === `/${loc}` || pathname.startsWith(`/${loc}/`));
 
   if (pathnameHasLocale) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    const locale = pathname.split("/")[1] || DEFAULT_LOCALE;
+    requestHeaders.set("x-nexa-locale", locale);
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    response.headers.set("Content-Language", locale);
+    if (PRIVATE_ROUTE.test(pathname)) {
+      response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    }
+    return response;
   }
 
   if (pathname === "/") {

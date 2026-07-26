@@ -22,7 +22,7 @@ type Props = {
   onRetryUpload?: () => void;
 };
 
-export function ImageMessageGrid({
+function ImageMessageGridInner({
   attachments,
   caption,
   isOwn,
@@ -35,23 +35,40 @@ export function ImageMessageGrid({
   const count = attachments.length;
   const display = attachments.slice(0, 4);
   const extra = count > 4 ? count - 3 : 0;
+  const moreLabel = t("listings.loadMore").trim().split(/\s+/).at(-1);
+  const first = attachments[0];
+  const firstAspect =
+    first?.width && first?.height
+      ? Math.max(0.82, Math.min(1.65, first.width / first.height))
+      : 4 / 3;
 
   if (count === 1) {
     return (
-      <div className={cn("w-full max-w-[260px]", isOwn ? "ms-auto" : "")}>
-        <button
-          type="button"
-          onClick={() => onOpen?.(0)}
-          className="block w-full rounded-2xl border border-white shadow-[0_8px_22px_rgba(83,41,60,0.14)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_11px_28px_rgba(83,41,60,0.18)] active:translate-y-0 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/50"
-          aria-label={t("inbox.openImage").replace("{number}", "1")}
+      <div className={cn("min-w-0 w-full max-w-[360px]", isOwn ? "ms-auto" : "")}>
+        <div
+          className="block w-full overflow-hidden rounded-messaging-bubble border border-nexa-line bg-nexa-bg-2 shadow-messaging-2 transition-[box-shadow,transform] duration-messaging-hover lg:hover:scale-[1.02] lg:hover:shadow-messaging-3 motion-reduce:transition-none"
+          style={{ aspectRatio: firstAspect }}
         >
           <ProgressiveImage
             src={attachmentThumbUrl(attachments[0])}
             alt={attachments[0]?.originalFilename ?? ""}
-            className="h-48 w-full rounded-2xl"
+            className="h-full w-full"
+            onClick={() => onOpen?.(0)}
+            actionLabel={t("inbox.openImage").replace("{number}", "1")}
+            errorLabel={t("inbox.imageLoadFailed")}
+            retryLabel={t("inbox.attachmentComposer.retry")}
           />
-        </button>
-        {caption ? <p className="mt-1 text-sm text-nexa-ink-3 px-1">{caption}</p> : null}
+        </div>
+        {caption ? (
+          <p
+            className={cn(
+              "mt-2 px-1 text-sm leading-5 text-nexa-ink-2",
+              isOwn && "text-end",
+            )}
+          >
+            {caption}
+          </p>
+        ) : null}
         {uploadMeta && uploadLabels ? (
           <MediaUploadStatus
             meta={uploadMeta}
@@ -65,36 +82,47 @@ export function ImageMessageGrid({
   }
 
   return (
-    <div className={cn("w-full max-w-[280px]", isOwn ? "ms-auto" : "")}>
-      <div className="grid w-full grid-cols-2 gap-1">
+    <div className={cn("min-w-0 w-full max-w-[360px]", isOwn ? "ms-auto" : "")}>
+      <div className="grid w-full grid-cols-2 gap-2 overflow-hidden rounded-messaging-bubble border border-nexa-line bg-white p-2 shadow-messaging-2">
       {display.map((att, i) => {
         const isOverlayCell = extra > 0 && i === 3;
         return (
-          <button
+          <div
             key={att.id}
-            type="button"
-            onClick={() => onOpen?.(i)}
-            aria-label={t("inbox.openImage").replace("{number}", String(i + 1))}
             className={cn(
-              "relative overflow-hidden rounded-xl border border-white shadow-[0_6px_18px_rgba(83,41,60,0.12)] transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_9px_24px_rgba(83,41,60,0.17)] active:translate-y-0 motion-reduce:transition-none",
-              count === 3 && i === 0 ? "row-span-2 h-full min-h-[160px]" : "h-24",
+              "relative overflow-hidden rounded-xl border border-nexa-line/70 bg-nexa-bg-2 shadow-messaging-1 transition-[box-shadow,transform] duration-messaging-hover lg:hover:z-layer-content lg:hover:scale-[1.02] lg:hover:shadow-messaging-2 motion-reduce:transition-none",
+              count === 2
+                ? "h-44"
+                : count === 3 && i === 0
+                  ? "col-span-2 h-44"
+                  : "h-32",
             )}
           >
             <ProgressiveImage
               src={attachmentThumbUrl(att)}
               alt={att.originalFilename ?? ""}
               className="h-full w-full"
+              onClick={() => onOpen?.(i)}
+              actionLabel={t("inbox.openImage").replace(
+                "{number}",
+                String(i + 1),
+              )}
+              errorLabel={t("inbox.imageLoadFailed")}
+              retryLabel={t("inbox.attachmentComposer.retry")}
             />
             {isOverlayCell ? (
-              <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-lg font-bold text-white">
-                +{extra}
+              <span className="pointer-events-none absolute inset-0 z-layer-content flex flex-col items-center justify-center bg-[linear-gradient(145deg,rgba(24,14,19,0.48),rgba(24,14,19,0.76))] text-white backdrop-blur-[1px]">
+                <span className="text-lg font-bold leading-none">
+                  +{extra} {moreLabel}
+                </span>
+                <span className="mt-1 h-0.5 w-7 rounded-full bg-nexa-primary" aria-hidden />
               </span>
             ) : null}
-          </button>
+          </div>
         );
       })}
       {caption ? (
-        <p className={cn("col-span-2 text-sm text-nexa-ink-3 px-1", isOwn ? "text-right" : "")}>{caption}</p>
+        <p className={cn("col-span-2 px-1 pt-1 text-sm leading-5 text-nexa-ink-2", isOwn ? "text-end" : "")}>{caption}</p>
       ) : null}
       {uploadMeta && uploadLabels ? (
         <div className="col-span-2">
@@ -110,3 +138,18 @@ export function ImageMessageGrid({
     </div>
   );
 }
+
+export const ImageMessageGrid = React.memo(
+  ImageMessageGridInner,
+  (previous, next) =>
+    previous.attachments === next.attachments &&
+    previous.caption === next.caption &&
+    previous.isOwn === next.isOwn &&
+    previous.uploadMeta?.uploadState === next.uploadMeta?.uploadState &&
+    previous.uploadMeta?.uploadProgress === next.uploadMeta?.uploadProgress &&
+    previous.uploadMeta?.uploadLabel === next.uploadMeta?.uploadLabel &&
+    previous.uploadMeta?.uploadError === next.uploadMeta?.uploadError &&
+    previous.uploadLabels?.uploading === next.uploadLabels?.uploading &&
+    previous.uploadLabels?.failed === next.uploadLabels?.failed &&
+    previous.uploadLabels?.retry === next.uploadLabels?.retry,
+);

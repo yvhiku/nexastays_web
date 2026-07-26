@@ -303,7 +303,7 @@ export default function RegistrationPage() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [step, awaitingDecision, token]);
+  }, [step, awaitingDecision, token, setAuthJwt]);
 
   if (!token) {
     return null;
@@ -321,7 +321,7 @@ export default function RegistrationPage() {
           <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-layer-content max-w-[400px]">
             <Link
-              href="/"
+              href={localePath("/")}
               className="flex items-center gap-2.5 mb-12 cursor-pointer hover:opacity-90"
             >
               <div className="relative w-11 h-11 rounded-lg overflow-hidden">

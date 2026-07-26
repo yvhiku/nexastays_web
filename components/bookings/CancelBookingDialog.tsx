@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { StaysBooking } from "@/lib/stays-types";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useModalDialog } from "@/components/ui/useModalDialog";
 
 function hoursUntil(dateOnly: string): number {
   const [y, m, d] = dateOnly.split("-").map(Number);
@@ -50,13 +51,15 @@ export function CancelBookingDialog({
   t,
 }: CancelBookingDialogProps) {
   const [reason, setReason] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
   const refundEstimate = useMemo(() => (booking ? estimateRefund(booking) : 0), [booking]);
+  useModalDialog(open && !!booking, dialogRef, onClose);
 
   if (!open || !booking) return null;
 
   return (
     <OverlayPortal layer="modal">
-    <div className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div ref={dialogRef} className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-booking-title">
       <button
         type="button"
         className="absolute inset-0 bg-black/45"
@@ -67,7 +70,7 @@ export function CancelBookingDialog({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-2 text-nexa-ink-4 hover:bg-nexa-bg-2"
+          className="absolute right-3 top-3 flex h-12 w-12 items-center justify-center rounded-full text-nexa-ink-4 hover:bg-nexa-bg-2"
           aria-label={t("common.close")}
         >
           <X className="h-4 w-4" />
@@ -77,7 +80,7 @@ export function CancelBookingDialog({
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-nexa-ink">
+            <h2 id="cancel-booking-title" className="text-lg font-semibold text-nexa-ink">
               {t("bookings.cancelTitle")}
             </h2>
             <p className="mt-1 text-sm text-nexa-ink-3">

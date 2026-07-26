@@ -23,6 +23,15 @@
     "gotIt": "Got it",
     "changesSaved": "Changes saved"
   },
+  "navigationError": {
+    "eyebrow": "Something went wrong",
+    "title": "We could not load this page.",
+    "body": "Please try again. If the problem continues, return home and start again.",
+    "retry": "Try again",
+    "notFoundTitle": "This page could not be found",
+    "notFoundBody": "The link may have expired or the page may have moved.",
+    "goHome": "Return home"
+  },
   "seo": {
     "staysHubTitle": "Stays in Morocco | Nexa Stays",
     "staysHubDescription": "Browse verified stays across Morocco — Marrakech, Casablanca, Agadir, Fes, and more.",
@@ -722,6 +731,15 @@
     "hostRole": "Host",
     "guestRole": "Guest",
     "openImage": "Open image {number}",
+    "imageLoadFailed": "Unable to load image",
+    "newest": "Newest",
+    "newMessages": "{count} new messages",
+    "delivery": {
+      "sending": "Sending",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "seen": "Seen"
+    },
     "wifi": "Wi-Fi",
     "showWifiPassword": "Show Wi-Fi password",
     "hideWifiPassword": "Hide Wi-Fi password",
@@ -753,6 +771,13 @@
     "mute": "Mute notifications",
     "unmute": "Unmute notifications",
     "reportPrompt": "Tell us briefly what happened (optional)",
+    "attachmentMenu": {
+      "title": "Add to conversation",
+      "photos": "Photos",
+      "documents": "Document",
+      "location": "Location",
+      "locationError": "Your location could not be accessed."
+    },
     "attachmentComposer": {
       "captionPlaceholder": "Add a caption…",
       "send": "Send",
@@ -789,8 +814,50 @@
       "updateTitle": "Stay update",
       "bookingTitle": "Your booking is confirmed",
       "bookingBody": "Everything is ready for your stay.",
+      "bookingConfirmed": "Confirmed",
+      "bookingConfirmedBody": "You're all set. Your reservation is confirmed.",
+      "bookingPending": "Pending",
+      "bookingCancelled": "Cancelled",
+      "bookingCompleted": "Completed",
+      "bookingStatus": "Reservation",
+      "yourReservation": "Your reservation",
+      "reservation": "Reservation",
+      "guestCount": "{count} guests",
+      "propertyImage": "Property image",
+      "retryImage": "Retry image",
+      "booked": "Booked",
+      "host": "Host",
+      "dates": "Stay",
+      "nightsHeading": "Duration",
+      "nightCount": "{count} nights",
+      "guestsHeading": "Guests",
+      "location": "Location",
+      "bookingProgress": "Reservation journey",
+      "progressConfirmed": "Confirmed",
+      "progressCheckin": "Check-in",
+      "progressCheckout": "Checkout",
+      "progressReview": "Review",
       "checkinTitle": "Your arrival details",
       "checkinBody": "Everything you need for a smooth check-in.",
+      "welcomeStay": "Welcome to your stay",
+      "arrival": "Arrival",
+      "checkinToday": "Check-in today",
+      "checkinTomorrow": "Check-in tomorrow",
+      "viewMap": "View on map",
+      "propertyAddress": "Property address",
+      "propertyAccess": "Property access",
+      "accessAvailable": "Access information is available securely in your stay context.",
+      "houseRules": "House rules",
+      "arrivalChecklist": "Arrival checklist",
+      "reservationConfirmed": "Reservation confirmed",
+      "checkinAvailable": "Check-in available",
+      "accessInformation": "Access information",
+      "enjoyStay": "Enjoy your stay",
+      "welcome": "Welcome!",
+      "stayBeginsToday": "Your stay begins today.",
+      "dismissWelcome": "Dismiss welcome message",
+      "wifiAvailable": "Wi-Fi information available",
+      "wifiSecure": "Connection details are kept in your secure stay context.",
       "checkoutTitle": "Thanks for staying with us",
       "checkoutBody": "We hope you enjoyed your trip.",
       "reviewTitle": "Share your experience",
@@ -799,6 +866,184 @@
       "paymentBody": "Your reservation payment status has been updated.",
       "supportTitle": "We’re here to help",
       "supportBody": "Nexa Stays support is available for this reservation."
+    },
+    "phase9": {
+      "activity": "Activity",
+      "reservation": "Reservation",
+      "view": "View",
+      "messages": "messages",
+      "photos": "photos",
+      "files": "files",
+      "voice": "voice",
+      "booking": "Booking",
+      "checkin": "Check-in",
+      "stayContext": "Stay context",
+      "jumpTo": "Jump to conversation section",
+      "sharedMedia": "Shared media",
+      "newMessages": "New messages",
+      "draft": "Draft recovered",
+      "dismissDraft": "Dismiss draft reminder",
+      "suggestedActions": "Suggested stay actions",
+      "search": "Search",
+      "searchConversation": "Search conversation",
+      "searchPlaceholder": "Search messages, files, photos…",
+      "searchFilter": {
+        "all": "All",
+        "message": "Messages",
+        "photo": "Photos",
+        "file": "Files",
+        "link": "Links",
+        "card": "Stay events"
+      }
+    },
+    "phase10": {
+      "searchConversation": "Search conversation",
+      "searchPlaceholder": "Search messages, events, photos, and files…",
+      "clearSearch": "Clear search",
+      "matches": "{count} matches",
+      "recent": "Recent searches",
+      "clearHistory": "Clear history",
+      "suggestions": "Suggested from this conversation",
+      "searching": "Searching conversation",
+      "jump": "Jump",
+      "open": "Open",
+      "host": "Host",
+      "guest": "Guest",
+      "emptyTitle": "No matches found",
+      "emptyBody": "Try another keyword or browse your shared attachments.",
+      "filter": {
+        "all": "All",
+        "message": "Messages",
+        "card": "Timeline",
+        "photo": "Photos",
+        "file": "Files",
+        "link": "Links"
+      },
+      "section": {
+        "message": "Messages",
+        "card": "Timeline events",
+        "photo": "Photos",
+        "file": "Files",
+        "link": "Location and links"
+      },
+      "suggestion": {
+        "reservation": "Reservation",
+        "checkin": "Check-in",
+        "payment": "Payment",
+        "parking": "Parking",
+        "rules": "House rules",
+        "invoice": "Invoice"
+      }
+    },
+    "phase11": {
+      "title": "Shared media",
+      "close": "Close media gallery",
+      "all": "All",
+      "photos": "Photos",
+      "files": "Files",
+      "voice": "Voice",
+      "links": "Links",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "open": "Open",
+      "download": "Download",
+      "downloading": "Downloading…",
+      "downloaded": "Downloaded",
+      "failed": "Download failed",
+      "select": "Select media",
+      "selected": "{count} selected",
+      "viewAll": "View all",
+      "emptyTitle": "Nothing shared yet",
+      "emptyBody": "Photos, files, voice messages, and links shared during this conversation will appear here.",
+      "sentBy": "Sent by {name}"
+    },
+    "phase13": {
+      "thread": "Conversation thread",
+      "composer": "Message composer",
+      "attach": "Add an attachment",
+      "emoji": "Choose an emoji",
+      "emojiPicker": "Emoji picker",
+      "playVoice": "Play voice message",
+      "pauseVoice": "Pause voice message",
+      "voicePosition": "Voice message position",
+      "playbackSpeed": "Playback speed {speed} times",
+      "photo": "Photo",
+      "attachment": "Attachment",
+      "document": "Document",
+      "share": "Share",
+      "imagePosition": "Image {current} of {total}",
+      "noSharedPhotos": "No shared photos yet",
+      "noSharedPhotosBody": "Photos shared in this conversation will appear here.",
+      "imageFailed": "This image could not be displayed",
+      "loadingImage": "Loading image",
+      "previousImage": "Previous image",
+      "nextImage": "Next image",
+      "newMessage": "New message received from {name}."
+      ,"uploadProgress": "Upload {percent} percent complete"
+      ,"uploadCompleted": "Upload completed."
+    },
+    "phase14": {
+      "journey": "Booking journey",
+      "steps": {
+        "inquiry": "Inquiry",
+        "confirmed": "Confirmed",
+        "checkin": "Check-in",
+        "stay": "Stay",
+        "checkout": "Checkout",
+        "review": "Review"
+      },
+      "status": {
+        "inquiry": "Reservation inquiry",
+        "confirmed": "Booking confirmed",
+        "checkin": "Check-in available",
+        "stay": "Stay in progress",
+        "checkout": "Stay completed",
+        "review": "Review available"
+      },
+      "quickActions": "Quick actions",
+      "essentials": "Trip essentials",
+      "address": "Address",
+      "checkin": "Check-in",
+      "checkout": "Check-out",
+      "property": "Property",
+      "viewProperty": "View property",
+      "host": "Host profile",
+      "verified": "Verified host"
+    },
+    "phase15": {
+      "welcome": {
+        "inquiry": {
+          "title": "Start planning your stay",
+          "body": "Ask your host about the property, arrival, or local recommendations."
+        },
+        "confirmed": {
+          "title": "Your stay is confirmed",
+          "body": "Everything you need for your reservation is organized in this conversation."
+        },
+        "checkin": {
+          "title": "Welcome to your stay",
+          "body": "Your available check-in and arrival details are ready in the booking context."
+        },
+        "stay": {
+          "title": "Enjoy your stay",
+          "body": "Reach out to your host whenever you need help during your visit."
+        },
+        "completed": {
+          "title": "Thanks for staying with Nexa Stays",
+          "body": "Your conversation and available post-stay actions remain here."
+        }
+      },
+      "suggestions": {
+        "amenities": "Ask about amenities",
+        "arrival": "Confirm arrival details",
+        "local": "Request local recommendations"
+      },
+      "tips": {
+        "property": "Tap the property card to review the available listing details.",
+        "directions": "Need directions? Open the address from Trip Essentials.",
+        "review": "Your stay is ready to review from the booking context."
+      },
+      "dismissTip": "Dismiss suggestion"
     },
     "context": {
       "eyebrow": "Stay context",

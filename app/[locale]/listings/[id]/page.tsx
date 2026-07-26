@@ -7,6 +7,7 @@ import { fetchSeoListingPage } from "@/lib/seo/listing-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildListingJsonLd } from "@/lib/seo/json-ld";
 import { ListingDetailPageClient } from "@/components/listing/ListingDetailPage.client";
+import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
 
 export const revalidate = 3600;
 
@@ -42,7 +43,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <script
           key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(node) }}
         />
       ))}
       <ListingDetailPageClient />

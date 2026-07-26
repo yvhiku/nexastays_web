@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -98,6 +98,7 @@ export function ListingDetailPageClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState(false);
+  const bookingSubmissionRef = useRef(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{
     kyc_status: string;
@@ -129,9 +130,19 @@ export function ListingDetailPageClient() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (isAuthenticated && token) {
-      getCurrentUserOrNull(() => token).then(setUserProfile);
+    let cancelled = false;
+    if (!isAuthenticated || !token) {
+      setUserProfile(null);
+      return () => {
+        cancelled = true;
+      };
     }
+    getCurrentUserOrNull(() => token).then((profile) => {
+      if (!cancelled) setUserProfile(profile);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, token]);
 
   useEffect(() => {
@@ -186,14 +197,22 @@ export function ListingDetailPageClient() {
   }, [listing, guests]);
 
   useEffect(() => {
+    let cancelled = false;
     const from = (() => {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     })();
     const to = addDaysToDateString(from, 540);
     getListingAvailability(id, from, to)
-      .then((data) => setBlockedNights(expandBlockedNights(data.blocked_ranges)))
-      .catch(() => setBlockedNights([]));
+      .then((data) => {
+        if (!cancelled) setBlockedNights(expandBlockedNights(data.blocked_ranges));
+      })
+      .catch(() => {
+        if (!cancelled) setBlockedNights([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -288,7 +307,8 @@ export function ListingDetailPageClient() {
   };
 
   const handleVerificationConfirm = async (occupants: CreateBookingOccupantDto[]) => {
-    if (!listing || !token) return;
+    if (!listing || !token || bookingSubmissionRef.current) return;
+    bookingSubmissionRef.current = true;
     const max = Math.max(1, listing.rules?.max_guests ?? 6);
     const guestCount = sanitizeGuestCount(guests, max) ?? 1;
     setBookingError(null);
@@ -317,6 +337,7 @@ export function ListingDetailPageClient() {
     } catch (err) {
       setBookingError(err instanceof Error ? err.message : "Booking failed");
     } finally {
+      bookingSubmissionRef.current = false;
       setBooking(false);
     }
   };

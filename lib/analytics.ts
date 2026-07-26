@@ -61,7 +61,10 @@ type AnalyticsEventName =
   | "cancel_upload"
   | "draft_restored"
   | "session_abandoned"
-  | "voice_message_recorded";
+  | "voice_message_recorded"
+  | "conversation_search_opened"
+  | "conversation_search_result_opened"
+  | "conversation_search_filter_changed";
 
 type AnalyticsPayload = Record<string, string | number | boolean | null | undefined>;
 

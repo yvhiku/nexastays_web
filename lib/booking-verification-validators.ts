@@ -3,7 +3,7 @@
  */
 
 import { validateEmail, validateIdNumber } from "./validators";
-import type { GuestIdentityFormData, GuestGender } from "./booking-verification-types";
+import type { GuestIdentityFormData } from "./booking-verification-types";
 
 export interface ValidationResult {
   valid: boolean;

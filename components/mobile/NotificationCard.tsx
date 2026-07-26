@@ -3,6 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import type { UserNotificationItem } from "@/lib/notifications-api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Props = {
   item: UserNotificationItem;
@@ -10,19 +11,19 @@ type Props = {
   subtitle?: string;
 };
 
-function formatRelativeTime(iso: string): string {
+export function formatRelativeTime(iso: string, locale: string): string {
   const date = new Date(iso);
   const now = Date.now();
   const diffMs = now - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  if (diffMin < 1) return relative.format(0, "minute");
+  if (diffMin < 60) return relative.format(-diffMin, "minute");
   const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffHours < 24) return relative.format(-diffHours, "hour");
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (diffDays < 7) return relative.format(-diffDays, "day");
+  return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 function notificationSubtitle(item: UserNotificationItem): string {
@@ -57,6 +58,7 @@ function notificationSubtitle(item: UserNotificationItem): string {
 }
 
 export function NotificationCard({ item, onClick, subtitle }: Props) {
+  const { locale } = useLanguage();
   const line2 = subtitle ?? notificationSubtitle(item);
 
   return (
@@ -80,7 +82,7 @@ export function NotificationCard({ item, onClick, subtitle }: Props) {
         <span className="block text-sm font-semibold text-nexa-ink">{item.title}</span>
         <span className="mt-0.5 block truncate text-sm text-nexa-ink-3">{line2}</span>
         <span className="mt-1 block text-xs text-nexa-ink-4">
-          {formatRelativeTime(item.created_at)}
+          {formatRelativeTime(item.created_at, locale)}
         </span>
       </span>
     </button>

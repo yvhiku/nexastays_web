@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, Send, X } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { AlertTriangle, RotateCcw, Send, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { useAttachmentManager } from "@/lib/messaging/AttachmentManager";
 import {
@@ -11,6 +12,10 @@ import {
 import { useFocusTrap } from "./hooks/useFocusTrap";
 import "./attachments/register-defaults";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import {
+  MESSAGING_EASE_OUT,
+  MESSAGING_MOTION,
+} from "@/lib/messaging/motion";
 
 type Manager = ReturnType<typeof useAttachmentManager>;
 
@@ -33,6 +38,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
   const { state, removeItem, rotateItem, setCaption, sendBatch, retryFailed, closeComposer } =
     manager;
   const [activeIndex, setActiveIndex] = useState(0);
+  const reduceMotion = useReducedMotion();
   const captionRef = useRef<HTMLTextAreaElement>(null);
   const trapRef = useRef<HTMLDivElement>(null);
 
@@ -67,12 +73,20 @@ export function AttachmentComposer({ manager, labels }: Props) {
 
   return (
     <OverlayPortal layer="modal">
-    <div
+    <motion.div
       ref={trapRef}
-      className="fixed inset-0 z-layer-modal flex flex-col bg-black"
+      className="fixed inset-0 z-layer-modal flex flex-col bg-black/[0.92] backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-label="Attachment composer"
+      initial={
+        reduceMotion ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.995 }
+      }
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: reduceMotion ? 0 : MESSAGING_MOTION.dialog,
+        ease: MESSAGING_EASE_OUT,
+      }}
     >
       <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-3 text-white sm:px-4">
         <button
@@ -136,8 +150,8 @@ export function AttachmentComposer({ manager, labels }: Props) {
                 </span>
               )}
               {item.status === "failed" ? (
-                <span className="absolute inset-0 flex items-center justify-center bg-red-600/70 text-[10px] font-bold text-white">
-                  !
+                <span className="absolute inset-0 flex items-center justify-center bg-red-700/70 text-white backdrop-blur-[1px]">
+                  <AlertTriangle className="h-4 w-4" aria-hidden />
                 </span>
               ) : null}
             </button>
@@ -161,13 +175,40 @@ export function AttachmentComposer({ manager, labels }: Props) {
       ) : null}
 
       {state.error ? (
-        <div className="px-4 py-2 text-center text-sm text-red-300" role="alert">
-          {state.error}
-          {items.some((i) => i.status === "failed") ? (
-            <button type="button" className="ml-2 underline" onClick={() => void retryFailed()}>
-              {labels.retry}
-            </button>
-          ) : null}
+        <div className="px-4 py-2" role="alert">
+          <div className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-3 py-2.5 text-red-100 shadow-lg backdrop-blur-xl">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/20">
+              <AlertTriangle className="h-4 w-4" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1 break-words text-xs font-semibold">
+              {state.error}
+            </span>
+            {items.some((item) => item.status === "failed") ? (
+              <>
+                <button
+                  type="button"
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3 text-xs font-bold text-red-600 transition-transform duration-150 active:scale-95 motion-reduce:transition-none"
+                  onClick={() => void retryFailed()}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                  {labels.retry}
+                </button>
+                {active?.status === "failed" ? (
+                  <button
+                    type="button"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-red-100 transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    onClick={() => {
+                      removeItem(active.id);
+                      if (items.length <= 1) closeComposer();
+                    }}
+                    aria-label={labels.remove}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </button>
+                ) : null}
+              </>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -183,7 +224,7 @@ export function AttachmentComposer({ manager, labels }: Props) {
           className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-nexa-primary/40"
         />
       </div>
-    </div>
+    </motion.div>
     </OverlayPortal>
   );
 }

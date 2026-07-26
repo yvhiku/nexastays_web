@@ -42,7 +42,7 @@ export function StayExampleCard({ layout = "hero" }: StayExampleCardProps) {
       <p className="text-xs font-semibold uppercase text-nexa-primary mb-1">
         {t("home.hero.previewLabel")}
       </p>
-      <h4
+      <h3
         className={
           layout === "hero"
             ? "font-display text-base font-semibold mb-1"
@@ -50,7 +50,7 @@ export function StayExampleCard({ layout = "hero" }: StayExampleCardProps) {
         }
       >
         {t("home.hero.previewTitle")}
-      </h4>
+      </h3>
       <span className="text-sm text-nexa-ink-3">{t("home.hero.previewLocation")}</span>
     </div>
   );

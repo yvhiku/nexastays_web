@@ -23,6 +23,15 @@
     "gotIt": "Compris",
     "changesSaved": "Modifications enregistrées"
   },
+  "navigationError": {
+    "eyebrow": "Une erreur est survenue",
+    "title": "Nous n’avons pas pu charger cette page.",
+    "body": "Veuillez réessayer. Si le problème persiste, revenez à l’accueil.",
+    "retry": "Réessayer",
+    "notFoundTitle": "Cette page est introuvable",
+    "notFoundBody": "Le lien a peut-être expiré ou la page a été déplacée.",
+    "goHome": "Retour à l’accueil"
+  },
   "seo": {
     "staysHubTitle": "Séjours au Maroc | Nexa Stays",
     "staysHubDescription": "Parcourez des séjours vérifiés au Maroc — Marrakech, Casablanca, Agadir, Fès et plus.",
@@ -649,7 +658,26 @@
     "refundEstimateHint": "Le remboursement final est calculé par le serveur selon la politique de l'annonce et l'état du paiement.",
     "cancelReason": "Motif d'annulation",
     "cancelReasonPlaceholder": "Ajoutez un court motif pour le support et l'autre partie.",
-    "confirmCancel": "Confirmer l'annulation"
+    "confirmCancel": "Confirmer l'annulation",
+    "bookingDetails": "Détails de la réservation",
+    "timeline": "Chronologie de la réservation",
+    "paymentSummary": "Récapitulatif du paiement",
+    "guestInfo": "Informations sur le voyageur",
+    "hostInfo": "Informations sur l'hôte",
+    "cancellationPolicy": "Politique d'annulation",
+    "receipt": "Reçu",
+    "propertyLocation": "Emplacement du logement",
+    "support": "Assistance",
+    "downloadInvoice": "Télécharger la facture",
+    "timelineCreated": "Réservation créée",
+    "timelinePayment": "Paiement confirmé",
+    "timelineCheckin": "Arrivée",
+    "timelineCheckout": "Départ",
+    "timelineCompleted": "Séjour terminé",
+    "hostContact": "Contact de l'hôte pour l'arrivée",
+    "standardCancellation": "La politique d'annulation standard s'applique. Consultez les conditions de l'annonce pour plus de détails.",
+    "printReceipt": "Imprimer le reçu",
+    "backToBookings": "Retour à mes réservations"
   },
   "hostBooking": {
     "title": "Détails de la réservation",
@@ -703,6 +731,15 @@
     "hostRole": "Hôte",
     "guestRole": "Voyageur",
     "openImage": "Ouvrir l’image {number}",
+    "imageLoadFailed": "Impossible de charger l’image",
+    "newest": "Plus récents",
+    "newMessages": "{count} nouveaux messages",
+    "delivery": {
+      "sending": "Envoi",
+      "sent": "Envoyé",
+      "delivered": "Distribué",
+      "seen": "Vu"
+    },
     "wifi": "Wi-Fi",
     "showWifiPassword": "Afficher le mot de passe Wi-Fi",
     "hideWifiPassword": "Masquer le mot de passe Wi-Fi",
@@ -734,6 +771,13 @@
     "mute": "Couper les notifications",
     "unmute": "Réactiver les notifications",
     "reportPrompt": "Décrivez brièvement ce qui s'est passé (facultatif)",
+    "attachmentMenu": {
+      "title": "Ajouter à la conversation",
+      "photos": "Photos",
+      "documents": "Document",
+      "location": "Lieu",
+      "locationError": "Votre position n'a pas pu être obtenue."
+    },
     "attachmentComposer": {
       "captionPlaceholder": "Ajouter une légende…",
       "send": "Envoyer",
@@ -770,8 +814,50 @@
       "updateTitle": "Actualité du séjour",
       "bookingTitle": "Votre réservation est confirmée",
       "bookingBody": "Tout est prêt pour votre séjour.",
+      "bookingConfirmed": "Confirmée",
+      "bookingConfirmedBody": "Tout est prêt. Votre réservation est confirmée.",
+      "bookingPending": "En attente",
+      "bookingCancelled": "Annulée",
+      "bookingCompleted": "Terminée",
+      "bookingStatus": "Réservation",
+      "yourReservation": "Votre réservation",
+      "reservation": "Réservation",
+      "guestCount": "{count} voyageurs",
+      "propertyImage": "Image du logement",
+      "retryImage": "Réessayer",
+      "booked": "Réservé le",
+      "host": "Hôte",
+      "dates": "Séjour",
+      "nightsHeading": "Durée",
+      "nightCount": "{count} nuits",
+      "guestsHeading": "Voyageurs",
+      "location": "Emplacement",
+      "bookingProgress": "Parcours de la réservation",
+      "progressConfirmed": "Confirmée",
+      "progressCheckin": "Arrivée",
+      "progressCheckout": "Départ",
+      "progressReview": "Avis",
       "checkinTitle": "Les détails de votre arrivée",
       "checkinBody": "Tout ce qu’il vous faut pour une arrivée sereine.",
+      "welcomeStay": "Bienvenue dans votre séjour",
+      "arrival": "Arrivée",
+      "checkinToday": "Arrivée aujourd’hui",
+      "checkinTomorrow": "Arrivée demain",
+      "viewMap": "Voir sur la carte",
+      "propertyAddress": "Adresse du logement",
+      "propertyAccess": "Accès au logement",
+      "accessAvailable": "Les informations d’accès sont disponibles en toute sécurité dans le contexte du séjour.",
+      "houseRules": "Règles de la maison",
+      "arrivalChecklist": "Liste d’arrivée",
+      "reservationConfirmed": "Réservation confirmée",
+      "checkinAvailable": "Arrivée disponible",
+      "accessInformation": "Informations d’accès",
+      "enjoyStay": "Profitez de votre séjour",
+      "welcome": "Bienvenue !",
+      "stayBeginsToday": "Votre séjour commence aujourd’hui.",
+      "dismissWelcome": "Fermer le message de bienvenue",
+      "wifiAvailable": "Informations Wi-Fi disponibles",
+      "wifiSecure": "Les informations de connexion sont conservées dans le contexte sécurisé du séjour.",
       "checkoutTitle": "Merci d’avoir séjourné avec nous",
       "checkoutBody": "Nous espérons que vous avez apprécié votre voyage.",
       "reviewTitle": "Partagez votre expérience",
@@ -780,6 +866,184 @@
       "paymentBody": "Le statut du paiement de votre réservation a été mis à jour.",
       "supportTitle": "Nous sommes là pour vous",
       "supportBody": "L’assistance Nexa Stays est disponible pour cette réservation."
+    },
+    "phase9": {
+      "activity": "Activité",
+      "reservation": "Réservation",
+      "view": "Voir",
+      "messages": "messages",
+      "photos": "photos",
+      "files": "fichiers",
+      "voice": "audio",
+      "booking": "Réservation",
+      "checkin": "Arrivée",
+      "stayContext": "Contexte du séjour",
+      "jumpTo": "Accéder à une section",
+      "sharedMedia": "Médias partagés",
+      "newMessages": "Nouveaux messages",
+      "draft": "Brouillon récupéré",
+      "dismissDraft": "Masquer le rappel du brouillon",
+      "suggestedActions": "Actions suggérées pour le séjour",
+      "search": "Rechercher",
+      "searchConversation": "Rechercher dans la conversation",
+      "searchPlaceholder": "Rechercher messages, fichiers, photos…",
+      "searchFilter": {
+        "all": "Tout",
+        "message": "Messages",
+        "photo": "Photos",
+        "file": "Fichiers",
+        "link": "Liens",
+        "card": "Étapes du séjour"
+      }
+    },
+    "phase10": {
+      "searchConversation": "Rechercher dans la conversation",
+      "searchPlaceholder": "Rechercher messages, étapes, photos et fichiers…",
+      "clearSearch": "Effacer la recherche",
+      "matches": "{count} résultats",
+      "recent": "Recherches récentes",
+      "clearHistory": "Effacer l’historique",
+      "suggestions": "Suggestions de cette conversation",
+      "searching": "Recherche dans la conversation",
+      "jump": "Accéder",
+      "open": "Ouvrir",
+      "host": "Hôte",
+      "guest": "Voyageur",
+      "emptyTitle": "Aucun résultat",
+      "emptyBody": "Essayez un autre mot-clé ou parcourez les pièces jointes partagées.",
+      "filter": {
+        "all": "Tout",
+        "message": "Messages",
+        "card": "Chronologie",
+        "photo": "Photos",
+        "file": "Fichiers",
+        "link": "Liens"
+      },
+      "section": {
+        "message": "Messages",
+        "card": "Étapes du séjour",
+        "photo": "Photos",
+        "file": "Fichiers",
+        "link": "Emplacements et liens"
+      },
+      "suggestion": {
+        "reservation": "Réservation",
+        "checkin": "Arrivée",
+        "payment": "Paiement",
+        "parking": "Parking",
+        "rules": "Règles de la maison",
+        "invoice": "Facture"
+      }
+    },
+    "phase11": {
+      "title": "Médias partagés",
+      "close": "Fermer la galerie",
+      "all": "Tout",
+      "photos": "Photos",
+      "files": "Fichiers",
+      "voice": "Audio",
+      "links": "Liens",
+      "today": "Aujourd’hui",
+      "yesterday": "Hier",
+      "open": "Ouvrir",
+      "download": "Télécharger",
+      "downloading": "Téléchargement…",
+      "downloaded": "Téléchargé",
+      "failed": "Échec du téléchargement",
+      "select": "Sélectionner",
+      "selected": "{count} sélectionné(s)",
+      "viewAll": "Tout voir",
+      "emptyTitle": "Aucun partage pour le moment",
+      "emptyBody": "Les photos, fichiers, messages vocaux et liens partagés dans cette conversation apparaîtront ici.",
+      "sentBy": "Envoyé par {name}"
+    },
+    "phase13": {
+      "thread": "Fil de conversation",
+      "composer": "Rédiger un message",
+      "attach": "Ajouter une pièce jointe",
+      "emoji": "Choisir un emoji",
+      "emojiPicker": "Sélecteur d’emojis",
+      "playVoice": "Lire le message vocal",
+      "pauseVoice": "Mettre le message vocal en pause",
+      "voicePosition": "Position du message vocal",
+      "playbackSpeed": "Vitesse de lecture {speed} fois",
+      "photo": "Photo",
+      "attachment": "Pièce jointe",
+      "document": "Document",
+      "share": "Partager",
+      "imagePosition": "Image {current} sur {total}",
+      "noSharedPhotos": "Aucune photo partagée",
+      "noSharedPhotosBody": "Les photos partagées dans cette conversation apparaîtront ici.",
+      "imageFailed": "Cette image ne peut pas être affichée",
+      "loadingImage": "Chargement de l’image",
+      "previousImage": "Image précédente",
+      "nextImage": "Image suivante",
+      "newMessage": "Nouveau message reçu de {name}."
+      ,"uploadProgress": "Téléchargement terminé à {percent} pour cent"
+      ,"uploadCompleted": "Téléchargement terminé."
+    },
+    "phase14": {
+      "journey": "Parcours de réservation",
+      "steps": {
+        "inquiry": "Demande",
+        "confirmed": "Confirmée",
+        "checkin": "Arrivée",
+        "stay": "Séjour",
+        "checkout": "Départ",
+        "review": "Avis"
+      },
+      "status": {
+        "inquiry": "Demande de réservation",
+        "confirmed": "Réservation confirmée",
+        "checkin": "Arrivée disponible",
+        "stay": "Séjour en cours",
+        "checkout": "Séjour terminé",
+        "review": "Avis disponible"
+      },
+      "quickActions": "Actions rapides",
+      "essentials": "Essentiels du voyage",
+      "address": "Adresse",
+      "checkin": "Arrivée",
+      "checkout": "Départ",
+      "property": "Logement",
+      "viewProperty": "Voir le logement",
+      "host": "Profil de l’hôte",
+      "verified": "Hôte vérifié"
+    },
+    "phase15": {
+      "welcome": {
+        "inquiry": {
+          "title": "Commencez à préparer votre séjour",
+          "body": "Interrogez votre hôte sur le logement, l’arrivée ou les recommandations locales."
+        },
+        "confirmed": {
+          "title": "Votre séjour est confirmé",
+          "body": "Tout ce dont vous avez besoin pour votre réservation est organisé dans cette conversation."
+        },
+        "checkin": {
+          "title": "Bienvenue pour votre séjour",
+          "body": "Les informations disponibles pour votre arrivée sont prêtes dans le contexte de réservation."
+        },
+        "stay": {
+          "title": "Profitez de votre séjour",
+          "body": "Contactez votre hôte à tout moment si vous avez besoin d’aide."
+        },
+        "completed": {
+          "title": "Merci d’avoir choisi Nexa Stays",
+          "body": "Votre conversation et les actions disponibles après le séjour restent accessibles ici."
+        }
+      },
+      "suggestions": {
+        "amenities": "Demander les équipements",
+        "arrival": "Confirmer l’arrivée",
+        "local": "Demander des recommandations locales"
+      },
+      "tips": {
+        "property": "Touchez la fiche du logement pour consulter les informations disponibles.",
+        "directions": "Besoin d’un itinéraire ? Ouvrez l’adresse dans les essentiels du voyage.",
+        "review": "Vous pouvez maintenant évaluer votre séjour depuis le contexte de réservation."
+      },
+      "dismissTip": "Masquer la suggestion"
     },
     "context": {
       "eyebrow": "Contexte du séjour",

@@ -72,6 +72,7 @@ export default function ListingsPage() {
   const loadingMoreLock = useRef(false);
   const exploreMapRef = useRef<ExploreMapHandle | null>(null);
   const lastMapBoundsRef = useRef<MapBounds | null>(null);
+  const mapRequestSequenceRef = useRef(0);
 
   const exploreFilters = useMemo(
     () => searchParamsToExploreFilters(searchParams),
@@ -216,6 +217,7 @@ export default function ListingsPage() {
 
   const handleMapBounds = useCallback(
     async (bounds: MapBounds) => {
+      const requestSequence = ++mapRequestSequenceRef.current;
       lastMapBoundsRef.current = bounds;
       setMapLoading(true);
       try {
@@ -223,18 +225,24 @@ export default function ListingsPage() {
           ...exploreParams,
           ...bounds,
         });
-        setMapPins(envelope.items.map(mapPinToListing));
+        if (requestSequence === mapRequestSequenceRef.current) {
+          setMapPins(envelope.items.map(mapPinToListing));
+        }
       } catch {
         // Keep previous pins on transient map errors.
       } finally {
-        setMapLoading(false);
+        if (requestSequence === mapRequestSequenceRef.current) {
+          setMapLoading(false);
+        }
       }
     },
     [exploreParams],
   );
 
   useEffect(() => {
+    mapRequestSequenceRef.current += 1;
     setMapPins([]);
+    setMapLoading(false);
   }, [exploreParams]);
 
   useEffect(() => {
@@ -573,9 +581,10 @@ export default function ListingsPage() {
     <>
       <NavBar />
       <main className="pt-[72px] min-h-screen min-w-0">
+        <h1 className="sr-only">{t("listings.staysTitle")}</h1>
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,260px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)] w-full">
           <aside className="hidden xl:block bg-white border-r border-nexa-line p-5 2xl:p-7 px-5 2xl:px-6 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto overflow-x-hidden min-w-0">
-            <h3 className="mb-5">{t("listings.filters")}</h3>
+            <h2 className="mb-5">{t("listings.filters")}</h2>
             <div className="mb-7">
               <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">
                 {t("explore.filterVerified")}

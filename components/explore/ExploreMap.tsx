@@ -278,7 +278,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       return () => {
         cancelAnimationFrame(id);
       };
-    }, [selected?.id]);
+    }, [selected]);
 
     useEffect(() => {
       let cancelled = false;
@@ -296,6 +296,8 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     useEffect(() => {
       if (locating) return;
       let cancelled = false;
+      let settleTimer: ReturnType<typeof setTimeout> | null = null;
+      const markers = markersRef.current;
 
       async function init() {
         if (!mapEl.current || mapRef.current) return;
@@ -370,7 +372,8 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
         clusterRef.current = cluster;
         didInitialFrame.current = true;
         setReady(true);
-        setTimeout(() => {
+        settleTimer = setTimeout(() => {
+          if (cancelled) return;
           map.invalidateSize();
           skipDirtyOnce.current = true;
           emitBounds();
@@ -381,12 +384,13 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       void init();
       return () => {
         cancelled = true;
+        if (settleTimer) clearTimeout(settleTimer);
         if (boundsTimer.current) clearTimeout(boundsTimer.current);
         clusterRef.current?.clearLayers();
         clusterRef.current = null;
         mapRef.current?.remove();
         mapRef.current = null;
-        markersRef.current.clear();
+        markers.clear();
         userMarkerRef.current = null;
         didInitialFrame.current = false;
         setReady(false);

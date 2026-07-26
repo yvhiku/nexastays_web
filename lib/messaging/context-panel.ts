@@ -34,7 +34,7 @@ const PROPERTY_TIME_ZONES_BY_COUNTRY: Record<string, string> = {
   Morocco: "Africa/Casablanca",
 };
 
-function propertyTimeZone(country?: string | null): string {
+export function propertyTimeZone(country?: string | null): string {
   const normalized = country?.trim() ?? "";
   return (
     PROPERTY_TIME_ZONES_BY_COUNTRY[normalized] ??
@@ -43,7 +43,7 @@ function propertyTimeZone(country?: string | null): string {
   );
 }
 
-function dateOnlyInTimeZone(now: Date, timeZone: string): string {
+export function dateOnlyInTimeZone(now: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -107,6 +107,14 @@ function firstString(
     if (typeof value === "string" && value.trim()) return value.trim();
   }
   return undefined;
+}
+
+export function hasGatedAccessCredential(
+  snapshot: Record<string, unknown>,
+): boolean {
+  return Boolean(
+    firstString(snapshot, ["doorCode", "accessCode", "lockCode", "gateCode"]),
+  );
 }
 
 export function deriveContextModules(

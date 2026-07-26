@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 import {
-  NEXA_CONTACT_EMAIL,
   NEXA_PARTNERSHIPS_EMAIL,
   NEXA_SUPPORT_EMAIL,
   contactEmailForReason,

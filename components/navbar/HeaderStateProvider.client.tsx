@@ -32,7 +32,6 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     avatar: null,
     hostMode: false,
   });
-  const [pollingActive, setPollingActive] = useState(false);
   const [idleReady, setIdleReady] = useState(false);
   const mountedRef = useRef(true);
 
@@ -77,7 +76,6 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     document.visibilityState === "visible";
 
   useEffect(() => {
-    setPollingActive(canPoll);
     if (!canPoll) return;
 
     void refresh();
@@ -104,6 +102,7 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     "inbox",
     refresh,
     canPoll,
+    token,
   );
 
   const value = useMemo(

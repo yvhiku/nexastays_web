@@ -38,7 +38,7 @@ export const HowItWorksSection = () => {
               {t("home.howItWorks.subtitle")}
             </p>
             <div className="flex flex-col gap-8">
-              {steps.map((step, i) => (
+              {steps.map((step) => (
                 <div key={step.num} className="flex gap-5">
                   <div className="shrink-0 w-11 h-11 rounded-full bg-nexa-primary text-white font-bold text-base flex items-center justify-center shadow-[0_4px_12px_rgba(232,80,122,.32)]">
                     {step.num}

@@ -4,6 +4,8 @@ const isDev = process.env.NODE_ENV === "development";
 const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
 const identityApi = process.env.NEXT_PUBLIC_IDENTITY_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3001";
 const staysApi = process.env.NEXT_PUBLIC_STAYS_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3002";
+const analyticsEndpoint = process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT;
+const errorReportingEndpoint = process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT;
 
 function originOf(value) {
   try {
@@ -16,21 +18,29 @@ function originOf(value) {
 const siteOrigin = originOf(appUrl);
 const identityOrigin = originOf(identityApi);
 const staysOrigin = originOf(staysApi);
+const analyticsOrigin = originOf(analyticsEndpoint);
+const errorReportingOrigin = originOf(errorReportingEndpoint);
+const sumsubApiOrigin = "https://api.sumsub.com";
+const sumsubStaticOrigin = "https://static.sumsub.com";
 const csp = [
   "default-src 'self'",
-  `script-src 'self' ${isProd ? "" : "'unsafe-eval'"} 'unsafe-inline'`,
+  `script-src 'self' ${sumsubStaticOrigin} ${isProd ? "" : "'unsafe-eval'"} 'unsafe-inline'`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com https://*.tile.openstreetmap.org https://staticmap.openstreetmap.de https://*.basemaps.cartocdn.com" +
     (staysOrigin ? ` ${staysOrigin}` : ""),
   "font-src 'self' data:",
   "media-src 'self'" + (staysOrigin ? ` ${staysOrigin}` : ""),
   "connect-src 'self'" +
-    [siteOrigin, identityOrigin, staysOrigin].filter(Boolean).map((origin) => ` ${origin}`).join(""),
+    [siteOrigin, identityOrigin, staysOrigin, sumsubApiOrigin, analyticsOrigin, errorReportingOrigin]
+      .filter(Boolean)
+      .map((origin) => ` ${origin}`)
+      .join(""),
+  `frame-src 'self' ${sumsubApiOrigin}`,
   "worker-src 'self'",
   "manifest-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self' https:",
+  "form-action 'self'",
   "object-src 'none'",
   "upgrade-insecure-requests",
 ].join("; ");
@@ -43,7 +53,8 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(self)",
+    value:
+      'camera=(self "https://api.sumsub.com"), microphone=(self "https://api.sumsub.com"), geolocation=(self)',
   },
   ...(isProd
     ? [
@@ -193,13 +204,9 @@ const withPWA = require("@ducanh2912/next-pwa").default({
           /\/api\/v1\//.test(url.pathname) ||
           (typeof identityOrigin === "string" && url.origin === identityOrigin) ||
           (typeof staysOrigin === "string" && url.origin === staysOrigin),
-        handler: "NetworkFirst",
+        // Authenticated API responses must never enter a shared service-worker cache.
+        handler: "NetworkOnly",
         method: "GET",
-        options: {
-          cacheName: "apis",
-          networkTimeoutSeconds: 10,
-          expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 },
-        },
       },
       {
         urlPattern: ({ request }) => request.mode === "navigate",

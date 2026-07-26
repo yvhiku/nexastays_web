@@ -8,6 +8,7 @@ import {
   DEFAULT_SEARCH_BAR_VALUE,
   type SearchBarValue,
 } from "@/components/search/types";
+import { isValidBookingRange } from "@/lib/booking-dates";
 
 export function occupancyTotal(value: Pick<SearchBarValue, "adults" | "children">): number {
   return Math.max(0, value.adults + value.children);
@@ -68,7 +69,11 @@ export function searchBarValueFromSearchParams(
 ): SearchBarValue {
   const city = sanitizeCityInput(sp.get("city") || "");
   const checkin = sanitizeDateInput(sp.get("checkin_date") || "");
-  const checkout = sanitizeDateInput(sp.get("checkout_date") || "");
+  const requestedCheckout = sanitizeDateInput(sp.get("checkout_date") || "");
+  const checkout =
+    checkin && requestedCheckout && !isValidBookingRange(checkin, requestedCheckout)
+      ? ""
+      : requestedCheckout;
   const listingType = (sp.get("listing_type") || "all").toUpperCase();
   const guests = sanitizeGuestCount(sp.get("guests") || "") ?? 0;
 

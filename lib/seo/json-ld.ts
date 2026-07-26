@@ -93,39 +93,19 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
     nodes.push(touristDestination);
   }
 
-  const lodgingBusiness: Record<string, unknown> = {
+  const collectionPage: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
+    "@type": "CollectionPage",
     name: page.h1,
     url: pageUrl,
     description: page.description,
-    address: {
-      "@type": "PostalAddress",
-      addressCountry: "MA",
-      ...(page.destination?.name ? { addressLocality: page.destination.name } : {}),
+    inLanguage: page.locale,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: page.intelligence.listingCount,
     },
   };
-  if (page.intelligence.avgRating != null) {
-    lodgingBusiness.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: page.intelligence.avgRating,
-      reviewCount: page.intelligence.reviewCount,
-      bestRating: 5,
-    };
-  }
-  nodes.push(lodgingBusiness);
-
-  if (page.intelligence.listingCount > 0 && page.intelligence.minPrice != null) {
-    nodes.push({
-      "@context": "https://schema.org",
-      "@type": "AggregateOffer",
-      offerCount: page.intelligence.listingCount,
-      lowPrice: page.intelligence.minPrice,
-      highPrice: page.intelligence.maxPrice ?? page.intelligence.minPrice,
-      priceCurrency: page.intelligence.currency,
-      url: pageUrl,
-    });
-  }
+  nodes.push(collectionPage);
 
   if (page.faq.length > 0) {
     nodes.push({

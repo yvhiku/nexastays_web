@@ -8,8 +8,8 @@ import { StarRatingDisplay } from "./StarRatingSelector";
 import { NexaSelect } from "@/components/ui/NexaSelect";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-function formatReviewDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+function formatReviewDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale, {
     month: "long",
     year: "numeric",
   });
@@ -20,11 +20,13 @@ function ReviewCard({
   optimistic,
   yourLabel,
   justNowLabel,
+  locale,
 }: {
   review: ListingReview;
   optimistic?: boolean;
   yourLabel: string;
   justNowLabel: string;
+  locale: string;
 }) {
   return (
     <article className="py-6 border-b border-nexa-line/50 last:border-0">
@@ -55,7 +57,7 @@ function ReviewCard({
           <div className="flex items-center gap-2 mt-1">
             <StarRatingDisplay rating={review.rating} />
             <span className="text-xs text-nexa-ink-4">
-              {optimistic ? justNowLabel : formatReviewDate(review.created_at)}
+            {optimistic ? justNowLabel : formatReviewDate(review.created_at, locale)}
             </span>
           </div>
           {review.comment && (
@@ -155,7 +157,7 @@ export function ListingReviewsSection({
   initialAvg,
   initialCount = 0,
 }: ListingReviewsSectionProps) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [reviews, setReviews] = useState<ListingReview[]>([]);
   const [optimisticIds, setOptimisticIds] = useState<Set<string>>(() => new Set());
   const [avg, setAvg] = useState<number | null>(initialAvg ?? null);
@@ -167,9 +169,11 @@ export function ListingReviewsSection({
   const [loadingMore, setLoadingMore] = useState(false);
   const [sort, setSort] = useState<ReviewSort>("newest");
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const requestSequenceRef = useRef(0);
 
   const load = useCallback(
     async (pageNum: number, sortVal: ReviewSort, append: boolean) => {
+      const requestSequence = ++requestSequenceRef.current;
       if (pageNum === 1) setLoading(true);
       else setLoadingMore(true);
       try {
@@ -178,6 +182,7 @@ export function ListingReviewsSection({
           limit: 10,
           sort: sortVal,
         });
+        if (requestSequence !== requestSequenceRef.current) return;
         setReviews((prev) => (append ? [...prev, ...res.reviews] : res.reviews));
         setAvg(res.summary.overall_avg_rating);
         setTotal(res.summary.total_count);
@@ -185,8 +190,10 @@ export function ListingReviewsSection({
         setHasMore(res.page * res.limit < res.total);
         setPage(pageNum);
       } finally {
-        setLoading(false);
-        setLoadingMore(false);
+        if (requestSequence === requestSequenceRef.current) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     },
     [listingId],
@@ -292,6 +299,7 @@ export function ListingReviewsSection({
                 optimistic={optimisticIds.has(r.id)}
                 yourLabel={t("rateStay.yourReviewLabel")}
                 justNowLabel={t("rateStay.justNow")}
+                locale={locale}
               />
             ))}
         {loadingMore && (

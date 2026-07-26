@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FileText, X } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { AttachmentEditorProps } from "@/lib/messaging/attachments/registry";
 
 export function FileAttachmentEditor({ item, onRemove, labels }: AttachmentEditorProps) {

@@ -5,7 +5,8 @@ export type ConversationSectionId =
   | "unread"
   | "today"
   | "yesterday"
-  | "earlier";
+  | "earlier"
+  | "archived";
 
 export type ConversationSection = {
   id: ConversationSectionId;
@@ -42,9 +43,17 @@ export function groupConversations(
     ["today", []],
     ["yesterday", []],
     ["earlier", []],
+    ["archived", []],
   ]);
 
   for (const item of items) {
+    if (
+      item.conversation.visibility === "ARCHIVED" ||
+      item.conversation.messagingState === "ARCHIVED"
+    ) {
+      sections.get("archived")!.push(item);
+      continue;
+    }
     if (item.sync.unreadCount > 0) {
       sections.get("unread")!.push(item);
       continue;
@@ -59,7 +68,7 @@ export function groupConversations(
     sections.get(id)!.push(item);
   }
 
-  return (["unread", "today", "yesterday", "earlier"] as const)
+  return (["unread", "today", "yesterday", "earlier", "archived"] as const)
     .map((id) => ({
       id,
       items: sections

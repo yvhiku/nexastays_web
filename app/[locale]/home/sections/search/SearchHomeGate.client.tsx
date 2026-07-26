@@ -39,7 +39,6 @@ export function SearchHomeGate({ children, variant = "standalone" }: Props) {
       }}
       onFocus={activate}
       className="outline-none"
-      aria-label="Activate search"
     >
       {children}
     </div>

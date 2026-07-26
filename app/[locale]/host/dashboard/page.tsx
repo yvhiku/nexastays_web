@@ -119,7 +119,7 @@ function HostDashboardContent() {
       })
       .catch((e) => setError(formatUserError(e) || t("hostDashboard.failedLoad")))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     if (searchParams.get("saved") !== "1") return;

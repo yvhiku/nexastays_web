@@ -9,10 +9,7 @@ import { DateSheet } from "@/components/search/DateSheet";
 import { GuestSheet } from "@/components/search/GuestSheet";
 import { SEARCH_MOTION, nexaHaptic } from "@/components/search/SearchAnimations";
 import type { SearchActiveStep } from "@/components/search/SearchState";
-import {
-  DEFAULT_SEARCH_BAR_VALUE,
-  type SearchBarValue,
-} from "@/components/search/types";
+import { type SearchBarValue } from "@/components/search/types";
 import { getExploreRecentSearches } from "@/lib/explore-recent-searches";
 import { getCollectionsForContext } from "@/lib/explore-collections";
 import { MOROCCO_CONTEXT } from "@/lib/explore-city-context";

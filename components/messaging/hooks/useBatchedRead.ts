@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { markConversationRead } from "@/lib/messaging/messages-api";
 
-const DEBOUNCE_MS = 5_000;
-const MAX_INTERVAL_MS = 15_000;
+const MIN_INTERVAL_MS = 1_000;
 
 export function useBatchedRead(
   conversationId: string | null,
@@ -13,7 +12,6 @@ export function useBatchedRead(
   onRead?: () => void,
 ) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const maxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef(false);
   const lastSentAt = useRef(0);
   const flushing = useRef(false);
@@ -23,10 +21,6 @@ export function useBatchedRead(
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
-    if (maxTimer.current) {
-      clearTimeout(maxTimer.current);
-      maxTimer.current = null;
-    }
   }, []);
 
   const onReadRef = useRef(onRead);
@@ -34,8 +28,6 @@ export function useBatchedRead(
 
   const flush = useCallback(async () => {
     if (!conversationId || !token || !pending.current || flushing.current) return;
-    const now = Date.now();
-    if (now - lastSentAt.current < MAX_INTERVAL_MS) return;
 
     flushing.current = true;
     pending.current = false;
@@ -48,6 +40,15 @@ export function useBatchedRead(
       pending.current = true;
     } finally {
       flushing.current = false;
+      if (pending.current) {
+        const remaining = Math.max(
+          0,
+          MIN_INTERVAL_MS - (Date.now() - lastSentAt.current),
+        );
+        debounceTimer.current = setTimeout(() => {
+          void flush();
+        }, remaining);
+      }
     }
   }, [conversationId, token, clearTimers]);
 
@@ -56,18 +57,23 @@ export function useBatchedRead(
     pending.current = true;
 
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    const remaining = Math.max(
+      0,
+      MIN_INTERVAL_MS - (Date.now() - lastSentAt.current),
+    );
+    if (!flushing.current && remaining === 0) {
+      void flush();
+      return;
+    }
     debounceTimer.current = setTimeout(() => {
       void flush();
-    }, DEBOUNCE_MS);
-
-    if (!maxTimer.current) {
-      maxTimer.current = setTimeout(() => {
-        void flush();
-      }, MAX_INTERVAL_MS);
-    }
+    }, remaining);
   }, [conversationId, token, enabled, flush]);
 
   useEffect(() => {
+    pending.current = false;
+    lastSentAt.current = 0;
+    clearTimers();
     return () => {
       void flush();
       clearTimers();

@@ -33,6 +33,7 @@ import {
 import { CompletedStayReviewPrompt } from "@/components/bookings/CompletedStayReviewPrompt";
 import { StarRatingDisplay } from "@/components/reviews/StarRatingSelector";
 import { HostBookingDetailView } from "@/components/bookings/HostBookingDetailView";
+import { maskSensitiveIdentifier } from "@/lib/privacy";
 import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
 import { getBookingReview } from "@/lib/stays-api";
 import type { StaysReviewDetail } from "@/lib/stays-types";
@@ -407,7 +408,10 @@ function BookingDetailPageInner() {
                     <li key={i} className="text-sm">
                       <span className="font-medium text-nexa-ink">{o.full_name}</span>
                       {o.id_number && (
-                        <span className="text-nexa-ink-4"> · ID: {o.id_number}</span>
+                        <span className="text-nexa-ink-4">
+                          {" · ID: "}
+                          {maskSensitiveIdentifier(o.id_number)}
+                        </span>
                       )}
                     </li>
                   ))}
@@ -588,7 +592,7 @@ function BookingDetailPageInner() {
                   {openingMessage ? t("inbox.opening") : t("inbox.messageHost")}
                 </Button>
                 <Button variant="outline" asChild className="gap-2">
-                  <Link href={`/contact?booking=${booking.id}`}>
+                  <Link href={localePath(`/contact?booking=${booking.id}`)}>
                     <MessageCircle className="h-4 w-4" aria-hidden />
                     {t("myBookings.reportIssue")}
                   </Link>

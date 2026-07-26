@@ -6,6 +6,8 @@ import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { getPublicSiteUrl } from "@/lib/env";
 import { PWA_FAVICON_ICO, PWA_ICONS } from "@/lib/pwa-assets";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
+import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
+import { ClientMonitoring } from "@/components/monitoring/ClientMonitoring";
 
 const siteUrl = getPublicSiteUrl();
 
@@ -94,7 +96,7 @@ export default function RootLayout({
 }) {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "TravelAgency",
+    "@type": "Organization",
     name: "Nexa Stays",
     url: siteUrl,
     logo: `${siteUrl}${NEXA_STAYS_LOGO_SRC}`,
@@ -105,16 +107,17 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <ClientMonitoring />
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-layer-modal focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-nexa-ink focus:shadow-nexa-card"
         >
           Skip to main content
         </a>
-        <div id="main-content">{children}</div>
+        <div id="main-content" tabIndex={-1}>{children}</div>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
         />
       </body>
     </html>

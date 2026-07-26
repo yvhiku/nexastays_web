@@ -46,7 +46,7 @@ function HostVerificationStep({
   token,
   isAuthenticated,
   user,
-  hostStatus,
+  hostStatus: _hostStatus,
   hostLoading,
   hostSubmitLoading,
   hostError,
@@ -97,8 +97,11 @@ function HostVerificationStep({
   onLoginRedirect: () => void;
   onDismissError: () => void;
 }) {
+  const onLoadStatusRef = React.useRef(onLoadStatus);
+  onLoadStatusRef.current = onLoadStatus;
+
   useEffect(() => {
-    if (isAuthenticated && token) onLoadStatus();
+    if (isAuthenticated && token) onLoadStatusRef.current();
   }, [isAuthenticated, token]);
 
   if (!isAuthenticated || !token) {

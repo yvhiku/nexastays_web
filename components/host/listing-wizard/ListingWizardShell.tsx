@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import type { WizardStepDef } from "@/lib/host-listing-wizard/form-types";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ListingWizardShell({
   brandTitle,
@@ -50,6 +51,7 @@ export function ListingWizardShell({
   };
   children: React.ReactNode;
 }) {
+  const { localePath } = useLanguage();
   const total = Math.max(steps.length, 1);
   const current = steps[stepIndex];
   const completePct =
@@ -70,7 +72,7 @@ export function ListingWizardShell({
   const sidebar = (
     <>
       <Link
-        href="/"
+        href={localePath("/")}
         className="mb-8 flex items-center gap-2.5 hover:opacity-90"
       >
         <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg">

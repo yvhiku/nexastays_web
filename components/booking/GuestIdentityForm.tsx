@@ -36,7 +36,6 @@ export function GuestIdentityForm({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const frontRef = useRef<HTMLInputElement>(null);
-  const backRef = useRef<HTMLInputElement>(null);
 
   const needsPhoneEmail = isPrimary || guest.gender === "MALE" || guest.gender === "PREFER_NOT_TO_SAY";
 

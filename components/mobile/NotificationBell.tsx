@@ -30,6 +30,7 @@ export function NotificationBell({ className }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const feed = useNotificationsFeed(open, () => setOpen(false));
+  const setOnUnreadChange = feed.setOnUnreadChange;
 
   const handleUnreadChange = useCallback(
     (count: number) => {
@@ -40,8 +41,8 @@ export function NotificationBell({ className }: Props) {
   );
 
   useEffect(() => {
-    feed.setOnUnreadChange(handleUnreadChange);
-  }, [handleUnreadChange, feed.setOnUnreadChange]);
+    setOnUnreadChange(handleUnreadChange);
+  }, [handleUnreadChange, setOnUnreadChange]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

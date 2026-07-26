@@ -16,6 +16,7 @@ import {
   t as translate,
   formatMessage,
 } from "@/lib/i18n";
+import { resolveLocalizedPath } from "@/lib/locale-path";
 
 const VALID_LOCALES = ["en", "fr", "ar"] as const;
 
@@ -110,17 +111,14 @@ export function LanguageProvider({
           : `/${newLocale}${pathWithoutLocale.startsWith("/") ? pathWithoutLocale : "/" + pathWithoutLocale}`;
       const qs =
         typeof window !== "undefined" ? window.location.search.replace(/^\?/, "") : "";
-      router.push(qs ? `${newPath}?${qs}` : newPath);
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      router.push(`${qs ? `${newPath}?${qs}` : newPath}${hash}`);
     },
     [locale, pathname, router],
   );
 
   const localePath = useCallback(
-    (path: string) => {
-      const p = path.startsWith("/") ? path : `/${path}`;
-      if (p === "/") return `/${locale}`;
-      return `/${locale}${p}`;
-    },
+    (path: string) => resolveLocalizedPath(path, locale),
     [locale]
   );
 

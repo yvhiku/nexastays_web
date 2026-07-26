@@ -17,7 +17,6 @@ import {
 } from "./image-pipeline";
 import {
   buildOptimisticMediaMessage,
-  patchOptimisticUploadMeta,
   type OptimisticPreview,
 } from "./optimistic-media";
 import {
@@ -191,6 +190,18 @@ export function useAttachmentManager(
   const activeSendRef = useRef<ActiveSend | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resumeCheckedRef = useRef(false);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  useEffect(() => {
+    return () => {
+      revokePreviews(itemsRef.current);
+      const activeItems = activeSendRef.current?.items ?? [];
+      const stagedUrls = new Set(itemsRef.current.map((item) => item.previewUrl));
+      revokePreviews(activeItems.filter((item) => !stagedUrls.has(item.previewUrl)));
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   const persistDraft = useCallback(async (draftItems: StagedItem[], draftCaption: string) => {
     if (!draftItems.length) {

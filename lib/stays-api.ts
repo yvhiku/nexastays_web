@@ -10,6 +10,7 @@ import {
   notifyAuthLogout,
 } from "./auth-api";
 import { toAppError } from "./errors";
+import { validateImageFile } from "./validators";
 import type {
   SearchListingsParams,
   StaysListing,
@@ -820,6 +821,10 @@ export async function uploadListingPhoto(
   file: File,
   token?: string | null
 ): Promise<{ asset_id: string }> {
+  const validation = validateImageFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error ?? "Invalid listing photo");
+  }
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
   const form = new FormData();
   form.append("file", file);
@@ -834,6 +839,13 @@ export async function uploadListingWalkthrough(
   file: File,
   token?: string | null
 ): Promise<{ asset_id: string }> {
+  const allowedTypes = ["video/mp4", "video/quicktime", "video/webm"];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("Only MP4, MOV, and WebM walkthrough videos are allowed");
+  }
+  if (file.size > 100 * 1024 * 1024) {
+    throw new Error("Walkthrough video must be 100MB or smaller");
+  }
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
   const form = new FormData();
   form.append("file", file);

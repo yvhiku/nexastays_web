@@ -219,7 +219,6 @@ export function SumsubWebVerification({
             void trySync();
           })
           .on("idCheck.onError", (error: unknown) => {
-            console.error("Sumsub idCheck.onError", error);
             const msg =
               typeof error === "object" &&
               error !== null &&

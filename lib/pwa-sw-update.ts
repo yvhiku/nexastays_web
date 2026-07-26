@@ -1,6 +1,13 @@
 /** Service worker update helpers for SwUpdateBanner. */
 
-const IMAGE_CACHE_HINTS = ["static-image", "image", "pages", "start-url"];
+const STALE_CACHE_HINTS = [
+  "static-image",
+  "image",
+  "pages",
+  "start-url",
+  // Removed in Phase F: it could contain authenticated API responses.
+  "apis",
+];
 
 /** Unregister all service workers (dev/QA recovery). */
 export async function unregisterAllServiceWorkers(): Promise<number> {
@@ -42,11 +49,26 @@ export async function clearStaleRuntimeCaches(): Promise<void> {
     const keys = await caches.keys();
     await Promise.all(
       keys
-        .filter((k) => IMAGE_CACHE_HINTS.some((h) => k.toLowerCase().includes(h)))
+        .filter((k) => STALE_CACHE_HINTS.some((h) => k.toLowerCase().includes(h)))
         .map((k) => caches.delete(k)),
     );
   } catch {
     /* ignore */
+  }
+}
+
+/** Remove legacy caches that may contain authenticated API responses. */
+export async function clearSensitiveRuntimeCaches(): Promise<void> {
+  if (typeof caches === "undefined") return;
+  try {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter((key) => key.toLowerCase().includes("apis"))
+        .map((key) => caches.delete(key)),
+    );
+  } catch {
+    /* cache cleanup must never block authentication recovery */
   }
 }
 

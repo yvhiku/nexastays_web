@@ -13,6 +13,7 @@ import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
 import { SeoLandingPageClient } from "@/components/seo/SeoLandingPage.client";
 import { staticParamsInDev } from "@/lib/seo/dev-static-params";
+import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
 
 export const revalidate = 86400;
 
@@ -77,7 +78,7 @@ export default async function SeoComboPage({ params }: Props) {
         <script
           key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(node) }}
         />
       ))}
       <SeoLandingPageClient page={page} listings={listings} />

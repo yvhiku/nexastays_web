@@ -28,6 +28,7 @@ import type { StaysBooking } from "@/lib/stays-types";
 import { cn } from "@/lib/utils";
 import { openConversationForBooking } from "@/lib/messaging/messages-api";
 import { useAuth } from "@/contexts/AuthContext";
+import { maskSensitiveIdentifier } from "@/lib/privacy";
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, {
@@ -106,7 +107,9 @@ export function HostBookingDetailView({
     t("hostBooking.guest");
   const guestPhone = booking.guest_phone?.trim() || guest?.phone?.trim() || "";
   const guestEmail = guest?.email?.trim() || "";
-  const guestId = guest?.id_number?.trim() || "";
+  const guestId = guest?.id_number?.trim()
+    ? maskSensitiveIdentifier(guest.id_number)
+    : "";
 
   const checkinTime = formatTime(booking.listing?.checkin_time);
   const checkoutTime = formatTime(booking.listing?.checkout_time);
@@ -218,7 +221,10 @@ export function HostBookingDetailView({
                     <li key={i} className="text-sm text-nexa-ink">
                       <span className="font-medium">{o.full_name}</span>
                       {o.id_number && (
-                        <span className="text-nexa-ink-4"> · ID: {o.id_number}</span>
+                        <span className="text-nexa-ink-4">
+                          {" · ID: "}
+                          {maskSensitiveIdentifier(o.id_number)}
+                        </span>
                       )}
                       {o.is_primary && (
                         <span className="ml-2 text-xs text-nexa-primary font-medium">

@@ -12,6 +12,7 @@ import {
 } from "@/lib/notifications-api";
 import { trackEvent } from "@/lib/analytics";
 import { formatUserError } from "@/lib/errors";
+import { safeInternalPath } from "@/lib/safe-url";
 
 export function useNotificationsFeed(open: boolean, onClose: () => void) {
   const router = useRouter();
@@ -22,6 +23,7 @@ export function useNotificationsFeed(open: boolean, onClose: () => void) {
   const [error, setError] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
   const loadInFlightRef = useRef(false);
+  const requestSequenceRef = useRef(0);
   const onUnreadChangeRef = useRef<((count: number) => void) | undefined>(undefined);
 
   const notifyUnreadCount = useCallback((list: UserNotificationItem[]) => {
@@ -34,20 +36,34 @@ export function useNotificationsFeed(open: boolean, onClose: () => void) {
 
   const load = useCallback(async () => {
     if (!token || loadInFlightRef.current) return;
+    const requestSequence = ++requestSequenceRef.current;
     loadInFlightRef.current = true;
     setLoading(true);
     setError(null);
     try {
       const data = await getNotifications(token, 20);
+      if (requestSequence !== requestSequenceRef.current) return;
       setItems(data);
       notifyUnreadCount(data);
     } catch (e) {
-      setError(formatUserError(e));
+      if (requestSequence === requestSequenceRef.current) {
+        setError(formatUserError(e));
+      }
     } finally {
-      loadInFlightRef.current = false;
-      setLoading(false);
+      if (requestSequence === requestSequenceRef.current) {
+        loadInFlightRef.current = false;
+        setLoading(false);
+      }
     }
   }, [token, notifyUnreadCount]);
+
+  useEffect(() => {
+    requestSequenceRef.current += 1;
+    loadInFlightRef.current = false;
+    setItems([]);
+    setError(null);
+    setLoading(false);
+  }, [token]);
 
   useEffect(() => {
     if (open && isAuthenticated && ready && token) {
@@ -77,8 +93,9 @@ export function useNotificationsFeed(open: boolean, onClose: () => void) {
   };
 
   const handleItemClick = async (item: UserNotificationItem) => {
-    const actionUrl =
-      typeof item.data?.action_url === "string" ? item.data.action_url : null;
+    const actionUrl = safeInternalPath(
+      typeof item.data?.action_url === "string" ? item.data.action_url : null,
+    );
     trackEvent("notification_clicked", {
       notification_id: item.id,
       type: item.type,

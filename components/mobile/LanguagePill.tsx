@@ -27,7 +27,7 @@ export function LanguagePill({ className }: Props) {
           "md:hidden",
           className,
         )}
-        aria-label={t("common.language")}
+        aria-label={`${t("common.language")}: ${label}`}
         aria-haspopup="dialog"
         aria-expanded={open}
       >

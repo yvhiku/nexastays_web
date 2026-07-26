@@ -23,6 +23,15 @@
     "gotIt": "حسناً",
     "changesSaved": "تم حفظ التغييرات"
   },
+  "navigationError": {
+    "eyebrow": "حدث خطأ ما",
+    "title": "تعذر تحميل هذه الصفحة.",
+    "body": "يرجى المحاولة مرة أخرى. إذا استمرت المشكلة، عُد إلى الصفحة الرئيسية.",
+    "retry": "حاول مرة أخرى",
+    "notFoundTitle": "تعذر العثور على هذه الصفحة",
+    "notFoundBody": "ربما انتهت صلاحية الرابط أو تم نقل الصفحة.",
+    "goHome": "العودة إلى الرئيسية"
+  },
   "seo": {
     "staysHubTitle": "إقامات في المغرب | Nexa Stays",
     "staysHubDescription": "تصفح إقامات موثقة في المغرب — مراكش، الدار البيضاء، أكادير، فاس والمزيد.",
@@ -649,7 +658,26 @@
     "refundEstimateHint": "يتم حساب الاسترداد النهائي في الخادم حسب سياسة القائمة وحالة الدفع.",
     "cancelReason": "سبب الإلغاء",
     "cancelReasonPlaceholder": "أضف سبباً مختصراً للدعم والطرف الآخر.",
-    "confirmCancel": "تأكيد الإلغاء"
+    "confirmCancel": "تأكيد الإلغاء",
+    "bookingDetails": "تفاصيل الحجز",
+    "timeline": "الجدول الزمني للحجز",
+    "paymentSummary": "ملخص الدفع",
+    "guestInfo": "معلومات الضيف",
+    "hostInfo": "معلومات المضيف",
+    "cancellationPolicy": "سياسة الإلغاء",
+    "receipt": "الإيصال",
+    "propertyLocation": "موقع العقار",
+    "support": "الدعم",
+    "downloadInvoice": "تنزيل الفاتورة",
+    "timelineCreated": "تم إنشاء الحجز",
+    "timelinePayment": "تم تأكيد الدفع",
+    "timelineCheckin": "تسجيل الوصول",
+    "timelineCheckout": "تسجيل المغادرة",
+    "timelineCompleted": "اكتملت الإقامة",
+    "hostContact": "جهة اتصال المضيف لتسجيل الوصول",
+    "standardCancellation": "تُطبّق سياسة الإلغاء القياسية. راجع شروط الإعلان لمزيد من التفاصيل.",
+    "printReceipt": "طباعة الإيصال",
+    "backToBookings": "العودة إلى حجوزاتي"
   },
   "hostBooking": {
     "title": "تفاصيل الحجز",
@@ -703,6 +731,15 @@
     "hostRole": "مضيف",
     "guestRole": "ضيف",
     "openImage": "فتح الصورة {number}",
+    "imageLoadFailed": "تعذّر تحميل الصورة",
+    "newest": "الأحدث",
+    "newMessages": "{count} رسائل جديدة",
+    "delivery": {
+      "sending": "جارٍ الإرسال",
+      "sent": "تم الإرسال",
+      "delivered": "تم التسليم",
+      "seen": "تمت المشاهدة"
+    },
     "wifi": "واي فاي",
     "showWifiPassword": "إظهار كلمة مرور الواي فاي",
     "hideWifiPassword": "إخفاء كلمة مرور الواي فاي",
@@ -734,6 +771,13 @@
     "mute": "كتم الإشعارات",
     "unmute": "إلغاء كتم الإشعارات",
     "reportPrompt": "صف باختصار ما حدث (اختياري)",
+    "attachmentMenu": {
+      "title": "إضافة إلى المحادثة",
+      "photos": "الصور",
+      "documents": "مستند",
+      "location": "الموقع",
+      "locationError": "تعذر الوصول إلى موقعك."
+    },
     "attachmentComposer": {
       "captionPlaceholder": "أضف تعليقًا…",
       "send": "إرسال",
@@ -770,8 +814,50 @@
       "updateTitle": "تحديث الإقامة",
       "bookingTitle": "تم تأكيد حجزك",
       "bookingBody": "كل شيء جاهز لإقامتك.",
+      "bookingConfirmed": "مؤكد",
+      "bookingConfirmedBody": "كل شيء جاهز. تم تأكيد حجزك.",
+      "bookingPending": "قيد الانتظار",
+      "bookingCancelled": "ملغى",
+      "bookingCompleted": "مكتمل",
+      "bookingStatus": "الحجز",
+      "yourReservation": "حجزك",
+      "reservation": "الحجز",
+      "guestCount": "{count} ضيوف",
+      "propertyImage": "صورة العقار",
+      "retryImage": "إعادة المحاولة",
+      "booked": "تم الحجز",
+      "host": "المضيف",
+      "dates": "الإقامة",
+      "nightsHeading": "المدة",
+      "nightCount": "{count} ليالٍ",
+      "guestsHeading": "الضيوف",
+      "location": "الموقع",
+      "bookingProgress": "مراحل الحجز",
+      "progressConfirmed": "مؤكد",
+      "progressCheckin": "الوصول",
+      "progressCheckout": "المغادرة",
+      "progressReview": "التقييم",
       "checkinTitle": "تفاصيل وصولك",
       "checkinBody": "كل ما تحتاجه لتسجيل وصول سلس.",
+      "welcomeStay": "مرحبًا بك في إقامتك",
+      "arrival": "الوصول",
+      "checkinToday": "الوصول اليوم",
+      "checkinTomorrow": "الوصول غدًا",
+      "viewMap": "عرض على الخريطة",
+      "propertyAddress": "عنوان العقار",
+      "propertyAccess": "الدخول إلى العقار",
+      "accessAvailable": "معلومات الدخول متاحة بأمان ضمن سياق الإقامة.",
+      "houseRules": "قواعد المنزل",
+      "arrivalChecklist": "قائمة الوصول",
+      "reservationConfirmed": "تم تأكيد الحجز",
+      "checkinAvailable": "تسجيل الوصول متاح",
+      "accessInformation": "معلومات الدخول",
+      "enjoyStay": "استمتع بإقامتك",
+      "welcome": "مرحبًا!",
+      "stayBeginsToday": "تبدأ إقامتك اليوم.",
+      "dismissWelcome": "إغلاق رسالة الترحيب",
+      "wifiAvailable": "معلومات شبكة Wi-Fi متاحة",
+      "wifiSecure": "يتم حفظ معلومات الاتصال ضمن سياق الإقامة الآمن.",
       "checkoutTitle": "شكرًا لإقامتك معنا",
       "checkoutBody": "نأمل أن تكون قد استمتعت برحلتك.",
       "reviewTitle": "شارك تجربتك",
@@ -780,6 +866,184 @@
       "paymentBody": "تم تحديث حالة دفع حجزك.",
       "supportTitle": "نحن هنا لمساعدتك",
       "supportBody": "دعم Nexa Stays متاح لمساعدتك في هذا الحجز."
+    },
+    "phase9": {
+      "activity": "النشاط",
+      "reservation": "الحجز",
+      "view": "عرض",
+      "messages": "رسائل",
+      "photos": "صور",
+      "files": "ملفات",
+      "voice": "صوت",
+      "booking": "الحجز",
+      "checkin": "الوصول",
+      "stayContext": "سياق الإقامة",
+      "jumpTo": "الانتقال إلى قسم",
+      "sharedMedia": "الوسائط المشتركة",
+      "newMessages": "رسائل جديدة",
+      "draft": "تم استعادة المسودة",
+      "dismissDraft": "إخفاء تذكير المسودة",
+      "suggestedActions": "إجراءات الإقامة المقترحة",
+      "search": "بحث",
+      "searchConversation": "البحث في المحادثة",
+      "searchPlaceholder": "البحث في الرسائل والملفات والصور…",
+      "searchFilter": {
+        "all": "الكل",
+        "message": "الرسائل",
+        "photo": "الصور",
+        "file": "الملفات",
+        "link": "الروابط",
+        "card": "أحداث الإقامة"
+      }
+    },
+    "phase10": {
+      "searchConversation": "البحث في المحادثة",
+      "searchPlaceholder": "البحث في الرسائل والأحداث والصور والملفات…",
+      "clearSearch": "مسح البحث",
+      "matches": "{count} نتائج",
+      "recent": "عمليات البحث الأخيرة",
+      "clearHistory": "مسح السجل",
+      "suggestions": "اقتراحات من هذه المحادثة",
+      "searching": "جارٍ البحث في المحادثة",
+      "jump": "انتقال",
+      "open": "فتح",
+      "host": "المضيف",
+      "guest": "الضيف",
+      "emptyTitle": "لا توجد نتائج",
+      "emptyBody": "جرّب كلمة أخرى أو تصفح المرفقات المشتركة.",
+      "filter": {
+        "all": "الكل",
+        "message": "الرسائل",
+        "card": "الخط الزمني",
+        "photo": "الصور",
+        "file": "الملفات",
+        "link": "الروابط"
+      },
+      "section": {
+        "message": "الرسائل",
+        "card": "أحداث الإقامة",
+        "photo": "الصور",
+        "file": "الملفات",
+        "link": "المواقع والروابط"
+      },
+      "suggestion": {
+        "reservation": "الحجز",
+        "checkin": "الوصول",
+        "payment": "الدفع",
+        "parking": "موقف السيارات",
+        "rules": "قواعد المنزل",
+        "invoice": "الفاتورة"
+      }
+    },
+    "phase11": {
+      "title": "الوسائط المشتركة",
+      "close": "إغلاق معرض الوسائط",
+      "all": "الكل",
+      "photos": "الصور",
+      "files": "الملفات",
+      "voice": "الصوت",
+      "links": "الروابط",
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "open": "فتح",
+      "download": "تنزيل",
+      "downloading": "جارٍ التنزيل…",
+      "downloaded": "تم التنزيل",
+      "failed": "فشل التنزيل",
+      "select": "تحديد الوسائط",
+      "selected": "تم تحديد {count}",
+      "viewAll": "عرض الكل",
+      "emptyTitle": "لا توجد وسائط بعد",
+      "emptyBody": "ستظهر هنا الصور والملفات والرسائل الصوتية والروابط المشتركة في هذه المحادثة.",
+      "sentBy": "أرسلها {name}"
+    },
+    "phase13": {
+      "thread": "سلسلة المحادثة",
+      "composer": "محرر الرسائل",
+      "attach": "إضافة مرفق",
+      "emoji": "اختيار رمز تعبيري",
+      "emojiPicker": "منتقي الرموز التعبيرية",
+      "playVoice": "تشغيل الرسالة الصوتية",
+      "pauseVoice": "إيقاف الرسالة الصوتية مؤقتًا",
+      "voicePosition": "موضع الرسالة الصوتية",
+      "playbackSpeed": "سرعة التشغيل {speed} مرات",
+      "photo": "صورة",
+      "attachment": "مرفق",
+      "document": "مستند",
+      "share": "مشاركة",
+      "imagePosition": "الصورة {current} من {total}",
+      "noSharedPhotos": "لا توجد صور مشتركة بعد",
+      "noSharedPhotosBody": "ستظهر هنا الصور المشتركة في هذه المحادثة.",
+      "imageFailed": "تعذر عرض هذه الصورة",
+      "loadingImage": "جارٍ تحميل الصورة",
+      "previousImage": "الصورة السابقة",
+      "nextImage": "الصورة التالية",
+      "newMessage": "تم استلام رسالة جديدة من {name}."
+      ,"uploadProgress": "اكتمل الرفع بنسبة {percent} بالمئة"
+      ,"uploadCompleted": "اكتمل الرفع."
+    },
+    "phase14": {
+      "journey": "رحلة الحجز",
+      "steps": {
+        "inquiry": "استفسار",
+        "confirmed": "مؤكد",
+        "checkin": "الوصول",
+        "stay": "الإقامة",
+        "checkout": "المغادرة",
+        "review": "التقييم"
+      },
+      "status": {
+        "inquiry": "استفسار عن الحجز",
+        "confirmed": "تم تأكيد الحجز",
+        "checkin": "تسجيل الوصول متاح",
+        "stay": "الإقامة جارية",
+        "checkout": "اكتملت الإقامة",
+        "review": "التقييم متاح"
+      },
+      "quickActions": "إجراءات سريعة",
+      "essentials": "أساسيات الرحلة",
+      "address": "العنوان",
+      "checkin": "تسجيل الوصول",
+      "checkout": "تسجيل المغادرة",
+      "property": "العقار",
+      "viewProperty": "عرض العقار",
+      "host": "ملف المضيف",
+      "verified": "مضيف موثّق"
+    },
+    "phase15": {
+      "welcome": {
+        "inquiry": {
+          "title": "ابدأ التخطيط لإقامتك",
+          "body": "اسأل مضيفك عن العقار أو الوصول أو التوصيات المحلية."
+        },
+        "confirmed": {
+          "title": "تم تأكيد إقامتك",
+          "body": "كل ما تحتاجه لحجزك منظم داخل هذه المحادثة."
+        },
+        "checkin": {
+          "title": "مرحبًا بك في إقامتك",
+          "body": "تفاصيل الوصول وتسجيل الدخول المتاحة جاهزة في سياق الحجز."
+        },
+        "stay": {
+          "title": "استمتع بإقامتك",
+          "body": "تواصل مع مضيفك في أي وقت تحتاج فيه إلى المساعدة."
+        },
+        "completed": {
+          "title": "شكرًا لاختيارك Nexa Stays",
+          "body": "تظل محادثتك وإجراءات ما بعد الإقامة المتاحة محفوظة هنا."
+        }
+      },
+      "suggestions": {
+        "amenities": "اسأل عن المرافق",
+        "arrival": "أكد تفاصيل الوصول",
+        "local": "اطلب توصيات محلية"
+      },
+      "tips": {
+        "property": "اضغط على بطاقة العقار لمراجعة تفاصيل الإعلان المتاحة.",
+        "directions": "تحتاج إلى الاتجاهات؟ افتح العنوان من أساسيات الرحلة.",
+        "review": "يمكنك الآن تقييم إقامتك من سياق الحجز."
+      },
+      "dismissTip": "إخفاء الاقتراح"
     },
     "context": {
       "eyebrow": "سياق الإقامة",

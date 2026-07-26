@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
@@ -28,6 +28,7 @@ import { BookingFiltersPanel } from "@/components/bookings/BookingFiltersPanel";
 import { BookingListSkeleton } from "@/components/bookings/BookingCardSkeleton";
 import { CancelBookingDialog } from "@/components/bookings/CancelBookingDialog";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useModalDialog } from "@/components/ui/useModalDialog";
 import { openConversationForBooking } from "@/lib/messaging/messages-api";
 import {
   CalendarCheck,
@@ -53,6 +54,12 @@ function MyBookingsContent() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<StaysBooking | null>(null);
   const [messagingBookingId, setMessagingBookingId] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalDialog(
+    mobileFiltersOpen,
+    dialogRef,
+    () => setMobileFiltersOpen(false),
+  );
 
   const handleMessageHost = useCallback(
     async (bookingId: string) => {
@@ -287,7 +294,7 @@ function MyBookingsContent() {
 
       {mobileFiltersOpen && (
         <OverlayPortal layer="drawer">
-        <div className="fixed inset-0 z-layer-drawer lg:hidden" role="dialog" aria-modal="true">
+        <div ref={dialogRef} className="fixed inset-0 z-layer-drawer lg:hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-booking-filters-title">
           <button
             type="button"
             className="absolute inset-0 bg-black/40"
@@ -296,11 +303,11 @@ function MyBookingsContent() {
           />
           <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-nexa-lg animate-in slide-in-from-bottom duration-300">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-nexa-ink">{t("myBookings.filterSort")}</h2>
+              <h2 id="mobile-booking-filters-title" className="font-semibold text-nexa-ink">{t("myBookings.filterSort")}</h2>
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(false)}
-                className="p-2 rounded-lg hover:bg-nexa-bg-1"
+                className="flex h-12 w-12 items-center justify-center rounded-xl hover:bg-nexa-bg-1"
                 aria-label={t("common.close")}
               >
                 <X className="h-5 w-5" />

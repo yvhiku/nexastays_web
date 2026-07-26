@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --primary: 347 76% 59%;
+    --primary: 342 65% 47%;
     --primary-foreground: 0 0% 100%;
     --background: 330 33% 99%;
     --foreground: 330 30% 10%;
@@ -86,6 +86,33 @@
 }
 
 /* Custom listing map pin — no Leaflet default chrome */
+:where(
+  a[href],
+  button,
+  input,
+  textarea,
+  select,
+  summary,
+  [role="button"],
+  [role="link"],
+  [role="tab"],
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 3px solid rgb(196 42 88);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .leaflet-marker-icon.nexa-map-pin {
   background: transparent !important;
   border: none !important;
@@ -168,5 +195,86 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Messaging design system: normalize Lucide weight across every inbox surface. */
+.messaging-ui svg.lucide {
+  stroke-width: 1.75;
+}
+@keyframes media-download {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(110%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.messaging-surface :where(button, a, input, textarea, [tabindex]):focus-visible {
+  outline: 3px solid rgb(196 42 88);
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  .messaging-surface :where(button, a, input, textarea, [role="tab"], [role="menuitem"]) {
+    border: 1px solid ButtonText;
+    forced-color-adjust: auto;
+  }
+
+  .messaging-surface :where([aria-current="page"], [aria-selected="true"], [aria-pressed="true"]) {
+    border: 2px solid Highlight;
+  }
+
+  .messaging-surface :where([data-message-id], [role="status"]) {
+    forced-color-adjust: auto;
+  }
+
+  .messaging-surface :focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
+
+[data-conversation-theme="inquiry"] {
+  --conversation-accent: #9a7f8a;
+  --conversation-accent-border: rgba(154, 127, 138, 0.2);
+}
+
+[data-conversation-theme="confirmed"],
+[data-conversation-theme="review"] {
+  --conversation-accent: #e8507a;
+  --conversation-accent-border: rgba(232, 80, 122, 0.2);
+}
+
+[data-conversation-theme="checkin"] {
+  --conversation-accent: #b7791f;
+  --conversation-accent-border: rgba(183, 121, 31, 0.22);
+}
+
+[data-conversation-theme="stay"] {
+  --conversation-accent: #397b9c;
+  --conversation-accent-border: rgba(57, 123, 156, 0.22);
+}
+
+[data-conversation-theme="completed"] {
+  --conversation-accent: #6f6670;
+  --conversation-accent-border: rgba(111, 102, 112, 0.2);
+}
+
+.messaging-surface [data-message-composer-input]::placeholder {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.messaging-surface [data-message-composer-input]:focus::placeholder {
+  opacity: 0.55;
+  transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messaging-surface [data-message-composer-input]::placeholder {
+    transition: none;
   }
 }

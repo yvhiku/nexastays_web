@@ -2,7 +2,7 @@
 
 import React from "react";
 import { MessageBubble } from "./MessageBubble";
-import type { ConversationPresentation, MessageDto, AttachmentDto, SignedMedia } from "@/lib/messaging/messages-api";
+import type { MessageDto, AttachmentDto, SignedMedia } from "@/lib/messaging/messages-api";
 import type { MessageGroup } from "@/lib/messaging/selectors/group-messages";
 
 export type MessageRendererProps = {

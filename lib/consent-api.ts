@@ -2,7 +2,7 @@
  * User consent API (Terms & Privacy) - shared with Pay/Go
  */
 
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   refreshToken as refreshTokenApi,
   notifyTokenRefreshed,

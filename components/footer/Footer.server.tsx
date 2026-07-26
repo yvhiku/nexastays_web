@@ -35,12 +35,12 @@ export function FooterSection({ locale }: Props) {
             />
             <div>
               <div className="text-lg font-semibold text-white">Nexa Stays</div>
-              <div className="text-sm text-nexa-ink-4">{t("footer.tagline")}</div>
+              <div className="text-sm text-white/70">{t("footer.tagline")}</div>
             </div>
           </div>
         </div>
 
-        <p className={`mt-8 max-w-3xl text-xs leading-relaxed text-nexa-ink-4 ${textStart}`}>
+        <p className={`mt-8 max-w-3xl text-xs leading-relaxed text-white/70 ${textStart}`}>
           {t("footer.disclaimer")}
         </p>
 
@@ -162,7 +162,7 @@ export function FooterSection({ locale }: Props) {
         </div>
 
         <div
-          className={`mt-12 flex flex-col gap-3 border-t border-nexa-ink-2 pt-8 text-xs text-nexa-ink-4 sm:flex-row sm:items-center sm:justify-between ${
+          className={`mt-12 flex flex-col gap-3 border-t border-nexa-ink-2 pt-8 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between ${
             isRtl ? "sm:flex-row-reverse" : ""
           }`}
         >

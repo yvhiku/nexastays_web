@@ -96,7 +96,7 @@ const UNIT_KIND_LABEL: Record<UnitTypeDraft["kind"], string> = {
   HOSTEL_PRIVATE: "Private room",
 };
 
-const BOOKING_MODEL_LABEL: Record<string, string> = {
+const _BOOKING_MODEL_LABEL: Record<string, string> = {
   ENTIRE_PROPERTY: "Entire place",
   PRIVATE_ROOM: "Private room",
   MULTI_UNIT: "Several similar units",

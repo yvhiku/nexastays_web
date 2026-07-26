@@ -4,6 +4,7 @@ import {
   sanitizeGuestCount,
 } from "@/lib/input-sanitize";
 import type { SearchListingsParams } from "@/lib/stays-types";
+import { isValidBookingRange } from "@/lib/booking-dates";
 
 export const EXPLORE_FILTER_VERSION = 1 as const;
 
@@ -104,7 +105,15 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): ExploreFilte
 export function normalizeExploreFilters(input: ExploreFilters): ExploreFilters {
   const city = sanitizeCityInput(input.city ?? "");
   const checkin = input.checkin_date ? sanitizeDateInput(input.checkin_date) : "";
-  const checkout = input.checkout_date ? sanitizeDateInput(input.checkout_date) : "";
+  const requestedCheckout = input.checkout_date
+    ? sanitizeDateInput(input.checkout_date)
+    : "";
+  const checkout =
+    checkin &&
+    requestedCheckout &&
+    !isValidBookingRange(checkin, requestedCheckout)
+      ? ""
+      : requestedCheckout;
   const guestsRaw = input.guests != null ? sanitizeGuestCount(input.guests) : undefined;
   const guests = guestsRaw != null && guestsRaw > 0 ? guestsRaw : undefined;
 

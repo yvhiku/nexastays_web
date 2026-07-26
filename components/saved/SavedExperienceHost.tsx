@@ -60,9 +60,36 @@ export function SavedExperienceHost() {
       showToast({ kind: "saved" }, 2000);
     };
 
+    const onStorage = (event: StorageEvent) => {
+      if (!userId || event.key !== `nexa-saved-listings:${userId}`) return;
+      let count = 0;
+      try {
+        const parsed = JSON.parse(event.newValue ?? "[]");
+        count = Array.isArray(parsed) ? parsed.length : 0;
+      } catch {
+        count = 0;
+      }
+      window.dispatchEvent(
+        new CustomEvent<SavedListingEventDetail>(
+          "nexa-saved-listings-changed",
+          {
+            detail: {
+              action: "saved",
+              listingId: "",
+              count,
+              isFirstSaveEver: false,
+              silent: true,
+            },
+          },
+        ),
+      );
+    };
+
     window.addEventListener("nexa-saved-listings-changed", onSaved);
+    window.addEventListener("storage", onStorage);
     return () => {
       window.removeEventListener("nexa-saved-listings-changed", onSaved);
+      window.removeEventListener("storage", onStorage);
       clearTimer();
     };
   }, [userId]);

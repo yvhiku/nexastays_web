@@ -16,6 +16,7 @@ import {
 } from "@/lib/stays-api";
 import type { StaysReviewDetail } from "@/lib/stays-types";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useModalDialog } from "@/components/ui/useModalDialog";
 
 const MAX_COMMENT = 1000;
 const MAX_PHOTOS = 5;
@@ -52,6 +53,8 @@ export function ReviewModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalDialog(true, dialogRef, onClose);
 
   const handleFile = useCallback(
     async (files: FileList | null) => {
@@ -125,6 +128,7 @@ export function ReviewModal({
   return (
     <OverlayPortal layer="modal">
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
@@ -152,7 +156,7 @@ export function ReviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-nexa-bg-2 text-nexa-ink-3"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full hover:bg-nexa-bg-2 text-nexa-ink-3"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

@@ -127,12 +127,3 @@ export class MessagingRealtimeAdapter {
     }
   }
 }
-
-let sharedAdapter: MessagingRealtimeAdapter | null = null;
-
-export function getMessagingRealtimeAdapter(): MessagingRealtimeAdapter {
-  if (!sharedAdapter) {
-    sharedAdapter = new MessagingRealtimeAdapter();
-  }
-  return sharedAdapter;
-}

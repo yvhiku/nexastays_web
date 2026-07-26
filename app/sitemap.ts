@@ -18,6 +18,13 @@ const staticRoutes = [
   "/refund",
 ] as const;
 
+function languageAlternates(baseUrl: string, path: string) {
+  const suffix = path.replace(/^\/(en|fr|ar)(?=\/|$)/, "");
+  return Object.fromEntries(
+    locales.map((locale) => [locale, `${baseUrl}/${locale}${suffix}`]),
+  );
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getPublicSiteUrl();
   const now = new Date();
@@ -28,6 +35,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: route === "" || route === "/listings" || route === "/stays" ? "daily" : "monthly",
       priority: route === "" ? 1 : route === "/listings" || route === "/stays" ? 0.9 : 0.6,
+      alternates: {
+        languages: languageAlternates(baseUrl, `/${locale}${route}`),
+      },
     })),
   );
 
@@ -37,7 +47,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: entry.lastmod ? new Date(entry.lastmod) : now,
     changeFrequency: "daily",
     priority: entry.priority ?? 0.85,
+    alternates: {
+      languages: languageAlternates(baseUrl, entry.path),
+    },
   }));
 
-  return [...staticEntries, ...dynamicEntries];
+  const entries = [...staticEntries, ...dynamicEntries];
+  return Array.from(new Map(entries.map((entry) => [entry.url, entry])).values());
 }

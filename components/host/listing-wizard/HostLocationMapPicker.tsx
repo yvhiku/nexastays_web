@@ -240,7 +240,7 @@ export function HostLocationMapPicker({
     }
   };
 
-  const useMyLocation = async () => {
+  const findMyLocation = async () => {
     setBusy(true);
     setError(null);
     try {
@@ -281,7 +281,7 @@ export function HostLocationMapPicker({
           type="button"
           variant="outline"
           disabled={busy || locating}
-          onClick={() => void useMyLocation()}
+          onClick={() => void findMyLocation()}
           className="sm:w-auto inline-flex items-center gap-1.5"
         >
           <LocateFixed className="h-4 w-4" aria-hidden />

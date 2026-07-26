@@ -40,7 +40,6 @@ export async function fetchSeoPage(
   locale: SeoLocale,
 ): Promise<SeoPagePayload | null> {
   if (segments.length === 0) return null;
-  const path = segments.map(encodeURIComponent).join("/");
   if (segments.length === 1) {
     return seoFetch<SeoPagePayload>(
       `/stays/seo/pages/${encodeURIComponent(segments[0]!)}?locale=${locale}`,

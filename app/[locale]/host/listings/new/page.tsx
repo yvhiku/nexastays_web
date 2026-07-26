@@ -85,7 +85,20 @@ function ListingWizardContent() {
   const [feeRates, setFeeRates] = useState<StaysFeeRates>(DEFAULT_FEE_RATES);
   const skipAutosave = useRef(true);
   const formRef = useRef(form);
+  const persistQueueRef = useRef<Promise<void>>(Promise.resolve());
   formRef.current = form;
+
+  useEffect(() => {
+    return () => {
+      for (const photo of formRef.current.photos) {
+        if (photo.preview.startsWith("blob:")) URL.revokeObjectURL(photo.preview);
+      }
+      const walkthroughPreview = formRef.current.walkthroughPreview;
+      if (walkthroughPreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(walkthroughPreview);
+      }
+    };
+  }, []);
 
   const steps = useMemo(
     () => getWizardSteps(form.listingType, form.bookingModel),
@@ -168,7 +181,7 @@ function ListingWizardContent() {
   const syncMedia = useCallback(
     async (id: string, next: ListingWizardFormState) => {
       if (!token) return next;
-      let photos = [...next.photos];
+      const photos = [...next.photos];
       let walkthroughAssetId = next.walkthroughAssetId ?? null;
 
       for (let i = 0; i < photos.length; i++) {
@@ -200,35 +213,43 @@ function ListingWizardContent() {
   );
 
   const persistServer = useCallback(
-    async (opts?: { syncUnits?: boolean; syncMedia?: boolean }) => {
+    (opts?: { syncUnits?: boolean; syncMedia?: boolean }) => {
       const id = listingId;
-      if (!token || !id) return;
+      if (!token || !id) return Promise.resolve();
       const current = formRef.current;
-      try {
-        let next = current;
-        await updateHostListing(id, buildUpdateHostListingBody(current), token);
-        if (opts?.syncUnits && isMultiUnitFlow(current.listingType, current.bookingModel)) {
-          await replaceListingUnitTypes(
-            id,
-            buildReplaceUnitTypesBody(current),
-            token,
+      const run = async () => {
+        try {
+          let next = current;
+          await updateHostListing(id, buildUpdateHostListingBody(current), token);
+          if (opts?.syncUnits && isMultiUnitFlow(current.listingType, current.bookingModel)) {
+            await replaceListingUnitTypes(
+              id,
+              buildReplaceUnitTypesBody(current),
+              token,
+            );
+          }
+          if (opts?.syncMedia) {
+            next = await syncMedia(id, current);
+            setForm(next);
+          }
+          const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          setSavedLabel(
+            t("hostListing.draftSavedAt").replace("{time}", time),
           );
+        } catch (e) {
+          setSavedLabel(t("hostListing.draftSaveFailed"));
+          setError(formatUserError(e) || t("hostListing.draftSaveFailed"));
         }
-        if (opts?.syncMedia) {
-          next = await syncMedia(id, current);
-          setForm(next);
-        }
-        const time = new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        setSavedLabel(
-          t("hostListing.draftSavedAt").replace("{time}", time),
-        );
-      } catch (e) {
-        setSavedLabel(t("hostListing.draftSaveFailed"));
-        setError(formatUserError(e) || t("hostListing.draftSaveFailed"));
-      }
+      };
+      const queued = persistQueueRef.current.then(run, run);
+      persistQueueRef.current = queued.then(
+        () => undefined,
+        () => undefined,
+      );
+      return queued;
     },
     [listingId, token, syncMedia, t],
   );

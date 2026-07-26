@@ -9,6 +9,8 @@ import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoGuideJsonLd } from "@/lib/seo/json-ld";
 import { SeoGuidePageClient } from "@/components/seo/SeoGuidePage.client";
 import { staticParamsInDev } from "@/lib/seo/dev-static-params";
+import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
+import { sanitizeContentHtml } from "@/lib/seo/sanitize-content-html";
 
 export const revalidate = 86400;
 
@@ -51,6 +53,10 @@ export default async function GuidePage({ params }: Props) {
       : [];
 
   const jsonLd = buildSeoGuideJsonLd(page);
+  const safePage = {
+    ...page,
+    bodyHtml: sanitizeContentHtml(page.bodyHtml),
+  };
 
   return (
     <>
@@ -58,10 +64,10 @@ export default async function GuidePage({ params }: Props) {
         <script
           key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(node) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(node) }}
         />
       ))}
-      <SeoGuidePageClient page={page} listings={listings} />
+      <SeoGuidePageClient page={safePage} listings={listings} />
     </>
   );
 }

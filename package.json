@@ -20,7 +20,8 @@
     "generate:pwa": "npm run generate:pwa-icons && npm run verify:pwa-assets",
     "measure:homepage": "node scripts/measure-homepage.mjs",
     "test": "npx --yes tsx --test lib/messaging/__tests__/*.test.ts lib/__tests__/*.test.ts",
-    "test:messaging": "npm run test"
+    "test:messaging": "npm run test",
+    "release:env": "node scripts/verify-production-config.mjs"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -28,6 +29,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-virtual": "^3.14.8",
     "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -42,6 +44,7 @@
     "react-dom": "^18.2.0",
     "react-easy-crop": "^5.4.2",
     "react-phone-number-input": "^3.4.17",
+    "sanitize-html": "^2.17.6",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -50,6 +53,7 @@
     "@types/leaflet.markercluster": "^1.5.6",
     "@types/node": "25.1.0",
     "@types/react": "19.2.10",
+    "@types/sanitize-html": "^2.16.1",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.50.0",
     "eslint-config-next": "^14.0.0",

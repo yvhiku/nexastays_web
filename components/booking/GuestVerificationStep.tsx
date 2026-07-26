@@ -13,6 +13,7 @@ import type { GuestIdentityFormData } from "@/lib/booking-verification-types";
 import type { CreateBookingOccupantDto } from "@/lib/stays-types";
 import { Shield, X, BadgeCheck } from "lucide-react";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useModalDialog } from "@/components/ui/useModalDialog";
 
 interface GuestVerificationStepProps {
   open: boolean;
@@ -51,6 +52,8 @@ export function GuestVerificationStep({
   const [acknowledgeName, setAcknowledgeName] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [guests, setGuests] = useState<GuestIdentityFormData[]>([]);
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  useModalDialog(open, dialogRef, onClose);
 
   const hasVerifiedProfile = !!(userProfile?.full_name && userProfile.full_name.trim().length >= 2);
   const skipIdForVerifiedPrimary = hasVerifiedProfile;
@@ -140,6 +143,7 @@ export function GuestVerificationStep({
     <OverlayPortal layer="modal">
     <div className="fixed inset-0 z-layer-modal flex items-center justify-center p-4 bg-black/50">
       <div
+        ref={dialogRef}
         className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
@@ -153,7 +157,7 @@ export function GuestVerificationStep({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-nexa-bg-1 text-nexa-ink-4"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl hover:bg-nexa-bg-1 text-nexa-ink-4"
             aria-label={t("common.close")}
           >
             <X className="h-5 w-5" />

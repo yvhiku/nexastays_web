@@ -27,9 +27,20 @@ import {
 import { executeCardAction } from "@/lib/messaging/actions/registry";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  MESSAGING_EASE_OUT,
+  MESSAGING_MOTION,
+} from "@/lib/messaging/motion";
 
 type Props = {
   conversation: ConversationDetail;
+  activity?: {
+    messages: number;
+    photos: number;
+    files: number;
+    voice: number;
+  };
+  contextualNote?: string | null;
   className?: string;
   onClose?: () => void;
 };
@@ -64,27 +75,29 @@ function ModuleActions({ module }: { module: ContextModule }) {
   const { t, localePath } = useLanguage();
   if (module.actions.length === 0) return null;
   return (
-    <div className="mt-7 flex flex-col gap-2.5">
+    <div className="mt-8 flex flex-col gap-3">
       {module.actions.slice(0, 2).map((action, index) => (
         <button
           key={action.id}
           type="button"
           onClick={() => executeCardAction(action, { localePath })}
           className={cn(
-            "group flex min-h-12 w-full items-center justify-between rounded-2xl border px-4 text-start text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 active:scale-[0.985]",
+            "group flex min-h-12 w-full items-center justify-between rounded-messaging-dropdown border px-4 text-start text-sm font-semibold shadow-messaging-1 transition-[background-color,border-color,box-shadow,transform] duration-messaging-hover motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 active:scale-[0.98] active:duration-messaging-press lg:min-h-10",
             index === 0
-              ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a_55%,#c93a62)] text-white shadow-[0_8px_20px_rgba(232,80,122,0.25)] hover:-translate-y-0.5 hover:shadow-[0_11px_26px_rgba(232,80,122,0.31)]"
-              : "border-nexa-primary/20 bg-white text-nexa-primary shadow-[0_4px_14px_rgba(91,48,67,0.06)] hover:-translate-y-0.5 hover:border-nexa-primary/35 hover:bg-nexa-primary-soft/40 hover:shadow-nexa-sm",
+              ? "border-nexa-primary/20 bg-[linear-gradient(145deg,#e8507a,#f06792)] text-white hover:-translate-y-px hover:shadow-messaging-2"
+              : "border-nexa-line bg-white text-nexa-ink-2 hover:-translate-y-px hover:bg-nexa-bg-2 hover:text-nexa-ink hover:shadow-messaging-2",
           )}
         >
           {actionLabel(action, t)}
-          <ArrowUpRight className={cn("h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 rtl:-scale-x-100", index === 0 ? "text-white/85" : "text-nexa-primary")} />
+          <ArrowUpRight className={cn("h-5 w-5 stroke-[1.75] transition-transform duration-messaging-hover group-hover:-translate-y-px group-hover:translate-x-px rtl:-scale-x-100", index === 0 ? "text-white/85" : "text-nexa-ink-3")} />
         </button>
       ))}
     </div>
   );
 }
 
+// Kept for the richer booking renderer while the registry uses the compact variant.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function BookingModule({
   module,
   status,
@@ -107,7 +120,7 @@ function BookingModule({
   return (
     <>
       {coverUrl ? (
-        <div className="mb-7 overflow-hidden rounded-[24px] border border-white bg-nexa-bg-2 shadow-[0_12px_30px_rgba(85,43,62,0.13)]">
+        <div className="mb-6 overflow-hidden rounded-messaging-panel border border-nexa-line bg-nexa-bg-2 shadow-messaging-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={coverUrl}
@@ -116,22 +129,22 @@ function BookingModule({
           />
         </div>
       ) : null}
-      <h3 className="font-display text-[24px] font-semibold leading-tight text-nexa-ink">
+      <h3 className="font-display text-xl font-semibold leading-tight text-nexa-ink">
         {module.title}
       </h3>
-      <dl className="mt-7 space-y-5 rounded-[22px] border border-nexa-primary/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(253,243,246,0.82))] p-5 text-sm shadow-[0_10px_28px_rgba(91,45,65,0.08)]">
+      <dl className="mt-6 space-y-5 rounded-messaging-card border border-nexa-line bg-nexa-bg p-5 text-sm shadow-messaging-1">
         <div className="flex items-start justify-between gap-3">
           <dt className="font-display text-lg font-semibold text-nexa-ink">
             {t("inbox.context.bookingOverview")}
           </dt>
           {status ? (
-            <dd className="inline-flex shrink-0 rounded-full border border-nexa-primary/15 bg-nexa-primary-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-nexa-primary shadow-[0_2px_8px_rgba(232,80,122,0.07)]">
+            <dd className="inline-flex shrink-0 rounded-full border border-nexa-primary/15 bg-nexa-primary-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-nexa-primary">
               {status}
             </dd>
           ) : null}
         </div>
         <div className="flex gap-3.5">
-          <CalendarDays className="box-content h-4 w-4 shrink-0 rounded-xl border border-nexa-primary/10 bg-white p-2 text-nexa-primary shadow-sm" />
+          <CalendarDays className="box-content h-5 w-5 shrink-0 rounded-xl border border-nexa-line bg-white p-2 stroke-[1.75] text-nexa-ink-3 shadow-messaging-1" />
           <div>
             <dt className="font-semibold text-nexa-ink">{t("inbox.duration")}</dt>
             <dd className="mt-1 leading-6 text-nexa-ink-2">
@@ -142,7 +155,7 @@ function BookingModule({
         </div>
         {Number(snapshot.guestCount) > 0 ? (
           <div className="flex gap-3.5">
-            <Users className="box-content h-4 w-4 shrink-0 rounded-xl border border-nexa-primary/10 bg-white p-2 text-nexa-primary shadow-sm" />
+            <Users className="box-content h-5 w-5 shrink-0 rounded-xl border border-nexa-line bg-white p-2 stroke-[1.75] text-nexa-ink-3 shadow-messaging-1" />
             <div>
               <dt className="font-semibold text-nexa-ink">{t("inbox.guests")}</dt>
               <dd className="mt-1 text-nexa-ink-2">
@@ -153,7 +166,7 @@ function BookingModule({
         ) : null}
         {location ? (
           <div className="flex gap-3.5">
-            <MapPin className="box-content h-4 w-4 shrink-0 rounded-xl border border-nexa-primary/10 bg-white p-2 text-nexa-primary shadow-sm" />
+            <MapPin className="box-content h-5 w-5 shrink-0 rounded-xl border border-nexa-line bg-white p-2 stroke-[1.75] text-nexa-ink-3 shadow-messaging-1" />
             <div>
               <dt className="font-semibold text-nexa-ink">{t("inbox.location")}</dt>
               <dd className="mt-1 leading-6 text-nexa-ink-2">{location}</dd>
@@ -172,16 +185,16 @@ function AccessModule({ module }: { module: ContextModule }) {
   const [revealed, setRevealed] = useState(false);
   return (
     <>
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-nexa-primary/15 bg-[linear-gradient(135deg,#fff,#fce6ec)] text-nexa-primary shadow-nexa-sm">
-        <KeyRound className="h-5 w-5" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-messaging-dropdown border border-nexa-line bg-nexa-bg-2 text-nexa-ink-3 shadow-messaging-1">
+        <KeyRound className="h-6 w-6 stroke-[1.75]" />
       </div>
-      <h3 className="mt-5 font-display text-[24px] font-semibold text-nexa-ink">
+      <h3 className="mt-5 font-display text-xl font-semibold text-nexa-ink">
         {t("inbox.context.accessTitle")}
       </h3>
       {module.body ? (
         <p className="mt-2.5 text-sm leading-6 text-nexa-ink-2">{module.body}</p>
       ) : null}
-      <div className="mt-7 rounded-[22px] border border-nexa-primary/10 bg-[linear-gradient(145deg,#fff,#fdf3f6)] p-5 shadow-[0_10px_26px_rgba(96,47,69,0.09)]">
+      <div className="mt-6 rounded-messaging-card border border-nexa-line bg-nexa-bg p-5 shadow-messaging-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
           {t("inbox.context.accessCode")}
         </p>
@@ -192,22 +205,22 @@ function AccessModule({ module }: { module: ContextModule }) {
           <button
             type="button"
             onClick={() => setRevealed((value) => !value)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-nexa-primary transition-[background-color,border-color,transform] hover:border-nexa-primary/15 hover:bg-white active:scale-95 motion-reduce:transition-none"
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-transparent text-nexa-ink-3 transition-[background-color,border-color,color,transform] duration-messaging-hover hover:border-nexa-line hover:bg-white hover:text-nexa-ink active:scale-95 active:duration-messaging-press motion-reduce:transition-none lg:h-10 lg:w-10"
             aria-label={
               revealed
                 ? t("inbox.context.hideAccessCode")
                 : t("inbox.context.showAccessCode")
             }
           >
-            {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {revealed ? <EyeOff className="h-5 w-5 stroke-[1.75]" /> : <Eye className="h-5 w-5 stroke-[1.75]" />}
           </button>
           <button
             type="button"
             onClick={() => void navigator.clipboard?.writeText(credential)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-nexa-primary transition-[background-color,border-color,transform] hover:border-nexa-primary/15 hover:bg-white active:scale-95 motion-reduce:transition-none"
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-transparent text-nexa-ink-3 transition-[background-color,border-color,color,transform] duration-messaging-hover hover:border-nexa-line hover:bg-white hover:text-nexa-ink active:scale-95 active:duration-messaging-press motion-reduce:transition-none lg:h-10 lg:w-10"
             aria-label={t("inbox.context.copyAccessCode")}
           >
-            <Copy className="h-4 w-4" />
+            <Copy className="h-5 w-5 stroke-[1.75]" />
           </button>
         </div>
       </div>
@@ -220,10 +233,10 @@ function GenericModule({ module }: { module: ContextModule }) {
   const Icon = ICONS[module.id];
   return (
     <>
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-nexa-primary/15 bg-[linear-gradient(135deg,#fff,#fce6ec)] text-nexa-primary shadow-nexa-sm">
-        <Icon className="h-5 w-5" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-messaging-dropdown border border-nexa-line bg-nexa-bg-2 text-nexa-ink-3 shadow-messaging-1">
+        <Icon className="h-6 w-6 stroke-[1.75]" />
       </div>
-      <h3 className="mt-5 font-display text-[24px] font-semibold leading-tight text-nexa-ink">
+      <h3 className="mt-5 font-display text-xl font-semibold leading-tight text-nexa-ink">
         {module.title || t(`${module.labelKey}Title`)}
       </h3>
       {module.body ? (
@@ -252,17 +265,8 @@ export function registerContextModuleRenderer(
 
 registerContextModuleRenderer("booking", function RegisteredBookingModule({
   module,
-  conversation,
 }) {
-  return (
-    <BookingModule
-      module={module}
-      status={
-        conversation.presentation.statusChip ??
-        conversation.bookingStatus
-      }
-    />
-  );
+  return <GenericModule module={{ ...module, actions: [] }} />;
 });
 
 registerContextModuleRenderer("access", function RegisteredAccessModule({ module }) {
@@ -271,6 +275,8 @@ registerContextModuleRenderer("access", function RegisteredAccessModule({ module
 
 export function MessagingContextPanel({
   conversation,
+  activity,
+  contextualNote,
   className,
   onClose,
 }: Props) {
@@ -281,7 +287,18 @@ export function MessagingContextPanel({
     [conversation],
   );
   const [selectedId, setSelectedId] = useState<ContextModuleId>(
-    state.recommendedId,
+    () => {
+      if (typeof window === "undefined") return state.recommendedId;
+      try {
+        return (
+          localStorage.getItem(
+            `nexa-messaging-context-module:${conversation.conversation.id}`,
+          ) as ContextModuleId | null
+        ) ?? state.recommendedId;
+      } catch {
+        return state.recommendedId;
+      }
+    },
   );
   const conversationIdRef = React.useRef(conversation.conversation.id);
 
@@ -300,6 +317,17 @@ export function MessagingContextPanel({
   const selected =
     state.modules.find((module) => module.id === selectedId) ??
     state.modules[0];
+  useEffect(() => {
+    if (!selected) return;
+    try {
+      localStorage.setItem(
+        `nexa-messaging-context-module:${conversation.conversation.id}`,
+        selected.id,
+      );
+    } catch {
+      /* storage may be unavailable */
+    }
+  }, [conversation.conversation.id, selected]);
   const SelectedModule = selected
     ? contextModuleRegistry.get(selected.id)
     : undefined;
@@ -320,24 +348,25 @@ export function MessagingContextPanel({
         event.key === "ArrowRight" ? (rtl ? -1 : 1) : (rtl ? 1 : -1);
       next = (index + movement + state.modules.length) % state.modules.length;
     }
-    const module = state.modules[next];
-    if (!module) return;
-    setSelectedId(module.id);
+    const selectedModule = state.modules[next];
+    if (!selectedModule) return;
+    setSelectedId(selectedModule.id);
     requestAnimationFrame(() =>
-      document.getElementById(`context-tab-${module.id}`)?.focus(),
+      document.getElementById(`context-tab-${selectedModule.id}`)?.focus(),
     );
   };
 
   return (
-    <div
+    <aside
+      aria-label={t("inbox.context.title")}
       className={cn(
-        "flex h-full min-h-0 min-w-0 flex-col overflow-x-hidden border-s border-nexa-primary/10 bg-[linear-gradient(180deg,#fffafb_0%,#fdf7f9_38%,#fff_100%)] shadow-[-18px_0_42px_rgba(102,49,72,0.09)]",
+        "flex h-full min-h-0 min-w-0 flex-col overflow-x-hidden border-s border-nexa-line bg-[linear-gradient(180deg,#fff_0%,#fdfbfc_42%,#fff_100%)] shadow-messaging-2",
         className,
       )}
     >
-      <div className="flex shrink-0 items-start justify-between bg-[radial-gradient(circle_at_top_right,rgba(244,128,154,0.16),transparent_52%)] px-4 pb-5 pt-6 sm:px-6">
+      <div className="flex shrink-0 items-start justify-between px-4 pb-5 pt-6 sm:px-6">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-nexa-primary">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-nexa-ink-3">
             {t("inbox.context.eyebrow")}
           </p>
           <h2 className="mt-1 font-display text-[22px] font-semibold leading-tight text-nexa-ink">
@@ -348,16 +377,16 @@ export function MessagingContextPanel({
           <button
             type="button"
             onClick={onClose}
-            className="-me-2 -mt-2 flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-nexa-ink-3 transition-[background-color,border-color,color,transform] hover:border-nexa-primary/15 hover:bg-white hover:text-nexa-primary active:scale-95 motion-reduce:transition-none"
+            className="-me-2 -mt-2 flex h-12 w-12 items-center justify-center rounded-full border border-transparent text-nexa-ink-3 transition-[background-color,border-color,color,transform] duration-messaging-hover hover:border-nexa-line hover:bg-nexa-bg-2 hover:text-nexa-ink active:scale-95 active:duration-messaging-press motion-reduce:transition-none lg:h-10 lg:w-10"
             aria-label={t("common.close")}
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5 stroke-[1.75]" />
           </button>
         ) : null}
       </div>
 
       <div
-        className="flex shrink-0 flex-wrap gap-2 overflow-x-hidden border-b border-nexa-primary/10 px-4 pb-3 sm:px-6"
+        className="flex shrink-0 flex-wrap gap-2 overflow-x-hidden border-b border-nexa-line px-4 pb-3 sm:px-6"
         role="tablist"
         aria-label={t("inbox.context.title")}
       >
@@ -376,13 +405,13 @@ export function MessagingContextPanel({
               onClick={() => setSelectedId(module.id)}
               onKeyDown={(event) => navigateTabs(event, index)}
               className={cn(
-                "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-200 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 active:scale-95 lg:min-h-9",
+                "inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-messaging-hover motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40 active:scale-95 active:duration-messaging-press lg:min-h-10",
                 active
-                  ? "border-nexa-primary/20 bg-[linear-gradient(135deg,#f4809a,#e8507a)] text-white shadow-[0_5px_14px_rgba(232,80,122,0.24)]"
-                  : "border-nexa-line/70 bg-white/70 text-nexa-ink-3 hover:border-nexa-primary/20 hover:bg-white hover:text-nexa-primary hover:shadow-sm",
+                  ? "border-nexa-primary/20 bg-[linear-gradient(145deg,#e8507a,#f06792)] text-white shadow-messaging-1"
+                  : "border-nexa-line bg-white text-nexa-ink-3 hover:bg-nexa-bg-2 hover:text-nexa-ink hover:shadow-messaging-1",
               )}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-4 w-4 stroke-[1.75]" />
               {t(module.labelKey)}
             </button>
           );
@@ -400,21 +429,47 @@ export function MessagingContextPanel({
             initial={{ opacity: 0, x: reduceMotion ? 0 : 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: reduceMotion ? 0 : -6 }}
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : { type: "spring", stiffness: 340, damping: 30 }
-            }
-            className="m-3 min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden rounded-[28px] border border-white bg-white/92 px-4 pb-8 pt-6 shadow-[0_16px_44px_rgba(83,42,61,0.10)] backdrop-blur-xl sm:m-4 sm:px-6"
+            transition={{
+              duration: reduceMotion ? 0 : MESSAGING_MOTION.context,
+              ease: MESSAGING_EASE_OUT,
+            }}
+            className="m-3 min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden rounded-messaging-panel border border-nexa-line bg-white/95 p-5 pb-7 shadow-messaging-2 backdrop-blur-xl"
           >
             {SelectedModule ? (
-              <SelectedModule module={selected} conversation={conversation} />
+              <>
+                <SelectedModule module={selected} conversation={conversation} />
+                {activity ? (
+                  <section className="mt-7 border-t border-nexa-line/70 pt-5" aria-labelledby="context-activity-title">
+                    <h3 id="context-activity-title" className="font-display text-base font-semibold text-nexa-ink">
+                      {t("inbox.phase9.activity")}
+                    </h3>
+                    <dl className="mt-3 grid grid-cols-2 gap-2">
+                      {([
+                        ["messages", activity.messages],
+                        ["photos", activity.photos],
+                        ["files", activity.files],
+                        ["voice", activity.voice],
+                      ] as const).map(([key, value]) => (
+                        <div key={key} className="rounded-xl bg-nexa-bg px-3 py-2.5">
+                          <dt className="text-[11px] font-medium text-nexa-ink-3">{t(`inbox.phase9.${key}`)}</dt>
+                          <dd className="mt-0.5 text-sm font-bold text-nexa-ink">{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                ) : null}
+                {contextualNote ? (
+                  <p className="mt-4 rounded-xl border border-nexa-primary/10 bg-nexa-primary-soft/55 px-3 py-2.5 text-xs leading-5 text-nexa-ink-2">
+                    {contextualNote}
+                  </p>
+                ) : null}
+              </>
             ) : (
               <GenericModule module={selected} />
             )}
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </div>
+    </aside>
   );
 }

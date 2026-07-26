@@ -1,3 +1,10 @@
+import {
+  safeEmailUrl,
+  safeExternalHttpUrl,
+  safeInternalPath,
+  safeTelephoneUrl,
+} from "@/lib/safe-url";
+
 export type ActionKind =
   | "COPY"
   | "OPEN_MAPS"
@@ -44,40 +51,43 @@ const copyAction: ActionHandler = (action) => {
 };
 
 const deepLinkAction: ActionHandler = (action, ctx) => {
-  const href = hrefFor(action);
-  if (!href) return;
-  const path = href.startsWith("/") ? ctx.localePath(href) : href;
-  if (typeof window !== "undefined") window.location.assign(path);
+  const path = safeInternalPath(hrefFor(action));
+  if (path && typeof window !== "undefined") {
+    window.location.assign(ctx.localePath(path));
+  }
 };
 
 const externalMapsAction: ActionHandler = (action) => {
-  const href = hrefFor(action);
+  const href = safeExternalHttpUrl(hrefFor(action));
   if (href && typeof window !== "undefined") {
     window.open(href, "_blank", "noopener,noreferrer");
   }
 };
 
 const linkAction: ActionHandler = (action, ctx) => {
-  const href = hrefFor(action);
+  const rawHref = hrefFor(action);
+  const internalPath = safeInternalPath(rawHref);
+  const externalHref = safeExternalHttpUrl(rawHref);
+  const href = internalPath ? ctx.localePath(internalPath) : externalHref;
   if (!href) return;
-  if (href.startsWith("http")) {
+  if (externalHref) {
     window.open(href, "_blank", "noopener,noreferrer");
     return;
   }
-  window.location.assign(ctx.localePath(href));
+  window.location.assign(href);
 };
 
 const phoneAction: ActionHandler = (action) => {
-  const href = hrefFor(action);
+  const href = safeTelephoneUrl(hrefFor(action));
   if (href && typeof window !== "undefined") {
-    window.location.assign(href.startsWith("tel:") ? href : `tel:${href}`);
+    window.location.assign(href);
   }
 };
 
 const emailAction: ActionHandler = (action) => {
-  const href = hrefFor(action);
+  const href = safeEmailUrl(hrefFor(action));
   if (href && typeof window !== "undefined") {
-    window.location.assign(href.startsWith("mailto:") ? href : `mailto:${href}`);
+    window.location.assign(href);
   }
 };
 

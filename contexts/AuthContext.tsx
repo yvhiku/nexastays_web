@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenType, setTokenType] = useState<TokenType>("none");
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const storageSyncSequence = React.useRef(0);
 
   const clearStoredTokens = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -69,11 +70,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setTokenType("none");
     setUser(null);
+    void import("@/lib/pwa-sw-update").then((module) =>
+      module.clearSensitiveRuntimeCaches(),
+    );
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     let cancelled = false;
+    void import("@/lib/pwa-sw-update").then((module) =>
+      module.clearSensitiveRuntimeCaches(),
+    );
     const jwt = localStorage.getItem(JWT_KEY);
     const otp = localStorage.getItem(OTP_SESSION_KEY);
 
@@ -109,6 +116,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, [clearStoredTokens]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onStorage = (event: StorageEvent) => {
+      if (
+        event.storageArea !== localStorage ||
+        ![JWT_KEY, REFRESH_TOKEN_KEY, OTP_SESSION_KEY].includes(event.key ?? "")
+      ) {
+        return;
+      }
+
+      const sequence = ++storageSyncSequence.current;
+      const jwt = localStorage.getItem(JWT_KEY);
+      const otp = localStorage.getItem(OTP_SESSION_KEY);
+
+      if (jwt) {
+        setToken(jwt);
+        setTokenType("jwt");
+        void fetchCurrentUserWithJwt(jwt).then(({ user: nextUser, status }) => {
+          if (sequence !== storageSyncSequence.current) return;
+          if (status === 401) {
+            clearStoredTokens();
+            return;
+          }
+          setUser(nextUser ?? null);
+        });
+        return;
+      }
+
+      setUser(null);
+      if (otp) {
+        setToken(otp);
+        setTokenType("otp_session");
+      } else {
+        setToken(null);
+        setTokenType("none");
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, [clearStoredTokens]);
 
   useEffect(() => {
@@ -173,6 +223,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setTokenType("none");
     setUser(null);
+    void import("@/lib/pwa-sw-update").then((module) =>
+      module.clearSensitiveRuntimeCaches(),
+    );
   }, []);
 
   const refreshUser = useCallback(async () => {

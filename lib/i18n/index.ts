@@ -28,15 +28,25 @@ function getNested(obj: unknown, path: string): string | undefined {
   return typeof current === "string" ? current : undefined;
 }
 
-/** Replace {em}...{/em} with <em>...</em> and \n with <br /> for rich text */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Render the supported {em}...{/em} and newline syntax without accepting raw HTML. */
 export function formatMessage(
   msg: string,
   vars?: Record<string, string | number>
 ): string {
-  let s = msg;
+  let s = escapeHtml(msg);
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
-      s = s.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      const escapedKey = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      s = s.replace(new RegExp(`\\{${escapedKey}\\}`, "g"), escapeHtml(String(v)));
     }
   }
   s = s.replace(/\{em\}(.*?)\{\/em\}/g, "<em>$1</em>");

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { LegalLayout } from "@/components/legal/LegalLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { NEXA_SUPPORT_EMAIL } from "@/lib/contact-emails";

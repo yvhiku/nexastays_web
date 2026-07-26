@@ -9,7 +9,6 @@ import { sendOtp } from "@/lib/auth-api";
 import { changePhone } from "@/lib/kyc-api";
 import { formatUserError } from "@/lib/errors";
 import { normalizePhone } from "@/lib/validators";
-import { cn } from "@/lib/utils";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
 type Step = "current_otp" | "new_phone" | "new_otp" | "done";
@@ -131,7 +130,7 @@ export function ChangePhoneModal({
           {step === "current_otp" && (
             <>
               <div>
-                <p className="text-sm text-nexa-ink-3 mb-2">We'll send a code to your current number:</p>
+                <p className="text-sm text-nexa-ink-3 mb-2">We&apos;ll send a code to your current number:</p>
                 <p className="font-medium text-nexa-ink">{currentPhone}</p>
               </div>
               <Button

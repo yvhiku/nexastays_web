@@ -47,6 +47,8 @@ export function ProfileAvatar({ hasPhoto, token, size = "md", className }: Profi
 
   if (src) {
     return (
+      // Signed profile URLs are runtime-authenticated and cannot use next/image.
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt="Profile"

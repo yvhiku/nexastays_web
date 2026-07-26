@@ -110,7 +110,7 @@ export const NavBar = () => {
           <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border-2 border-nexa-primary-soft shrink-0">
             <Image
               src={NEXA_STAYS_LOGO_SRC}
-              alt="Nexa Stays"
+              alt=""
               fill
               sizes="36px"
               className="object-cover"
