@@ -1,7 +1,7 @@
 import React from "react";
 import type { SeoLandingComparison } from "@/lib/seo/types";
 import Link from "next/link";
-import { formatStarRating } from "@/components/seo/landing/utils";
+import { StarRatingDisplay } from "@/components/ui/StarRatingDisplay";
 
 type Props = {
   comparison: SeoLandingComparison;
@@ -10,8 +10,8 @@ type Props = {
   localePath: (path: string) => string;
 };
 
-function cellValue(text: string, rating?: number): string {
-  if (rating != null && rating > 0) return formatStarRating(rating);
+function cellValue(text: string, rating?: number): React.ReactNode {
+  if (rating != null && rating > 0) return <StarRatingDisplay rating={rating} />;
   return text;
 }
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { headers } from "next/headers";
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
@@ -74,7 +75,7 @@ export const viewport: Viewport = {
 };
 
 const playfair = Playfair_Display({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-playfair",
   weight: ["400", "500", "600", "700"],
   display: "swap",
@@ -94,6 +95,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const localeHeader = headers().get("x-nexa-locale");
+  const locale =
+    localeHeader === "fr" || localeHeader === "ar" ? localeHeader : "en";
+  const dir = locale === "ar" ? "rtl" : "ltr";
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -105,7 +111,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={dir} className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ClientMonitoring />
         <a

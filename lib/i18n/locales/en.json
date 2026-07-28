@@ -21,7 +21,8 @@
     "browseStays": "Browse Stays",
     "language": "Language",
     "gotIt": "Got it",
-    "changesSaved": "Changes saved"
+    "changesSaved": "Changes saved",
+    "separator": " · "
   },
   "navigationError": {
     "eyebrow": "Something went wrong",
@@ -111,7 +112,19 @@
     "closingCtaTitle": "Ready to stay in {area}?",
     "closingCtaBody": "Browse verified apartments, hotels, riads and villas with transparent pricing and secure booking.",
     "cityListingCount": "{count} live listings",
-    "exploreCity": "Explore this destination"
+    "exploreCity": "Explore this destination",
+    "entityGraphEyebrow": "Morocco travel network",
+    "entityGraphTitle": "Explore connected places and stays",
+    "entityGraphDescription": "Continue through verified destinations, local areas, travel guides, stay types, amenities, and live listings related to this page.",
+    "entityPlaces": "Places and nearby areas",
+    "entityTransport": "Transportation",
+    "entityLocalKnowledge": "Local points of interest",
+    "entityListings": "Related stays",
+    "entitySource": "Source",
+    "entityUpdated": "Updated",
+    "entitySourceMarketplace": "Nexa Stays marketplace",
+    "entitySourceEditorial": "Nexa Stays editorial",
+    "entitySourceRegistry": "Nexa Stays destination registry"
   },
   "explore": {
     "moroccoTitle": "Explore stays across Morocco",
@@ -554,6 +567,7 @@
     "clearFilters": "Clear filters"
   },
   "listingDetail": {
+    "backToListings": "Back to listings",
     "requestToBook": "Request to Book",
     "signInToBook": "Sign in to Book",
     "booking": "Booking…",
@@ -563,7 +577,26 @@
     "bathrooms": "Bathrooms",
     "whereYoullStay": "Where you'll stay",
     "openInMaps": "Open in Maps",
-    "checkInContactAfterBooking": "Check-in contact and access instructions are shared after your booking is confirmed."
+    "checkInContactAfterBooking": "Check-in contact and access instructions are shared after your booking is confirmed.",
+    "totalLabel": "total",
+    "nightCount": "{count} night",
+    "nightsCount": "{count} nights",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "cleaningFee": "Cleaning fee",
+    "guestFee": "Guest fee ({percent})",
+    "total": "Total",
+    "nightsLine": "{price} × {nights} nights",
+    "nightLine": "{price} × {nights} night",
+    "notChargedYet": "You won't be charged yet",
+    "book": "Book",
+    "signIn": "Sign in",
+    "blockedDatesHint": "Greyed-out dates are already booked for this stay.",
+    "kycPending": "Verification pending. Booking unlocks after approval.",
+    "completeVerification": "Complete verification",
+    "securePayment": "Secure SSL Payment",
+    "freeCancellation": "Free cancellation within 48 hours",
+    "identityRequired": "Identity verification required. Sign in to book."
   },
   "bookingVerification": {
     "title": "Guest verification",
@@ -1944,6 +1977,8 @@
     "navWishlist": "Saved",
     "navSaved": "Saved",
     "navSearch": "Search",
+    "navMap": "Show map",
+    "navList": "Show list",
     "navTrips": "Trips",
     "navProfile": "Profile",
     "navDashboard": "Dashboard",

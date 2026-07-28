@@ -9,6 +9,7 @@ import { GuestsPanel } from "@/components/search";
 import type { StaysListing } from "@/lib/stays-types";
 import { addDaysToDateString } from "@/lib/booking-dates";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatMoney, formatNightlyPrice } from "@/lib/format-money";
 
 interface ListingBookingCardProps {
   listing: StaysListing;
@@ -30,6 +31,8 @@ interface ListingBookingCardProps {
   localePath: (p: string) => string;
   /** Occupied nights (YYYY-MM-DD) that cannot be booked. */
   blockedNights?: string[];
+  /** Increment to begin the guided check-in → check-out date flow. */
+  openCalendarRequest?: number;
   onCheckinChange: (v: string) => void;
   onCheckoutChange: (v: string) => void;
   onGuestsChange: (v: number) => void;
@@ -63,6 +66,7 @@ export function ListingBookingCard({
   userProfile,
   localePath,
   blockedNights = [],
+  openCalendarRequest = 0,
   onCheckinChange,
   onCheckoutChange,
   onGuestsChange,
@@ -73,6 +77,11 @@ export function ListingBookingCard({
   const [childrenCount, setChildrenCount] = useState(0);
   const [infants, setInfants] = useState(0);
   const [pets, setPets] = useState(0);
+  const [activeCalendar, setActiveCalendar] = useState<"checkin" | "checkout" | null>(null);
+
+  useEffect(() => {
+    if (openCalendarRequest > 0) setActiveCalendar("checkin");
+  }, [openCalendarRequest]);
 
   useEffect(() => {
     const occ = adults + childrenCount;
@@ -116,12 +125,43 @@ export function ListingBookingCard({
     return invalid;
   }, [checkin, blockedNights, today]);
 
+  const handleCheckinSelection = (value: string) => {
+    onCheckinChange(value);
+    if (!value) {
+      setActiveCalendar(null);
+      return;
+    }
+    // The check-in picker closes during the same event. Transfer control on the
+    // next frame so focus and portal positioning settle before checkout opens.
+    requestAnimationFrame(() => setActiveCalendar("checkout"));
+  };
+
+  const handleCheckoutSelection = (value: string) => {
+    onCheckoutChange(value);
+    setActiveCalendar(null);
+  };
+
+  const handleGuidedSubmit = (event: React.FormEvent) => {
+    if (!checkin) {
+      event.preventDefault();
+      setActiveCalendar("checkin");
+      return;
+    }
+    if (!checkout || nights < 1) {
+      event.preventDefault();
+      setActiveCalendar("checkout");
+      return;
+    }
+    onSubmit(event);
+  };
+
   return (
     <div className="md:sticky md:top-[100px] bg-white/80 backdrop-blur-xl rounded-2xl shadow-nexa-card border border-white p-6">
       <div className="flex items-baseline justify-between mb-6">
         <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-nexa-ink">{price}</span>
-          <span className="text-nexa-ink-4 text-sm">{currency} / night</span>
+          <span className="text-2xl font-bold text-nexa-ink">
+            {formatNightlyPrice(price, currency, locale, ` ${t("listingDetail.perNight")}`)}
+          </span>
         </div>
         {listing.instant_booking && (
           <span className="flex items-center gap-1 text-xs font-semibold text-nexa-primary">
@@ -131,15 +171,17 @@ export function ListingBookingCard({
         )}
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleGuidedSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 border border-nexa-line rounded-xl">
           <div className="relative p-3 border-b sm:border-b-0 sm:border-r border-nexa-line sm:rounded-tl-xl">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
-              Check-in
+              {t("listingDetail.checkIn")}
             </label>
             <DatePicker
               value={checkin}
-              onChange={onCheckinChange}
+              onChange={handleCheckinSelection}
+              open={activeCalendar === "checkin"}
+              onOpenChange={(open) => setActiveCalendar(open ? "checkin" : null)}
               min={today}
               disabledDates={blockedNights}
               placeholder={t("home.search.addDates")}
@@ -150,11 +192,13 @@ export function ListingBookingCard({
           </div>
           <div className="relative p-3 border-b sm:border-b-0 border-nexa-line sm:rounded-tr-xl">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
-              Check-out
+              {t("listingDetail.checkOut")}
             </label>
             <DatePicker
               value={checkout}
-              onChange={onCheckoutChange}
+              onChange={handleCheckoutSelection}
+              open={activeCalendar === "checkout"}
+              onOpenChange={(open) => setActiveCalendar(open ? "checkout" : null)}
               min={checkoutMin}
               disabledDates={checkoutDisabledDates}
               placeholder={t("home.search.addDates")}
@@ -193,15 +237,15 @@ export function ListingBookingCard({
 
         {blockedNights.length > 0 && (
           <p className="text-xs text-nexa-ink-4">
-            Greyed-out dates are already booked for this stay.
+            {t("listingDetail.blockedDatesHint")}
           </p>
         )}
 
         {kycBlocked && (
           <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
-            Verification pending. Booking unlocks after approval.{" "}
+            {t("listingDetail.kycPending")}{" "}
             <Link href={localePath("/registration")} className="text-nexa-primary font-medium hover:underline">
-              Complete verification
+              {t("listingDetail.completeVerification")}
             </Link>
           </div>
         )}
@@ -213,40 +257,49 @@ export function ListingBookingCard({
           className="w-full justify-center py-6 text-base font-bold rounded-xl bg-nexa-primary-soft text-nexa-primary-dark hover:bg-nexa-primary/20 border-0 shadow-md"
           disabled={
             booking ||
-            !checkin ||
-            !checkout ||
-            nights < 1 ||
             !!kycBlocked ||
             occupancyOver
           }
         >
-          {booking ? "Booking…" : isAuthenticated ? "Request to Book" : "Sign in to Book"}
+          {booking
+            ? t("listingDetail.booking")
+            : isAuthenticated
+              ? t("listingDetail.requestToBook")
+              : t("listingDetail.signInToBook")}
         </Button>
 
-        <p className="text-center text-xs text-nexa-ink-4">You won&apos;t be charged yet</p>
+        <p className="text-center text-xs text-nexa-ink-4">{t("listingDetail.notChargedYet")}</p>
 
         {nights > 0 && (
           <div className="space-y-3 pt-2">
             <div className="flex justify-between text-sm">
               <span className="text-nexa-ink-3">
-                {price} × {nights} night{nights > 1 ? "s" : ""}
+                {nights === 1
+                  ? t("listingDetail.nightLine")
+                      .replace("{price}", formatMoney(price, currency, locale))
+                      .replace("{nights}", String(nights))
+                  : t("listingDetail.nightsLine")
+                      .replace("{price}", formatMoney(price, currency, locale))
+                      .replace("{nights}", String(nights))}
               </span>
-              <span>{price * nights} {currency}</span>
+              <span>{formatMoney(price * nights, currency, locale)}</span>
             </div>
             {cleaningFee > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-nexa-ink-3">Cleaning fee</span>
-                <span>{cleaningFee} {currency}</span>
+                <span className="text-nexa-ink-3">{t("listingDetail.cleaningFee")}</span>
+                <span>{formatMoney(cleaningFee, currency, locale)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-nexa-ink-3">Guest fee ({guestFeeLabel})</span>
-              <span>{guestFee} {currency}</span>
+              <span className="text-nexa-ink-3">
+                {t("listingDetail.guestFee").replace("{percent}", guestFeeLabel)}
+              </span>
+              <span>{formatMoney(guestFee, currency, locale)}</span>
             </div>
             <hr className="border-nexa-line/60" />
             <div className="flex justify-between font-bold text-base pt-1">
-              <span>Total</span>
-              <span>{total.toFixed(2)} {currency}</span>
+              <span>{t("listingDetail.total")}</span>
+              <span>{formatMoney(total, currency, locale, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         )}
@@ -254,17 +307,17 @@ export function ListingBookingCard({
         <div className="pt-4 mt-4 border-t border-nexa-line/60 space-y-3">
           <div className="flex items-center gap-3">
             <Shield className="w-4 h-4 text-green-700 shrink-0" />
-            <span className="text-xs font-medium text-nexa-ink-3">Secure SSL Payment</span>
+            <span className="text-xs font-medium text-nexa-ink-3">{t("listingDetail.securePayment")}</span>
           </div>
           <div className="flex items-center gap-3">
             <FileText className="w-4 h-4 text-green-700 shrink-0" />
-            <span className="text-xs font-medium text-nexa-ink-3">Free cancellation within 48 hours</span>
+            <span className="text-xs font-medium text-nexa-ink-3">{t("listingDetail.freeCancellation")}</span>
           </div>
         </div>
 
         {!isAuthenticated && (
           <p className="text-xs text-nexa-ink-4 text-center">
-            Identity verification required. Sign in to book.
+            {t("listingDetail.identityRequired")}
           </p>
         )}
       </form>

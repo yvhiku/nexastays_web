@@ -24,7 +24,9 @@ import {
   Minus,
   Plus,
   Star,
+  X,
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
 import React, {
@@ -153,6 +155,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     },
     ref,
   ) {
+    const { locale } = useLanguage();
     const mapEl = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<import("leaflet").Map | null>(null);
     const clusterRef = useRef<MarkerClusterGroup | null>(null);
@@ -451,7 +454,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
         for (const listing of mappable) {
           const lat = Number(listing.geo_lat);
           const lng = Number(listing.geo_lng);
-          const label = formatListingPriceLabel(listing);
+          const label = formatListingPriceLabel(listing, locale);
           const isSelected = listing.id === selectedId;
           const icon = await createPriceBubbleIcon(label, isSelected);
           if (cancelled || !clusterRef.current) return;
@@ -495,7 +498,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       return () => {
         cancelled = true;
       };
-    }, [mappable, ready, selectedId, preferListingsCenter]);
+    }, [mappable, ready, selectedId, preferListingsCenter, locale]);
 
     const goToUser = async () => {
       const coords = userCenter ?? (await readUserLocation());
@@ -683,7 +686,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
         {selected && (
           <div
             className={cn(
-              "absolute bottom-4 left-4 right-4 z-layer-content mx-auto max-w-md overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.88] p-0 shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
+              "absolute bottom-4 left-4 right-4 z-layer-popover mx-auto max-w-md overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.88] p-0 shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
               previewEnter
                 ? "translate-y-0 opacity-100"
                 : "translate-y-3 opacity-0",
@@ -709,10 +712,10 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
                   e.stopPropagation();
                   setSelectedId(null);
                 }}
-                className="absolute right-3 top-3 rounded-full bg-black/40 px-2 py-1 text-xs text-white"
+                className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 text-white"
                 aria-label="Close"
               >
-                ✕
+                <X className="h-3.5 w-3.5" aria-hidden />
               </button>
             </Link>
 

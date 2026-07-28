@@ -10,6 +10,9 @@ import { LISTING_TYPES } from "@/lib/host-listing-constants";
 import { getShortLocationLabel } from "@/lib/listing-location";
 import { getListingMediaUrl } from "@/lib/stays-api";
 import type { StaysListing } from "@/lib/stays-types";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { cleanText } from "@/lib/clean-text";
+import { formatNightlyPrice } from "@/lib/format-money";
 import { cn } from "@/lib/utils";
 import { SaveButton } from "@/components/saved/SaveButton";
 import {
@@ -67,6 +70,7 @@ export function ListingCard({
   density = "default",
 }: ListingCardProps) {
   const router = useRouter();
+  const { locale } = useLanguage();
   const price = listing.rate_plan?.base_price ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const cover = listing.media?.find((m) => m.kind === "PHOTO");
@@ -94,7 +98,7 @@ export function ListingCard({
     `/listings/${listing.id}${detailUrl.toString() ? `?${detailUrl}` : ""}`,
   );
 
-  const title = toTitleCase(listing.title);
+  const title = toTitleCase(cleanText(listing.title));
   const description =
     listing.description?.trim() ||
     `${listingTypeLabel(listing.listing_type)} in ${listing.city}`;
@@ -220,8 +224,9 @@ export function ListingCard({
 
         <div className="flex items-center justify-between gap-3 pt-3 border-t border-nexa-line/60">
           <div className="min-w-0">
-            <span className="font-bold text-lg text-nexa-ink tabular-nums">{price}</span>
-            <span className="text-sm text-nexa-ink-4 ml-1">{currency}/night</span>
+            <span className="font-bold text-lg text-nexa-ink tabular-nums">
+              {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}
+            </span>
           </div>
           <Button size="sm" asChild className="rounded-xl font-medium shrink-0 shadow-nexa-sm">
             <Link href={linkHref}>{t("listings.viewStay")}</Link>

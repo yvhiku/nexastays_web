@@ -5,7 +5,12 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { SeoTrustSignals } from "@/components/seo/landing/SeoTrustSignals";
 import { SeoHeroBackground } from "@/components/seo/SeoHeroBackground";
+import { SemanticBreadcrumbs } from "@/components/seo/SemanticBreadcrumbs";
+import { StarRatingDisplay } from "@/components/ui/StarRatingDisplay";
+import { TextSeparator } from "@/components/ui/TextSeparator";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatNightlyPrice } from "@/lib/format-money";
+import { semanticBreadcrumbsForSeoPage } from "@/lib/seo/entity-graph";
 import type { SeoPagePayload } from "@/lib/seo/types";
 
 type Props = {
@@ -15,7 +20,7 @@ type Props = {
 };
 
 export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
-  const { t, tf, localePath } = useLanguage();
+  const { t, tf, locale } = useLanguage();
   const dest = page.destination;
   const hero = dest?.heroImageUrl ?? null;
   const intel = page.intelligence;
@@ -35,34 +40,25 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-nexa-ink/80 via-nexa-ink/40 to-transparent" />
       <div className="relative z-layer-content max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-10 w-full">
-        <nav aria-label="Breadcrumb" className="text-xs text-white/80 mb-4 flex flex-wrap gap-1">
-          {page.breadcrumbs.map((crumb, i) => (
-            <span key={crumb.path} className="inline-flex items-center gap-1">
-              {i > 0 && <span aria-hidden>/</span>}
-              {i < page.breadcrumbs.length - 1 ? (
-                <Link
-                  href={localePath(crumb.path.replace(/^\/(en|fr|ar)/, "") || "/")}
-                  className="hover:text-white"
-                >
-                  {crumb.name === "Morocco Stays" ? t("seo.moroccoStays") : crumb.name}
-                </Link>
-              ) : (
-                <span className="text-white">{crumb.name}</span>
-              )}
-            </span>
-          ))}
-        </nav>
+        <SemanticBreadcrumbs
+          items={semanticBreadcrumbsForSeoPage(page)}
+          tone="light"
+          className="mb-4"
+        />
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold text-white max-w-3xl">
           {displayTitle}
         </h1>
         <p className="text-white/90 mt-3 max-w-2xl text-base sm:text-lg leading-relaxed">{heroIntro}</p>
         {badge && (
-          <p className="mt-3 text-sm text-white/80 font-medium">
-            {badge} {t("seo.neighborhoodLabel")}
+          <p className="mt-3 text-sm text-white/80 font-medium inline-flex flex-wrap items-center gap-x-1.5">
+            <span>
+              {badge} {t("seo.neighborhoodLabel")}
+            </span>
             {intel.avgRating != null && (
-              <span className="ml-2">
-                · {formatStars(intel.avgRating)} {intel.avgRating.toFixed(1)}
-              </span>
+              <>
+                <TextSeparator className="text-white/50 mx-0" />
+                <StarRatingDisplay rating={intel.avgRating} tone="onDark" showNumeric />
+              </>
             )}
           </p>
         )}
@@ -71,7 +67,7 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
             <span>
               {intel.listingCount} {t("seo.verifiedStays").toLowerCase()}
               {intel.avgNightlyPrice != null &&
-                ` · ${t("seo.avgPrice").toLowerCase()} ${intel.avgNightlyPrice} ${intel.currency}${t("seo.perNight")}`}
+                ` · ${t("seo.avgPrice").toLowerCase()} ${formatNightlyPrice(intel.avgNightlyPrice, intel.currency, locale, t("seo.perNight"))}`}
             </span>
           )}
         </div>
@@ -90,9 +86,4 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
       </div>
     </section>
   );
-}
-
-function formatStars(rating: number): string {
-  const full = Math.round(rating);
-  return "★".repeat(Math.min(5, full));
 }

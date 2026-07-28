@@ -21,7 +21,8 @@
     "browseStays": "Parcourir les séjours",
     "language": "Langue",
     "gotIt": "Compris",
-    "changesSaved": "Modifications enregistrées"
+    "changesSaved": "Modifications enregistrées",
+    "separator": " · "
   },
   "navigationError": {
     "eyebrow": "Une erreur est survenue",
@@ -111,7 +112,19 @@
     "closingCtaTitle": "Prêt à séjourner à {area} ?",
     "closingCtaBody": "Parcourez appartements, hôtels, riads et villas vérifiés avec tarifs transparents.",
     "cityListingCount": "{count} annonces actives",
-    "exploreCity": "Explorer cette destination"
+    "exploreCity": "Explorer cette destination",
+    "entityGraphEyebrow": "Réseau de voyage au Maroc",
+    "entityGraphTitle": "Explorer les lieux et séjours associés",
+    "entityGraphDescription": "Poursuivez votre découverte grâce aux destinations vérifiées, quartiers, guides, types de logements, équipements et annonces liés à cette page.",
+    "entityPlaces": "Lieux et zones à proximité",
+    "entityTransport": "Transports",
+    "entityLocalKnowledge": "Points d’intérêt locaux",
+    "entityListings": "Séjours associés",
+    "entitySource": "Source",
+    "entityUpdated": "Mis à jour",
+    "entitySourceMarketplace": "Marché Nexa Stays",
+    "entitySourceEditorial": "Rédaction Nexa Stays",
+    "entitySourceRegistry": "Registre des destinations Nexa Stays"
   },
   "explore": {
     "moroccoTitle": "Explorez les séjours au Maroc",
@@ -597,6 +610,7 @@
     "completeVerification": "Compléter la vérification"
   },
   "listingDetail": {
+    "backToListings": "Retour aux annonces",
     "requestToBook": "Demander à réserver",
     "signInToBook": "Se connecter pour réserver",
     "booking": "Réservation…",
@@ -606,7 +620,26 @@
     "bathrooms": "Salles de bain",
     "whereYoullStay": "Où vous séjournerez",
     "openInMaps": "Ouvrir dans Maps",
-    "checkInContactAfterBooking": "Le contact d'arrivée et les instructions d'accès sont partagés après confirmation de votre réservation."
+    "checkInContactAfterBooking": "Le contact d'arrivée et les instructions d'accès sont partagés après confirmation de votre réservation.",
+    "totalLabel": "total",
+    "nightCount": "{count} nuit",
+    "nightsCount": "{count} nuits",
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "cleaningFee": "Frais de ménage",
+    "guestFee": "Frais voyageur ({percent})",
+    "total": "Total",
+    "nightsLine": "{price} × {nights} nuits",
+    "nightLine": "{price} × {nights} nuit",
+    "notChargedYet": "Vous ne serez pas débité pour l'instant",
+    "book": "Réserver",
+    "signIn": "Se connecter",
+    "blockedDatesHint": "Les dates grisées sont déjà réservées pour ce séjour.",
+    "kycPending": "Vérification en cours. La réservation s'ouvre après approbation.",
+    "completeVerification": "Terminer la vérification",
+    "securePayment": "Paiement SSL sécurisé",
+    "freeCancellation": "Annulation gratuite sous 48 h",
+    "identityRequired": "Vérification d'identité requise. Connectez-vous pour réserver."
   },
   "bookings": {
     "bookingNotFound": "Réservation introuvable",
@@ -1944,6 +1977,8 @@
     "navWishlist": "Enregistrés",
     "navSaved": "Enregistrés",
     "navSearch": "Recherche",
+    "navMap": "Afficher la carte",
+    "navList": "Afficher la liste",
     "navTrips": "Voyages",
     "navProfile": "Profil",
     "navDashboard": "Tableau",

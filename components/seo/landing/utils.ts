@@ -1,9 +1,3 @@
-export function formatStarRating(value?: number): string {
-  if (value == null || value <= 0) return "";
-  const full = Math.max(0, Math.min(5, Math.round(value)));
-  return "★".repeat(full) + "☆".repeat(5 - full);
-}
-
 export function formatLastmod(iso: string, locale: string): string {
   try {
     const date = new Date(iso);

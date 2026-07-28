@@ -4,14 +4,14 @@ import React, { useMemo } from "react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { useStaysFees } from "@/contexts/StaysFeeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { calculateBookingFees } from "@/lib/stays-fees";
-
-function fmtMad(value: number) {
-  return `${Math.round(value).toLocaleString()} MAD`;
-}
+import { formatMoney, formatNightlyPrice } from "@/lib/format-money";
 
 export default function FeesPage() {
   const { rates } = useStaysFees();
+  const { locale } = useLanguage();
+  const fmtMad = (value: number) => formatMoney(value, "MAD", locale);
   const g = rates.guest_fee_percent;
   const h = rates.host_fee_percent;
   const total = rates.total_commission_percent;
@@ -108,8 +108,8 @@ export default function FeesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
               <ExampleCard
                 title="Example 1 — 1 Night"
-                nightly="600 MAD/night"
-                subtotalLabel="Subtotal: 600 MAD"
+                nightly={formatNightlyPrice(600, "MAD", locale, "/night")}
+                subtotalLabel={`Subtotal: ${fmtMad(600)}`}
                 subtotal={ex1.subtotal}
                 guestFee={ex1.guestFee}
                 total={ex1.totalGuestPays}
@@ -117,11 +117,12 @@ export default function FeesPage() {
                 payout={ex1.hostPayout}
                 guestPct={g}
                 hostPct={h}
+                formatAmount={fmtMad}
               />
               <ExampleCard
                 title="Example 2 — 3 Nights"
-                nightly="550 MAD/night"
-                subtotalLabel="Subtotal: 1,650 MAD"
+                nightly={formatNightlyPrice(550, "MAD", locale, "/night")}
+                subtotalLabel={`Subtotal: ${fmtMad(1650)}`}
                 subtotal={ex2.subtotal}
                 guestFee={ex2.guestFee}
                 total={ex2.totalGuestPays}
@@ -130,6 +131,7 @@ export default function FeesPage() {
                 guestPct={g}
                 hostPct={h}
                 subtotalRowLabel="Subtotal (3 × 550)"
+                formatAmount={fmtMad}
               />
             </div>
 
@@ -272,6 +274,7 @@ function ExampleCard({
   guestPct,
   hostPct,
   subtotalRowLabel = "Subtotal",
+  formatAmount,
 }: {
   title: string;
   nightly: string;
@@ -284,6 +287,7 @@ function ExampleCard({
   guestPct: number;
   hostPct: number;
   subtotalRowLabel?: string;
+  formatAmount: (value: number) => string;
 }) {
   return (
     <div className="bg-white rounded-[32px] border border-nexa-line overflow-hidden shadow-nexa-card">
@@ -301,15 +305,15 @@ function ExampleCard({
             <tbody>
               <tr className="border-b border-nexa-line">
                 <td className="py-3.5">{subtotalRowLabel}</td>
-                <td className="text-right">{fmtMad(subtotal)}</td>
+                <td className="text-right">{formatAmount(subtotal)}</td>
               </tr>
               <tr className="border-b border-nexa-line">
                 <td className="py-3.5">Guest fee ({guestPct}%)</td>
-                <td className="text-right">{fmtMad(guestFee)}</td>
+                <td className="text-right">{formatAmount(guestFee)}</td>
               </tr>
               <tr className="font-bold text-nexa-ink">
                 <td className="py-3.5 pt-4">Total</td>
-                <td className="text-right text-nexa-primary pt-4">{fmtMad(total)}</td>
+                <td className="text-right text-nexa-primary pt-4">{formatAmount(total)}</td>
               </tr>
             </tbody>
           </table>
@@ -322,15 +326,15 @@ function ExampleCard({
             <tbody>
               <tr className="border-b border-nexa-line">
                 <td className="py-3.5">Subtotal</td>
-                <td className="text-right">{fmtMad(subtotal)}</td>
+                <td className="text-right">{formatAmount(subtotal)}</td>
               </tr>
               <tr className="border-b border-nexa-line">
                 <td className="py-3.5">Host fee ({hostPct}%)</td>
-                <td className="text-right">−{fmtMad(hostFee)}</td>
+                <td className="text-right">−{formatAmount(hostFee)}</td>
               </tr>
               <tr className="font-bold text-nexa-ink">
                 <td className="py-3.5 pt-4">Host payout</td>
-                <td className="text-right text-green-700 pt-4">{fmtMad(payout)}</td>
+                <td className="text-right text-green-700 pt-4">{formatAmount(payout)}</td>
               </tr>
             </tbody>
           </table>

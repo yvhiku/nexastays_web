@@ -34,8 +34,10 @@ import {
   Play,
   Download,
   Link2,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatNightlyPrice } from "@/lib/format-money";
 import { trackEvent } from "@/lib/analytics";
 
 function listingStatusClass(status: string): string {
@@ -74,7 +76,7 @@ function listingCanPause(status: string): boolean {
 
 function HostDashboardContent() {
   const { token } = useAuth();
-  const { t, tf, localePath } = useLanguage();
+  const { t, tf, locale, localePath } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
@@ -441,6 +443,7 @@ function HostDashboardContent() {
         <HostKpiSection
           stats={stats ?? computeHostDashboardStats(bookings, listings)}
           t={t}
+          locale={locale}
           loading={statsLoading && stats === null}
         />
       )}
@@ -619,8 +622,9 @@ function HostDashboardContent() {
                         {b.total_paid != null && ` · ${b.total_paid} ${b.currency}`}
                       </p>
                     </div>
-                    <Link href={localePath(`/bookings/${b.id}`)} className="text-sm text-nexa-primary font-medium shrink-0 hover:underline">
-                      {t("hostDashboard.viewDetails")} →
+                    <Link href={localePath(`/bookings/${b.id}`)} className="inline-flex items-center gap-1 text-sm text-nexa-primary font-medium shrink-0 hover:underline">
+                      {t("hostDashboard.viewDetails")}
+                      <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
                     </Link>
                   </div>
                 ))}
@@ -768,7 +772,7 @@ function HostDashboardContent() {
                             </span>
                             {l.rate_plan &&
                               l.rate_plan.base_price > 0 &&
-                              ` · ${l.rate_plan.base_price} ${l.rate_plan.currency}/night`}
+                              ` · ${formatNightlyPrice(l.rate_plan.base_price, l.rate_plan.currency || "MAD", locale, t("seo.perNight"))}`}
                           </p>
                           {(l.status === "DRAFT" || l.status === "REJECTED") && (
                             <div className="mt-3">
@@ -857,9 +861,10 @@ function HostDashboardContent() {
                           {listingIsPublic(l.status) ? (
                             <Link
                               href={localePath(`/listings/${l.id}`)}
-                              className="px-1 text-sm font-medium text-nexa-primary hover:underline"
+                              className="inline-flex items-center gap-1 px-1 text-sm font-medium text-nexa-primary hover:underline"
                             >
-                              {t("hostDashboard.view")} →
+                              {t("hostDashboard.view")}
+                              <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
                             </Link>
                           ) : null}
                         </div>

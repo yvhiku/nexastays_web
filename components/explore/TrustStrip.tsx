@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   EXPLORE_TRUST_ITEMS,
@@ -44,9 +45,10 @@ export function TrustStrip({ localePath, t, className }: TrustStripProps) {
         </div>
         <Link
           href={localePath(EXPLORE_TRUST_LEARN_MORE_PATH)}
-          className="shrink-0 text-sm font-semibold text-nexa-primary hover:text-nexa-primary-dark"
+          className="inline-flex items-center gap-1 shrink-0 text-sm font-semibold text-nexa-primary hover:text-nexa-primary-dark"
         >
-          {t("explore.trustLearnMore")} →
+          {t("explore.trustLearnMore")}
+          <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
         </Link>
       </div>
     </section>

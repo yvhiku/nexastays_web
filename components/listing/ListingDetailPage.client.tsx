@@ -18,8 +18,20 @@ import {
   CigaretteOff,
   PawPrint,
   Play,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Accessibility,
+  ChefHat,
+  CircleParking,
+  Coffee,
+  Dumbbell,
+  LockKeyhole,
+  Snowflake,
+  TreePine,
+  Tv,
+  WashingMachine,
+  Waves,
 } from "lucide-react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
@@ -53,24 +65,43 @@ import { trackEvent } from "@/lib/analytics";
 import { recordRecentlyViewed } from "@/lib/recently-viewed";
 import { recordListingViewForInstall } from "@/lib/pwa-engagement";
 import { ShareButton } from "@/components/pwa/ShareButton";
+import { EntityRelationshipHub } from "@/components/seo/EntityRelationshipHub";
+import { SemanticBreadcrumbs } from "@/components/seo/SemanticBreadcrumbs";
+import type {
+  SemanticBreadcrumb,
+  TravelEntityGraph,
+} from "@/lib/seo/entity-graph";
 import { ListingDetailSkeleton } from "@/components/ui/skeleton";
 import {
   amenityLabel,
   normalizeAmenities,
-  AMENITY_OPTIONS,
   LISTING_TYPES,
 } from "@/lib/host-listing-constants";
+import { cleanText } from "@/lib/clean-text";
+import {
+  formatBookingTotalLine,
+  formatNightlyPrice,
+} from "@/lib/format-money";
+import { TextSeparator } from "@/components/ui/TextSeparator";
 
 const placeholderImg = "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=800&q=80";
 
-const AMENITY_ICONS: Record<string, React.ReactNode> = {
-  wifi: <Wifi className="w-5 h-5" />,
-  kitchen: <span className="text-lg">≡ƒì│</span>,
-  ac: <span className="text-lg">Γ¥ä∩╕Å</span>,
-  tv: <span className="text-lg">≡ƒô║</span>,
-  washing_machine: <span className="text-lg">≡ƒº║</span>,
-  parking: <span className="text-lg">≡ƒà┐∩╕Å</span>,
-  pool: <span className="text-lg">≡ƒÅè</span>,
+// SVG icons are encoding-safe across server rendering, JSON payloads, and
+// Windows development environments. Keep them ahead of legacy emoji fallbacks.
+const STABLE_AMENITY_ICONS: Record<string, React.ReactNode> = {
+  wifi: <Wifi className="h-5 w-5" />,
+  kitchen: <ChefHat className="h-5 w-5" />,
+  ac: <Snowflake className="h-5 w-5" />,
+  tv: <Tv className="h-5 w-5" />,
+  washing_machine: <WashingMachine className="h-5 w-5" />,
+  parking: <CircleParking className="h-5 w-5" />,
+  pool: <Waves className="h-5 w-5" />,
+  accessible: <Accessibility className="h-5 w-5" />,
+  safe: <LockKeyhole className="h-5 w-5" />,
+  coffee: <Coffee className="h-5 w-5" />,
+  gym: <Dumbbell className="h-5 w-5" />,
+  garden: <TreePine className="h-5 w-5" />,
+  cleaning: <Sparkles className="h-5 w-5" />,
 };
 
 const HIGHLIGHT_AMENITIES = [
@@ -84,12 +115,18 @@ function listingTypeLabel(type: string): string {
   return LISTING_TYPES.find((t) => t.id === type)?.label ?? type;
 }
 
-export function ListingDetailPageClient() {
+export function ListingDetailPageClient({
+  seoGraph,
+  seoBreadcrumbs,
+}: {
+  seoGraph?: TravelEntityGraph;
+  seoBreadcrumbs?: SemanticBreadcrumb[];
+} = {}) {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token, isAuthenticated } = useAuth();
-  const { t, localePath } = useLanguage();
+  const { t, locale, localePath } = useLanguage();
   const { rates } = useStaysFees();
   const id = params.id as string;
 
@@ -100,6 +137,7 @@ export function ListingDetailPageClient() {
   const [booking, setBooking] = useState(false);
   const bookingSubmissionRef = useRef(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [openCalendarRequest, setOpenCalendarRequest] = useState(0);
   const [userProfile, setUserProfile] = useState<{
     kyc_status: string;
     full_name?: string;
@@ -255,6 +293,17 @@ export function ListingDetailPageClient() {
     setCheckout(value);
   };
 
+  const beginBookingDateFlow = () => {
+    setBookingError(null);
+    setOpenCalendarRequest((request) => request + 1);
+    requestAnimationFrame(() => {
+      document.getElementById("booking-card")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
+
   const handleBookClick = (e: React.FormEvent) => {
     e.preventDefault();
     if (!listing) return;
@@ -286,7 +335,7 @@ export function ListingDetailPageClient() {
     const max = Math.max(1, listing.rules?.max_guests ?? 6);
     const guestCount = sanitizeGuestCount(guests, max) ?? 1;
 
-    // Solo booking: reuse verified account identity ΓÇö skip re-entry / ID upload.
+    // Solo booking: reuse verified account identity — skip re-entry / ID upload.
     if (
       guestCount === 1 &&
       userProfile?.full_name &&
@@ -367,6 +416,11 @@ export function ListingDetailPageClient() {
         <NavBar />
         <main className="min-h-screen pt-[72px]">
           <ListingDetailSkeleton />
+          {seoGraph && (
+            <div className="mx-auto max-w-[1280px] px-4 pb-12 sm:px-6 md:px-16">
+              <EntityRelationshipHub graph={seoGraph} />
+            </div>
+          )}
         </main>
       </>
     );
@@ -381,7 +435,9 @@ export function ListingDetailPageClient() {
             <ErrorAlert error={error || "Listing not found"} />
           </div>
           <Button asChild>
-            <Link href={localePath("/listings")}>Back to Listings</Link>
+            <Link href={localePath("/listings")}>
+              {t("listingDetail.backToListings")}
+            </Link>
           </Button>
         </main>
       </>
@@ -418,10 +474,17 @@ export function ListingDetailPageClient() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen bg-nexa-bg pb-24 md:pb-0">
+      <main className="min-h-screen bg-nexa-bg pb-24 pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] md:pb-0 md:pt-[72px]">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-16 py-6 md:py-8">
-          <Link href={backHref} className="text-nexa-primary hover:underline text-sm mb-6 inline-block">
-            ΓåÉ Back to Listings
+          {seoBreadcrumbs && seoBreadcrumbs.length > 0 && (
+            <SemanticBreadcrumbs items={seoBreadcrumbs} className="mb-4" />
+          )}
+          <Link
+            href={backHref}
+            className="mb-6 inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-medium text-nexa-primary transition-colors hover:text-nexa-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary"
+          >
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
+            {t("listingDetail.backToListings")}
           </Link>
 
           {/* Hero Gallery */}
@@ -448,7 +511,7 @@ export function ListingDetailPageClient() {
             )}
           </section>
 
-          {/* Video Tour ΓÇö directly below photos */}
+          {/* Video Tour — directly below photos */}
           {hasWalkthrough && walkthroughMedia && (
             <section className="mb-8">
               <h2 className="font-display text-2xl font-semibold mb-4">Video Tour</h2>
@@ -489,17 +552,17 @@ export function ListingDetailPageClient() {
           {/* Property Header */}
           <section className="border-b border-nexa-line/60 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <div>
-              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-nexa-ink break-words">{listing.title}</h1>
+              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-nexa-ink break-words">{cleanText(listing.title)}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-nexa-ink-3 text-sm">
                 <span className="flex items-center gap-1 font-medium text-nexa-ink">
                   <MapPin className="w-4 h-4 text-nexa-primary" />
                   {getShortLocationLabel(listing)}
                 </span>
-                <span className="hidden sm:inline">ΓÇó</span>
+                <TextSeparator className="hidden sm:inline mx-0" />
                 <span className="font-medium">{listingTypeLabel(listing.listing_type)}</span>
                 {hasWalkthrough && (
                   <>
-                    <span className="hidden sm:inline">ΓÇó</span>
+                    <TextSeparator className="hidden sm:inline mx-0" />
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <BadgeCheck className="w-3.5 h-3.5" />
                       Verified Walkthrough
@@ -514,7 +577,7 @@ export function ListingDetailPageClient() {
               <span>{maxGuests} Guests max</span>
               {listing.instant_booking && (
                 <>
-                  <span>ΓÇó</span>
+                  <TextSeparator className="mx-0" />
                   <span className="text-nexa-primary">Instant booking</span>
                 </>
               )}
@@ -530,7 +593,7 @@ export function ListingDetailPageClient() {
               <section>
                 <h2 className="font-display text-2xl font-semibold mb-4">About this stay</h2>
                 {listing.description ? (
-                  <p className="text-lg text-nexa-ink-3 leading-relaxed max-w-3xl">{listing.description}</p>
+                  <p className="text-lg text-nexa-ink-3 leading-relaxed max-w-3xl">{cleanText(listing.description)}</p>
                 ) : (
                   <p className="text-lg text-nexa-ink-3 leading-relaxed max-w-3xl">
                     A beautifully curated {listingTypeLabel(listing.listing_type).toLowerCase()} in {listing.city},
@@ -567,14 +630,15 @@ export function ListingDetailPageClient() {
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {visibleAmenities.map((tag) => {
-                        const opt = AMENITY_OPTIONS.find((a) => a.tag === tag);
                         return (
                           <div
                             key={tag}
                             className="p-4 rounded-2xl bg-white border border-nexa-line/40 flex items-center gap-3 shadow-sm"
                           >
                             <span className="text-nexa-primary">
-                              {AMENITY_ICONS[tag] ?? <span>{opt?.emoji ?? "Γ£ô"}</span>}
+                              {STABLE_AMENITY_ICONS[tag] ?? (
+                                <Sparkles className="h-5 w-5" aria-hidden />
+                              )}
                             </span>
                             <span className="text-sm font-medium">{amenityLabel(tag)}</span>
                           </div>
@@ -758,7 +822,10 @@ export function ListingDetailPageClient() {
             </div>
 
             {/* Right Column: Booking Card */}
-            <aside id="booking-card" className="md:col-span-4 order-1 md:order-2">
+            <aside
+              id="booking-card"
+              className="scroll-mt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] md:scroll-mt-[104px] md:col-span-4 order-1 md:order-2"
+            >
               <ListingBookingCard
                 listing={listing}
                 checkin={checkin}
@@ -778,6 +845,7 @@ export function ListingDetailPageClient() {
                 userProfile={userProfile}
                 localePath={localePath}
                 blockedNights={blockedNights}
+                openCalendarRequest={openCalendarRequest}
                 onCheckinChange={handleCheckinChange}
                 onCheckoutChange={handleCheckoutChange}
                 onGuestsChange={setGuests}
@@ -825,14 +893,19 @@ export function ListingDetailPageClient() {
                         )}
                       </div>
                       <p className="mt-1 font-bold text-sm">
-                        {itemPrice}{" "}
-                        <span className="font-normal text-nexa-ink-4">{itemCurrency}/night</span>
+                        {formatNightlyPrice(itemPrice, itemCurrency, locale, t("seo.perNight"))}
                       </p>
                     </Link>
                   );
                 })}
               </div>
             </section>
+          )}
+
+          {seoGraph && (
+            <div className="mt-8 mb-12">
+              <EntityRelationshipHub graph={seoGraph} />
+            </div>
           )}
 
           {/* Trust Ecosystem */}
@@ -869,23 +942,28 @@ export function ListingDetailPageClient() {
         </div>
 
         {/* Mobile sticky booking bar */}
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-layer-sticky bg-white/95 backdrop-blur border-t border-nexa-line px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lg flex items-center justify-between gap-3">
+        <div className="fixed inset-x-0 top-[calc(var(--nexa-app-banner-h,0px)+72px+env(safe-area-inset-top))] z-layer-sticky flex items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-nexa-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur md:hidden">
           <div className="min-w-0">
             <p className="font-bold text-base sm:text-lg truncate">
-              {price} <span className="text-sm font-normal text-nexa-ink-4">{currency}/night</span>
+              {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}
             </p>
             {nights > 0 && (
               <p className="text-xs text-nexa-ink-4 truncate">
-                {total.toFixed(2)} {currency} total ┬╖ {nights} night{nights > 1 ? "s" : ""}
+                {formatBookingTotalLine(total, currency, nights, locale, {
+                  total: t("listingDetail.totalLabel"),
+                  night: t("listingDetail.nightCount").replace("{count}", String(nights)),
+                  nights: t("listingDetail.nightsCount"),
+                  separator: t("common.separator"),
+                })}
               </p>
             )}
           </div>
           <Button
             type="button"
             className="shrink-0 font-semibold"
-            onClick={() => document.getElementById("booking-card")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            onClick={beginBookingDateFlow}
           >
-            {isAuthenticated ? "Book" : "Sign in"}
+            {isAuthenticated ? t("listingDetail.book") : t("listingDetail.signIn")}
           </Button>
         </div>
       </main>

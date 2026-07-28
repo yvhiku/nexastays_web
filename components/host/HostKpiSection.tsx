@@ -20,12 +20,16 @@ import {
   formatHostCurrency,
   formatMomBadge,
 } from "@/lib/host-dashboard-stats";
+import type { Locale } from "@/lib/i18n";
+import { StarRatingDisplay } from "@/components/ui/StarRatingDisplay";
+import { TextSeparator } from "@/components/ui/TextSeparator";
 
 type TranslateFn = (key: string) => string;
 
 interface HostKpiSectionProps {
   stats: HostDashboardStats;
   t: TranslateFn;
+  locale: Locale;
   loading?: boolean;
 }
 
@@ -62,7 +66,7 @@ function KpiCard({
   title,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   sub?: string;
   icon: React.ComponentType<{ className?: string }>;
   onClick?: () => void;
@@ -94,10 +98,12 @@ function KpiCard({
 function RevenueSparkline({
   series,
   currency,
+  locale,
   t,
 }: {
   series: Array<{ date: string; amount: number }>;
   currency: string;
+  locale: Locale;
   t: TranslateFn;
 }) {
   const [range, setRange] = useState<"7d" | "30d">("30d");
@@ -132,8 +138,9 @@ function RevenueSparkline({
           <p className="text-sm font-semibold text-nexa-ink">
             {t("hostDashboard.revenueTrend")}
           </p>
-          <p className="text-xs text-nexa-ink-4 mt-0.5">
-            {formatHostCurrency(total, currency)} ·{" "}
+          <p className="text-xs text-nexa-ink-4 mt-0.5 inline-flex items-center flex-wrap gap-x-1">
+            {formatHostCurrency(total, currency, locale)}
+            <TextSeparator className="mx-0" />
             {range === "7d"
               ? t("hostDashboard.sparkline7d")
               : t("hostDashboard.sparkline30d")}
@@ -178,7 +185,7 @@ function RevenueSparkline({
   );
 }
 
-export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
+export function HostKpiSection({ stats, t, locale, loading }: HostKpiSectionProps) {
   if (loading) {
     return (
       <div className="rounded-2xl border border-nexa-line bg-white p-8 mb-8 text-center text-nexa-ink-4 text-sm">
@@ -191,10 +198,12 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
   const MomIcon =
     mom.kind === "up" ? TrendingUp : mom.kind === "down" ? TrendingDown : Minus;
 
-  const ratingLabel =
-    stats.avg_rating != null
-      ? `${stats.avg_rating.toFixed(2)}★`
-      : t("hostDashboard.noRatingYet");
+  const ratingValue =
+    stats.avg_rating != null ? (
+      <StarRatingDisplay rating={stats.avg_rating} size="md" showNumeric />
+    ) : (
+      t("hostDashboard.noRatingYet")
+    );
   const ratingSub =
     stats.total_reviews > 0
       ? t("hostDashboard.reviewCount").replace(
@@ -236,7 +245,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
             {t("hostDashboard.totalEarnings")}
           </p>
           <p className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-            {formatHostCurrency(stats.total_earnings, stats.currency)}
+            {formatHostCurrency(stats.total_earnings, stats.currency, locale)}
           </p>
           <div
             className={cn(
@@ -256,7 +265,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
                 {t("hostDashboard.thisMonth")}
               </p>
               <p className="text-lg font-semibold">
-                {formatHostCurrency(stats.this_month_earnings, stats.currency)}
+                {formatHostCurrency(stats.this_month_earnings, stats.currency, locale)}
               </p>
             </div>
             <div>
@@ -274,6 +283,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
                   {formatHostCurrency(
                     stats.pending_payout_amount!,
                     stats.currency,
+                    locale,
                   )}
                 </p>
               </div>
@@ -286,6 +296,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
                 {formatHostCurrency(
                   stats.upcoming_revenue_30d ?? 0,
                   stats.currency,
+                  locale,
                 )}
               </p>
               <p className="text-[10px] text-white/50 mt-0.5">
@@ -316,7 +327,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
           label={t("hostDashboard.avgNightlyEarnings")}
           value={
             stats.avg_nightly_earnings != null
-              ? formatHostCurrency(stats.avg_nightly_earnings, stats.currency)
+              ? formatHostCurrency(stats.avg_nightly_earnings, stats.currency, locale)
               : "—"
           }
           sub={t("hostDashboard.avgNightlyEarningsHint")}
@@ -325,7 +336,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
         />
         <KpiCard
           label={t("hostDashboard.avgRating")}
-          value={ratingLabel}
+          value={ratingValue}
           sub={ratingSub}
           icon={Star}
         />
@@ -411,7 +422,7 @@ export function HostKpiSection({ stats, t, loading }: HostKpiSectionProps) {
       </div>
 
       {series.length > 0 ? (
-        <RevenueSparkline series={series} currency={stats.currency} t={t} />
+        <RevenueSparkline series={series} currency={stats.currency} locale={locale} t={t} />
       ) : null}
     </section>
   );

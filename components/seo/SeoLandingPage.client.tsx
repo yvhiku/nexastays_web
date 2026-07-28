@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { DestinationIntelligencePanel } from "@/components/seo/DestinationIntelligencePanel";
-import { SeoInternalLinkGrid } from "@/components/seo/SeoListingsGrid.client";
+import { EntityRelationshipHub } from "@/components/seo/EntityRelationshipHub";
 import { SeoLandingHero } from "@/components/seo/landing/SeoLandingHero";
 import { SeoLandingProfile } from "@/components/seo/landing/SeoLandingProfile";
 import { SeoLandingAtAGlance } from "@/components/seo/landing/SeoLandingAtAGlance";
@@ -30,6 +29,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import type { SeoPagePayload } from "@/lib/seo/types";
 import type { StaysListing } from "@/lib/stays-types";
 import { buildListingsQueryPath } from "@/lib/seo/seo-api";
+import { deriveSeoPageEntityGraph } from "@/lib/seo/entity-graph";
 
 type Props = {
   page: SeoPagePayload;
@@ -37,7 +37,7 @@ type Props = {
 };
 
 export function SeoLandingPageClient({ page, listings }: Props) {
-  const { t, tf, localePath } = useLanguage();
+  const { t, tf, locale, localePath } = useLanguage();
   const dest = page.destination;
   const blocks = page.contentBlocks;
   const area = areaLabel(page);
@@ -57,6 +57,10 @@ export function SeoLandingPageClient({ page, listings }: Props) {
     editorialFaq.length > 0
       ? editorialFaq
       : page.faq.filter((f) => !f.statKey);
+  const entityGraph = React.useMemo(
+    () => deriveSeoPageEntityGraph(page, listings),
+    [page, listings],
+  );
 
   return (
     <>
@@ -90,6 +94,7 @@ export function SeoLandingPageClient({ page, listings }: Props) {
           <DestinationIntelligencePanel
             destinationName={dest?.name ?? page.filterLabel ?? "Morocco"}
             intelligence={page.intelligence}
+            locale={locale}
             bestTimeToVisit={dest?.bestTimeToVisit ?? null}
             labels={{
               title: intelligenceTitle,
@@ -199,78 +204,7 @@ export function SeoLandingPageClient({ page, listings }: Props) {
 
           <SeoLandingFaq title={t("seo.commonQuestions")} items={displayFaq} />
 
-          {(page.neighborhoodLinks ?? []).length > 0 && (
-            <SeoInternalLinkGrid
-              title={t("seo.neighborhoods")}
-              links={(page.neighborhoodLinks ?? []).map((l) => ({
-                href: l.href,
-                label: l.label,
-              }))}
-            />
-          )}
-
-          {page.nearbyDestinations.length > 0 && (
-            <SeoInternalLinkGrid
-              title={t("seo.nearbyDestinations")}
-              links={page.nearbyDestinations.map((d) => ({
-                href: `/${page.locale}/stays/${d.slug}`,
-                label: d.name,
-              }))}
-            />
-          )}
-
-          {(page.relatedDestinations ?? []).length > 0 && (
-            <SeoInternalLinkGrid
-              title={t("seo.relatedDestinations")}
-              links={(page.relatedDestinations ?? []).map((d) => ({
-                href: d.href,
-                label: d.name,
-              }))}
-            />
-          )}
-
-          {page.propertyTypeLinks.length > 0 && (
-            <SeoInternalLinkGrid
-              title={t("seo.propertyTypes")}
-              links={page.propertyTypeLinks.map((l) => ({ href: l.href, label: l.label }))}
-            />
-          )}
-
-          {page.amenityLinks.length > 0 && (
-            <SeoInternalLinkGrid
-              title={t("seo.amenities")}
-              links={page.amenityLinks.map((l) => ({ href: l.href, label: l.label }))}
-            />
-          )}
-
-          {((page.relatedGuides ?? []).length > 0 || page.cityGuideLink) && (
-            <section className="mt-10">
-              <h2 className="font-display text-lg font-semibold text-nexa-ink mb-4">
-                {t("seo.guidesHubHeading")}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {page.cityGuideLink && (
-                  <Link
-                    href={localePath(page.cityGuideLink.href.replace(/^\/(en|fr|ar)/, ""))}
-                    className="inline-flex items-center rounded-full border border-nexa-border px-4 py-2 text-sm font-medium text-nexa-ink hover:border-nexa-primary hover:text-nexa-primary transition-colors"
-                  >
-                    {page.cityGuideLink.label}
-                  </Link>
-                )}
-                {(page.relatedGuides ?? [])
-                  .filter((g) => g.slug !== page.cityGuideLink?.slug)
-                  .map((g) => (
-                    <Link
-                      key={g.slug}
-                      href={localePath(g.href.replace(/^\/(en|fr|ar)/, ""))}
-                      className="inline-flex items-center rounded-full border border-nexa-border px-4 py-2 text-sm font-medium text-nexa-ink hover:border-nexa-primary hover:text-nexa-primary transition-colors"
-                    >
-                      {g.title}
-                    </Link>
-                  ))}
-              </div>
-            </section>
-          )}
+          <EntityRelationshipHub graph={entityGraph} />
 
           <SeoLandingClosingCta
             title={tf("seo.closingCtaTitle", { area })}

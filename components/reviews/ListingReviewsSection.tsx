@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { BadgeCheck, Loader2 } from "lucide-react";
+import { BadgeCheck, Loader2, Star } from "lucide-react";
 import { getListingReviews, getReviewMediaUrl } from "@/lib/stays-api";
 import type { ListingReview, ReviewSort } from "@/lib/stays-types";
 import { StarRatingDisplay } from "./StarRatingSelector";
@@ -109,8 +109,9 @@ function Histogram({
         const pct = total > 0 ? (count / total) * 100 : 0;
         return (
           <div key={star} className="flex items-center gap-3 text-sm">
-            <span className="w-16 shrink-0 text-nexa-ink-3 tabular-nums">
-              {star} ★
+            <span className="w-16 shrink-0 text-nexa-ink-3 tabular-nums inline-flex items-center gap-1">
+              {star}
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden />
             </span>
             <div className="flex-1 h-2 rounded-full bg-nexa-bg-2 dark:bg-nexa-ink/30 overflow-hidden">
               <div

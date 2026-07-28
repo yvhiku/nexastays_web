@@ -242,9 +242,15 @@ export function computeHostDashboardStats(
   };
 }
 
-export function formatHostCurrency(amount: number, currency: string): string {
-  const rounded = Math.round(amount);
-  return `${rounded.toLocaleString()} ${currency}`;
+import type { Locale } from "@/lib/i18n";
+import { formatMoney } from "@/lib/format-money";
+
+export function formatHostCurrency(
+  amount: number,
+  currency: string,
+  locale: Locale = "en",
+): string {
+  return formatMoney(amount, currency, locale);
 }
 
 /** MoM display: clamp absurd swings when previous month is tiny. */

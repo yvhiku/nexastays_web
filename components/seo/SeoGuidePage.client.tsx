@@ -2,10 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { GeoBlock } from "@/components/seo/GeoBlock";
 import { SeoHeroBackground } from "@/components/seo/SeoHeroBackground";
+import { SemanticBreadcrumbs } from "@/components/seo/SemanticBreadcrumbs";
+import { EntityRelationshipHub } from "@/components/seo/EntityRelationshipHub";
 import { DestinationIntelligencePanel } from "@/components/seo/DestinationIntelligencePanel";
 import { SeoListingsGrid } from "@/components/seo/SeoListingsGrid.client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,6 +16,10 @@ import { guideTypeLabel } from "@/lib/seo/guide-api";
 import type { SeoGuidePagePayload } from "@/lib/seo/types";
 import type { StaysListing } from "@/lib/stays-types";
 import { buildListingsQueryPath } from "@/lib/seo/seo-api";
+import {
+  deriveGuideEntityGraph,
+  semanticBreadcrumbsForGuide,
+} from "@/lib/seo/entity-graph";
 
 type Props = {
   page: SeoGuidePagePayload;
@@ -20,13 +27,17 @@ type Props = {
 };
 
 export function SeoGuidePageClient({ page, listings }: Props) {
-  const { t, tf, localePath } = useLanguage();
+  const { t, tf, locale, localePath } = useLanguage();
   const dest = page.destination;
   const hero = dest?.heroImageUrl ?? null;
 
   const listingsPath = dest
     ? localePath(buildListingsQueryPath(page.exploreFilters))
     : localePath("/listings");
+  const entityGraph = React.useMemo(
+    () => deriveGuideEntityGraph(page, listings),
+    [page, listings],
+  );
 
   return (
     <>
@@ -40,23 +51,11 @@ export function SeoGuidePageClient({ page, listings }: Props) {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-nexa-ink/70 via-nexa-ink/30 to-transparent" />
           <div className="relative z-layer-content max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-10 w-full">
-            <nav aria-label="Breadcrumb" className="text-xs text-white/80 mb-4 flex flex-wrap gap-1">
-              {page.breadcrumbs.map((crumb, i) => (
-                <span key={crumb.path} className="inline-flex items-center gap-1">
-                  {i > 0 && <span aria-hidden>/</span>}
-                  {i < page.breadcrumbs.length - 1 ? (
-                    <Link
-                      href={localePath(crumb.path.replace(/^\/(en|fr|ar)/, "") || "/")}
-                      className="hover:text-white"
-                    >
-                      {crumb.name === "Guides" ? t("seo.guidesHubHeading") : crumb.name}
-                    </Link>
-                  ) : (
-                    <span className="text-white">{page.h1}</span>
-                  )}
-                </span>
-              ))}
-            </nav>
+            <SemanticBreadcrumbs
+              items={semanticBreadcrumbsForGuide(page)}
+              tone="light"
+              className="mb-4"
+            />
             <p className="text-xs uppercase tracking-wide text-white/70 mb-2">
               {guideTypeLabel(page.guideType, t)}
             </p>
@@ -83,9 +82,10 @@ export function SeoGuidePageClient({ page, listings }: Props) {
                   <p className="not-prose mt-6">
                     <Link
                       href={localePath(page.cityGuideLink.href.replace(/^\/(en|fr|ar)/, ""))}
-                      className="text-nexa-primary font-medium hover:underline"
+                      className="inline-flex items-center gap-1 text-nexa-primary font-medium hover:underline"
                     >
-                      {page.cityGuideLink.label} →
+                      {page.cityGuideLink.label}
+                      <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
                     </Link>
                   </p>
                 )}
@@ -96,6 +96,7 @@ export function SeoGuidePageClient({ page, listings }: Props) {
                   <DestinationIntelligencePanel
                     destinationName={dest.name}
                     intelligence={page.intelligence}
+                    locale={locale}
                     bestTimeToVisit={dest.bestTimeToVisit}
                     labels={{
                       title: tf("seo.intelligenceForCity", { city: dest.name }),
@@ -162,32 +163,11 @@ export function SeoGuidePageClient({ page, listings }: Props) {
           </section>
         )}
 
-        {page.relatedGuides.length > 0 && (
-          <section className="py-10 sm:py-14 border-t border-nexa-border/60">
-            <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-              <h2 className="font-display text-2xl font-semibold text-nexa-ink mb-6">
-                {t("seo.relatedGuides")}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {page.relatedGuides.map((guide) => (
-                  <Link
-                    key={guide.slug}
-                    href={localePath(guide.href.replace(/^\/(en|fr|ar)/, ""))}
-                    className="rounded-2xl border border-nexa-border p-5 hover:border-nexa-primary hover:shadow-nexa-card transition-all"
-                  >
-                    <p className="text-xs uppercase tracking-wide text-nexa-muted mb-1">
-                      {guideTypeLabel(guide.guideType, t)}
-                    </p>
-                    <h3 className="font-semibold text-nexa-ink">{guide.title}</h3>
-                    {guide.description && (
-                      <p className="text-sm text-nexa-muted mt-2 line-clamp-2">{guide.description}</p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        <section className="py-10 sm:py-14 border-t border-nexa-border/60">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+            <EntityRelationshipHub graph={entityGraph} />
+          </div>
+        </section>
       </main>
       <Footer />
     </>

@@ -1,6 +1,6 @@
 import React from "react";
 import type { SeoLandingQuickFacts } from "@/lib/seo/types";
-import { formatStarRating } from "@/components/seo/landing/utils";
+import { StarRatingDisplay } from "@/components/ui/StarRatingDisplay";
 
 type Props = {
   title: string;
@@ -9,17 +9,30 @@ type Props = {
 };
 
 export function SeoLandingProfile({ title, facts, labels }: Props) {
-  const rows: { label: string; value: string }[] = [];
+  const rows: { label: string; value: React.ReactNode }[] = [];
   if (facts.atmosphere) rows.push({ label: labels.atmosphere, value: facts.atmosphere });
   if (facts.budget) rows.push({ label: labels.budget, value: facts.budget });
-  if (facts.family != null) rows.push({ label: labels.families, value: formatStarRating(facts.family) });
-  if (facts.nightlife != null) rows.push({ label: labels.nightlife, value: formatStarRating(facts.nightlife) });
-  if (facts.shopping != null) rows.push({ label: labels.shopping, value: formatStarRating(facts.shopping) });
-  if (facts.walkability != null) rows.push({ label: labels.walkability, value: formatStarRating(facts.walkability) });
-  if (facts.digital_nomads != null)
-    rows.push({ label: labels.remoteWork, value: formatStarRating(facts.digital_nomads) });
-  if (facts.culture != null) rows.push({ label: labels.culture, value: formatStarRating(facts.culture) });
-  if (facts.luxury != null) rows.push({ label: labels.luxury, value: formatStarRating(facts.luxury) });
+  if (facts.family != null) {
+    rows.push({ label: labels.families, value: <StarRatingDisplay rating={facts.family} /> });
+  }
+  if (facts.nightlife != null) {
+    rows.push({ label: labels.nightlife, value: <StarRatingDisplay rating={facts.nightlife} /> });
+  }
+  if (facts.shopping != null) {
+    rows.push({ label: labels.shopping, value: <StarRatingDisplay rating={facts.shopping} /> });
+  }
+  if (facts.walkability != null) {
+    rows.push({ label: labels.walkability, value: <StarRatingDisplay rating={facts.walkability} /> });
+  }
+  if (facts.digital_nomads != null) {
+    rows.push({ label: labels.remoteWork, value: <StarRatingDisplay rating={facts.digital_nomads} /> });
+  }
+  if (facts.culture != null) {
+    rows.push({ label: labels.culture, value: <StarRatingDisplay rating={facts.culture} /> });
+  }
+  if (facts.luxury != null) {
+    rows.push({ label: labels.luxury, value: <StarRatingDisplay rating={facts.luxury} /> });
+  }
 
   if (rows.length === 0) return null;
 

@@ -1,5 +1,8 @@
 import type { DivIcon, Icon, IconOptions } from "leaflet";
 
+import type { Locale } from "@/lib/i18n";
+import { formatMoney } from "@/lib/format-money";
+
 /** Served from `public/images/assets/pin.png` (keep in sync with `images/assets/pin.png`). */
 export const NEXA_MAP_PIN_SRC = "/images/assets/pin.png" as const;
 
@@ -65,14 +68,17 @@ export async function createClusterCountIcon(
   });
 }
 
-export function formatListingPriceLabel(listing: {
-  rate_plan?: { base_price?: number | null; currency?: string | null } | null;
-  title?: string;
-}): string {
+export function formatListingPriceLabel(
+  listing: {
+    rate_plan?: { base_price?: number | null; currency?: string | null } | null;
+    title?: string;
+  },
+  locale: Locale = "en",
+): string {
   const price = listing.rate_plan?.base_price;
   const currency = (listing.rate_plan?.currency || "MAD").toUpperCase();
   if (price == null || !Number.isFinite(Number(price))) {
     return listing.title?.trim() || "Stay";
   }
-  return `${Math.round(Number(price))} ${currency}`;
+  return formatMoney(Number(price), currency, locale);
 }

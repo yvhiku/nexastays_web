@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -58,9 +59,10 @@ export function LegalLayout({
                   <Link
                     key={link.href}
                     href={localePath(link.href)}
-                    className="block text-sm text-nexa-ink-3 mb-2 hover:text-nexa-primary transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm text-nexa-ink-3 mb-2 hover:text-nexa-primary transition-colors"
                   >
-                    → {link.label}
+                    <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180 shrink-0" aria-hidden />
+                    {link.label}
                   </Link>
                 ))}
               </div>

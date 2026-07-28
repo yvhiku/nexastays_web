@@ -21,7 +21,8 @@
     "browseStays": "تصفح الإقامات",
     "language": "اللغة",
     "gotIt": "حسناً",
-    "changesSaved": "تم حفظ التغييرات"
+    "changesSaved": "تم حفظ التغييرات",
+    "separator": " · "
   },
   "navigationError": {
     "eyebrow": "حدث خطأ ما",
@@ -111,7 +112,19 @@
     "closingCtaTitle": "مستعد للإقامة في {area}؟",
     "closingCtaBody": "تصفح شققاً وفنادق ورياضاً وفيلات موثقة بأسعار شفافة.",
     "cityListingCount": "{count} إعلان نشط",
-    "exploreCity": "استكشف هذه الوجهة"
+    "exploreCity": "استكشف هذه الوجهة",
+    "entityGraphEyebrow": "شبكة السفر في المغرب",
+    "entityGraphTitle": "استكشف الأماكن والإقامات المرتبطة",
+    "entityGraphDescription": "تابع الاستكشاف عبر الوجهات والأحياء والأدلة وأنواع الإقامات والمرافق والإعلانات الموثقة المرتبطة بهذه الصفحة.",
+    "entityPlaces": "الأماكن والمناطق القريبة",
+    "entityTransport": "وسائل النقل",
+    "entityLocalKnowledge": "معالم محلية",
+    "entityListings": "إقامات ذات صلة",
+    "entitySource": "المصدر",
+    "entityUpdated": "آخر تحديث",
+    "entitySourceMarketplace": "سوق Nexa Stays",
+    "entitySourceEditorial": "تحرير Nexa Stays",
+    "entitySourceRegistry": "سجل وجهات Nexa Stays"
   },
   "explore": {
     "moroccoTitle": "استكشف الإقامات في المغرب",
@@ -597,6 +610,7 @@
     "completeVerification": "إكمال التحقق"
   },
   "listingDetail": {
+    "backToListings": "العودة إلى الإقامات",
     "requestToBook": "طلب الحجز",
     "signInToBook": "سجّل الدخول للحجز",
     "booking": "جاري الحجز…",
@@ -606,7 +620,26 @@
     "bathrooms": "الحمامات",
     "whereYoullStay": "مكان إقامتك",
     "openInMaps": "فتح في الخرائط",
-    "checkInContactAfterBooking": "يتم مشاركة جهة الاتصال للوصول وتعليمات الدخول بعد تأكيد حجزك."
+    "checkInContactAfterBooking": "يتم مشاركة جهة الاتصال للوصول وتعليمات الدخول بعد تأكيد حجزك.",
+    "totalLabel": "الإجمالي",
+    "nightCount": "ليلة {count}",
+    "nightsCount": "{count} ليالٍ",
+    "checkIn": "تسجيل الوصول",
+    "checkOut": "تسجيل المغادرة",
+    "cleaningFee": "رسوم التنظيف",
+    "guestFee": "رسوم الضيف ({percent})",
+    "total": "المجموع",
+    "nightsLine": "{price} × {nights} ليالٍ",
+    "nightLine": "{price} × {nights} ليلة",
+    "notChargedYet": "لن يتم الخصم بعد",
+    "book": "احجز",
+    "signIn": "تسجيل الدخول",
+    "blockedDatesHint": "التواريخ الرمادية محجوزة بالفعل لهذا الإقامة.",
+    "kycPending": "التحقق قيد المراجعة. يُفعَّل الحجز بعد الموافقة.",
+    "completeVerification": "إكمال التحقق",
+    "securePayment": "دفع SSL آمن",
+    "freeCancellation": "إلغاء مجاني خلال 48 ساعة",
+    "identityRequired": "التحقق من الهوية مطلوب. سجّل الدخول للحجز."
   },
   "bookings": {
     "bookingNotFound": "الحجز غير موجود",
@@ -1944,6 +1977,8 @@
     "navWishlist": "محفوظات",
     "navSaved": "محفوظات",
     "navSearch": "بحث",
+    "navMap": "عرض الخريطة",
+    "navList": "عرض القائمة",
     "navTrips": "رحلاتي",
     "navProfile": "الملف",
     "navDashboard": "لوحة التحكم",

@@ -14,6 +14,7 @@
     "audit": "npm audit --audit-level=high",
     "audit:osv": "npx --yes @google/osv-scanner@latest -r . || npx --yes osv-scanner@latest -r .",
     "validate:explore-catalog": "npx --yes tsx scripts/validate-explore-catalog.ts",
+    "check:text-encoding": "npx --yes tsx scripts/check-text-encoding.ts",
     "import:explore-city": "npx --yes tsx scripts/import-explore-city.ts",
     "generate:pwa-icons": "npx --yes tsx scripts/generate-pwa-icons.ts",
     "verify:pwa-assets": "npx --yes tsx scripts/verify-pwa-assets.ts",

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import type { SeoLandingPoi } from "@/lib/seo/types";
 
 type Props = {
@@ -38,9 +39,10 @@ export function SeoLandingPoiCards({ title, items, localePath, defaultCta }: Pro
               )}
               <Link
                 href={ctaHref}
-                className="text-sm font-medium text-nexa-primary hover:underline mt-4 inline-block"
+                className="inline-flex items-center gap-1 text-sm font-medium text-nexa-primary hover:underline mt-4"
               >
-                {poi.cta_label ?? defaultCta} →
+                {poi.cta_label ?? defaultCta}
+                <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
               </Link>
             </article>
           );
