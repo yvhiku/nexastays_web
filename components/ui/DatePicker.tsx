@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 type DatePickerProps = {
   value: string;
   onChange: (value: string) => void;
+  /** Optional controlled open state for guided date-selection flows. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   placeholder?: string;
   min?: string;
   max?: string;
@@ -74,6 +77,8 @@ function isAfter(a: Date, b: Date): boolean {
 export function DatePicker({
   value,
   onChange,
+  open: controlledOpen,
+  onOpenChange,
   placeholder = "mm/dd/yyyy",
   min,
   max,
@@ -87,7 +92,15 @@ export function DatePicker({
   id,
   disabled = false,
 }: DatePickerProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (controlledOpen === undefined) setInternalOpen(nextOpen);
+      onOpenChange?.(nextOpen);
+    },
+    [controlledOpen, onOpenChange],
+  );
   const [pos, setPos] = useState<PanelPos | null>(null);
   const selected = useMemo(() => (value ? parseISODate(value) : null), [value]);
   const [view, setView] = useState(() => selected ?? new Date());
@@ -156,7 +169,7 @@ export function DatePicker({
       window.removeEventListener("resize", onReposition);
       window.removeEventListener("scroll", onReposition, true);
     };
-  }, [open, updatePosition]);
+  }, [open, setOpen, updatePosition]);
 
   const monthLabel = useMemo(
     () =>
@@ -338,7 +351,7 @@ export function DatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
-        onClick={() => !disabled && setOpen((v) => !v)}
+        onClick={() => !disabled && setOpen(!open)}
         className={cn(
           TRIGGER[variant],
           open && variant === "field" && "border-nexa-primary ring-2 ring-nexa-primary/20",
