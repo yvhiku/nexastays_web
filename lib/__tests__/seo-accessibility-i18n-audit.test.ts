@@ -35,6 +35,11 @@ test("public static metadata is localized with canonical and hreflang URLs", () 
   assert.equal(arabic.alternates?.canonical, "/ar/contact");
   assert.equal(arabic.alternates?.languages?.en, "/en/contact");
   assert.equal(arabic.alternates?.languages?.["x-default"], "/en/contact");
+  assert.equal(english.openGraph?.locale, "en_US");
+  assert.equal(french.openGraph?.locale, "fr_FR");
+  assert.equal(arabic.openGraph?.locale, "ar_MA");
+  assert.ok(english.openGraph?.images);
+  assert.ok(english.twitter?.images);
 });
 
 test("private metadata blocks indexing and image indexing", () => {
@@ -71,8 +76,14 @@ test("robots and middleware protect every private route family", () => {
 
 test("sitemap publishes language alternates and removes duplicate URLs", () => {
   const source = read("app/sitemap.ts");
+  const middleware = read("middleware.ts");
   assert.match(source, /alternates:\s*\{\s*languages:/);
   assert.match(source, /new Map\(entries\.map/);
+  assert.match(
+    middleware,
+    /sitemap\\+\.xml/,
+    "locale middleware must not redirect the root sitemap",
+  );
 });
 
 test("destination landing pages use CollectionPage rather than a fabricated lodging entity", () => {

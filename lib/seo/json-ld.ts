@@ -1,10 +1,60 @@
 import { getPublicSiteUrl } from "@/lib/env";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
+import {
+  deriveGuideEntityGraph,
+  deriveListingEntityGraph,
+  deriveSeoPageEntityGraph,
+  relatedEntities,
+  semanticBreadcrumbsForGuide,
+  semanticBreadcrumbsForListing,
+  semanticBreadcrumbsForSeoPage,
+  type SemanticBreadcrumb,
+  type TravelEntity,
+} from "./entity-graph";
 import type { SeoGuidePagePayload, SeoListingPagePayload, SeoPagePayload } from "./types";
+
+function breadcrumbJsonLd(
+  breadcrumbs: SemanticBreadcrumb[],
+  siteUrl: string,
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbs.map((crumb, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: crumb.name,
+      item: `${siteUrl}${crumb.path}`,
+    })),
+  };
+}
+
+function schemaReference(entity: TravelEntity, siteUrl: string): Record<string, unknown> {
+  const type =
+    entity.kind === "city"
+      ? "City"
+      : entity.kind === "country"
+        ? "Country"
+        : entity.kind === "landmark" || entity.kind === "attraction"
+          ? "TouristAttraction"
+          : entity.kind === "guide"
+            ? "Article"
+            : entity.kind === "listing"
+              ? "LodgingBusiness"
+              : entity.kind === "property_type" || entity.kind === "amenity"
+                ? "DefinedTerm"
+                : "Place";
+  return {
+    "@type": type,
+    name: entity.name,
+    url: entity.href.startsWith("http") ? entity.href : `${siteUrl}${entity.href}`,
+  };
+}
 
 export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
   const pageUrl = `${siteUrl}${page.canonical}`;
+  const graph = deriveSeoPageEntityGraph(page);
 
   const organization = {
     "@context": "https://schema.org",
@@ -26,16 +76,7 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
     },
   };
 
-  const breadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: page.breadcrumbs.map((crumb, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: crumb.name,
-      item: `${siteUrl}${crumb.path}`,
-    })),
-  };
+  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForSeoPage(page), siteUrl);
 
   const nodes: Record<string, unknown>[] = [organization, website, breadcrumb];
 
@@ -105,6 +146,10 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
       numberOfItems: page.intelligence.listingCount,
     },
   };
+  const graphReferences = relatedEntities(graph).map(({ entity }) =>
+    schemaReference(entity, siteUrl),
+  );
+  if (graphReferences.length > 0) collectionPage.mentions = graphReferences;
   nodes.push(collectionPage);
 
   if (page.faq.length > 0) {
@@ -128,17 +173,9 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
 export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
   const pageUrl = `${siteUrl}${page.canonical}`;
+  const graph = deriveGuideEntityGraph(page);
 
-  const breadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: page.breadcrumbs.map((crumb, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: crumb.name,
-      item: `${siteUrl}${crumb.path}`,
-    })),
-  };
+  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForGuide(page), siteUrl);
 
   const article: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -163,6 +200,10 @@ export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, u
       containedInPlace: { "@type": "Country", name: "Morocco" },
     };
   }
+  const graphReferences = relatedEntities(graph)
+    .map(({ entity }) => schemaReference(entity, siteUrl))
+    .filter((entity) => entity.url !== pageUrl);
+  if (graphReferences.length > 0) article.mentions = graphReferences;
 
   const nodes: Record<string, unknown>[] = [breadcrumb, article];
 
@@ -184,17 +225,9 @@ export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, u
 export function buildListingJsonLd(page: SeoListingPagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
   const pageUrl = `${siteUrl}${page.canonical}`;
+  const graph = deriveListingEntityGraph(page);
 
-  const breadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: page.breadcrumbs.map((crumb, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: crumb.name,
-      item: `${siteUrl}${crumb.path}`,
-    })),
-  };
+  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForListing(page), siteUrl);
 
   const lodging: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -240,6 +273,10 @@ export function buildListingJsonLd(page: SeoListingPagePayload): Record<string, 
       url: pageUrl,
     };
   }
+  const graphReferences = relatedEntities(graph)
+    .map(({ entity }) => schemaReference(entity, siteUrl))
+    .filter((entity) => entity.url !== pageUrl);
+  if (graphReferences.length > 0) lodging.mentions = graphReferences;
 
   return [breadcrumb, lodging];
 }

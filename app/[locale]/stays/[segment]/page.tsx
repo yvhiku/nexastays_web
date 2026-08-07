@@ -18,7 +18,7 @@ import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
 export const revalidate = 86400;
 
 type Props = {
-  params: { locale: string; segment: string };
+  params: Promise<{ locale: string; segment: string }>;
 };
 
 export async function generateStaticParams() {
@@ -39,7 +39,8 @@ export async function generateStaticParams() {
   return staticParamsInDev([...cityParams, ...typeParams, ...amenityParams, ...landmarkParams]);
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const page = await fetchSeoPage([params.segment], locale);
   if (!page) return {};
@@ -53,7 +54,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function SeoSegmentPage({ params }: Props) {
+export default async function SeoSegmentPage(props: Props) {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const page = await fetchSeoPage([params.segment], locale);
   if (!page) notFound();

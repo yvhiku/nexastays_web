@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { getPublicSiteUrl } from "@/lib/env";
 import type { SeoLocale } from "./types";
 
 const LOCALES: SeoLocale[] = ["en", "fr", "ar"];
+const OPEN_GRAPH_LOCALES: Record<SeoLocale, string> = {
+  en: "en_US",
+  fr: "fr_FR",
+  ar: "ar_MA",
+};
 
 export function buildSeoMetadata(args: {
   title: string;
@@ -22,6 +28,11 @@ export function buildSeoMetadata(args: {
   );
 
   const indexable = !args.robots?.includes("noindex");
+  const image = args.ogImage
+    ? args.ogImage.startsWith("http")
+      ? args.ogImage
+      : `${siteUrl}${args.ogImage}`
+    : `${siteUrl}${NEXA_STAYS_LOGO_SRC}`;
 
   return {
     title: args.title,
@@ -38,17 +49,17 @@ export function buildSeoMetadata(args: {
       url: `${siteUrl}${canonicalPath}`,
       title: args.title,
       description: args.description,
-      images: args.ogImage
-        ? [{ url: args.ogImage.startsWith("http") ? args.ogImage : `${siteUrl}${args.ogImage}` }]
-        : undefined,
+      locale: OPEN_GRAPH_LOCALES[args.locale],
+      alternateLocale: LOCALES
+        .filter((locale) => locale !== args.locale)
+        .map((locale) => OPEN_GRAPH_LOCALES[locale]),
+      images: [{ url: image }],
     },
     twitter: {
       card: "summary_large_image",
       title: args.title,
       description: args.description,
-      images: args.ogImage
-        ? [args.ogImage.startsWith("http") ? args.ogImage : `${siteUrl}${args.ogImage}`]
-        : undefined,
+      images: [image],
     },
   };
 }

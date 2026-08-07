@@ -19,7 +19,6 @@ interface ListingBookingCardProps {
   maxGuests: number;
   nights: number;
   price: number;
-  cleaningFee: number;
   guestFee: number;
   guestFeeLabel: string;
   total: number;
@@ -55,7 +54,6 @@ export function ListingBookingCard({
   maxGuests,
   nights,
   price,
-  cleaningFee,
   guestFee,
   guestFeeLabel,
   total,
@@ -284,12 +282,6 @@ export function ListingBookingCard({
               </span>
               <span>{formatMoney(price * nights, currency, locale)}</span>
             </div>
-            {cleaningFee > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-nexa-ink-3">{t("listingDetail.cleaningFee")}</span>
-                <span>{formatMoney(cleaningFee, currency, locale)}</span>
-              </div>
-            )}
             <div className="flex justify-between text-sm">
               <span className="text-nexa-ink-3">
                 {t("listingDetail.guestFee").replace("{percent}", guestFeeLabel)}

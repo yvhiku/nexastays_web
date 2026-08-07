@@ -113,7 +113,6 @@ export interface ListingWizardFormState {
   guestLanguage: string;
   basePrice: string;
   weekendPrice: string;
-  cleaningFee: string;
   unitTypes: UnitTypeDraft[];
   photos: WizardPhoto[];
   walkthrough: File | null;

@@ -19,6 +19,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onSearch: (value: SearchBarValue) => void;
+  initialValue?: SearchBarValue;
   t: (key: string) => string;
   tf: (key: string, vars?: Record<string, string | number>) => string;
   locale: string;
@@ -31,6 +32,7 @@ export function SearchFlow({
   open,
   onClose,
   onSearch,
+  initialValue,
   t,
   tf,
   locale,
@@ -53,10 +55,12 @@ export function SearchFlow({
       setEnteredRoot(false);
       return;
     }
-    setValue(sessionDraft);
+    const nextDraft = initialValue ?? sessionDraft;
+    sessionDraft = nextDraft;
+    setValue(nextDraft);
     const id = requestAnimationFrame(() => setEnteredRoot(true));
     return () => cancelAnimationFrame(id);
-  }, [open]);
+  }, [initialValue, open]);
 
   const patch = useCallback((partial: Partial<SearchBarValue>) => {
     setValue((prev) => {

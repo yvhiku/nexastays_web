@@ -122,6 +122,16 @@
   }
 }
 
+/*
+ * Keep Leaflet's internal panes and controls inside the map's own layer.
+ * Leaflet uses z-index values up to 1000; without a stacking context they can
+ * paint above app headers, sticky action bars, dropdowns, and dialogs.
+ */
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+}
+
 .leaflet-marker-icon.nexa-map-pin {
   background: transparent !important;
   border: none !important;

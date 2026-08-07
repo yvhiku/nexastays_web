@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { buildExploreFeed } from "./buildExploreFeed";
 import { ExploreFeedRail } from "./ExploreFeedRail";
 import { ExploreStickySearch } from "../ExploreStickySearch";
-import { ExploreSearchSheet } from "../ExploreSearchSheet";
 import { QuickFilters } from "../QuickFilters";
 import { ResultsHeader } from "../ResultsHeader";
 import { DestinationContext } from "../DestinationContext";
@@ -14,7 +13,10 @@ import { ContinueBrowsingRail } from "./rails/ContinueBrowsingRail";
 import { CollectionRail } from "./rails/CollectionRail";
 import { DestinationRail } from "./rails/DestinationRail";
 import { ListingGridRail } from "./rails/ListingGridRail";
-import { getExplorePersonalization } from "@/lib/explore-personalization";
+import {
+  getExplorePersonalization,
+  type ExplorePersonalization,
+} from "@/lib/explore-personalization";
 import { getCollectionsForContext } from "@/lib/explore-collections";
 import { getExploreDestinationCards } from "@/lib/explore-destination-counts";
 import type { ExplorePageMode } from "@/lib/explore-mode";
@@ -107,9 +109,11 @@ export function ExploreFeed(props: ExploreFeedProps) {
     localePath,
   } = props;
 
-  const [searchOpen, setSearchOpen] = useState(false);
   const [scrollDepth, setScrollDepth] = useState(0);
-  const [personalization, setPersonalization] = useState(getExplorePersonalization);
+  // The server cannot read localStorage. Keep the server and first browser
+  // render identical, then add personalized rails after hydration.
+  const [personalization, setPersonalization] =
+    useState<ExplorePersonalization>({ recentlyViewed: [] });
   const momentumTriggered = useRef(false);
   const momentumRef = useRef<HTMLDivElement | null>(null);
 
@@ -201,22 +205,9 @@ export function ExploreFeed(props: ExploreFeedProps) {
       <ExploreStickySearch
         value={searchDraft}
         locale={locale}
-        onOpenSheet={() => setSearchOpen(true)}
+        onSearch={onSearch}
         t={t}
         tf={tf}
-      />
-
-      <ExploreSearchSheet
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        value={searchDraft}
-        onSearch={(next) => {
-          setSearchOpen(false);
-          onSearch(next);
-        }}
-        t={t}
-        tf={tf}
-        locale={locale}
       />
 
       <div className="space-y-3 px-4 pb-4 pt-3">

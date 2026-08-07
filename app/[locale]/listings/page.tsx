@@ -108,6 +108,13 @@ export default function ListingsPage() {
   const rawLayoutParam = searchParams.get("layout");
   const [viewport, setViewport] = useState<"mobile" | "desktop">("mobile");
   const effectiveLayout = resolveExploreLayout(rawLayoutParam, viewport);
+
+  useEffect(() => {
+    const mode = effectiveLayout === "map" ? "map" : "list";
+    window.dispatchEvent(
+      new CustomEvent("nexa:explore-mode", { detail: { mode } }),
+    );
+  }, [effectiveLayout]);
   const exploreMode = useMemo(
     () => getExploreMode(exploreFilters),
     [exploreFilters],
@@ -1016,7 +1023,7 @@ export default function ListingsPage() {
                   <button
                     type="button"
                     onClick={() => setLayout("list")}
-                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky inline-flex items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg"
+                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky hidden items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg md:inline-flex"
                   >
                     {t("listings.listView")}
                   </button>

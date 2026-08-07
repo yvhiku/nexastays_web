@@ -7,16 +7,24 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { refreshToken as refreshTokenApi } from "@/lib/auth-api";
+import {
+  logoutBrowserSession,
+  refreshToken as refreshTokenApi,
+} from "@/lib/auth-api";
 import { hydrateAuthSession, fetchCurrentUserWithJwt } from "@/lib/auth-session";
-import { runAfterIdle } from "@/lib/defer-after-idle";
 
 const AUTH_TOKEN_REFRESHED = "nexa:auth:token-refreshed";
 const AUTH_LOGOUT = "nexa:auth:logout";
 
-const JWT_KEY = "nexa_access_token";
-const REFRESH_TOKEN_KEY = "nexa_refresh_token";
 const OTP_SESSION_KEY = "nexa_otp_session_token";
+const AUTH_CHANNEL = "nexa-auth";
+
+function broadcastAuth(type: "session" | "logout"): void {
+  if (typeof BroadcastChannel === "undefined") return;
+  const channel = new BroadcastChannel(AUTH_CHANNEL);
+  channel.postMessage({ type });
+  channel.close();
+}
 
 export type TokenType = "jwt" | "otp_session" | "none";
 
@@ -59,13 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenType, setTokenType] = useState<TokenType>("none");
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
-  const storageSyncSequence = React.useRef(0);
 
   const clearStoredTokens = useCallback(() => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem(JWT_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(OTP_SESSION_KEY);
+      sessionStorage.removeItem(OTP_SESSION_KEY);
     }
     setToken(null);
     setTokenType("none");
@@ -81,37 +86,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void import("@/lib/pwa-sw-update").then((module) =>
       module.clearSensitiveRuntimeCaches(),
     );
-    const jwt = localStorage.getItem(JWT_KEY);
-    const otp = localStorage.getItem(OTP_SESSION_KEY);
+    const otp = sessionStorage.getItem(OTP_SESSION_KEY);
 
-    if (jwt) {
-      setToken(jwt);
-      setTokenType("jwt");
-    } else if (otp) {
+    if (otp) {
       setToken(otp);
       setTokenType("otp_session");
       setUser(null);
-    } else {
-      setToken(null);
-      setTokenType("none");
-      setUser(null);
+      setReady(true);
+      return () => {
+        cancelled = true;
+      };
     }
 
-    setReady(true);
-
-    runAfterIdle(() => {
-      void (async () => {
-        const result = await hydrateAuthSession();
-        if (cancelled) return;
-        if (result.cleared || !result.accessToken) {
-          if (result.cleared) clearStoredTokens();
-          return;
-        }
-        setToken(result.accessToken);
-        setTokenType("jwt");
-        setUser(result.user);
-      })();
-    });
+    // Restore using the HttpOnly refresh cookie. Access tokens stay in memory.
+    setReady(false);
+    setToken(null);
+    setTokenType("none");
+    setUser(null);
+    void (async () => {
+      const result = await hydrateAuthSession();
+      if (cancelled) return;
+      if (result.cleared || !result.accessToken) {
+        if (result.cleared) clearStoredTokens();
+        setReady(true);
+        return;
+      }
+      setToken(result.accessToken);
+      setTokenType("jwt");
+      setUser(result.user);
+      setReady(true);
+    })();
 
     return () => {
       cancelled = true;
@@ -119,46 +123,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearStoredTokens]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const onStorage = (event: StorageEvent) => {
-      if (
-        event.storageArea !== localStorage ||
-        ![JWT_KEY, REFRESH_TOKEN_KEY, OTP_SESSION_KEY].includes(event.key ?? "")
-      ) {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel(AUTH_CHANNEL);
+    channel.onmessage = (event: MessageEvent<{ type?: string }>) => {
+      if (event.data?.type === "logout") {
+        clearStoredTokens();
         return;
       }
-
-      const sequence = ++storageSyncSequence.current;
-      const jwt = localStorage.getItem(JWT_KEY);
-      const otp = localStorage.getItem(OTP_SESSION_KEY);
-
-      if (jwt) {
-        setToken(jwt);
-        setTokenType("jwt");
-        void fetchCurrentUserWithJwt(jwt).then(({ user: nextUser, status }) => {
-          if (sequence !== storageSyncSequence.current) return;
-          if (status === 401) {
-            clearStoredTokens();
-            return;
-          }
-          setUser(nextUser ?? null);
+      if (event.data?.type === "session") {
+        void hydrateAuthSession().then((result) => {
+          if (!result.accessToken) return;
+          setToken(result.accessToken);
+          setTokenType("jwt");
+          setUser(result.user);
         });
-        return;
-      }
-
-      setUser(null);
-      if (otp) {
-        setToken(otp);
-        setTokenType("otp_session");
-      } else {
-        setToken(null);
-        setTokenType("none");
       }
     };
-
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    return () => channel.close();
   }, [clearStoredTokens]);
 
   useEffect(() => {
@@ -180,34 +161,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [clearStoredTokens]);
 
-  const setAuthJwt = useCallback((accessToken: string, refreshToken?: string) => {
+  const setAuthJwt = useCallback((accessToken: string, _refreshToken?: string) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(JWT_KEY, accessToken);
-      if (refreshToken) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-      }
-      localStorage.removeItem(OTP_SESSION_KEY);
+      sessionStorage.removeItem(OTP_SESSION_KEY);
     }
     setToken(accessToken);
     setTokenType("jwt");
     setUser(null);
     fetchCurrentUserWithJwt(accessToken).then(({ user: u, status }) => {
       if (status === 401 && typeof window !== "undefined") {
-        localStorage.removeItem(JWT_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
         setToken(null);
         setTokenType("none");
       } else {
         setUser(u ?? null);
       }
     });
+    broadcastAuth("session");
   }, []);
 
   const setAuthOtpSession = useCallback((otpSessionToken: string) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(OTP_SESSION_KEY, otpSessionToken);
-      localStorage.removeItem(JWT_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      sessionStorage.setItem(OTP_SESSION_KEY, otpSessionToken);
     }
     setToken(otpSessionToken);
     setTokenType("otp_session");
@@ -215,14 +189,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    void logoutBrowserSession().catch(() => {
+      // Local sign-out must still complete if the session already expired.
+    });
     if (typeof window !== "undefined") {
-      localStorage.removeItem(JWT_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(OTP_SESSION_KEY);
+      sessionStorage.removeItem(OTP_SESSION_KEY);
     }
     setToken(null);
     setTokenType("none");
     setUser(null);
+    broadcastAuth("logout");
     void import("@/lib/pwa-sw-update").then((module) =>
       module.clearSensitiveRuntimeCaches(),
     );
@@ -233,21 +209,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!jwt) return;
     const { user: u, status } = await fetchCurrentUserWithJwt(jwt);
     if (status === 401 && typeof window !== "undefined") {
-      const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-      if (refresh) {
-        try {
-          const tokens = await refreshTokenApi(refresh);
-          localStorage.setItem(JWT_KEY, tokens.access_token);
-          if (tokens.refresh_token) {
-            localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-          }
-          setToken(tokens.access_token);
-          const { user: u2 } = await fetchCurrentUserWithJwt(tokens.access_token);
-          setUser(u2 ?? null);
-          return;
-        } catch {
-          // Fall through to clear
-        }
+      try {
+        const tokens = await refreshTokenApi();
+        setToken(tokens.access_token);
+        const { user: u2 } = await fetchCurrentUserWithJwt(tokens.access_token);
+        setUser(u2 ?? null);
+        return;
+      } catch {
+        // Fall through to clear
       }
       clearStoredTokens();
     } else {

@@ -21,6 +21,14 @@ import { AppLoader } from "@/components/AppLoader";
 import { HostLocationMapPicker } from "@/components/host/listing-wizard/HostLocationMapPicker";
 import { ArrowLeft, Save } from "lucide-react";
 
+const MAX_GUEST_OPTIONS = Array.from({ length: 15 }, (_, index) => {
+  const guests = index + 1;
+  return {
+    value: String(guests),
+    label: `${guests} ${guests === 1 ? "guest" : "guests"}`,
+  };
+});
+
 interface EditFormState {
   title: string;
   city: string;
@@ -31,7 +39,6 @@ interface EditFormState {
   description: string;
   basePrice: string;
   weekendPrice: string;
-  cleaningFee: string;
   checkinTime: string;
   checkoutTime: string;
   maxGuests: number;
@@ -73,11 +80,9 @@ function listingToForm(
     basePrice: l.rate_plan?.base_price != null ? String(l.rate_plan.base_price) : "",
     weekendPrice:
       l.rate_plan?.weekend_price != null ? String(l.rate_plan.weekend_price) : "",
-    cleaningFee:
-      l.rate_plan?.cleaning_fee != null ? String(l.rate_plan.cleaning_fee) : "0",
     checkinTime: normalizeTime(l.checkin_time ?? "14:00"),
     checkoutTime: normalizeTime(l.checkout_time ?? "11:00"),
-    maxGuests: rules.max_guests ?? 2,
+    maxGuests: Math.min(15, Math.max(1, rules.max_guests ?? 2)),
     petsPolicy: (rules.pets_policy as EditFormState["petsPolicy"]) ?? "NO",
     smokingPolicy:
       (rules.smoking_policy as EditFormState["smokingPolicy"]) ?? "NOT_ALLOWED",
@@ -165,6 +170,7 @@ function HostListingEditContent() {
     if (!Number.isFinite(price) || price <= 0)
       return t("hostListingEdit.priceRequired");
     if (form.maxGuests < 1) return t("hostListingEdit.guestsRequired");
+    if (form.maxGuests > 15) return "Maximum guests cannot exceed 15.";
     if (!form.contactName.trim()) return t("hostListingEdit.contactNameRequired");
     if (!form.contactPhone.trim()) return t("hostListingEdit.contactPhoneRequired");
     return null;
@@ -183,7 +189,6 @@ function HostListingEditContent() {
         ...(form.weekendPrice.trim()
           ? { weekend_price: Number(form.weekendPrice) }
           : {}),
-        cleaning_fee: Number(form.cleaningFee) || 0,
       },
       rules: {
         max_guests: form.maxGuests,
@@ -381,17 +386,6 @@ function HostListingEditContent() {
                 onChange={(e) => patch({ weekendPrice: e.target.value })}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-nexa-ink mb-1.5">
-                {t("hostListingEdit.fieldCleaningFee")}
-              </label>
-              <Input
-                type="number"
-                min={0}
-                value={form.cleaningFee}
-                onChange={(e) => patch({ cleaningFee: e.target.value })}
-              />
-            </div>
           </div>
         </section>
 
@@ -424,11 +418,12 @@ function HostListingEditContent() {
               <label className="block text-sm font-medium text-nexa-ink mb-1.5">
                 {t("hostListingEdit.fieldMaxGuests")}
               </label>
-              <Input
-                type="number"
-                min={1}
-                value={form.maxGuests}
-                onChange={(e) => patch({ maxGuests: Number(e.target.value) || 1 })}
+              <NexaSelect
+                variant="field"
+                value={String(form.maxGuests)}
+                onChange={(value) => patch({ maxGuests: Number(value) })}
+                options={MAX_GUEST_OPTIONS}
+                aria-label={t("hostListingEdit.fieldMaxGuests")}
               />
             </div>
             <div>

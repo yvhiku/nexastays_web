@@ -15,7 +15,7 @@ import { sanitizeContentHtml } from "@/lib/seo/sanitize-content-html";
 export const revalidate = 86400;
 
 type Props = {
-  params: { locale: string; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 };
 
 export async function generateStaticParams() {
@@ -28,7 +28,8 @@ export async function generateStaticParams() {
   );
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const page = await fetchSeoGuidePage(params.slug, locale);
   if (!page) return {};
@@ -42,7 +43,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function GuidePage({ params }: Props) {
+export default async function GuidePage(props: Props) {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const page = await fetchSeoGuidePage(params.slug, locale);
   if (!page) notFound();

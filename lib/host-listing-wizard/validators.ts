@@ -14,8 +14,8 @@ export function validateStep(
     case "location":
       if (!form.city.trim()) return "City is required.";
       if (!form.address.trim()) return "Street address is required.";
-      if (!/^[A-Za-z]{2}$/.test(form.country.trim())) {
-        return "Country must be a 2-letter code (e.g. MA).";
+      if (!["MA", "MOROCCO"].includes(form.country.trim().toUpperCase())) {
+        return "Select Morocco as the listing country.";
       }
       if (form.geoLat == null || form.geoLng == null) {
         return "Place the listing on the map so guests can find it.";
@@ -30,10 +30,22 @@ export function validateStep(
         return "Add a description of at least 20 characters.";
       }
       if (form.maxGuests < 1) return "Maximum guests must be at least 1.";
+      if (form.maxGuests > 15) return "Maximum guests cannot exceed 15.";
       return null;
     case "unitTypes": {
       if (!isMultiUnitFlow(form.listingType, form.bookingModel)) return null;
       if (form.unitTypes.length < 1) return "Add at least one room or dorm type.";
+      const invalidCapacity = form.unitTypes.find(
+        (u) =>
+          u.quantity < 1 ||
+          u.quantity > 100 ||
+          u.maxGuests < 1 ||
+          u.maxGuests > 15 ||
+          (u.pricingUnit === "BED_NIGHT" && u.maxGuests !== 1),
+      );
+      if (invalidCapacity) {
+        return "Each type must have 1–100 rooms or beds and 1–15 guests per booking.";
+      }
       const incomplete = form.unitTypes.find(
         (u) => !u.name.trim() || !u.basePrice.trim() || Number(u.basePrice) <= 0,
       );

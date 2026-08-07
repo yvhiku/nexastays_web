@@ -11,13 +11,12 @@ import {
 import { getIdentityApiBaseUrl } from "./env";
 
 const API_BASE = getIdentityApiBaseUrl();
-const JWT_KEY = "nexa_access_token";
-const REFRESH_TOKEN_KEY = "nexa_refresh_token";
-
 const client = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
+client.defaults.headers.common["X-Auth-Transport"] = "cookie";
 
 client.interceptors.response.use(
   (res) => res,
@@ -26,19 +25,14 @@ client.interceptors.response.use(
     if (!config) return Promise.reject(err);
     if (err.response?.status === 401 && !config.__refreshRetried && typeof window !== "undefined") {
       const hadAuth = config.headers?.["Authorization"] || config.headers?.Authorization;
-      const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-      if (hadAuth && refresh) {
+      if (hadAuth) {
         config.__refreshRetried = true;
         try {
-          const tokens = await refreshTokenApi(refresh);
-          localStorage.setItem(JWT_KEY, tokens.access_token);
-          if (tokens.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+          const tokens = await refreshTokenApi();
           notifyTokenRefreshed(tokens.access_token);
           config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
           return client.request(config);
         } catch {
-          localStorage.removeItem(JWT_KEY);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
           notifyAuthLogout();
         }
       }
@@ -49,8 +43,7 @@ client.interceptors.response.use(
 
 function getAuthHeaders(token?: string | null): Record<string, string> {
   if (typeof window === "undefined") return {};
-  const t = token ?? (typeof window !== "undefined" ? localStorage.getItem(JWT_KEY) : null);
-  return t ? { Authorization: `Bearer ${t}` } : {};
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export interface ConsentStatus {

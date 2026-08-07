@@ -16,9 +16,6 @@ import {
 } from "./auth-api";
 
 const API_BASE = getIdentityApiBaseUrl();
-const JWT_KEY = "nexa_access_token";
-const REFRESH_TOKEN_KEY = "nexa_refresh_token";
-
 function getAuthHeaders(getToken: () => string | null): Record<string, string> {
   if (typeof window === "undefined") return {};
   const token = getToken();
@@ -85,9 +82,11 @@ export async function getCurrentUserOrNull(
 
 const jsonClient = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
   timeout: 15000,
 });
+jsonClient.defaults.headers.common["X-Auth-Transport"] = "cookie";
 
 jsonClient.interceptors.response.use(
   (res) => res,
@@ -99,19 +98,14 @@ jsonClient.interceptors.response.use(
       !config.__refreshRetried &&
       typeof window !== "undefined"
     ) {
-      const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-      if (refresh) {
+      {
         config.__refreshRetried = true;
         try {
-          const tokens = await refreshTokenApi(refresh);
-          localStorage.setItem(JWT_KEY, tokens.access_token);
-          if (tokens.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+          const tokens = await refreshTokenApi();
           notifyTokenRefreshed(tokens.access_token);
           config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
           return jsonClient.request(config);
         } catch {
-          localStorage.removeItem(JWT_KEY);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
           notifyAuthLogout();
         }
       }

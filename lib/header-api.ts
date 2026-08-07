@@ -34,15 +34,28 @@ function parseUnreadCount(payload: unknown): number | null {
   return null;
 }
 
-export async function getHeaderState(token: string): Promise<HeaderState> {
+/**
+ * Returns null when Identity rejects the credential so AuthContext can refresh
+ * or clear the session. Other transient failures keep the header safely empty.
+ */
+export async function getHeaderState(token: string): Promise<HeaderState | null> {
   try {
     const base = getIdentityApiBaseUrl();
     const headers = { Authorization: `Bearer ${token}` };
-    const [headerRes, unreadRes] = await Promise.all([
-      fetch(`${base}/users/me/header`, { headers, cache: "no-store" }),
-      fetch(`${base}/users/me/notifications/unread-count`, { headers, cache: "no-store" }),
-    ]);
+    // Validate the credential with the primary endpoint before issuing the
+    // secondary request. A rejected token should create one refresh signal,
+    // not a burst of parallel 401 responses.
+    const headerRes = await fetch(`${base}/users/me/header`, {
+      headers,
+      cache: "no-store",
+    });
+    if (headerRes.status === 401) return null;
     if (!headerRes.ok) return EMPTY;
+    const unreadRes = await fetch(
+      `${base}/users/me/notifications/unread-count`,
+      { headers, cache: "no-store" },
+    );
+    if (unreadRes.status === 401) return null;
     const data = (await headerRes.json()) as Partial<HeaderState>;
     const freshUnread = unreadRes.ok ? parseUnreadCount(await unreadRes.json()) : null;
     return {

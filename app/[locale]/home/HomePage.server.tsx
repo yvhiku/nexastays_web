@@ -23,11 +23,12 @@ function HomeEntryFallback() {
 export const revalidate = 3600;
 
 type Props = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 export default async function HomePage({ params }: Props) {
-  const locale = getServerLocale(params.locale) as Locale;
+  const { locale: localeParam } = await params;
+  const locale = getServerLocale(localeParam) as Locale;
   const { t } = getServerTranslations(locale);
 
   return (

@@ -159,7 +159,11 @@ export function ListingWizardShell({
               <Button variant="outline" onClick={onSaveDraft} disabled={continuing}>
                 {saveLabel}
               </Button>
-              <Button onClick={onContinue} disabled={!canContinue || continuing}>
+              <Button
+                onClick={onContinue}
+                disabled={continuing}
+                data-step-valid={canContinue}
+              >
                 {continuing ? "…" : continueLabel}
               </Button>
             </div>

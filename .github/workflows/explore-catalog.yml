@@ -6,12 +6,18 @@ on:
       - "lib/explore/**"
       - "lib/i18n/locales/**"
       - "scripts/validate-explore-catalog.ts"
+      - "scripts/check-text-encoding.ts"
+      - "components/**"
+      - "app/**"
       - "package.json"
   pull_request:
     paths:
       - "lib/explore/**"
       - "lib/i18n/locales/**"
       - "scripts/validate-explore-catalog.ts"
+      - "scripts/check-text-encoding.ts"
+      - "components/**"
+      - "app/**"
       - "package.json"
 
 jobs:
@@ -22,5 +28,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - run: npm run check:text-encoding
       - name: Validate explore catalog
         run: npm run validate:explore-catalog

@@ -47,7 +47,10 @@ export function buildCreateHostListingBody(
     listing_type: form.listingType,
     booking_model: form.bookingModel,
     city: form.city.trim(),
-    country: form.country.trim() || "MA",
+    country:
+      form.country.trim().toUpperCase() === "MOROCCO"
+        ? "MA"
+        : form.country.trim().toUpperCase() || "MA",
     neighborhood: form.neighborhood.trim() || undefined,
     postal_code: form.postalCode.trim() || undefined,
     building_name: form.buildingName.trim() || undefined,
@@ -94,7 +97,6 @@ export function buildCreateHostListingBody(
       currency: "MAD",
       base_price: unitBase,
       weekend_price: form.weekendPrice ? Number(form.weekendPrice) : undefined,
-      cleaning_fee: Number(form.cleaningFee) || 0,
     },
     check_in_contact: {
       full_name: form.contactName.trim(),
@@ -139,6 +141,8 @@ export function buildUpdateHostListingBody(
       ? Math.min(...unitPrices)
       : Number(form.basePrice) || 0
     : Number(form.basePrice) || 0;
+  const validBasePrice =
+    Number.isFinite(basePrice) && basePrice >= 1 ? basePrice : undefined;
 
   return {
     title: form.title.trim() || "Untitled listing",
@@ -180,11 +184,12 @@ export function buildUpdateHostListingBody(
     },
     rate_plan: {
       currency: "MAD",
-      base_price: basePrice,
+      ...(validBasePrice !== undefined
+        ? { base_price: validBasePrice }
+        : {}),
       ...(form.weekendPrice.trim()
         ? { weekend_price: Number(form.weekendPrice) }
         : { weekend_price: null }),
-      cleaning_fee: Number(form.cleaningFee) || 0,
     },
     check_in_contact: {
       full_name: form.contactName.trim() || undefined,
@@ -289,8 +294,11 @@ export function hydrateWizardFromListing(
         id: u.id,
         kind: u.kind as UnitKind,
         name: u.name,
-        quantity: u.quantity,
-        maxGuests: u.max_guests,
+        quantity: Math.min(100, Math.max(1, u.quantity)),
+        maxGuests:
+          u.pricing_unit === "BED_NIGHT"
+            ? 1
+            : Math.min(15, Math.max(1, u.max_guests)),
         bedConfig:
           Array.isArray(u.bed_config) && u.bed_config[0]
             ? String(
@@ -316,7 +324,10 @@ export function hydrateWizardFromListing(
     bookingModel,
     guestHouse,
     title: listing.title === "Untitled listing" ? "" : listing.title ?? "",
-    country: listing.country ?? "MA",
+    country:
+      listing.country?.trim().toUpperCase() === "MOROCCO"
+        ? "MA"
+        : listing.country?.trim().toUpperCase() || "MA",
     city: listing.city ?? "",
     neighborhood: listing.neighborhood ?? "",
     address: listing.address ?? "",
@@ -326,7 +337,7 @@ export function hydrateWizardFromListing(
     geoLat: listing.geo_lat != null ? Number(listing.geo_lat) : null,
     geoLng: listing.geo_lng != null ? Number(listing.geo_lng) : null,
     description: listing.description ?? "",
-    maxGuests: listing.rules?.max_guests ?? 2,
+    maxGuests: Math.min(15, Math.max(1, listing.rules?.max_guests ?? 2)),
     bedrooms,
     sizeSqm: details.size_sqm != null ? String(details.size_sqm) : "",
     propertyDetails: { ...details },
@@ -371,10 +382,6 @@ export function hydrateWizardFromListing(
       listing.rate_plan?.weekend_price != null
         ? String(listing.rate_plan.weekend_price)
         : "",
-    cleaningFee:
-      listing.rate_plan?.cleaning_fee != null
-        ? String(listing.rate_plan.cleaning_fee)
-        : "0",
     unitTypes,
     photos,
     walkthrough: null,

@@ -115,16 +115,16 @@ export function ListingDetailMap({
 
   return (
     <div
-      className={`relative w-full overflow-hidden bg-nexa-bg-2 ${heightClassName} ${className}`}
+      className={`relative z-layer-base isolate w-full overflow-hidden bg-nexa-bg-2 ${heightClassName} ${className}`}
     >
       <div ref={mapEl} className="h-full w-full" />
       {!ready && !failed && (
-        <div className="absolute inset-0 flex items-center justify-center text-sm text-nexa-ink-4">
+        <div className="absolute inset-0 z-layer-content flex items-center justify-center text-sm text-nexa-ink-4">
           Loading map…
         </div>
       )}
       {failed && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 z-layer-content flex items-center justify-center">
           <MapIcon className="h-10 w-10 text-nexa-ink-4" />
         </div>
       )}

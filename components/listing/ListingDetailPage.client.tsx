@@ -445,13 +445,12 @@ export function ListingDetailPageClient({
   }
 
   const price = listing.rate_plan?.base_price ?? 0;
-  const cleaningFee = listing.rate_plan?.cleaning_fee ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const amenities = normalizeAmenities(listing.rules?.amenities);
   const maxGuests = Math.max(1, listing.rules?.max_guests ?? 6);
   const nights =
     checkin && checkout ? bookingNights(checkin, checkout) : 0;
-  const subtotal = nights * price + cleaningFee;
+  const subtotal = nights * price;
   const { guestFee, totalGuestPays: total } = calculateBookingFees(subtotal, rates);
   const guestFeeLabel = `${rates.guest_fee_percent}%`;
 
@@ -834,7 +833,6 @@ export function ListingDetailPageClient({
                 maxGuests={maxGuests}
                 nights={nights}
                 price={price}
-                cleaningFee={cleaningFee}
                 guestFee={guestFee}
                 guestFeeLabel={guestFeeLabel}
                 total={total}

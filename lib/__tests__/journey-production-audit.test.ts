@@ -44,6 +44,79 @@ test("search journeys preserve dates, guest parts, property type, and extras in 
   assert.equal(params.get("neighborhood"), "Marina");
 });
 
+test("mobile listings use the shared step-by-step search flow", () => {
+  const listingsSearch = read("components/explore/ExploreStickySearch.tsx");
+  const searchFlow = read("components/search/SearchFlow.tsx");
+
+  assert.match(listingsSearch, /sm:hidden[\s\S]*<SearchFlow/);
+  assert.match(listingsSearch, /initialValue=\{draft\}/);
+  assert.match(listingsSearch, /setMobileOpen\(false\);[\s\S]*onSearch\(next\)/);
+  assert.match(searchFlow, /initialValue\?: SearchBarValue/);
+});
+
+test("mobile center FAB adapts from search to map and list", () => {
+  const nav = read("components/nav/MobileBottomNav.tsx");
+  const listings = read("app/[locale]/listings/page.tsx");
+
+  assert.match(nav, /const isExploreScreen = barePath === "\/listings"/);
+  assert.match(
+    nav,
+    /exploreMode === "list"[\s\S]*\? Map[\s\S]*: List/,
+  );
+  assert.match(
+    nav,
+    /next\.set\("layout", nextMode\)/,
+  );
+  assert.match(nav, /router\.replace\([\s\S]*\{ scroll: false \}/);
+  assert.doesNotMatch(nav, /useSearchParams/);
+  assert.match(listings, /new CustomEvent\("nexa:explore-mode"/);
+  assert.match(listings, /md:inline-flex/);
+});
+
+test("mobile listing booking bar sits safely below the upper navigation", () => {
+  const detail = read("components/listing/ListingDetailPage.client.tsx");
+
+  assert.match(
+    detail,
+    /top-\[calc\(var\(--nexa-app-banner-h,0px\)\+72px\+env\(safe-area-inset-top\)\)\]/,
+  );
+  assert.match(
+    detail,
+    /pb-24 pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top\)\)\] md:pb-0 md:pt-\[72px\]/,
+  );
+  assert.doesNotMatch(
+    detail,
+    /Mobile sticky booking bar[\s\S]{0,240}bottom-\[/,
+  );
+});
+
+test("mobile listing gallery supports native swipe navigation", () => {
+  const gallery = read("components/listing/ListingHeroGallery.tsx");
+
+  assert.match(gallery, /snap-x snap-mandatory overflow-x-auto/);
+  assert.match(gallery, /items\.slice\(1\)\.map/);
+  assert.match(gallery, /min-w-full shrink-0 snap-center/);
+  assert.match(gallery, /Math\.round\(gallery\.scrollLeft \/ gallery\.clientWidth\)/);
+  assert.match(gallery, /aria-label=\{`Photo \$\{activePhoto \+ 1\} of \$\{totalCount\}`\}/);
+});
+
+test("explore personalization cannot change the first hydration tree", () => {
+  const feed = read("components/explore/feed/ExploreFeed.tsx");
+
+  assert.match(
+    feed,
+    /useState<ExplorePersonalization>\(\{ recentlyViewed: \[\] \}\)/,
+  );
+  assert.match(
+    feed,
+    /useEffect\(\(\) => \{[\s\S]*setPersonalization\(getExplorePersonalization\(\)\)/,
+  );
+  assert.doesNotMatch(
+    feed,
+    /useState\(\s*getExplorePersonalization\s*\)/,
+  );
+});
+
 test("invalid deep-linked date ranges never reach discovery or booking state", () => {
   const params = new URLSearchParams({
     city: "Agadir",
@@ -62,14 +135,45 @@ test("invalid deep-linked date ranges never reach discovery or booking state", (
   );
 });
 
-test("authentication state synchronizes logout, JWT refresh, and OTP sessions across tabs", () => {
+test("authentication uses HttpOnly refresh cookies and synchronizes session changes across tabs", () => {
   const auth = read("contexts/AuthContext.tsx");
+  const session = read("lib/auth-session.ts");
 
-  assert.match(auth, /window\.addEventListener\("storage", onStorage\)/);
-  assert.match(auth, /\[JWT_KEY, REFRESH_TOKEN_KEY, OTP_SESSION_KEY\]/);
-  assert.match(auth, /storageSyncSequence/);
+  assert.match(auth, /new BroadcastChannel\(AUTH_CHANNEL\)/);
+  assert.match(auth, /broadcastAuth\("logout"\)/);
+  assert.match(session, /await refreshTokenApi\(\)/);
+  assert.doesNotMatch(auth, /localStorage/);
+  assert.doesNotMatch(session, /localStorage/);
   assert.match(auth, /setTokenType\("otp_session"\)/);
   assert.match(auth, /setTokenType\("none"\)/);
+});
+
+test("authenticated polling waits for stored JWT validation and refresh", () => {
+  const auth = read("contexts/AuthContext.tsx");
+  const headerApi = read("lib/header-api.ts");
+  const headerProvider = read("components/navbar/HeaderStateProvider.client.tsx");
+
+  assert.match(
+    auth,
+    /setReady\(false\);[\s\S]*setToken\(null\);[\s\S]*await hydrateAuthSession\(\)/,
+  );
+  assert.match(
+    auth,
+    /setToken\(result\.accessToken\);[\s\S]*setTokenType\("jwt"\);[\s\S]*setReady\(true\)/,
+  );
+  assert.doesNotMatch(auth, /setToken\(jwt\);[\s\S]*runAfterIdle/);
+  assert.match(
+    headerApi,
+    /if \(headerRes\.status === 401\) return null;[\s\S]*notifications\/unread-count/,
+  );
+  assert.match(
+    headerProvider,
+    /if \(next === null\) \{[\s\S]*await refreshUser\(\)/,
+  );
+  assert.match(
+    headerProvider,
+    /if \(isJwtExpired\(token\)\) \{[\s\S]*await refreshUser\(\)/,
+  );
 });
 
 test("saved listings synchronize silently across tabs for the active user", () => {

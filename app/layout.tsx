@@ -1,7 +1,7 @@
 import React from "react";
 import { headers } from "next/headers";
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { dmSans, playfair } from "@/app/fonts/brand-fonts";
 import "./globals.css";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { getPublicSiteUrl } from "@/lib/env";
@@ -74,28 +74,14 @@ export const viewport: Viewport = {
   themeColor: NEXA_PWA_THEME,
 };
 
-const playfair = Playfair_Display({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-playfair",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  preload: true,
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-dm-sans",
-  weight: ["300", "400", "500", "600"],
-  display: "swap",
-  preload: true,
-});
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const localeHeader = headers().get("x-nexa-locale");
+export default async function RootLayout(
+  {
+    children,
+  }: {
+    children: React.ReactNode;
+  }
+) {
+  const localeHeader = (await headers()).get("x-nexa-locale");
   const locale =
     localeHeader === "fr" || localeHeader === "ar" ? localeHeader : "en";
   const dir = locale === "ar" ? "rtl" : "ltr";

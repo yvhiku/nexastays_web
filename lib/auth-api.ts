@@ -13,8 +13,11 @@ const API_BASE = getIdentityApiBaseUrl();
 
 const client = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
+
+client.defaults.headers.common["X-Auth-Transport"] = "cookie";
 
 /** Retry on 429 once; always show friendly message instead of raw ThrottlerException */
 client.interceptors.response.use(
@@ -120,14 +123,17 @@ export async function completeRegistration(
 
 /** Refresh access token using refresh_token (for persistent sessions) */
 export async function refreshToken(
-  refresh_token: string
-): Promise<{ access_token: string; refresh_token: string }> {
-  const res = await client.post("/auth/refresh", { refresh_token });
+): Promise<{ access_token: string }> {
+  const res = await client.post("/auth/refresh", {});
   const raw = res.data?.data ?? res.data ?? {};
   return {
     access_token: raw.access_token,
-    refresh_token: raw.refresh_token ?? refresh_token,
   };
+}
+
+/** Revoke the browser session and clear HttpOnly authentication cookies. */
+export async function logoutBrowserSession(): Promise<void> {
+  await client.post("/auth/logout", {});
 }
 
 /** Notify AuthContext that tokens were refreshed (e.g. by API interceptor) */

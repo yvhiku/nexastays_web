@@ -2,11 +2,13 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Compass,
   Bookmark,
   Search,
+  Map,
+  List,
   Luggage,
   User,
   LayoutDashboard,
@@ -30,13 +32,39 @@ type Tab = {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t, localePath, isRtl } = useLanguage();
   const { isAuthenticated } = useAuth();
   const { openSearch } = useMobileSearch();
   const [fabGlow, setFabGlow] = useState(false);
+  const [exploreMode, setExploreMode] = useState<"list" | "map">("list");
 
   const isHostArea =
     pathname.includes("/host/dashboard") || pathname.includes("/host/listings");
+  const barePath = pathname.replace(/^\/(en|fr|ar)/, "") || "/";
+  const isExploreScreen = barePath === "/listings";
+
+  useEffect(() => {
+    if (!isExploreScreen) {
+      setExploreMode("list");
+      return;
+    }
+    const syncFromUrl = () => {
+      const layout = new URLSearchParams(window.location.search).get("layout");
+      setExploreMode(layout === "map" ? "map" : "list");
+    };
+    const syncFromExplore = (event: Event) => {
+      const mode = (event as CustomEvent<{ mode?: string }>).detail?.mode;
+      if (mode === "map" || mode === "list") setExploreMode(mode);
+    };
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    window.addEventListener("nexa:explore-mode", syncFromExplore);
+    return () => {
+      window.removeEventListener("popstate", syncFromUrl);
+      window.removeEventListener("nexa:explore-mode", syncFromExplore);
+    };
+  }, [isExploreScreen, pathname]);
 
   useEffect(() => {
     trackPwaPageView(pathname);
@@ -168,6 +196,32 @@ export function MobileBottomNav() {
 
   const left = guestSideTabs.slice(0, 2);
   const right = guestSideTabs.slice(2);
+  const FabIcon = !isExploreScreen
+    ? Search
+    : exploreMode === "list"
+      ? Map
+      : List;
+  const fabLabel = !isExploreScreen
+    ? t("pwa.navSearch")
+    : exploreMode === "list"
+      ? t("pwa.navMap")
+      : t("pwa.navList");
+
+  const handleFab = () => {
+    if (!isExploreScreen) {
+      openSearch();
+      return;
+    }
+
+    const nextMode = exploreMode === "list" ? "map" : "list";
+    const next = new URLSearchParams(window.location.search);
+    next.set("layout", nextMode);
+    setExploreMode(nextMode);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(12);
+    }
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
 
   return (
     <nav
@@ -231,10 +285,10 @@ export function MobileBottomNav() {
 
         <button
           type="button"
-          onClick={openSearch}
+          onClick={handleFab}
           data-guidance-target="search-fab"
           data-nexa-search-fab=""
-          aria-label={t("pwa.navSearch")}
+          aria-label={fabLabel}
           className={cn(
             "absolute left-1/2 top-0 z-layer-content flex h-14 w-14 -translate-x-1/2 -translate-y-[18px] items-center justify-center",
             "rounded-full text-white shadow-[0_8px_24px_rgba(232,80,122,0.45)]",
@@ -244,7 +298,12 @@ export function MobileBottomNav() {
             fabGlow && "scale-110 ring-4 ring-[#E8507A]/50 animate-pulse",
           )}
         >
-          <Search className="h-6 w-6" strokeWidth={2.25} />
+          <span
+            key={`${isExploreScreen ? "explore" : "search"}-${exploreMode}`}
+            className="animate-[nexaFabMorph_180ms_ease-out] motion-reduce:animate-none"
+          >
+            <FabIcon className="h-6 w-6" strokeWidth={2.25} />
+          </span>
         </button>
       </div>
     </nav>

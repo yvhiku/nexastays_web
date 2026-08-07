@@ -8,14 +8,19 @@ import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildListingJsonLd } from "@/lib/seo/json-ld";
 import { ListingDetailPageClient } from "@/components/listing/ListingDetailPage.client";
 import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
+import {
+  deriveListingEntityGraph,
+  semanticBreadcrumbsForListing,
+} from "@/lib/seo/entity-graph";
 
 export const revalidate = 3600;
 
 type Props = {
-  params: { locale: string; id: string };
+  params: Promise<{ locale: string; id: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const page = await fetchSeoListingPage(params.id, locale);
   if (!page) return { robots: { index: false, follow: false } };
@@ -30,12 +35,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function ListingDetailPage({ params }: Props) {
+export default async function ListingDetailPage(props: Props) {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const page = await fetchSeoListingPage(params.id, locale);
   if (!page) notFound();
 
   const jsonLd = buildListingJsonLd(page);
+  const entityGraph = deriveListingEntityGraph(page);
+  const breadcrumbs = semanticBreadcrumbsForListing(page);
 
   return (
     <>
@@ -46,7 +54,7 @@ export default async function ListingDetailPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(node) }}
         />
       ))}
-      <ListingDetailPageClient />
+      <ListingDetailPageClient seoGraph={entityGraph} seoBreadcrumbs={breadcrumbs} />
     </>
   );
 }

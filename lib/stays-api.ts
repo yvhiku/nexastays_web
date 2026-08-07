@@ -59,8 +59,10 @@ export function getReviewMediaUrl(assetId: string): string {
 
 const client = axios.create({
   baseURL: API_BASE,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
+client.defaults.headers.common["X-Auth-Transport"] = "cookie";
 
 // For FormData uploads, remove Content-Type so the browser sets multipart/form-data with boundary.
 client.interceptors.request.use((config) => {
@@ -69,9 +71,6 @@ client.interceptors.request.use((config) => {
   }
   return config;
 });
-
-const JWT_KEY = "nexa_access_token";
-const REFRESH_TOKEN_KEY = "nexa_refresh_token";
 
 /** Retry on 429 with backoff; show friendly message if still failing */
 const MAX_RETRIES = 2;
@@ -92,19 +91,14 @@ client.interceptors.response.use(
 
     if (err.response?.status === 401 && !config.__refreshRetried && typeof window !== "undefined") {
       const hadAuth = config.headers?.["Authorization"] || config.headers?.Authorization;
-      const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-      if (hadAuth && refresh) {
+      if (hadAuth) {
         config.__refreshRetried = true;
         try {
-          const tokens = await refreshTokenApi(refresh);
-          localStorage.setItem(JWT_KEY, tokens.access_token);
-          if (tokens.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
+          const tokens = await refreshTokenApi();
           notifyTokenRefreshed(tokens.access_token);
           config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
           return client.request(config);
         } catch {
-          localStorage.removeItem(JWT_KEY);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
           notifyAuthLogout();
         }
       }
@@ -116,9 +110,7 @@ client.interceptors.response.use(
 
 /** Attach JWT for authenticated requests */
 function getAuthHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem(JWT_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {};
 }
 
 function unwrap<T>(res: { data?: unknown }): T {

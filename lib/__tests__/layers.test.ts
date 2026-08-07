@@ -24,6 +24,46 @@ test("Tailwind emits every dynamic semantic layer", () => {
   assert.match(config, /\.\/lib\/\*\*\/\*\.\{js,ts,jsx,tsx,mdx\}/);
 });
 
+test("selected map listing renders above Leaflet panes", () => {
+  const exploreMap = readFileSync(
+    join(process.cwd(), "components", "explore", "ExploreMap.tsx"),
+    "utf8",
+  );
+
+  assert.match(
+    exploreMap,
+    /Preview[\s\S]*absolute bottom-4 left-4 right-4 z-layer-popover/,
+  );
+});
+
+test("every Leaflet map is contained below application overlays", () => {
+  const globals = readFileSync(
+    join(process.cwd(), "app", "globals.css"),
+    "utf8",
+  );
+  const hostMap = readFileSync(
+    join(
+      process.cwd(),
+      "components",
+      "host",
+      "listing-wizard",
+      "HostLocationMapPicker.tsx",
+    ),
+    "utf8",
+  );
+  const detailMap = readFileSync(
+    join(process.cwd(), "components", "listing", "ListingDetailMap.tsx"),
+    "utf8",
+  );
+
+  assert.match(
+    globals,
+    /\.leaflet-container\s*\{[\s\S]*isolation:\s*isolate;[\s\S]*z-index:\s*0;/,
+  );
+  assert.match(hostMap, /relative z-layer-base isolate/);
+  assert.match(detailMap, /relative z-layer-base isolate/);
+});
+
 test("application source has no numeric z-index utilities or literals", () => {
   const roots = ["app", "components", "contexts", "lib"];
   const violations = roots.flatMap((root) =>

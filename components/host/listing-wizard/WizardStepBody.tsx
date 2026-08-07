@@ -40,6 +40,20 @@ import {
 import { HostLocationMapPicker } from "@/components/host/listing-wizard/HostLocationMapPicker";
 
 const TYPES: ListingType[] = ["APARTMENT", "VILLA", "RIAD", "HOTEL", "HOSTEL"];
+const MAX_GUEST_OPTIONS = Array.from({ length: 15 }, (_, index) => {
+  const guests = index + 1;
+  return {
+    value: String(guests),
+    label: `${guests} ${guests === 1 ? "guest" : "guests"}`,
+  };
+});
+const ROOM_QUANTITY_OPTIONS = Array.from({ length: 100 }, (_, index) => {
+  const quantity = index + 1;
+  return {
+    value: String(quantity),
+    label: String(quantity),
+  };
+});
 
 const MEDIA_CATEGORIES: Array<{ id: MediaCategory; label: string; hint: string }> = [
   { id: "EXTERIOR", label: "Exterior / facade", hint: "Outside of the building" },
@@ -252,10 +266,12 @@ export function WizardStepBody({
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Country" hint="ISO code is fine (MA for Morocco).">
-              <Input
-                value={form.country}
-                onChange={(e) => patch({ country: e.target.value })}
-                placeholder="MA"
+              <NexaSelect
+                variant="field"
+                value="MA"
+                onChange={() => patch({ country: "MA" })}
+                options={[{ value: "MA", label: "Morocco" }]}
+                aria-label="Country"
               />
             </Field>
             <Field label="City" required hint="The city shown on the listing card.">
@@ -386,11 +402,12 @@ export function WizardStepBody({
                   : "Total people this listing can host."
               }
             >
-              <Input
-                type="number"
-                min={1}
-                value={form.maxGuests}
-                onChange={(e) => patch({ maxGuests: Number(e.target.value) || 1 })}
+              <NexaSelect
+                variant="field"
+                value={String(Math.min(15, Math.max(1, form.maxGuests)))}
+                onChange={(value) => patch({ maxGuests: Number(value) })}
+                options={MAX_GUEST_OPTIONS}
+                aria-label="Maximum guests"
               />
             </Field>
             <Field label="Size (m²)" hint="Optional — living space size.">
@@ -696,13 +713,18 @@ export function WizardStepBody({
                     label={perBed ? "How many beds?" : "How many rooms of this type?"}
                     hint="Total inventory of this category."
                   >
-                    <Input
-                      type="number"
-                      min={1}
-                      value={u.quantity}
-                      onChange={(e) => {
+                    <NexaSelect
+                      variant="field"
+                      value={String(Math.min(100, Math.max(1, u.quantity)))}
+                      options={ROOM_QUANTITY_OPTIONS}
+                      aria-label={
+                        perBed
+                          ? "Number of beds"
+                          : "Number of rooms of this type"
+                      }
+                      onChange={(value) => {
                         const next = [...form.unitTypes];
-                        next[idx] = { ...u, quantity: Number(e.target.value) || 1 };
+                        next[idx] = { ...u, quantity: Number(value) };
                         patch({ unitTypes: next });
                       }}
                     />
@@ -715,13 +737,18 @@ export function WizardStepBody({
                         : "How many people fit in one room of this type."
                     }
                   >
-                    <Input
-                      type="number"
-                      min={1}
-                      value={u.maxGuests}
-                      onChange={(e) => {
+                    <NexaSelect
+                      variant="field"
+                      value={String(
+                        perBed ? 1 : Math.min(15, Math.max(1, u.maxGuests)),
+                      )}
+                      options={
+                        perBed ? MAX_GUEST_OPTIONS.slice(0, 1) : MAX_GUEST_OPTIONS
+                      }
+                      aria-label="Maximum guests per booking"
+                      onChange={(value) => {
                         const next = [...form.unitTypes];
-                        next[idx] = { ...u, maxGuests: Number(e.target.value) || 1 };
+                        next[idx] = { ...u, maxGuests: Number(value) };
                         patch({ unitTypes: next });
                       }}
                     />
@@ -1035,18 +1062,18 @@ export function WizardStepBody({
       <div className="space-y-6">
         <StepHeader
           eyebrow={multi ? "Room pricing" : "Nightly pricing"}
-          title={multi ? "Room pricing & fees" : "Set your nightly price"}
+          title={multi ? "Room pricing" : "Set your nightly price"}
           description={
             multi
-              ? "Confirm room and dorm rates, then add property-level fees like cleaning."
+              ? "Confirm your all-inclusive room and dorm rates."
               : "Enter what you want to earn per night. We’ll show what guests pay after the Nexa Stays service fee."
           }
-          tip="Prices are in MAD. You can adjust later after the listing is approved."
+          tip="Prices are in MAD and include property fees. You can adjust later after the listing is approved."
         />
 
         {!multi && (
           <SectionCard title="Nightly rates" description="Base rate guests see first.">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Price per night" required hint="Weeknight starting price.">
                 <Input
                   type="number"
@@ -1065,33 +1092,7 @@ export function WizardStepBody({
                   placeholder="750"
                 />
               </Field>
-              <Field label="Cleaning fee" hint="One-time fee per stay, if any.">
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.cleaningFee}
-                  onChange={(e) => patch({ cleaningFee: e.target.value })}
-                  placeholder="0"
-                />
-              </Field>
             </div>
-          </SectionCard>
-        )}
-
-        {multi && (
-          <SectionCard
-            title="Cleaning fee"
-            description="Charged once per booking, on top of the room or bed rate."
-          >
-            <Field label="Cleaning fee (MAD)">
-              <Input
-                type="number"
-                min={0}
-                value={form.cleaningFee}
-                onChange={(e) => patch({ cleaningFee: e.target.value })}
-                placeholder="0"
-              />
-            </Field>
           </SectionCard>
         )}
 

@@ -10,9 +10,10 @@ import type { SeoLocale } from "@/lib/seo/types";
 
 export const revalidate = 86400;
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const { t } = getServerTranslations(locale);
   return buildSeoMetadata({
@@ -23,7 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function StaysHubPage({ params }: Props) {
+export default async function StaysHubPage(props: Props) {
+  const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
   const { t, localePath } = getServerTranslations(locale);
   const destinations = await fetchSeoDestinations();

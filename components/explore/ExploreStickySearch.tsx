@@ -1,115 +1,120 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { MOTION_MS } from "@/lib/motion";
-import { useScrollCompact } from "@/lib/use-scroll-compact";
-import { findDestinationById } from "@/lib/search-destinations";
-import { formatDateRangeSummary, formatGuestSummary } from "@/components/search/guest-summary";
+import { SearchBar, SearchFlow } from "@/components/search";
+import {
+  formatDateRangeSummary,
+  formatGuestSummary,
+} from "@/components/search/guest-summary";
 import type { SearchBarValue } from "@/components/search/types";
+import { findDestinationById } from "@/lib/search-destinations";
+import { cn } from "@/lib/utils";
 
 type Props = {
   value: SearchBarValue;
   locale: string;
-  onOpenSheet: () => void;
+  onSearch: (value: SearchBarValue) => void;
   t: (key: string) => string;
   tf: (key: string, vars?: Record<string, string | number>) => string;
   className?: string;
 };
 
+/**
+ * Listings search uses the same interactive search control as the home page.
+ * The draft remains local until Search is submitted so opening a field or
+ * changing guests does not mutate the listings URL prematurely.
+ */
 export function ExploreStickySearch({
   value,
   locale,
-  onOpenSheet,
+  onSearch,
   t,
   tf,
   className,
 }: Props) {
-  const compact = useScrollCompact();
+  const [draft, setDraft] = useState(value);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const dest = findDestinationById(value.destinationId);
-  const whereLabel = dest?.label || value.city || t("searchBar.searchMorocco");
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const destination = findDestinationById(draft.destinationId);
+  const whereLabel =
+    destination?.label || draft.city || t("searchBar.searchDestinations");
   const whenLabel = formatDateRangeSummary(
-    value.checkin,
-    value.checkout,
+    draft.checkin,
+    draft.checkout,
     locale,
     t("searchBar.addDates"),
   );
-  const guestsLabel = formatGuestSummary(value, tf);
-  const collapsedSummary = tf("searchBar.collapsedSummary", {
-    where: whereLabel,
-    when: whenLabel,
-    guests: guestsLabel,
-  });
+  const guestsLabel = formatGuestSummary(draft, tf);
 
   return (
-    <div
-      className={cn(
-        "sticky top-[72px] z-layer-sticky border-b border-nexa-line bg-white/95 backdrop-blur-sm px-4",
-        "transition-[height,padding,opacity] ease-out motion-reduce:transition-none",
-        compact ? "py-2" : "py-3",
-        className,
-      )}
-      style={{ transitionDuration: `${MOTION_MS.NORMAL}ms` }}
-    >
-      <button
-        type="button"
-        onClick={onOpenSheet}
-        aria-label={compact ? collapsedSummary : t("searchBar.searchMorocco")}
-        aria-expanded={!compact}
+    <>
+      <div
         className={cn(
-          "flex w-full items-center gap-3 rounded-2xl border border-nexa-line bg-white text-left shadow-sm",
-          "transition-[height,padding,opacity] ease-out hover:border-nexa-primary/40 motion-reduce:transition-none",
-          compact
-            ? "min-h-[52px] px-3.5 py-2.5"
-            : "min-h-[120px] flex-col items-stretch px-4 py-3.5",
+          "sticky top-[72px] z-layer-sticky border-b border-nexa-line",
+          "bg-[linear-gradient(180deg,#fff_0%,#fff8fa_100%)] px-4 py-3 sm:px-6 sm:py-4",
+          className,
         )}
-        style={{ transitionDuration: `${MOTION_MS.NORMAL}ms` }}
       >
-        <div className="flex w-full min-w-0 items-center gap-2.5">
-          <Search className="h-4 w-4 shrink-0 text-nexa-primary" aria-hidden />
-          <span
-            className={cn(
-              "truncate text-sm font-medium text-nexa-ink transition-opacity ease-out motion-reduce:transition-none",
-              compact ? "opacity-100" : "font-semibold opacity-100",
-            )}
-            style={{ transitionDuration: `${MOTION_MS.NORMAL}ms` }}
-          >
-            {compact ? collapsedSummary : t("searchBar.searchMorocco")}
-          </span>
-        </div>
-        <div
-          aria-hidden={compact}
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label={t("pwa.navSearch")}
+          aria-haspopup="dialog"
+          aria-expanded={mobileOpen}
           className={cn(
-            "grid w-full grid-cols-3 gap-2 overflow-hidden text-[0.72rem]",
-            "transition-[opacity,max-height,margin] ease-out motion-reduce:transition-none",
-            compact
-              ? "pointer-events-none mt-0 max-h-0 opacity-0"
-              : "mt-2 max-h-24 opacity-100",
+            "flex min-h-[64px] w-full items-center gap-3 rounded-full border border-nexa-line bg-white px-4 py-2 text-left shadow-nexa-md sm:hidden",
+            "transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.99]",
+            "hover:border-nexa-primary/40 focus-visible:border-nexa-primary",
           )}
-          style={{ transitionDuration: `${MOTION_MS.NORMAL}ms` }}
         >
-          <div className="min-w-0 rounded-xl border border-nexa-line/80 px-2.5 py-2">
-            <p className="text-[0.6rem] font-bold uppercase tracking-wide text-nexa-ink-4">
-              {t("searchBar.where")}
-            </p>
-            <p className="truncate font-medium text-nexa-ink">{whereLabel}</p>
-          </div>
-          <div className="min-w-0 rounded-xl border border-nexa-line/80 px-2.5 py-2">
-            <p className="text-[0.6rem] font-bold uppercase tracking-wide text-nexa-ink-4">
-              {t("searchBar.when")}
-            </p>
-            <p className="truncate font-medium text-nexa-ink">{whenLabel}</p>
-          </div>
-          <div className="min-w-0 rounded-xl border border-nexa-line/80 px-2.5 py-2">
-            <p className="text-[0.6rem] font-bold uppercase tracking-wide text-nexa-ink-4">
-              {t("searchBar.who")}
-            </p>
-            <p className="truncate font-medium text-nexa-ink">{guestsLabel}</p>
-          </div>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-nexa-primary text-white shadow-[0_6px_18px_rgba(232,80,122,.3)]">
+            <Search className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-nexa-ink">
+              {whereLabel}
+            </span>
+            <span className="mt-0.5 block truncate text-xs text-nexa-ink-4">
+              {whenLabel} · {guestsLabel}
+            </span>
+          </span>
+          <span className="shrink-0 rounded-full bg-nexa-primary-soft px-3 py-1.5 text-xs font-semibold text-nexa-primary">
+            {t("searchBar.search")}
+          </span>
+        </button>
+
+        <div className="hidden sm:block">
+          <SearchBar
+            value={draft}
+            onChange={setDraft}
+            onSearch={onSearch}
+            t={t}
+            tf={tf}
+            locale={locale}
+            variant="home"
+            className="mx-auto w-full max-w-none"
+          />
         </div>
-      </button>
-    </div>
+      </div>
+
+      <SearchFlow
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        initialValue={draft}
+        onSearch={(next) => {
+          setDraft(next);
+          setMobileOpen(false);
+          onSearch(next);
+        }}
+        t={t}
+        tf={tf}
+        locale={locale}
+      />
+    </>
   );
 }

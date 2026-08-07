@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHeaderState, type HeaderState } from "@/lib/header-api";
+import { isJwtExpired } from "@/lib/jwt-utils";
 import { runAfterIdle } from "@/lib/defer-after-idle";
 import { useMessagingRealtime } from "@/components/messaging/hooks/useMessagingRealtime";
 
@@ -25,7 +26,7 @@ type HeaderStateContextValue = HeaderState & {
 const HeaderStateContext = createContext<HeaderStateContextValue | null>(null);
 
 export function HeaderStateProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, token, tokenType, ready } = useAuth();
+  const { isAuthenticated, token, tokenType, ready, refreshUser } = useAuth();
   const [state, setState] = useState<HeaderState>({
     notificationCount: 0,
     inboxCount: 0,
@@ -34,6 +35,7 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
   });
   const [idleReady, setIdleReady] = useState(false);
   const mountedRef = useRef(true);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -45,19 +47,38 @@ export function HeaderStateProvider({ children }: { children: React.ReactNode })
     };
   }, []);
 
-  const refresh = useCallback(async () => {
-    if (!isAuthenticated || tokenType !== "jwt" || !token) {
-      setState({
-        notificationCount: 0,
-        inboxCount: 0,
-        avatar: null,
-        hostMode: false,
-      });
-      return;
-    }
-    const next = await getHeaderState(token);
-    if (mountedRef.current) setState(next);
-  }, [isAuthenticated, token, tokenType]);
+  const refresh = useCallback(() => {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
+
+    const request = (async () => {
+      if (!isAuthenticated || tokenType !== "jwt" || !token) {
+        setState({
+          notificationCount: 0,
+          inboxCount: 0,
+          avatar: null,
+          hostMode: false,
+        });
+        return;
+      }
+      if (isJwtExpired(token)) {
+        await refreshUser();
+        return;
+      }
+      const next = await getHeaderState(token);
+      if (next === null) {
+        await refreshUser();
+        return;
+      }
+      if (mountedRef.current) setState(next);
+    })();
+    refreshInFlightRef.current = request;
+    void request.finally(() => {
+      if (refreshInFlightRef.current === request) {
+        refreshInFlightRef.current = null;
+      }
+    });
+    return request;
+  }, [isAuthenticated, refreshUser, token, tokenType]);
 
   const setNotificationCount = useCallback((count: number) => {
     setState((prev) => ({

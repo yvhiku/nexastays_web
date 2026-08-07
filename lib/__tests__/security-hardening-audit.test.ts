@@ -65,11 +65,10 @@ test("government identifiers are masked to their final four characters", () => {
 });
 
 test("service worker never caches API responses and clears the legacy API cache", () => {
-  const config = read("next.config.js");
+  const worker = read("public/nexa-sw.js");
   const cleanup = read("lib/pwa-sw-update.ts");
-  assert.match(config, /Authenticated API responses must never enter/);
-  assert.match(config, /handler: "NetworkOnly"/);
-  assert.doesNotMatch(config, /cacheName: "apis"/);
+  assert.match(worker, /url\.pathname\.startsWith\("\/api\/"\)/);
+  assert.doesNotMatch(worker, /cache\.put\(event\.request/);
   assert.match(cleanup, /clearSensitiveRuntimeCaches/);
   assert.match(cleanup, /includes\("apis"\)/);
 });

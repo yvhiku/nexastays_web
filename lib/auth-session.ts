@@ -1,9 +1,5 @@
 import { refreshToken as refreshTokenApi } from "@/lib/auth-api";
 import { getIdentityApiBaseUrl } from "@/lib/env";
-import { isJwtExpired } from "@/lib/jwt-utils";
-
-const JWT_KEY = "nexa_access_token";
-const REFRESH_TOKEN_KEY = "nexa_refresh_token";
 
 export type AuthUser = {
   id: string;
@@ -33,6 +29,7 @@ async function fetchCurrentUser(
 ): Promise<{ user: AuthUser | null; status?: number }> {
   try {
     const res = await fetch(`${baseUrl}/users/me`, {
+      credentials: "include",
       headers: { Authorization: `Bearer ${jwt}` },
     });
     if (!res.ok) return { user: null, status: res.status };
@@ -43,14 +40,8 @@ async function fetchCurrentUser(
   }
 }
 
-function clearStoredTokens(): void {
-  localStorage.removeItem(JWT_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-}
-
 /**
- * Restore session from localStorage with at most one GET /users/me.
- * Skips /users/me when the access token is expired (refresh or clear first).
+ * Restore a browser session from the rotating HttpOnly refresh cookie.
  * Dedupes concurrent calls (React Strict Mode).
  */
 export async function hydrateAuthSession(): Promise<HydrateAuthResult> {
@@ -60,64 +51,23 @@ export async function hydrateAuthSession(): Promise<HydrateAuthResult> {
   if (hydrateInflight) return hydrateInflight;
 
   hydrateInflight = (async (): Promise<HydrateAuthResult> => {
-    const jwt = localStorage.getItem(JWT_KEY);
-    const refresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!jwt) {
-      return { accessToken: null, user: null, cleared: false };
-    }
-
-    let accessToken = jwt;
-
-    if (isJwtExpired(jwt)) {
-      if (!refresh) {
-        clearStoredTokens();
+    try {
+      const tokens = await refreshTokenApi();
+      const current = await fetchCurrentUser(
+        getIdentityApiBaseUrl(),
+        tokens.access_token,
+      );
+      if (current.status === 401) {
         return { accessToken: null, user: null, cleared: true };
       }
-      try {
-        const tokens = await refreshTokenApi(refresh);
-        accessToken = tokens.access_token;
-        localStorage.setItem(JWT_KEY, tokens.access_token);
-        if (tokens.refresh_token) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-        }
-      } catch {
-        clearStoredTokens();
-        return { accessToken: null, user: null, cleared: true };
-      }
-    }
-
-    const { user, status } = await fetchCurrentUser(getIdentityApiBaseUrl(), accessToken);
-    if (status === 401) {
-      if (refresh && accessToken === jwt) {
-        try {
-          const tokens = await refreshTokenApi(refresh);
-          localStorage.setItem(JWT_KEY, tokens.access_token);
-          if (tokens.refresh_token) {
-            localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
-          }
-          const retry = await fetchCurrentUser(
-            getIdentityApiBaseUrl(),
-            tokens.access_token,
-          );
-          if (retry.status === 401) {
-            clearStoredTokens();
-            return { accessToken: null, user: null, cleared: true };
-          }
-          return {
-            accessToken: tokens.access_token,
-            user: retry.user,
-            cleared: false,
-          };
-        } catch {
-          clearStoredTokens();
-          return { accessToken: null, user: null, cleared: true };
-        }
-      }
-      clearStoredTokens();
+      return {
+        accessToken: tokens.access_token,
+        user: current.user,
+        cleared: false,
+      };
+    } catch {
       return { accessToken: null, user: null, cleared: true };
     }
-
-    return { accessToken, user, cleared: false };
   })();
 
   try {
@@ -131,8 +81,5 @@ export async function hydrateAuthSession(): Promise<HydrateAuthResult> {
 export async function fetchCurrentUserWithJwt(
   jwt: string,
 ): Promise<{ user: AuthUser | null; status?: number }> {
-  if (isJwtExpired(jwt)) {
-    return { user: null, status: 401 };
-  }
   return fetchCurrentUser(getIdentityApiBaseUrl(), jwt);
 }
