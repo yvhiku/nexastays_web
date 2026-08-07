@@ -215,9 +215,10 @@ async function waitForHealthy(child, timeoutMs = 120_000) {
 
 function spawnDevServer() {
   const args = ["next", "dev", "-p", port];
-  if (useTurbo) args.push("--turbo");
+  // Next.js 16 defaults to Turbopack; we keep webpack for the dev memory-cache workaround.
+  args.push(useTurbo ? "--turbopack" : "--webpack");
 
-  log(`Starting Next.js dev server on http://localhost:${port}${useTurbo ? " (Turbopack)" : ""}`);
+  log(`Starting Next.js dev server on http://localhost:${port}${useTurbo ? " (Turbopack)" : " (webpack)"}`);
 
   const child = spawn("npx", args, {
     cwd: root,

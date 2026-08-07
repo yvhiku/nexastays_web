@@ -22,6 +22,18 @@ const analyticsOrigin = originOf(analyticsEndpoint);
 const errorReportingOrigin = originOf(errorReportingEndpoint);
 const sumsubApiOrigin = "https://api.sumsub.com";
 const sumsubStaticOrigin = "https://static.sumsub.com";
+const approvedListingImageHosts = [
+  "media.nexastays.ma",
+  "cdn.nexastays.ma",
+  "storage.nexastays.ma",
+];
+const staysImageHost = (() => {
+  try {
+    return new URL(staysApi).hostname;
+  } catch {
+    return undefined;
+  }
+})();
 const csp = [
   "default-src 'self'",
   `script-src 'self' ${sumsubStaticOrigin} ${isProd ? "" : "'unsafe-eval'"} 'unsafe-inline'`,
@@ -74,6 +86,8 @@ const nextConfig = {
     // Avoid huge lucide vendor chunks that often go stale in dev on Windows.
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
+  // Acknowledge Turbopack when using `npm run dev:turbo` (Next.js 16 requires this if webpack is also configured).
+  turbopack: {},
   webpack: (config, { dev }) => {
     if (dev) {
       // Filesystem webpack cache + Windows file locks → missing ./8948.js / vendor-chunks/*.js
@@ -88,21 +102,34 @@ const nextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
-      {
+      ...approvedListingImageHosts.map((hostname) => ({
         protocol: "https",
-        hostname: "**",
-        pathname: "/api/v1/stays/listings/**",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-        pathname: "/api/v1/stays/listings/**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        pathname: "/api/v1/stays/listings/**",
-      },
+        hostname,
+        pathname: "/**",
+      })),
+      ...(staysImageHost && !["localhost", "127.0.0.1"].includes(staysImageHost)
+        ? [
+            {
+              protocol: "https",
+              hostname: staysImageHost,
+              pathname: "/api/v1/stays/listings/**",
+            },
+          ]
+        : []),
+      ...(!isProd
+        ? [
+            {
+              protocol: "http",
+              hostname: "127.0.0.1",
+              pathname: "/api/v1/stays/listings/**",
+            },
+            {
+              protocol: "http",
+              hostname: "localhost",
+              pathname: "/api/v1/stays/listings/**",
+            },
+          ]
+        : []),
     ],
   },
   async headers() {
@@ -151,7 +178,8 @@ const nextConfig = {
   },
 };
 
-const withPWA = require("@ducanh2912/next-pwa").default({
+const withPWA = (config) => config;
+void ({
   dest: "public",
   // Skip PWA webpack work in dev — reduces cache corruption; SW recovery stays in NexaDebugBoot.
   disable: process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_DISABLE_PWA === "true",
