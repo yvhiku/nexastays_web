@@ -8,9 +8,9 @@
     "dev:recover": "npm run clean:next && node scripts/dev-safe.mjs --force",
     "dev:turbo": "node scripts/dev-safe.mjs --turbo",
     "clean:next": "node -e \"const fs=require('fs');['.next','.next-dev','node_modules/.cache'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true})}catch{}})\"",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "audit": "npm audit --audit-level=high",
     "audit:osv": "npx --yes @google/osv-scanner@latest -r . || npx --yes osv-scanner@latest -r .",
     "validate:explore-catalog": "npx --yes tsx scripts/validate-explore-catalog.ts",
@@ -25,7 +25,6 @@
     "release:env": "node scripts/verify-production-config.mjs"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^10.2.9",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.8",
@@ -40,9 +39,9 @@
     "leaflet.markercluster": "^1.5.3",
     "libphonenumber-js": "^1.12.38",
     "lucide-react": "^0.563.0",
-    "next": "^14.2.35",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-easy-crop": "^5.4.2",
     "react-phone-number-input": "^3.4.17",
     "sanitize-html": "^2.17.6",
@@ -54,13 +53,23 @@
     "@types/leaflet.markercluster": "^1.5.6",
     "@types/node": "25.1.0",
     "@types/react": "19.2.10",
+    "@types/react-dom": "19.2.3",
     "@types/sanitize-html": "^2.16.1",
     "autoprefixer": "^10.4.16",
-    "eslint": "^8.50.0",
-    "eslint-config-next": "^14.0.0",
-    "postcss": "^8.4.31",
-    "sharp": "^0.35.3",
+    "eslint": "10.8.0",
+    "postcss": "8.5.24",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "8.65.0"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.9",
+    "form-data": "4.0.6",
+    "nanoid": "3.3.17",
+    "postcss": "8.5.24",
+    "serialize-javascript": "7.0.7",
+    "next": {
+      "sharp": "0.35.3"
+    }
   }
 }
