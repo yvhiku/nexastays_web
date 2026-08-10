@@ -2,13 +2,10 @@
  * User notification inbox API (identity service).
  */
 
-import axios, { AxiosError } from "axios";
-import {
-  refreshToken as refreshTokenApi,
-  notifyTokenRefreshed,
-  notifyAuthLogout,
-} from "./auth-api";
+import axios from "axios";
 import { getIdentityApiBaseUrl } from "./env";
+import { bearerAuthHeaders } from "./access-token-store";
+import { attachBrowserBearerAuth } from "./attach-browser-bearer-auth";
 
 const API_BASE = getIdentityApiBaseUrl();
 const client = axios.create({
@@ -17,33 +14,12 @@ const client = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 client.defaults.headers.common["X-Auth-Transport"] = "cookie";
-
-client.interceptors.response.use(
-  (res) => res,
-  async (err: AxiosError) => {
-    const config = err.config as typeof err.config & { __refreshRetried?: boolean };
-    if (!config) return Promise.reject(err);
-    if (err.response?.status === 401 && !config.__refreshRetried && typeof window !== "undefined") {
-      const hadAuth = config.headers?.["Authorization"] || config.headers?.Authorization;
-      if (hadAuth) {
-        config.__refreshRetried = true;
-        try {
-          const tokens = await refreshTokenApi();
-          notifyTokenRefreshed(tokens.access_token);
-          config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` } as typeof config.headers;
-          return client.request(config);
-        } catch {
-          notifyAuthLogout();
-        }
-      }
-    }
-    return Promise.reject(err);
-  },
-);
+attachBrowserBearerAuth(client);
 
 function getAuthHeaders(token?: string | null): Record<string, string> {
   if (typeof window === "undefined") return {};
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (token) return { Authorization: `Bearer ${token}` };
+  return bearerAuthHeaders();
 }
 
 export interface UserNotificationItem {

@@ -145,6 +145,9 @@ export async function logoutBrowserSession(
 /** Notify AuthContext that tokens were refreshed (e.g. by API interceptor) */
 export function notifyTokenRefreshed(accessToken: string): void {
   if (typeof window !== "undefined") {
+    void import("./access-token-store").then(({ setMemoryAccessToken }) => {
+      setMemoryAccessToken(accessToken);
+    });
     window.dispatchEvent(
       new CustomEvent("nexa:auth:token-refreshed", { detail: { accessToken } })
     );
@@ -154,6 +157,9 @@ export function notifyTokenRefreshed(accessToken: string): void {
 /** Notify AuthContext that refresh failed and user should be logged out */
 export function notifyAuthLogout(): void {
   if (typeof window !== "undefined") {
+    void import("./access-token-store").then(({ clearMemoryAccessToken }) => {
+      clearMemoryAccessToken();
+    });
     window.dispatchEvent(new CustomEvent("nexa:auth:logout"));
   }
 }

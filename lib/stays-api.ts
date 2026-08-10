@@ -9,6 +9,11 @@ import {
   notifyTokenRefreshed,
   notifyAuthLogout,
 } from "./auth-api";
+import {
+  bearerAuthHeaders,
+  getMemoryAccessToken,
+  setMemoryAccessToken,
+} from "./access-token-store";
 import { toAppError } from "./errors";
 import { validateImageFile } from "./validators";
 import type {
@@ -69,6 +74,18 @@ client.interceptors.request.use((config) => {
   if (config.data instanceof FormData) {
     delete config.headers["Content-Type"];
   }
+  // PROD-SEC-001: always attach in-memory Bearer; never rely on ambient nexa_access.
+  const token = getMemoryAccessToken();
+  if (token) {
+    const headers = config.headers ?? {};
+    const existing =
+      (headers as { Authorization?: string; authorization?: string }).Authorization ||
+      (headers as { authorization?: string }).authorization;
+    if (!existing) {
+      (headers as { Authorization?: string }).Authorization = `Bearer ${token}`;
+      config.headers = headers as typeof config.headers;
+    }
+  }
   return config;
 });
 
@@ -90,11 +107,15 @@ client.interceptors.response.use(
     }
 
     if (err.response?.status === 401 && !config.__refreshRetried && typeof window !== "undefined") {
-      const hadAuth = config.headers?.["Authorization"] || config.headers?.Authorization;
+      const hadAuth =
+        config.headers?.["Authorization"] ||
+        config.headers?.Authorization ||
+        getMemoryAccessToken();
       if (hadAuth) {
         config.__refreshRetried = true;
         try {
           const tokens = await refreshTokenApi();
+          setMemoryAccessToken(tokens.access_token);
           notifyTokenRefreshed(tokens.access_token);
           config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
           return client.request(config);
@@ -108,9 +129,9 @@ client.interceptors.response.use(
   }
 );
 
-/** Attach JWT for authenticated requests */
+/** Attach JWT for authenticated requests (in-memory Bearer — ADR-005). */
 function getAuthHeaders(): Record<string, string> {
-  return {};
+  return bearerAuthHeaders();
 }
 
 function unwrap<T>(res: { data?: unknown }): T {

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-const root = join(__dirname, "../..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 function read(rel: string): string {
   return readFileSync(join(root, rel), "utf8");

@@ -12,6 +12,10 @@ import {
   refreshToken as refreshTokenApi,
 } from "@/lib/auth-api";
 import { hydrateAuthSession, fetchCurrentUserWithJwt } from "@/lib/auth-session";
+import {
+  clearMemoryAccessToken,
+  setMemoryAccessToken,
+} from "@/lib/access-token-store";
 
 const AUTH_TOKEN_REFRESHED = "nexa:auth:token-refreshed";
 const AUTH_LOGOUT = "nexa:auth:logout";
@@ -72,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(OTP_SESSION_KEY);
     }
+    clearMemoryAccessToken();
     setToken(null);
     setTokenType("none");
     setUser(null);
@@ -122,6 +127,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [clearStoredTokens]);
 
+  // Keep module-level store in sync for axios clients (PROD-SEC-001 Bearer).
+  useEffect(() => {
+    if (tokenType === "jwt" && token) {
+      setMemoryAccessToken(token);
+    } else if (tokenType !== "jwt") {
+      // OTP session tokens are not JWTs for Stays Bearer auth.
+      if (tokenType === "none") clearMemoryAccessToken();
+    }
+  }, [token, tokenType]);
+
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
     const channel = new BroadcastChannel(AUTH_CHANNEL);
@@ -165,11 +180,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(OTP_SESSION_KEY);
     }
+    setMemoryAccessToken(accessToken);
     setToken(accessToken);
     setTokenType("jwt");
     setUser(null);
     fetchCurrentUserWithJwt(accessToken).then(({ user: u, status }) => {
       if (status === 401 && typeof window !== "undefined") {
+        clearMemoryAccessToken();
         setToken(null);
         setTokenType("none");
       } else {
