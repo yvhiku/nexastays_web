@@ -388,20 +388,31 @@ export async function payWithWallet(
   return unwrap(res);
 }
 
-/** Simulate card payment success (dev only - calls mock webhook) */
+/** Authenticated mock payment confirmation (simulated provider). */
+export async function confirmMockPayment(
+  bookingId: string,
+  token?: string | null
+): Promise<{
+  status: "CONFIRMED" | "PAYMENT_ALREADY_PROCESSED";
+  booking_id: string;
+  payment_intent_id: string;
+  provider_intent_id: string;
+  amount: number;
+  currency: string;
+}> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .post(`/stays/bookings/${bookingId}/payments/mock-confirm`, {}, { headers })
+    .catch(handleError);
+  return unwrap(res);
+}
+
+/** @deprecated Use confirmMockPayment(bookingId) — legacy unauthenticated webhook removed. */
 export async function simulateCardPayment(
-  providerIntentId: string
+  bookingId: string,
+  token?: string | null
 ): Promise<void> {
-  const API_BASE = getStaysApiBaseUrl();
-  const res = await fetch(`${API_BASE}/stays/webhooks/payments/mock`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ provider_intent_id: providerIntentId }),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data?.message ?? `Simulate failed: ${res.status}`);
-  }
+  await confirmMockPayment(bookingId, token);
 }
 
 /** Get guest's booking history (requires JWT) */

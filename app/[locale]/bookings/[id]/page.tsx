@@ -198,8 +198,8 @@ function BookingDetailPageInner() {
         token,
         `web-card-${booking.id}`,
       );
-      if (intent.provider === "mock" && intent.provider_intent_id) {
-        await simulateCardPayment(intent.provider_intent_id);
+      if (intent.provider === "mock") {
+        await simulateCardPayment(booking.id, token);
         reloadBooking();
         return;
       }
