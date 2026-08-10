@@ -12,6 +12,7 @@ import {
   type BookingSummaryItem,
 } from "./BookingSummaryGrid";
 import { BookingStatusBanner } from "./BookingStatusBanner";
+import { bookingNights } from "@/lib/booking-dates";
 
 export type BookingTimelineStatus =
   | "confirmed"
@@ -94,10 +95,8 @@ function localizedDateRange(
 }
 
 function nightsBetween(checkIn?: string, checkOut?: string): number | null {
-  const start = parseDateOnly(checkIn);
-  const end = parseDateOnly(checkOut);
-  if (!start || !end) return null;
-  const nights = Math.round((end.getTime() - start.getTime()) / 86_400_000);
+  if (!checkIn || !checkOut) return null;
+  const nights = bookingNights(checkIn, checkOut);
   return nights > 0 ? nights : null;
 }
 

@@ -59,13 +59,19 @@ export function addDaysToDateString(isoDate: string, days: number): string {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Authoritative stay nights (must match backend booking-date.util).
+ * Check-in inclusive, check-out exclusive. UTC calendar midnights — DST-safe.
+ * 2026-08-10 → 2026-08-11 = 1; 2026-08-10 → 2026-08-12 = 2.
+ */
 export function bookingNights(checkin: string, checkout: string): number {
-  const ci = /^(\d{4})-(\d{2})-(\d{2})$/.exec(checkin);
-  const co = /^(\d{4})-(\d{2})-(\d{2})$/.exec(checkout);
+  const ci = /^(\d{4})-(\d{2})-(\d{2})/.exec(checkin.trim());
+  const co = /^(\d{4})-(\d{2})-(\d{2})/.exec(checkout.trim());
   if (!ci || !co) return 0;
-  const a = new Date(Number(ci[1]), Number(ci[2]) - 1, Number(ci[3])).getTime();
-  const b = new Date(Number(co[1]), Number(co[2]) - 1, Number(co[3])).getTime();
-  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+  const ms =
+    Date.UTC(Number(co[1]), Number(co[2]) - 1, Number(co[3])) -
+    Date.UTC(Number(ci[1]), Number(ci[2]) - 1, Number(ci[3]));
+  return Math.trunc(ms / 86_400_000);
 }
 
 export function isValidBookingRange(checkin: string, checkout: string): boolean {
