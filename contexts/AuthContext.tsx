@@ -16,6 +16,8 @@ import {
   clearMemoryAccessToken,
   setMemoryAccessToken,
 } from "@/lib/access-token-store";
+import { clearRegistrationPhone } from "@/lib/registration-phone-store";
+import type { IdentityOnboardingState } from "@/lib/auth-api";
 
 const AUTH_TOKEN_REFRESHED = "nexa:auth:token-refreshed";
 const AUTH_LOGOUT = "nexa:auth:logout";
@@ -43,6 +45,7 @@ export interface User {
   city?: string;
   date_of_birth?: string;
   nationality?: string;
+  onboarding?: IdentityOnboardingState;
   [key: string]: unknown;
 }
 
@@ -50,12 +53,21 @@ interface AuthContextValue {
   token: string | null;
   tokenType: TokenType;
   user: User | null;
+  onboarding: IdentityOnboardingState | null;
   ready: boolean;
   isAuthenticated: boolean;
   /** Set JWT after login or registration complete (refreshToken optional, for persistent sessions) */
-  setAuthJwt: (accessToken: string, refreshToken?: string) => void;
+  setAuthJwt: (
+    accessToken: string,
+    refreshToken?: string,
+    onboarding?: IdentityOnboardingState,
+  ) => void;
   /** Set OTP session token for registration flow */
-  setAuthOtpSession: (otpSessionToken: string) => void;
+  setAuthOtpSession: (
+    otpSessionToken: string,
+    onboarding?: IdentityOnboardingState,
+  ) => void;
+  setOnboarding: (onboarding: IdentityOnboardingState | null) => void;
   /** Refresh user from API (e.g. after profile/photo update) */
   refreshUser: () => Promise<void>;
   logout: () => void;
@@ -70,6 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [tokenType, setTokenType] = useState<TokenType>("none");
   const [user, setUser] = useState<User | null>(null);
+  const [onboarding, setOnboarding] =
+    useState<IdentityOnboardingState | null>(null);
   const [ready, setReady] = useState(false);
 
   const clearStoredTokens = useCallback(() => {
@@ -77,9 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem(OTP_SESSION_KEY);
     }
     clearMemoryAccessToken();
+    clearRegistrationPhone();
     setToken(null);
     setTokenType("none");
     setUser(null);
+    setOnboarding(null);
     void import("@/lib/pwa-sw-update").then((module) =>
       module.clearSensitiveRuntimeCaches(),
     );
@@ -97,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(otp);
       setTokenType("otp_session");
       setUser(null);
+      setOnboarding(null);
       setReady(true);
       return () => {
         cancelled = true;
@@ -108,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setTokenType("none");
     setUser(null);
+    setOnboarding(null);
     void (async () => {
       const result = await hydrateAuthSession();
       if (cancelled) return;
@@ -119,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(result.accessToken);
       setTokenType("jwt");
       setUser(result.user);
+      setOnboarding(result.user?.onboarding ?? null);
       setReady(true);
     })();
 
@@ -151,6 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setToken(result.accessToken);
           setTokenType("jwt");
           setUser(result.user);
+          setOnboarding(result.user?.onboarding ?? null);
         });
       }
     };
@@ -176,33 +196,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [clearStoredTokens]);
 
-  const setAuthJwt = useCallback((accessToken: string, _refreshToken?: string) => {
+  const setAuthJwt = useCallback((
+    accessToken: string,
+    _refreshToken?: string,
+    nextOnboarding?: IdentityOnboardingState,
+  ) => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(OTP_SESSION_KEY);
     }
+    clearRegistrationPhone();
     setMemoryAccessToken(accessToken);
     setToken(accessToken);
     setTokenType("jwt");
     setUser(null);
+    if (nextOnboarding) setOnboarding(nextOnboarding);
     fetchCurrentUserWithJwt(accessToken).then(({ user: u, status }) => {
       if (status === 401 && typeof window !== "undefined") {
         clearMemoryAccessToken();
         setToken(null);
         setTokenType("none");
+        setOnboarding(null);
       } else {
         setUser(u ?? null);
+        if (u?.onboarding) setOnboarding(u.onboarding);
       }
     });
     broadcastAuth("session");
   }, []);
 
-  const setAuthOtpSession = useCallback((otpSessionToken: string) => {
+  const setAuthOtpSession = useCallback((
+    otpSessionToken: string,
+    nextOnboarding?: IdentityOnboardingState,
+  ) => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(OTP_SESSION_KEY, otpSessionToken);
     }
     setToken(otpSessionToken);
     setTokenType("otp_session");
     setUser(null);
+    setOnboarding(nextOnboarding ?? null);
   }, []);
 
   const logout = useCallback(() => {
@@ -214,9 +246,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(OTP_SESSION_KEY);
     }
+    clearMemoryAccessToken();
+    clearRegistrationPhone();
     setToken(null);
     setTokenType("none");
     setUser(null);
+    setOnboarding(null);
     broadcastAuth("logout");
     void import("@/lib/pwa-sw-update").then((module) =>
       module.clearSensitiveRuntimeCaches(),
@@ -233,6 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(tokens.access_token);
         const { user: u2 } = await fetchCurrentUserWithJwt(tokens.access_token);
         setUser(u2 ?? null);
+        setOnboarding(u2?.onboarding ?? null);
         return;
       } catch {
         // Fall through to clear
@@ -240,6 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearStoredTokens();
     } else {
       setUser(u ?? null);
+      setOnboarding(u?.onboarding ?? null);
     }
   }, [token, tokenType, clearStoredTokens]);
 
@@ -260,10 +297,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token,
     tokenType,
     user,
+    onboarding,
     ready,
-    isAuthenticated: tokenType === "jwt" && !!token,
+    isAuthenticated:
+      tokenType === "jwt" && !!token && onboarding?.required !== true,
     setAuthJwt,
     setAuthOtpSession,
+    setOnboarding,
     refreshUser,
     logout,
     userId: user?.id ?? null,

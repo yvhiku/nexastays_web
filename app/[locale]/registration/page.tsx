@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
-import { completeRegistration } from "@/lib/auth-api";
+import {
+  completeRegistration,
+  type IdentityOnboardingState,
+} from "@/lib/auth-api";
 import {
   updateProfile,
   submitKyc,
@@ -29,6 +32,7 @@ import {
   SumsubWebVerification,
   type SumsubFinalStatus,
 } from "@/components/kyc/SumsubWebVerification";
+import { resolveRegistrationPhone } from "@/lib/registration-phone-store";
 
 const steps = [
   { id: 1, label: "Personal Info" },
@@ -81,7 +85,14 @@ export default function RegistrationPage() {
   const searchParams = useSearchParams();
   const redirectRaw = searchParams.get("redirect") || "/";
   const existingAccount = searchParams.get("existing") === "1";
-  const { token, tokenType, isAuthenticated, setAuthJwt, user } = useAuth();
+  const {
+    token,
+    tokenType,
+    isAuthenticated,
+    setAuthJwt,
+    setOnboarding,
+    user,
+  } = useAuth();
   const { localePath, locale } = useLanguage();
   const redirectTarget = resolveLocalizedPath(redirectRaw, locale);
   const [step, setStep] = useState(1);
@@ -104,9 +115,12 @@ export default function RegistrationPage() {
   );
 
   useEffect(() => {
-    const p = searchParams.get("phone");
-    if (p) setPhone(p);
-  }, [searchParams]);
+    // SEC-009: never read phone from URL query. Prefer memory; else otp_session JWT claim.
+    const fromTransient = resolveRegistrationPhone(
+      tokenType === "otp_session" ? token : null,
+    );
+    if (fromTransient) setPhone((prev) => prev || fromTransient);
+  }, [token, tokenType]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !token && !isAuthenticated) {
@@ -125,8 +139,8 @@ export default function RegistrationPage() {
     if (tokenType === "jwt" && token) {
       getCurrentUserOrNull(() => token).then((u) => {
         if (!u) return;
-        const k = (u.kyc_status || "").toUpperCase();
-        if (k === "APPROVED" || k === "VERIFIED") {
+        if (u.onboarding) setOnboarding(u.onboarding);
+        if (u.onboarding?.required === false) {
           router.replace(redirectTarget);
           return;
         }
@@ -141,7 +155,7 @@ export default function RegistrationPage() {
         });
       });
     }
-  }, [tokenType, token, router, redirectTarget]);
+  }, [tokenType, token, router, redirectTarget, setOnboarding]);
 
   useEffect(() => {
     if (user && tokenType === "jwt") {
@@ -240,9 +254,18 @@ export default function RegistrationPage() {
     setStep(3);
   };
 
-  const handleSumsubFinalStatus = async (status: SumsubFinalStatus) => {
+  const handleSumsubFinalStatus = async (
+    status: SumsubFinalStatus,
+    canonicalOnboarding?: IdentityOnboardingState,
+  ) => {
+    if (canonicalOnboarding) setOnboarding(canonicalOnboarding);
     try {
-      await exchangeOtpSessionForJwt();
+      if (
+        (status === "APPROVED" || status === "VERIFIED") &&
+        canonicalOnboarding?.required === false
+      ) {
+        await exchangeOtpSessionForJwt();
+      }
     } catch (e: unknown) {
       const apiErr = normalizeError(e);
       setError(
@@ -277,13 +300,23 @@ export default function RegistrationPage() {
                 : null;
         if (!terminal || cancelled) return;
 
-        try {
-          const result = await completeRegistration(tok);
-          if (!cancelled && result?.access_token) {
-            setAuthJwt(result.access_token, result.refresh_token);
+        if (r.onboarding) setOnboarding(r.onboarding);
+        if (
+          (terminal === "APPROVED" || terminal === "VERIFIED") &&
+          r.onboarding?.required === false
+        ) {
+          try {
+            const result = await completeRegistration(tok);
+            if (!cancelled && result?.access_token) {
+              setAuthJwt(
+                result.access_token,
+                result.refresh_token,
+                r.onboarding,
+              );
+            }
+          } catch {
+            //
           }
-        } catch {
-          //
         }
         if (!cancelled) {
           setFinalOutcome(terminal);
@@ -303,7 +336,7 @@ export default function RegistrationPage() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [step, awaitingDecision, token, setAuthJwt]);
+  }, [step, awaitingDecision, token, setAuthJwt, setOnboarding]);
 
   if (!token) {
     return null;
@@ -557,7 +590,9 @@ export default function RegistrationPage() {
                   applicantEmail={email || undefined}
                   applicantPhone={phone || undefined}
                   onSubmitted={() => void handleSumsubSubmitted()}
-                  onFinalStatus={(s) => void handleSumsubFinalStatus(s)}
+                  onFinalStatus={(s, nextOnboarding) =>
+                    void handleSumsubFinalStatus(s, nextOnboarding)
+                  }
                   onError={(msg) => setError(msg)}
                 />
                 <div className="flex gap-3 mt-6">

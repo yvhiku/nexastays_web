@@ -66,11 +66,21 @@ export interface NexaProfileSnippet {
   linked_services?: string[];
 }
 
-/** Verify OTP; returns access_token for sign-in, or otp_session_token for new users to set PIN */
-export async function verifyOtp(
-  phone_number: string,
-  otp: string
-): Promise<{
+export type IdentityVerificationStatus =
+  | "NOT_STARTED"
+  | "PENDING"
+  | "UNDER_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "EXPIRED";
+
+export interface IdentityOnboardingState {
+  required: boolean;
+  status: IdentityVerificationStatus;
+  next: "REGISTRATION" | null;
+}
+
+export interface VerifyOtpResult {
   verified: boolean;
   otp_session_token?: string;
   identity_session_token?: string;
@@ -78,8 +88,16 @@ export async function verifyOtp(
   refresh_token?: string;
   user_id?: string;
   accounts?: Array<{ id: string; account_type: string }>;
+  account?: { id: string; type: string } | null;
+  onboarding?: IdentityOnboardingState;
   nexa_profile?: NexaProfileSnippet;
-}> {
+}
+
+/** Verify OTP; Identity explicitly reports whether product onboarding remains required. */
+export async function verifyOtp(
+  phone_number: string,
+  otp: string
+): Promise<VerifyOtpResult> {
   const res = await client.post("/auth/otp/verify", {
     phone_number: apiPhone(phone_number),
     otp,
@@ -93,6 +111,8 @@ export async function verifyOtp(
     refresh_token: raw.refresh_token,
     user_id: raw.user_id,
     accounts: raw.accounts,
+    account: raw.account,
+    onboarding: raw.onboarding as IdentityOnboardingState | undefined,
     nexa_profile: raw.nexa_profile as NexaProfileSnippet | undefined,
   };
 }

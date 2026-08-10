@@ -16,6 +16,11 @@ import { validatePhone, normalizePhone } from "@/lib/validators";
 import { normalizeError } from "@/lib/api-client";
 import { resolveLocalizedPath } from "@/lib/locale-path";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
+import { resolveOtpPostVerifyState } from "@/lib/auth-flow";
+import {
+  buildRegistrationPath,
+  setRegistrationPhone,
+} from "@/lib/registration-phone-store";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -91,21 +96,31 @@ export default function LoginPage() {
           : undefined;
 
       const identitySession = otpSessionToken ?? identitySessionToken;
-      const registrationUrl = `${localePath("/registration")}?redirect=${encodeURIComponent(homePath)}&phone=${encodeURIComponent(phone)}`;
+      const registrationUrl = buildRegistrationPath({
+        localeRegistrationPath: localePath("/registration"),
+        redirect: postLoginDestination,
+      });
 
       const refresh =
         "refresh_token" in data
           ? (data as { refresh_token?: string }).refresh_token
           : undefined;
 
-      if (accessToken) {
-        setAuthJwt(accessToken, refresh);
-        router.push(postLoginDestination);
+      const nextState = resolveOtpPostVerifyState(res);
+      if (nextState === "REGISTRATION") {
+        // SEC-009: stash MSISDN in memory only — never in the registration URL.
+        setRegistrationPhone(phone);
+        if (accessToken) {
+          setAuthJwt(accessToken, refresh, res.onboarding);
+        } else if (identitySession) {
+          setAuthOtpSession(identitySession, res.onboarding);
+        }
+        router.push(registrationUrl);
         return;
       }
-      if (identitySession) {
-        setAuthOtpSession(identitySession);
-        router.push(registrationUrl);
+      if (nextState === "AUTHENTICATED" && accessToken) {
+        setAuthJwt(accessToken, refresh, res.onboarding);
+        router.push(postLoginDestination);
         return;
       }
       setError(t("login.couldNotComplete"));
@@ -115,8 +130,13 @@ export default function LoginPage() {
         apiErr.status === 404 ||
         apiErr.message?.toLowerCase().includes("not found")
       ) {
+        // SEC-009: stash phone in memory only; registration without binder redirects to login.
+        setRegistrationPhone(phone);
         router.push(
-          `${localePath("/registration")}?redirect=${encodeURIComponent(homePath)}&phone=${encodeURIComponent(phone)}`
+          buildRegistrationPath({
+            localeRegistrationPath: localePath("/registration"),
+            redirect: homePath,
+          }),
         );
         return;
       }
