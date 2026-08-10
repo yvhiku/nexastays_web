@@ -192,7 +192,6 @@ export function exploreCardToListing(card: ExploreCard): StaysListing {
     rate_plan: card.price
       ? {
           base_price: card.price.base_price,
-          cleaning_fee: 0,
           currency: card.price.currency || "MAD",
         }
       : null,
@@ -272,7 +271,6 @@ export function mapPinToListing(pin: ExploreMapPin): StaysListing {
     rate_plan: pin.price
       ? {
           base_price: pin.price.base_price,
-          cleaning_fee: 0,
           currency: pin.price.currency || "MAD",
         }
       : null,

@@ -104,7 +104,6 @@ export interface StaysListing {
   rate_plan?: {
     base_price: number;
     weekend_price?: number | null;
-    cleaning_fee: number;
     currency: string;
   } | null;
   rules?: {
@@ -430,7 +429,6 @@ export interface HostListingSummary {
   rate_plan?: {
     base_price: number;
     weekend_price?: number | null;
-    cleaning_fee: number;
     currency: string;
   } | null;
   rules?: {
@@ -494,7 +492,6 @@ export interface UpdateHostListingBody {
   rate_plan?: {
     base_price?: number;
     weekend_price?: number | null;
-    cleaning_fee?: number;
     currency?: string;
   };
   rules?: {
@@ -586,7 +583,6 @@ export interface CreateHostListingBody {
     currency?: string;
     base_price: number;
     weekend_price?: number;
-    cleaning_fee?: number;
     deposit_policy_text?: string;
   };
   check_in_contact: {

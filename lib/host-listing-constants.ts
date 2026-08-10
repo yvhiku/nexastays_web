@@ -85,7 +85,6 @@ export interface ListingWizardForm {
   amenities: string[];
   basePrice: string;
   weekendPrice: string;
-  cleaningFee: string;
   checkinTime: string;
   checkoutTime: string;
   contactName: string;
@@ -112,7 +111,6 @@ export const defaultListingForm = (): ListingWizardForm => ({
   amenities: [],
   basePrice: "",
   weekendPrice: "",
-  cleaningFee: "0",
   checkinTime: "14:00",
   checkoutTime: "11:00",
   contactName: "",
