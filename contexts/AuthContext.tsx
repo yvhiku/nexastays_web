@@ -189,7 +189,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    void logoutBrowserSession().catch(() => {
+    const access = tokenType === "jwt" ? token : null;
+    // HttpOnly refresh cookie is still sent with credentials until the server clears it.
+    void logoutBrowserSession(access).catch(() => {
       // Local sign-out must still complete if the session already expired.
     });
     if (typeof window !== "undefined") {
@@ -202,7 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void import("@/lib/pwa-sw-update").then((module) =>
       module.clearSensitiveRuntimeCaches(),
     );
-  }, []);
+  }, [token, tokenType]);
 
   const refreshUser = useCallback(async () => {
     const jwt = tokenType === "jwt" ? token : null;

@@ -131,9 +131,15 @@ export async function refreshToken(
   };
 }
 
-/** Revoke the browser session and clear HttpOnly authentication cookies. */
-export async function logoutBrowserSession(): Promise<void> {
-  await client.post("/auth/logout", {});
+/** Revoke the browser refresh session and clear HttpOnly authentication cookies. */
+export async function logoutBrowserSession(
+  accessToken?: string | null
+): Promise<void> {
+  const headers: Record<string, string> = {};
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+  await client.post("/auth/logout", {}, { headers });
 }
 
 /** Notify AuthContext that tokens were refreshed (e.g. by API interceptor) */
