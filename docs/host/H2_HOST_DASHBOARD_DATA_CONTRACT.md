@@ -1,12 +1,13 @@
 # H2 — Host Dashboard Data Contract
 
-**Status:** AUDIT COMPLETE / IMPLEMENTATION NOT STARTED  
+**Status:** AUDIT COMPLETE — H3 API implemented  
 **Scope:** Read-only mapping of H1 KPIs → Stays backend + web stats  
 **Upstream:** [H1 — Host Dashboard Audit & Specification](./H1_HOST_DASHBOARD_SPEC.md)  
-**Inventory:** [Current host dashboard](../host-dashboard.md)
+**Inventory:** [Current host dashboard](../host-dashboard.md)  
+**H3 implemented:** see `backend/stays/docs/host-dashboard-api.md` (`GET /stays/host/dashboard`). This H2 doc remains the contract audit; it is not rewritten to hide remaining gaps (analytics, wallet settlement, occupancy blocks, messaging unread).
 
 > This document is an **authoritative data contract**.  
-> It does **not** authorize API implementation, migrations, UI work, or real payout settlement.
+> Frontend redesign, migrations, and real payout settlement remain out of scope for H3.
 
 ---
 
@@ -472,4 +473,4 @@ Decisions that must be locked before implementing aggregated APIs / UI:
 - No payout settlement jobs
 - No fake “paid” money in dogfood
 
-**Next:** H3 — implement aggregated host dashboard API against this contract (after product signs off the open decisions above).
+**Next:** H4+ per H1 sequence (UI wiring to `/host/dashboard`, analytics, occupancy denominator, payout settlement) — see [host-dashboard-api.md](../../../backend/stays/docs/host-dashboard-api.md) for the H3 endpoint.
