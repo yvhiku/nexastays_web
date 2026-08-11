@@ -1470,7 +1470,36 @@
       "CANCELLED_BY_GUEST": "Annulée par l'invité",
       "CANCELLED_BY_HOST": "Annulée par l'hôte",
       "EXPIRED": "Expirée"
-    }
+    },
+    "viewReviews": "Voir les avis"
+  },
+  "hostReviews": {
+    "title": "Avis",
+    "description": "Lisez les avis publiés des voyageurs sur vos annonces.",
+    "backToDashboard": "Retour au tableau de bord",
+    "summaryTitle": "Résumé des avis",
+    "summaryDesc": "Note moyenne et répartition sur l’ensemble de vos avis publiés.",
+    "averageRating": "Note moyenne",
+    "noRatingYet": "Pas encore de moyenne",
+    "reviewCount": "{count} avis publiés",
+    "ratingDistribution": "Répartition des notes",
+    "listTitle": "Avis publiés",
+    "showingCount": "Affichage de {shown} sur {total}",
+    "emptyTitle": "Aucun avis pour le moment",
+    "emptyDesc": "Lorsqu’un voyageur laisse un avis après un séjour terminé, il apparaîtra ici.",
+    "loading": "Chargement des avis…",
+    "failedLoad": "Impossible de charger les avis",
+    "retry": "Réessayer",
+    "viewReviews": "Voir les avis",
+    "listing": "Annonce",
+    "guest": "Voyageur",
+    "guestFallback": "Voyageur",
+    "noComment": "Aucun commentaire écrit",
+    "pagination": "Pagination des avis",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {page} sur {totalPages}",
+    "notApproved": "Les avis sont disponibles une fois votre candidature hôte approuvée."
   },
   "hostListingEdit": {
     "title": "Modifier l'annonce",

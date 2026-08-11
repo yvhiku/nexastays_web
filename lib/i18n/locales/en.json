@@ -1502,7 +1502,36 @@
       "CANCELLED_BY_GUEST": "Cancelled by guest",
       "CANCELLED_BY_HOST": "Cancelled by host",
       "EXPIRED": "Expired"
-    }
+    },
+    "viewReviews": "View reviews"
+  },
+  "hostReviews": {
+    "title": "Reviews",
+    "description": "Read published guest reviews for your listings.",
+    "backToDashboard": "Back to dashboard",
+    "summaryTitle": "Review summary",
+    "summaryDesc": "Overall rating and distribution across all your published reviews.",
+    "averageRating": "Average rating",
+    "noRatingYet": "No average yet",
+    "reviewCount": "{count} published reviews",
+    "ratingDistribution": "Rating distribution",
+    "listTitle": "Published reviews",
+    "showingCount": "Showing {shown} of {total}",
+    "emptyTitle": "No reviews yet",
+    "emptyDesc": "When guests leave a review after a completed stay, it will appear here.",
+    "loading": "Loading reviews…",
+    "failedLoad": "Could not load reviews",
+    "retry": "Retry",
+    "viewReviews": "View reviews",
+    "listing": "Listing",
+    "guest": "Guest",
+    "guestFallback": "Guest",
+    "noComment": "No written comment",
+    "pagination": "Reviews pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {totalPages}",
+    "notApproved": "Reviews are available after your host application is approved."
   },
   "hostListingEdit": {
     "title": "Edit listing",

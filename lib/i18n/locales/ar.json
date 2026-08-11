@@ -1470,7 +1470,36 @@
       "CANCELLED_BY_GUEST": "ألغاه الضيف",
       "CANCELLED_BY_HOST": "ألغاه المضيف",
       "EXPIRED": "منتهٍ"
-    }
+    },
+    "viewReviews": "عرض التقييمات"
+  },
+  "hostReviews": {
+    "title": "التقييمات",
+    "description": "اطلع على تقييمات الضيوف المنشورة لإعلاناتك.",
+    "backToDashboard": "العودة إلى لوحة التحكم",
+    "summaryTitle": "ملخص التقييمات",
+    "summaryDesc": "متوسط التقييم والتوزيع عبر جميع تقييماتك المنشورة.",
+    "averageRating": "متوسط التقييم",
+    "noRatingYet": "لا يوجد متوسط بعد",
+    "reviewCount": "{count} تقييمات منشورة",
+    "ratingDistribution": "توزيع التقييمات",
+    "listTitle": "التقييمات المنشورة",
+    "showingCount": "عرض {shown} من {total}",
+    "emptyTitle": "لا توجد تقييمات بعد",
+    "emptyDesc": "عندما يترك الضيف تقييماً بعد إقامة مكتملة، سيظهر هنا.",
+    "loading": "جاري تحميل التقييمات…",
+    "failedLoad": "تعذر تحميل التقييمات",
+    "retry": "إعادة المحاولة",
+    "viewReviews": "عرض التقييمات",
+    "listing": "الإعلان",
+    "guest": "الضيف",
+    "guestFallback": "ضيف",
+    "noComment": "لا يوجد تعليق مكتوب",
+    "pagination": "ترقيم صفحات التقييمات",
+    "previous": "السابق",
+    "next": "التالي",
+    "pageOf": "صفحة {page} من {totalPages}",
+    "notApproved": "التقييمات متاحة بعد الموافقة على طلب المضيف."
   },
   "hostListingEdit": {
     "title": "تعديل القائمة",

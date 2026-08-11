@@ -42,6 +42,7 @@ import type {
   ReplaceListingMediaBody,
   ReplaceListingUnitTypesBody,
   ListingReviewsResponse,
+  HostReviewsResponse,
   StaysReviewDetail,
   ReviewSort,
 } from "./stays-types";
@@ -50,6 +51,11 @@ import {
   type ExploreFilters,
 } from "@/lib/search/explore-filter-utils";
 import { getStaysApiBaseUrl } from "./env";
+import {
+  buildHostReviewsPath,
+  clampHostReviewsLimit,
+  normalizeHostReviewsPage,
+} from "./host-reviews";
 
 const API_BASE = getStaysApiBaseUrl();
 
@@ -496,6 +502,23 @@ export async function getHostDashboard(
     .get("/stays/host/dashboard", { headers })
     .catch(handleError);
   return unwrap<HostDashboardAggregate>(res);
+}
+
+/**
+ * Published reviews across the authenticated host's listings.
+ * JWT-scoped — do not pass hostId. Limit capped at 50 (backend contract).
+ */
+export async function getHostReviews(
+  token?: string | null,
+  opts?: { page?: number; limit?: number },
+): Promise<HostReviewsResponse> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const page = normalizeHostReviewsPage(opts?.page);
+  const limit = clampHostReviewsLimit(opts?.limit);
+  const res = await client
+    .get(buildHostReviewsPath({ page, limit }), { headers })
+    .catch(handleError);
+  return unwrap<HostReviewsResponse>(res);
 }
 
 /** Get host's bookings (requires JWT) */
@@ -1125,6 +1148,7 @@ export const staysApi = {
   getHostVerification,
   getHostStats,
   getHostDashboard,
+  getHostReviews,
   submitHostOnboarding,
   getHostListings,
   getHostListingById,

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   Building2,
   Star,
@@ -19,6 +20,7 @@ interface HostBusinessSnapshotProps {
   loading?: boolean;
   t: TranslateFn;
   locale: Locale;
+  localePath: (path: string) => string;
 }
 
 export function HostBusinessSnapshot({
@@ -26,6 +28,7 @@ export function HostBusinessSnapshot({
   loading,
   t,
   locale,
+  localePath,
 }: HostBusinessSnapshotProps) {
   if (loading && !dashboard) {
     return (
@@ -121,6 +124,12 @@ export function HostBusinessSnapshot({
               </p>
             </>
           )}
+          <Link
+            href={localePath("/host/reviews")}
+            className="mt-3 inline-flex text-xs font-medium text-nexa-primary hover:underline"
+          >
+            {t("hostReviews.viewReviews")}
+          </Link>
         </div>
 
         <div className="rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">

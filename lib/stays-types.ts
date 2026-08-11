@@ -157,6 +157,37 @@ export interface ListingReviewsResponse {
   total: number;
 }
 
+/** Published review row from GET /stays/host/reviews (host-scoped). */
+export interface HostReview {
+  id: string;
+  listing_id: string;
+  listing_title: string;
+  guest_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface HostReviewSummary {
+  overall_avg_rating: number | null;
+  total_count: number;
+  distribution_pct: {
+    "5": number;
+    "4": number;
+    "3": number;
+    "2": number;
+    "1": number;
+  };
+}
+
+export interface HostReviewsResponse {
+  reviews: HostReview[];
+  summary: HostReviewSummary;
+  page: number;
+  limit: number;
+  total: number;
+}
+
 export interface StaysReviewDetail extends ListingReview {
   booking_id: string;
   status: string;
