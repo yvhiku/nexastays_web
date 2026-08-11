@@ -20,7 +20,9 @@ import { HostPayoutStatus } from "@/components/host/HostPayoutStatus";
 import { HostTodaySection } from "@/components/host/HostTodaySection";
 import { HostUpcomingSection } from "@/components/host/HostUpcomingSection";
 import { HostBusinessSnapshot } from "@/components/host/HostBusinessSnapshot";
+import { HostBookingCenter } from "@/components/host/HostBookingCenter";
 import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
+import type { HostBookingFilterId } from "@/lib/host-booking-center";
 import { AppLoader } from "@/components/AppLoader";
 import {
   Home,
@@ -34,7 +36,6 @@ import {
   Pencil,
   Pause,
   Play,
-  Download,
   Link2,
   ArrowRight,
 } from "lucide-react";
@@ -86,6 +87,8 @@ function HostDashboardContent() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [bookings, setBookings] = useState<HostBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [bookingFilter, setBookingFilter] = useState<HostBookingFilterId>("all");
   const [dashboard, setDashboard] = useState<HostDashboardAggregate | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -150,14 +153,25 @@ function HostDashboardContent() {
       .finally(() => setListingsLoading(false));
   }, [token, hostStatus?.status]);
 
+  const loadBookings = useCallback(() => {
+    if (!token) return Promise.resolve();
+    setBookingsLoading(true);
+    setBookingsError(null);
+    return getHostBookings(token)
+      .then(setBookings)
+      .catch((e) => {
+        setBookings([]);
+        setBookingsError(
+          formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
+        );
+      })
+      .finally(() => setBookingsLoading(false));
+  }, [token, t]);
+
   useEffect(() => {
     if (!token) return;
-    setBookingsLoading(true);
-    getHostBookings(token)
-      .then(setBookings)
-      .catch(() => setBookings([]))
-      .finally(() => setBookingsLoading(false));
-  }, [token]);
+    void loadBookings();
+  }, [token, loadBookings]);
 
   const loadDashboard = useCallback(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") {
@@ -484,6 +498,9 @@ function HostDashboardContent() {
             dashboard={dashboard}
             loading={dashboardLoading}
             t={t}
+            onOpenBookings={(filter) => {
+              setBookingFilter(filter);
+            }}
           />
           <HostUpcomingSection
             dashboard={dashboard}
@@ -533,178 +550,35 @@ function HostDashboardContent() {
         </div>
       )}
 
-      {/* Your bookings - for approved hosts */}
       {status === "APPROVED" && (
-        <div
-          id="host-bookings"
-          className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8 scroll-mt-24"
-        >
-          <div className="p-6 sm:p-8">
-            <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-start sm:justify-between">
-              <h2 className="text-lg font-semibold text-nexa-ink flex items-center gap-2">
-                <CalendarCheck className="h-5 w-5 text-nexa-primary" />
-                {t("hostDashboard.yourBookings")}
-              </h2>
-              <div className="flex flex-wrap gap-2 shrink-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10"
-                  onClick={() => {
-                    document
-                      .getElementById("host-calendar-sync")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                >
-                  <Link2 className="h-4 w-4" aria-hidden />
-                  {t("hostDashboard.calendarSyncCta")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10"
-                  disabled={exportSubmitting}
-                  onClick={handleExportBookingsCsv}
-                >
-                  <Download className="h-4 w-4" aria-hidden />
-                  {exportSubmitting
-                    ? t("hostDashboard.exportingCsv")
-                    : t("hostDashboard.exportCsv")}
-                </Button>
-              </div>
-            </div>
-            <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <NexaSelect
-                variant="field"
-                value={exportPeriod}
-                onChange={(v) =>
-                  setExportPeriod(
-                    v === "last_30_days" ||
-                      v === "this_year" ||
-                      v === "custom" ||
-                      v === "all"
-                      ? v
-                      : "all",
-                  )
-                }
-                aria-label={t("hostDashboard.exportPeriod")}
-                options={[
-                  { value: "all", label: t("hostDashboard.exportPeriodAll") },
-                  {
-                    value: "last_30_days",
-                    label: t("hostDashboard.exportPeriodLast30"),
-                  },
-                  {
-                    value: "this_year",
-                    label: t("hostDashboard.exportPeriodThisYear"),
-                  },
-                  {
-                    value: "custom",
-                    label: t("hostDashboard.exportPeriodCustom"),
-                  },
-                ]}
-              />
-              <NexaSelect
-                variant="field"
-                value={exportListingId}
-                onChange={setExportListingId}
-                aria-label={t("hostDashboard.listing")}
-                options={[
-                  { value: "", label: t("hostDashboard.exportListingAll") },
-                  ...listings.map((l) => ({ value: l.id, label: l.title })),
-                ]}
-              />
-              <NexaSelect
-                variant="field"
-                value={exportStatus}
-                onChange={setExportStatus}
-                aria-label={t("hostDashboard.exportStatusAll")}
-                options={[
-                  { value: "", label: t("hostDashboard.exportStatusAll") },
-                  { value: "CONFIRMED", label: "CONFIRMED" },
-                  { value: "CHECKED_IN", label: "CHECKED_IN" },
-                  { value: "COMPLETED", label: "COMPLETED" },
-                  { value: "PAYMENT_PENDING", label: "PAYMENT_PENDING" },
-                  { value: "CANCELLED_BY_GUEST", label: "CANCELLED_BY_GUEST" },
-                  { value: "CANCELLED_BY_HOST", label: "CANCELLED_BY_HOST" },
-                  { value: "EXPIRED", label: "EXPIRED" },
-                ]}
-              />
-            </div>
-            {exportPeriod === "custom" && (
-              <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
-                <DatePicker
-                  variant="field"
-                  value={exportFrom}
-                  onChange={setExportFrom}
-                  aria-label={t("hostDashboard.exportFrom")}
-                  placeholder={t("hostDashboard.exportFrom")}
-                />
-                <DatePicker
-                  variant="field"
-                  value={exportTo}
-                  onChange={setExportTo}
-                  min={exportFrom || undefined}
-                  aria-label={t("hostDashboard.exportTo")}
-                  placeholder={t("hostDashboard.exportTo")}
-                />
-              </div>
-            )}
-            {bookingsLoading ? (
-              <div className="py-12 text-center text-nexa-ink-4">{t("hostDashboard.loadingBookings")}</div>
-            ) : bookings.length > 0 ? (
-              <div className="space-y-4">
-                {bookings.map((b) => (
-                  <div
-                    key={b.id}
-                    className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-nexa-line hover:border-nexa-primary/30"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-nexa-ink">
-                        {b.guest_name ?? t("hostDashboard.guest")}
-                      </p>
-                      <p className="text-sm text-nexa-ink-3 truncate">
-                        {b.listing?.title ?? t("hostDashboard.listing")}
-                      </p>
-                      <p className="text-sm text-nexa-ink mt-1 tabular-nums">
-                        {b.checkin_date} → {b.checkout_date}
-                      </p>
-                      <p className="text-xs text-nexa-ink-4 mt-1">
-                        <span
-                          className={
-                            b.status === "CONFIRMED" || b.status === "CHECKED_IN"
-                              ? "text-green-700"
-                              : b.status === "PAYMENT_PENDING" ||
-                                  b.status === "INITIATED"
-                                ? "text-amber-700"
-                                : "text-nexa-ink-3"
-                          }
-                        >
-                          {b.status}
-                        </span>
-                        {b.total_paid != null
-                          ? ` · ${b.total_paid} ${b.currency}`
-                          : null}
-                      </p>
-                    </div>
-                    <Link href={localePath(`/bookings/${b.id}`)} className="inline-flex items-center gap-1 text-sm text-nexa-primary font-medium shrink-0 hover:underline">
-                      {t("hostDashboard.viewDetails")}
-                      <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border-2 border-dashed border-nexa-line bg-nexa-bg-1 p-6 text-center">
-                <CalendarCheck className="h-10 w-10 text-nexa-ink-4 mx-auto mb-2" />
-                <p className="text-nexa-ink-3 text-sm">{t("hostDashboard.noBookingsYet")}</p>
-                <p className="text-nexa-ink-4 text-xs mt-1">
-                  {t("hostDashboard.bookingsAppearHere")}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <HostBookingCenter
+          bookings={bookings}
+          listings={listings}
+          loading={bookingsLoading}
+          error={bookingsError}
+          onRetry={() => void loadBookings()}
+          filter={bookingFilter}
+          onFilterChange={setBookingFilter}
+          t={t}
+          locale={locale}
+          localePath={localePath}
+          exportState={{
+            period: exportPeriod,
+            from: exportFrom,
+            to: exportTo,
+            listingId: exportListingId,
+            status: exportStatus,
+          }}
+          onExportStateChange={(patch) => {
+            if (patch.period != null) setExportPeriod(patch.period);
+            if (patch.from != null) setExportFrom(patch.from);
+            if (patch.to != null) setExportTo(patch.to);
+            if (patch.listingId != null) setExportListingId(patch.listingId);
+            if (patch.status != null) setExportStatus(patch.status);
+          }}
+          onExportCsv={() => void handleExportBookingsCsv()}
+          exportSubmitting={exportSubmitting}
+        />
       )}
 
       {status === "APPROVED" && listings.length > 0 && (

@@ -21,6 +21,7 @@ interface HostTodaySectionProps {
   dashboard: HostDashboardAggregate | null;
   loading?: boolean;
   t: TranslateFn;
+  onOpenBookings?: (filter: "checkin_today" | "checkout_today" | "awaiting_payment" | "today") => void;
 }
 
 function scrollToId(id: string) {
@@ -32,6 +33,7 @@ export function HostTodaySection({
   dashboard,
   loading,
   t,
+  onOpenBookings,
 }: HostTodaySectionProps) {
   if (loading && !dashboard) {
     return (
@@ -106,6 +108,7 @@ export function HostTodaySection({
     label: string;
     target: string;
     critical: boolean;
+    bookingFilter?: "checkin_today" | "checkout_today" | "awaiting_payment" | "today";
   }> = [];
 
   if (today.checkins_today > 0) {
@@ -117,6 +120,7 @@ export function HostTodaySection({
       ),
       target: "host-bookings",
       critical: true,
+      bookingFilter: "checkin_today",
     });
   }
   if (today.checkouts_today > 0) {
@@ -128,6 +132,7 @@ export function HostTodaySection({
       ),
       target: "host-bookings",
       critical: true,
+      bookingFilter: "checkout_today",
     });
   }
   if (today.awaiting_guest_payment > 0) {
@@ -139,6 +144,7 @@ export function HostTodaySection({
       ),
       target: "host-bookings",
       critical: true,
+      bookingFilter: "awaiting_payment",
     });
   }
   if (calendar_status.listings_needing_attention > 0) {
@@ -240,7 +246,12 @@ export function HostTodaySection({
               <li key={row.key}>
                 <button
                   type="button"
-                  onClick={() => scrollToId(row.target)}
+                  onClick={() => {
+                    if (row.bookingFilter && onOpenBookings) {
+                      onOpenBookings(row.bookingFilter);
+                    }
+                    scrollToId(row.target);
+                  }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-nexa-bg-1 transition-colors"
                 >
                   {row.critical ? (
