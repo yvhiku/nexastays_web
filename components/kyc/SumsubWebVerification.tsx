@@ -7,6 +7,7 @@ import {
   type KycProductSource,
 } from "@/lib/kyc-api";
 import { normalizeError } from "@/lib/api-client";
+import type { IdentityOnboardingState } from "@/lib/auth-api";
 
 const SUMSUB_SCRIPT_SRC =
   "https://static.sumsub.com/idensic/static/sns-websdk-builder.js";
@@ -106,7 +107,10 @@ export interface SumsubWebVerificationProps {
   /** First successful backend sync (applicant exists / pending review). */
   onSubmitted: () => void;
   /** Terminal verification outcome from Nexa after Sumsub sync. */
-  onFinalStatus: (status: SumsubFinalStatus) => void;
+  onFinalStatus: (
+    status: SumsubFinalStatus,
+    onboarding?: IdentityOnboardingState,
+  ) => void;
   onError?: (message: string) => void;
 }
 
@@ -153,7 +157,7 @@ export function SumsubWebVerification({
         const terminal = mapBackendStatusToFinal(result.status);
         if (terminal) {
           finalEmittedRef.current = true;
-          onFinalStatusRef.current(terminal);
+          onFinalStatusRef.current(terminal, result.onboarding);
           return;
         }
         const review = (result.reviewStatus || "").toLowerCase();

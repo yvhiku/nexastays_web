@@ -1,5 +1,6 @@
 import { refreshToken as refreshTokenApi } from "@/lib/auth-api";
 import { getIdentityApiBaseUrl } from "@/lib/env";
+import type { IdentityOnboardingState } from "@/lib/auth-api";
 
 export type AuthUser = {
   id: string;
@@ -12,6 +13,7 @@ export type AuthUser = {
   city?: string;
   date_of_birth?: string;
   nationality?: string;
+  onboarding?: IdentityOnboardingState;
   [key: string]: unknown;
 };
 

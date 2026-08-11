@@ -13,6 +13,7 @@ import {
   notifyAuthLogout,
   notifyTokenRefreshed,
   refreshToken as refreshTokenApi,
+  type IdentityOnboardingState,
 } from "./auth-api";
 
 const API_BASE = getIdentityApiBaseUrl();
@@ -29,6 +30,7 @@ export interface UserProfile {
   email?: string;
   kyc_status: string;
   account_type?: string;
+  onboarding?: IdentityOnboardingState;
   [key: string]: unknown;
 }
 
@@ -178,6 +180,7 @@ export interface SyncSumsubStatusResult {
   reviewAnswer?: string | null;
   status?: string;
   kycProfileStatus?: string;
+  onboarding?: IdentityOnboardingState;
 }
 
 /** Create Sumsub Web/Mobile SDK access token (server calls Sumsub). Use OTP session or JWT. */

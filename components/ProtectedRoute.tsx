@@ -16,6 +16,7 @@ interface ProtectedRouteProps {
  * Protects routes that need authentication.
  * - If !ready → show loader
  * - If no JWT → redirect to /login?redirect=currentPath
+ * - If Identity says onboarding is required → redirect to /registration
  * - If requireJwt and only OTP session → redirect to /registration
  */
 export function ProtectedRoute({
@@ -24,7 +25,7 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { ready, tokenType, token } = useAuth();
+  const { ready, tokenType, token, onboarding } = useAuth();
   const locale = localeFromPathname(pathname || "/");
 
   useEffect(() => {
@@ -36,12 +37,21 @@ export function ProtectedRoute({
       );
       return;
     }
-    if (requireJwt && tokenType !== "jwt") {
+    if (onboarding?.required || (requireJwt && tokenType !== "jwt")) {
       router.replace(
         `${resolveLocalizedPath("/registration", locale)}?redirect=${encodeURIComponent(redirectPath)}`,
       );
     }
-  }, [ready, token, tokenType, requireJwt, router, pathname, locale]);
+  }, [
+    ready,
+    token,
+    tokenType,
+    onboarding,
+    requireJwt,
+    router,
+    pathname,
+    locale,
+  ]);
 
   if (!ready) {
     return <AppLoader />;
@@ -51,7 +61,7 @@ export function ProtectedRoute({
     return <AppLoader />;
   }
 
-  if (requireJwt && tokenType !== "jwt") {
+  if (onboarding?.required || (requireJwt && tokenType !== "jwt")) {
     return <AppLoader />;
   }
 
