@@ -257,9 +257,9 @@ function HostListingEditContent() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2">
+        <Button variant="ghost" size="sm" asChild className="mb-4 -ms-2">
           <Link href={localePath("/host/dashboard")} className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
             {t("hostListingEdit.backToDashboard")}
           </Link>
         </Button>

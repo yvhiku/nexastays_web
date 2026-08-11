@@ -40,7 +40,10 @@ export function MobileBottomNav() {
   const [exploreMode, setExploreMode] = useState<"list" | "map">("list");
 
   const isHostArea =
-    pathname.includes("/host/dashboard") || pathname.includes("/host/listings");
+    pathname.includes("/host/dashboard") ||
+    pathname.includes("/host/listings") ||
+    pathname.includes("/host/reviews") ||
+    pathname.includes("/host/analytics");
   const barePath = pathname.replace(/^\/(en|fr|ar)/, "") || "/";
   const isExploreScreen = barePath === "/listings";
 
@@ -126,7 +129,10 @@ export function MobileBottomNav() {
         href: localePath("/host/dashboard"),
         labelKey: "pwa.navDashboard",
         icon: LayoutDashboard,
-        match: (p) => p.includes("/host/dashboard"),
+        match: (p) =>
+          p.includes("/host/dashboard") ||
+          p.includes("/host/reviews") ||
+          p.includes("/host/analytics"),
       },
       {
         id: "bookings",

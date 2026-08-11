@@ -222,14 +222,23 @@ export function HostBookingCenter({
                 aria-label={t("hostDashboard.exportStatusAll")}
                 options={[
                   { value: "", label: t("hostDashboard.exportStatusAll") },
-                  { value: "CONFIRMED", label: "CONFIRMED" },
-                  { value: "CHECKED_IN", label: "CHECKED_IN" },
-                  { value: "COMPLETED", label: "COMPLETED" },
-                  { value: "PAYMENT_PENDING", label: "PAYMENT_PENDING" },
-                  { value: "INITIATED", label: "INITIATED" },
-                  { value: "CANCELLED_BY_GUEST", label: "CANCELLED_BY_GUEST" },
-                  { value: "CANCELLED_BY_HOST", label: "CANCELLED_BY_HOST" },
-                  { value: "EXPIRED", label: "EXPIRED" },
+                  { value: "CONFIRMED", label: t("hostDashboard.bookingStatus.CONFIRMED") },
+                  { value: "CHECKED_IN", label: t("hostDashboard.bookingStatus.CHECKED_IN") },
+                  { value: "COMPLETED", label: t("hostDashboard.bookingStatus.COMPLETED") },
+                  {
+                    value: "PAYMENT_PENDING",
+                    label: t("hostDashboard.bookingStatus.PAYMENT_PENDING"),
+                  },
+                  { value: "INITIATED", label: t("hostDashboard.bookingStatus.INITIATED") },
+                  {
+                    value: "CANCELLED_BY_GUEST",
+                    label: t("hostDashboard.bookingStatus.CANCELLED_BY_GUEST"),
+                  },
+                  {
+                    value: "CANCELLED_BY_HOST",
+                    label: t("hostDashboard.bookingStatus.CANCELLED_BY_HOST"),
+                  },
+                  { value: "EXPIRED", label: t("hostDashboard.bookingStatus.EXPIRED") },
                 ]}
               />
             </div>

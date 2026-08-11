@@ -78,7 +78,9 @@ export function HostBookingRow({
 
           <p className="text-sm text-nexa-ink tabular-nums">
             <span className="font-medium">{checkin}</span>
-            <span className="mx-1.5 text-nexa-ink-4">→</span>
+            <span className="mx-1.5 inline-block text-nexa-ink-4 rtl:rotate-180" aria-hidden>
+              →
+            </span>
             <span className="font-medium">{checkout}</span>
             {nights > 0 ? (
               <span className="ms-2 text-xs text-nexa-ink-4">

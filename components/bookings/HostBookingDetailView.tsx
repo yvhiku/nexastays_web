@@ -125,7 +125,7 @@ export function HostBookingDetailView({
         <Link href={localePath("/host/dashboard")} className="hover:text-nexa-primary transition-colors">
           {t("nav.hostDashboard")}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+        <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
         <span>{t("hostBooking.breadcrumb")}</span>
       </nav>
 
@@ -135,7 +135,7 @@ export function HostBookingDetailView({
             href={localePath("/host/dashboard")}
             className="inline-flex items-center gap-2 text-sm text-nexa-ink-3 hover:text-nexa-primary mb-4 transition-colors md:hidden"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
             {t("hostBooking.backToDashboard")}
           </Link>
           <h1 className="font-[family-name:var(--font-playfair)] text-3xl sm:text-4xl font-bold text-nexa-ink">

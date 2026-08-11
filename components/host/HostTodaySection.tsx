@@ -246,7 +246,7 @@ export function HostTodaySection({
                       }
                       scrollToId(row.target);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-nexa-bg-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-nexa-primary/30"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-start hover:bg-nexa-bg-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-nexa-primary/30"
                     aria-label={
                       isFilter
                         ? `${row.label}. ${t("hostDashboard.viewBookingsLink")}`

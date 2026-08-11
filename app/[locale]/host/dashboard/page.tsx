@@ -706,11 +706,12 @@ function HostDashboardContent() {
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium text-nexa-ink">
                             {l.title === "Untitled listing"
-                              ? "Untitled draft"
+                              ? t("hostDashboard.untitledDraft")
                               : l.title}
                           </p>
                           <p className="text-sm text-nexa-ink-3">
-                            {l.city?.trim() || "Location pending"} · {l.listing_type}
+                            {l.city?.trim() || t("hostDashboard.locationPending")} ·{" "}
+                            {l.listing_type}
                           </p>
                           <p className="mt-1 text-xs text-nexa-ink-4">
                             {t("hostDashboard.status")}:{" "}
@@ -724,7 +725,7 @@ function HostDashboardContent() {
                           {(l.status === "DRAFT" || l.status === "REJECTED") && (
                             <div className="mt-3">
                               <div className="mb-1 flex items-center justify-between text-xs text-nexa-ink-4">
-                                <span>Listing complete</span>
+                                <span>{t("hostDashboard.listingComplete")}</span>
                                 <span className="tabular-nums font-semibold text-nexa-ink-2">
                                   {pct}%
                                 </span>
@@ -737,7 +738,7 @@ function HostDashboardContent() {
                               </div>
                               {missingRequired.length > 0 && (
                                 <p className="mt-2 text-xs text-nexa-ink-4">
-                                  Still needed:{" "}
+                                  {t("hostDashboard.stillNeeded")}{" "}
                                   {missingRequired.map((m) => m.label).join(", ")}
                                 </p>
                               )}
@@ -745,12 +746,12 @@ function HostDashboardContent() {
                           )}
                           {l.status === "SUBMITTED" && (
                             <p className="mt-2 text-xs text-amber-700">
-                              Review usually takes 1–2 business days.
+                              {t("hostDashboard.submittedReviewHint")}
                             </p>
                           )}
                           {l.status === "REJECTED" && (
                             <p className="mt-2 text-xs text-red-700">
-                              Fix the items below and resubmit for review.
+                              {t("hostDashboard.rejectedFixHint")}
                             </p>
                           )}
                         </div>
@@ -762,7 +763,9 @@ function HostDashboardContent() {
                             <Button variant="outline" size="sm" asChild>
                               <Link href={href} className="flex items-center gap-1.5">
                                 <Pencil className="h-3.5 w-3.5" />
-                                {l.status === "REJECTED" ? "Fix & Resubmit" : "Continue"}
+                                {l.status === "REJECTED"
+                                  ? t("hostDashboard.fixAndResubmit")
+                                  : t("hostDashboard.continueDraft")}
                               </Link>
                             </Button>
                           )}
