@@ -9,18 +9,23 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getHostVerification, getHostListings, getHostBookings, getHostDashboard, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock, exportHostBookingsCsv } from "@/lib/stays-api";
+import {
+  getHostVerification,
+  getHostListings,
+  getHostBookings,
+  getHostDashboard,
+  normalizeHostVerificationStatus,
+  setHostAvailabilityBlock,
+} from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { showSaveToast } from "@/lib/save-toast";
-import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardAggregate } from "@/lib/stays-types";
-import { HostDashboardHero } from "@/components/host/HostDashboardHero";
-import { HostPayoutStatus } from "@/components/host/HostPayoutStatus";
-import { HostTodaySection } from "@/components/host/HostTodaySection";
-import { HostUpcomingSection } from "@/components/host/HostUpcomingSection";
-import { HostBusinessSnapshot } from "@/components/host/HostBusinessSnapshot";
-import { HostBookingCenter } from "@/components/host/HostBookingCenter";
-import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
-import type { HostBookingFilterId } from "@/lib/host-booking-center";
+import type {
+  HostVerificationStatus,
+  HostListingSummary,
+  HostBooking,
+  HostDashboardAggregate,
+} from "@/lib/stays-types";
+import { HostDashboardHome } from "@/components/host/dashboard/HostDashboardHome";
 import { AppLoader } from "@/components/AppLoader";
 import {
   Home,
@@ -28,86 +33,32 @@ import {
   FileCheck,
   Clock,
   XCircle,
-  LayoutDashboard,
   Building2,
   CalendarCheck,
-  Pencil,
-  Pause,
-  Play,
-  Link2,
-  ArrowRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatNightlyPrice } from "@/lib/format-money";
 import { trackEvent } from "@/lib/analytics";
 
-function listingStatusClass(status: string): string {
-  if (status === "LIVE" || status === "APPROVED") return "text-green-600";
-  if (status === "PAUSED") return "text-orange-600";
-  if (status === "SUBMITTED") return "text-amber-600";
-  if (status === "DRAFT") return "text-nexa-primary";
-  if (status === "REJECTED") return "text-red-600";
-  return "text-nexa-ink-4";
-}
-
-function hostFacingStatus(status: string): string {
-  if (status === "REJECTED") return "Needs Changes";
-  if (status === "SUBMITTED") return "In review";
-  if (status === "DRAFT") return "Draft";
-  return status;
-}
-
-function listingHref(
-  listing: HostListingSummary,
-  localePath: (path: string) => string,
-): string {
-  if (listing.status === "DRAFT" || listing.status === "REJECTED") {
-    return localePath(`/host/listings/new?draft=${listing.id}`);
-  }
-  return localePath(`/host/listings/${listing.id}/edit`);
-}
-
-function listingIsPublic(status: string): boolean {
-  return status === "LIVE" || status === "APPROVED";
-}
-
-function listingCanPause(status: string): boolean {
-  return status === "LIVE" || status === "APPROVED";
-}
-
 function HostDashboardContent() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { t, tf, locale, localePath } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
   const [listings, setListings] = useState<HostListingSummary[]>([]);
-  const [listingsLoading, setListingsLoading] = useState(false);
   const [bookings, setBookings] = useState<HostBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
-  const [bookingsError, setBookingsError] = useState<string | null>(null);
-  const [bookingFilter, setBookingFilter] = useState<HostBookingFilterId>("all");
   const [dashboard, setDashboard] = useState<HostDashboardAggregate | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [listingActionId, setListingActionId] = useState<string | null>(null);
-  const [listingActionError, setListingActionError] = useState<string | null>(null);
   const [blockListingId, setBlockListingId] = useState("");
   const [blockFrom, setBlockFrom] = useState("");
   const [blockTo, setBlockTo] = useState("");
   const [blockAction, setBlockAction] = useState<"block" | "unblock">("block");
   const [blockSubmitting, setBlockSubmitting] = useState(false);
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
-  const [exportPeriod, setExportPeriod] = useState<
-    "last_30_days" | "this_year" | "all" | "custom"
-  >("all");
-  const [exportFrom, setExportFrom] = useState("");
-  const [exportTo, setExportTo] = useState("");
-  const [exportListingId, setExportListingId] = useState("");
-  const [exportStatus, setExportStatus] = useState("");
-  const [exportSubmitting, setExportSubmitting] = useState(false);
+  const [blockError, setBlockError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -134,57 +85,51 @@ function HostDashboardContent() {
 
   useEffect(() => {
     if (loading) return;
-    const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
-    if (
-      hash !== "host-bookings" &&
-      hash !== "host-listings" &&
-      hash !== "host-calendar-sync"
-    ) {
+    const hash =
+      typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+    if (hash === "host-bookings") {
+      router.replace(localePath("/host/bookings"));
       return;
     }
+    if (hash === "host-listings") {
+      router.replace(localePath("/host/listings"));
+      return;
+    }
+    if (hash !== "host-calendar-sync") return;
     const id = window.setTimeout(() => {
-      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const el = document.getElementById(hash);
+      if (el instanceof HTMLDetailsElement) el.open = true;
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
     return () => window.clearTimeout(id);
-  }, [loading, listingsLoading, bookingsLoading]);
+  }, [loading, router, localePath]);
 
   useEffect(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
-    setListingsLoading(true);
     getHostListings(token)
       .then(setListings)
-      .catch(() => setListings([]))
-      .finally(() => setListingsLoading(false));
+      .catch(() => setListings([]));
   }, [token, hostStatus?.status]);
 
   const loadBookings = useCallback(() => {
-    if (!token) return Promise.resolve();
+    if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
     setBookingsLoading(true);
-    setBookingsError(null);
-    return getHostBookings(token)
+    getHostBookings(token)
       .then(setBookings)
-      .catch((e) => {
-        setBookings([]);
-        setBookingsError(
-          formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
-        );
-      })
+      .catch(() => setBookings([]))
       .finally(() => setBookingsLoading(false));
-  }, [token, t]);
+  }, [token, hostStatus?.status]);
 
   useEffect(() => {
-    if (!token) return;
-    void loadBookings();
-  }, [token, loadBookings]);
+    loadBookings();
+  }, [loadBookings]);
 
   const loadDashboard = useCallback(() => {
-    if (!token || (hostStatus?.status ?? "") !== "APPROVED") {
-      return Promise.resolve();
-    }
+    if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
     setDashboardLoading(true);
     setDashboardError(null);
-    return getHostDashboard(token)
-      .then((data) => setDashboard(data))
+    getHostDashboard(token)
+      .then(setDashboard)
       .catch((e) => {
         setDashboard(null);
         setDashboardError(
@@ -195,76 +140,14 @@ function HostDashboardContent() {
   }, [token, hostStatus?.status, t]);
 
   useEffect(() => {
-    if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
-    let cancelled = false;
-    setDashboardLoading(true);
-    setDashboardError(null);
-    getHostDashboard(token)
-      .then((data) => {
-        if (!cancelled) setDashboard(data);
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setDashboard(null);
-          setDashboardError(
-            formatUserError(e) || t("hostDashboard.dashboardLoadFailed"),
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setDashboardLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [token, hostStatus?.status, t]);
-
-  const refreshListings = useCallback(() => {
-    if (!token) return;
-    setListingsLoading(true);
-    getHostListings(token)
-      .then(setListings)
-      .catch(() => setListings([]))
-      .finally(() => setListingsLoading(false));
-  }, [token]);
-
-  const handlePauseListing = async (id: string) => {
-    if (!token) return;
-    setListingActionId(id);
-    setListingActionError(null);
-    try {
-      await pauseHostListing(id, token);
-      refreshListings();
-    } catch (e) {
-      setListingActionError(
-        formatUserError(e) || t("hostDashboard.pauseFailed"),
-      );
-    } finally {
-      setListingActionId(null);
-    }
-  };
-
-  const handleResumeListing = async (id: string) => {
-    if (!token) return;
-    setListingActionId(id);
-    setListingActionError(null);
-    try {
-      await resumeHostListing(id, token);
-      refreshListings();
-    } catch (e) {
-      setListingActionError(
-        formatUserError(e) || t("hostDashboard.resumeFailed"),
-      );
-    } finally {
-      setListingActionId(null);
-    }
-  };
+    loadDashboard();
+  }, [loadDashboard]);
 
   const handleAvailabilityBlock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !blockListingId || !blockFrom || !blockTo) return;
     setBlockSubmitting(true);
-    setListingActionError(null);
+    setBlockError(null);
     setBlockMessage(null);
     try {
       const result = await setHostAvailabilityBlock(
@@ -286,7 +169,7 @@ function HostDashboardContent() {
         nights: result.nights,
       });
     } catch (err) {
-      setListingActionError(
+      setBlockError(
         formatUserError(err) || t("hostDashboard.availabilityUpdateFailed"),
       );
     } finally {
@@ -294,39 +177,9 @@ function HostDashboardContent() {
     }
   };
 
-  const handleExportBookingsCsv = async () => {
-    if (!token || exportSubmitting) return;
-    if (exportPeriod === "custom" && (!exportFrom || !exportTo)) {
-      setListingActionError(t("hostDashboard.exportCsvFailed"));
-      return;
-    }
-    setExportSubmitting(true);
-    setListingActionError(null);
-    try {
-      await exportHostBookingsCsv(token, {
-        period: exportPeriod,
-        from: exportPeriod === "custom" ? exportFrom : undefined,
-        to: exportPeriod === "custom" ? exportTo : undefined,
-        listing_id: exportListingId || undefined,
-        status: exportStatus || undefined,
-      });
-      trackEvent("host_bookings_csv_exported", {
-        period: exportPeriod,
-        listing_id: exportListingId || null,
-        status: exportStatus || null,
-      });
-    } catch (err) {
-      setListingActionError(
-        formatUserError(err) || t("hostDashboard.exportCsvFailed"),
-      );
-    } finally {
-      setExportSubmitting(false);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="flex min-h-[40vh] items-center justify-center">
         <AppLoader />
       </div>
     );
@@ -334,80 +187,165 @@ function HostDashboardContent() {
 
   const status = hostStatus?.status ?? "NOT_STARTED";
 
-  return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+  if (status === "APPROVED" && token) {
+    const hostName =
+      user?.full_name?.trim() || t("hostPortal.profileFallback");
+
+    const tools =
+      listings.length > 0 ? (
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-nexa-ink flex items-center gap-2">
-            <LayoutDashboard className="h-8 w-8 text-nexa-primary" />
-            {t("hostDashboard.title")}
-          </h1>
-          <p className="text-nexa-ink-3 mt-1">
-            {status === "APPROVED"
-              ? t("hostDashboard.dashboardSubtitle")
-              : t("hostDashboard.applicationStatus")}
-          </p>
+          <form onSubmit={handleAvailabilityBlock}>
+            <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold text-[color:var(--host-text)]">
+              <CalendarCheck
+                className="h-5 w-5 text-[color:var(--host-primary)]"
+                aria-hidden
+              />
+              {t("hostDashboard.calendarBlocking")}
+            </h2>
+            <p className="mb-5 text-sm text-[color:var(--host-text-secondary)]">
+              {t("hostDashboard.calendarBlockingDesc")}
+            </p>
+            {blockError ? (
+              <ErrorAlert
+                error={blockError}
+                className="mb-4"
+                compact
+                onDismiss={() => setBlockError(null)}
+              />
+            ) : null}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto]">
+              <NexaSelect
+                variant="field"
+                value={blockListingId}
+                onChange={setBlockListingId}
+                aria-label={t("hostDashboard.listing")}
+                options={[
+                  { value: "", label: t("hostDashboard.selectListing") },
+                  ...listings.map((listing) => ({
+                    value: listing.id,
+                    label: listing.title,
+                  })),
+                ]}
+              />
+              <DatePicker
+                variant="field"
+                value={blockFrom}
+                onChange={setBlockFrom}
+                aria-label={t("hostDashboard.fromDate")}
+                placeholder={t("hostDashboard.fromDate")}
+              />
+              <DatePicker
+                variant="field"
+                value={blockTo}
+                onChange={setBlockTo}
+                min={blockFrom || undefined}
+                aria-label={t("hostDashboard.toDate")}
+                placeholder={t("hostDashboard.toDate")}
+              />
+              <NexaSelect
+                variant="field"
+                value={blockAction}
+                onChange={(v) => setBlockAction(v as "block" | "unblock")}
+                aria-label={t("hostDashboard.calendarAction")}
+                options={[
+                  { value: "block", label: t("hostDashboard.blockDates") },
+                  { value: "unblock", label: t("hostDashboard.unblockDates") },
+                ]}
+              />
+              <Button type="submit" disabled={blockSubmitting} className="h-11">
+                {blockSubmitting
+                  ? t("common.saving")
+                  : t("hostDashboard.updateCalendar")}
+              </Button>
+            </div>
+            {blockMessage ? (
+              <p className="mt-3 text-sm text-emerald-700">{blockMessage}</p>
+            ) : null}
+          </form>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={localePath("/")}>{t("hostDashboard.home")}</Link>
-          </Button>
-          {status === "APPROVED" && (
-            <Button size="sm" asChild>
-              <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
-                {t("hostDashboard.addListing")}
-              </Link>
-            </Button>
-          )}
-        </div>
+      ) : null;
+
+    return (
+      <HostDashboardHome
+        hostName={hostName}
+        dashboard={dashboard}
+        dashboardLoading={dashboardLoading}
+        dashboardError={dashboardError}
+        onRetryDashboard={loadDashboard}
+        bookings={bookings}
+        bookingsLoading={bookingsLoading}
+        listings={listings}
+        token={token}
+        t={t}
+        locale={locale}
+        localePath={localePath}
+        tools={tools}
+      />
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl py-4">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-nexa-ink sm:text-3xl">
+          {t("hostDashboard.title")}
+        </h1>
+        <p className="mt-1 text-nexa-ink-3">
+          {t("hostDashboard.applicationStatus")}
+        </p>
       </div>
 
-      {error && (
+      {error ? (
         <ErrorAlert
           error={error}
           className="mb-6"
           onDismiss={() => setError(null)}
         />
-      )}
+      ) : null}
 
-      {/* Status card */}
-      <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
+      <div className="mb-8 overflow-hidden rounded-2xl border border-nexa-line bg-white">
         <div className="p-6 sm:p-8">
-          <h2 className="text-lg font-semibold text-nexa-ink mb-4">{t("hostDashboard.hostStatus")}</h2>
+          <h2 className="mb-4 text-lg font-semibold text-nexa-ink">
+            {t("hostDashboard.hostStatus")}
+          </h2>
           {status === "NOT_STARTED" && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-nexa-ink-1 text-nexa-ink-4 shrink-0">
-                <Building2 className="h-8 w-8" />
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-nexa-ink-1 text-nexa-ink-4">
+                <Building2 className="h-8 w-8" aria-hidden />
               </div>
               <div className="flex-1">
-                <p className="text-nexa-ink font-medium">{t("hostDashboard.notAppliedYet")}</p>
-                <p className="text-nexa-ink-3 text-sm mt-1">
+                <p className="font-medium text-nexa-ink">
+                  {t("hostDashboard.notAppliedYet")}
+                </p>
+                <p className="mt-1 text-sm text-nexa-ink-3">
                   {t("hostDashboard.completeApplication")}
                 </p>
                 <Button className="mt-4" asChild>
-                  <Link href={localePath("/host")}>{t("hostDashboard.becomeHost")}</Link>
+                  <Link href={localePath("/host")}>
+                    {t("hostDashboard.becomeHost")}
+                  </Link>
                 </Button>
               </div>
             </div>
           )}
 
           {status === "PENDING" && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-700 shrink-0">
-                <Clock className="h-8 w-8" />
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                <Clock className="h-8 w-8" aria-hidden />
               </div>
               <div className="flex-1">
-                <p className="text-nexa-ink font-medium">{t("hostDashboard.underReview")}</p>
-                <p className="text-nexa-ink-3 text-sm mt-1">
+                <p className="font-medium text-nexa-ink">
+                  {t("hostDashboard.underReview")}
+                </p>
+                <p className="mt-1 text-sm text-nexa-ink-3">
                   {hostStatus?.message ?? t("hostDashboard.reviewMessage")}
                 </p>
-                <p className="text-nexa-ink-4 text-xs mt-2">
-                  {t("hostDashboard.meanwhileBrowse")}
-                </p>
-                <div className="flex gap-2 mt-4">
+                <div className="mt-4 flex gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={localePath("/listings")}>{t("hostDashboard.browseStays")}</Link>
+                    <Link href={localePath("/listings")}>
+                      {t("hostDashboard.browseStays")}
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={localePath("/profile")}>{t("common.profile")}</Link>
@@ -418,13 +356,15 @@ function HostDashboardContent() {
           )}
 
           {status === "REJECTED" && (
-            <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-700 shrink-0">
-                <XCircle className="h-8 w-8" />
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                <XCircle className="h-8 w-8" aria-hidden />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-nexa-ink font-medium">{t("hostDashboard.notApproved")}</p>
-                <p className="text-nexa-ink-3 text-sm mt-1">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-nexa-ink">
+                  {t("hostDashboard.notApproved")}
+                </p>
+                <p className="mt-1 text-sm text-nexa-ink-3">
                   {t("hostDashboard.reapplyMessage")}
                 </p>
                 <div className="mt-4">
@@ -439,417 +379,44 @@ function HostDashboardContent() {
                   </Alert>
                 </div>
                 <Button className="mt-4" asChild>
-                  <Link href={localePath("/host")}>{t("hostDashboard.applyAgain")}</Link>
+                  <Link href={localePath("/host")}>
+                    {t("hostDashboard.applyAgain")}
+                  </Link>
                 </Button>
               </div>
             </div>
           )}
 
-          {status === "APPROVED" && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 shrink-0">
-                <FileCheck className="h-8 w-8" />
+          {status !== "NOT_STARTED" &&
+          status !== "PENDING" &&
+          status !== "REJECTED" ? (
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                <FileCheck className="h-8 w-8" aria-hidden />
               </div>
               <div className="flex-1">
-                <p className="text-nexa-ink font-medium">{t("hostDashboard.approvedHost")}</p>
-                <p className="text-nexa-ink-3 text-sm mt-1">
-                  {t("hostDashboard.addListingDesc")}
+                <p className="font-medium text-nexa-ink">
+                  {t("hostDashboard.approvedHost")}
                 </p>
                 <Button className="mt-4" asChild>
-                  <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
-                    <PlusCircle className="h-4 w-4" />
+                  <Link
+                    href={localePath("/host/listings/new")}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" aria-hidden />
                     {t("hostDashboard.addListing")}
                   </Link>
                 </Button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {status === "APPROVED" && dashboardError && (
-        <ErrorAlert
-          error={dashboardError}
-          className="mb-6"
-          onDismiss={() => setDashboardError(null)}
-          action={
-            <button
-              type="button"
-              className="text-sm font-medium text-nexa-primary underline"
-              onClick={() => loadDashboard()}
-            >
-              {t("hostDashboard.retryDashboard")}
-            </button>
-          }
-        />
-      )}
-
-      {status === "APPROVED" && (
-        <>
-          <HostDashboardHero
-            dashboard={dashboard}
-            loading={dashboardLoading}
-            t={t}
-            locale={locale}
-            localePath={localePath}
-          />
-          <HostPayoutStatus
-            dashboard={dashboard}
-            loading={dashboardLoading}
-            t={t}
-            locale={locale}
-          />
-          <HostTodaySection
-            dashboard={dashboard}
-            loading={dashboardLoading}
-            t={t}
-            onOpenBookings={(filter) => {
-              setBookingFilter(filter);
-            }}
-          />
-          <HostUpcomingSection
-            dashboard={dashboard}
-            bookings={bookings}
-            bookingsLoading={bookingsLoading}
-            loading={dashboardLoading}
-            t={t}
-            localePath={localePath}
-          />
-          <HostBusinessSnapshot
-            dashboard={dashboard}
-            loading={dashboardLoading}
-            t={t}
-            locale={locale}
-            localePath={localePath}
-          />
-        </>
-      )}
-
-      {/* Calendar sync (iCal) */}
-      {status === "APPROVED" && listings.length > 0 && token && (
-        <div id="host-calendar-sync" className="scroll-mt-24">
-          <HostCalendarSyncPanel
-            listings={listings.map((l) => ({ id: l.id, title: l.title }))}
-            token={token}
-            t={t}
-          />
-        </div>
-      )}
-      {status === "APPROVED" && listings.length === 0 && (
-        <div
-          id="host-calendar-sync"
-          className="rounded-2xl border-2 border-dashed border-nexa-line bg-nexa-bg-1 p-6 sm:p-8 mb-8 scroll-mt-24 text-center"
-        >
-          <Link2 className="h-10 w-10 text-nexa-ink-4 mx-auto mb-2" aria-hidden />
-          <h2 className="text-lg font-semibold text-nexa-ink mb-1">
-            {t("hostDashboard.calendarSyncTitle")}
-          </h2>
-          <p className="text-sm text-nexa-ink-3 max-w-md mx-auto">
-            {t("hostDashboard.calendarSyncNeedsListing")}
-          </p>
-          <Button className="mt-4" asChild>
-            <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              {t("hostDashboard.addListing")}
-            </Link>
-          </Button>
-        </div>
-      )}
-
-      {status === "APPROVED" && (
-        <HostBookingCenter
-          bookings={bookings}
-          listings={listings}
-          loading={bookingsLoading}
-          error={bookingsError}
-          onRetry={() => void loadBookings()}
-          filter={bookingFilter}
-          onFilterChange={setBookingFilter}
-          t={t}
-          locale={locale}
-          localePath={localePath}
-          exportState={{
-            period: exportPeriod,
-            from: exportFrom,
-            to: exportTo,
-            listingId: exportListingId,
-            status: exportStatus,
-          }}
-          onExportStateChange={(patch) => {
-            if (patch.period != null) setExportPeriod(patch.period);
-            if (patch.from != null) setExportFrom(patch.from);
-            if (patch.to != null) setExportTo(patch.to);
-            if (patch.listingId != null) setExportListingId(patch.listingId);
-            if (patch.status != null) setExportStatus(patch.status);
-          }}
-          onExportCsv={() => void handleExportBookingsCsv()}
-          exportSubmitting={exportSubmitting}
-        />
-      )}
-
-      {status === "APPROVED" && listings.length > 0 && (
-        <div className="rounded-2xl border border-nexa-line bg-white overflow-hidden mb-8">
-          <form onSubmit={handleAvailabilityBlock} className="p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-nexa-ink mb-2 flex items-center gap-2">
-              <CalendarCheck className="h-5 w-5 text-nexa-primary" />
-              {t("hostDashboard.calendarBlocking")}
-            </h2>
-            <p className="text-sm text-nexa-ink-3 mb-5">
-              {t("hostDashboard.calendarBlockingDesc")}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr_auto] gap-3">
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.listing")}</span>
-                <NexaSelect
-                  variant="field"
-                  value={blockListingId}
-                  onChange={setBlockListingId}
-                  aria-label={t("hostDashboard.listing")}
-                  options={[
-                    { value: "", label: t("hostDashboard.selectListing") },
-                    ...listings.map((listing) => ({
-                      value: listing.id,
-                      label: listing.title,
-                    })),
-                  ]}
-                />
-              </label>
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.fromDate")}</span>
-                <DatePicker
-                  variant="field"
-                  value={blockFrom}
-                  onChange={setBlockFrom}
-                  aria-label={t("hostDashboard.fromDate")}
-                  placeholder={t("hostDashboard.fromDate")}
-                />
-              </label>
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.toDate")}</span>
-                <DatePicker
-                  variant="field"
-                  value={blockTo}
-                  onChange={setBlockTo}
-                  min={blockFrom || undefined}
-                  aria-label={t("hostDashboard.toDate")}
-                  placeholder={t("hostDashboard.toDate")}
-                />
-              </label>
-              <label className="text-sm">
-                <span className="sr-only">{t("hostDashboard.calendarAction")}</span>
-                <NexaSelect
-                  variant="field"
-                  value={blockAction}
-                  onChange={(v) => setBlockAction(v === "unblock" ? "unblock" : "block")}
-                  aria-label={t("hostDashboard.calendarAction")}
-                  options={[
-                    { value: "block", label: t("hostDashboard.blockDates") },
-                    { value: "unblock", label: t("hostDashboard.unblockDates") },
-                  ]}
-                />
-              </label>
-              <Button type="submit" disabled={blockSubmitting} className="h-11">
-                {blockSubmitting ? t("common.saving") : t("hostDashboard.updateCalendar")}
-              </Button>
-            </div>
-            {blockMessage && (
-              <p className="mt-3 text-sm text-green-700">{blockMessage}</p>
-            )}
-          </form>
-        </div>
-      )}
-
-      {/* Your listings - only for approved hosts */}
-      {status === "APPROVED" && (
-        <div
-          id="host-listings"
-          className="rounded-2xl border border-nexa-line bg-white overflow-hidden scroll-mt-24"
-        >
-          <div className="p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-nexa-ink mb-4">{t("hostDashboard.yourListings")}</h2>
-            {listingActionError && (
-              <ErrorAlert
-                error={listingActionError}
-                className="mb-4"
-                compact
-                onDismiss={() => setListingActionError(null)}
-              />
-            )}
-            {listingsLoading ? (
-              <div className="py-12 text-center text-nexa-ink-4">{t("hostDashboard.loadingListings")}</div>
-            ) : listings.length > 0 ? (
-              <div className="space-y-4">
-                {listings.map((l) => {
-                  const href = listingHref(l, localePath);
-                  const pct = l.completion_percentage ?? 0;
-                  const missingRequired = (l.missing ?? []).filter((m) => m.required);
-                  return (
-                    <div
-                      key={l.id}
-                      role="link"
-                      tabIndex={0}
-                      onClick={() => router.push(href)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          router.push(href);
-                        }
-                      }}
-                      className={cn(
-                        "cursor-pointer rounded-xl border border-nexa-line p-4 transition-colors",
-                        "hover:border-nexa-primary/40 hover:bg-nexa-primary-soft/20",
-                      )}
-                    >
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-nexa-ink">
-                            {l.title === "Untitled listing"
-                              ? t("hostDashboard.untitledDraft")
-                              : l.title}
-                          </p>
-                          <p className="text-sm text-nexa-ink-3">
-                            {l.city?.trim() || t("hostDashboard.locationPending")} ·{" "}
-                            {l.listing_type}
-                          </p>
-                          <p className="mt-1 text-xs text-nexa-ink-4">
-                            {t("hostDashboard.status")}:{" "}
-                            <span className={listingStatusClass(l.status)}>
-                              {hostFacingStatus(l.status)}
-                            </span>
-                            {l.rate_plan &&
-                              l.rate_plan.base_price > 0 &&
-                              ` · ${formatNightlyPrice(l.rate_plan.base_price, l.rate_plan.currency || "MAD", locale, t("seo.perNight"))}`}
-                          </p>
-                          {(l.status === "DRAFT" || l.status === "REJECTED") && (
-                            <div className="mt-3">
-                              <div className="mb-1 flex items-center justify-between text-xs text-nexa-ink-4">
-                                <span>{t("hostDashboard.listingComplete")}</span>
-                                <span className="tabular-nums font-semibold text-nexa-ink-2">
-                                  {pct}%
-                                </span>
-                              </div>
-                              <div className="h-1.5 overflow-hidden rounded-full bg-nexa-line">
-                                <div
-                                  className="h-full rounded-full bg-nexa-primary transition-all"
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                              {missingRequired.length > 0 && (
-                                <p className="mt-2 text-xs text-nexa-ink-4">
-                                  {t("hostDashboard.stillNeeded")}{" "}
-                                  {missingRequired.map((m) => m.label).join(", ")}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          {l.status === "SUBMITTED" && (
-                            <p className="mt-2 text-xs text-amber-700">
-                              {t("hostDashboard.submittedReviewHint")}
-                            </p>
-                          )}
-                          {l.status === "REJECTED" && (
-                            <p className="mt-2 text-xs text-red-700">
-                              {t("hostDashboard.rejectedFixHint")}
-                            </p>
-                          )}
-                        </div>
-                        <div
-                          className="flex shrink-0 flex-wrap items-center gap-2"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {(l.status === "DRAFT" || l.status === "REJECTED") && (
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={href} className="flex items-center gap-1.5">
-                                <Pencil className="h-3.5 w-3.5" />
-                                {l.status === "REJECTED"
-                                  ? t("hostDashboard.fixAndResubmit")
-                                  : t("hostDashboard.continueDraft")}
-                              </Link>
-                            </Button>
-                          )}
-                          {l.status !== "DRAFT" && l.status !== "REJECTED" && (
-                            <Button variant="outline" size="sm" asChild>
-                              <Link
-                                href={localePath(`/host/listings/${l.id}/edit`)}
-                                className="flex items-center gap-1.5"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                                {t("hostDashboard.edit")}
-                              </Link>
-                            </Button>
-                          )}
-                          {listingCanPause(l.status) && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={listingActionId === l.id}
-                              onClick={() => handlePauseListing(l.id)}
-                              className="flex items-center gap-1.5"
-                            >
-                              <Pause className="h-3.5 w-3.5" />
-                              {listingActionId === l.id
-                                ? t("hostDashboard.pausing")
-                                : t("hostDashboard.pause")}
-                            </Button>
-                          )}
-                          {l.status === "PAUSED" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={listingActionId === l.id}
-                              onClick={() => handleResumeListing(l.id)}
-                              className="flex items-center gap-1.5"
-                            >
-                              <Play className="h-3.5 w-3.5" />
-                              {listingActionId === l.id
-                                ? t("hostDashboard.resuming")
-                                : t("hostDashboard.resume")}
-                            </Button>
-                          )}
-                          {listingIsPublic(l.status) ? (
-                            <Link
-                              href={localePath(`/listings/${l.id}`)}
-                              className="inline-flex items-center gap-1 px-1 text-sm font-medium text-nexa-primary hover:underline"
-                            >
-                              {t("hostDashboard.view")}
-                              <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
-                            </Link>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                <Button variant="outline" className="mt-2" asChild>
-                  <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    {t("hostDashboard.addAnotherListing")}
-                  </Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="rounded-xl border-2 border-dashed border-nexa-line bg-nexa-bg-1 p-8 text-center">
-                <Building2 className="h-12 w-12 text-nexa-ink-4 mx-auto mb-3" />
-              <p className="text-nexa-ink font-medium">{t("hostDashboard.noListingsYet")}</p>
-              <p className="text-nexa-ink-3 text-sm mt-1 max-w-sm mx-auto">
-                {t("hostDashboard.addFirstProperty")}
-              </p>
-              <Button className="mt-4" asChild>
-                <Link href={localePath("/host/listings/new")} className="flex items-center gap-2">
-                  <PlusCircle className="h-4 w-4" />
-                  {t("hostDashboard.addListing")}
-                </Link>
-              </Button>
-            </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-8 flex justify-center">
+      <div className="flex justify-center">
         <Button variant="ghost" asChild>
-          <Link href={localePath("/")} className="flex items-center gap-2">
-            <Home className="h-4 w-4" />
+          <Link href={localePath("/")} className="inline-flex items-center gap-2">
+            <Home className="h-4 w-4" aria-hidden />
             {t("hostDashboard.backToHome")}
           </Link>
         </Button>
@@ -859,6 +426,5 @@ function HostDashboardContent() {
 }
 
 export default function HostDashboardPage() {
-  /* Portal layout supplies ProtectedRoute + HostPortalShell chrome. */
   return <HostDashboardContent />;
 }

@@ -2260,6 +2260,26 @@
     "top": {
       "portfolio": "المحفظة",
       "calendar": "التقويم"
+    },
+    "dashboard": {
+      "welcomeTitle": "مرحباً بعودتك، {name}",
+      "welcomeSubtitle": "إليك ما يحدث في عقاراتك اليوم.",
+      "asOf": "لقطة حتى {asOf}",
+      "kpiRevenue": "إيرادات الشهر",
+      "kpiOccupancy": "الإشغال",
+      "kpiReservations": "إقامات نشطة",
+      "kpiReservationsHint": "{active} نشطة · {upcoming} وصول قادم",
+      "kpiRating": "تقييم الضيوف",
+      "kpiRatingEmpty": "—",
+      "kpiRatingHintEmpty": "لا تقييمات بعد",
+      "toolsTitle": "الأدوات",
+      "toolsDesc": "مزامنة التقويم وحظر التوافر",
+      "quickLinksTitle": "روابط سريعة",
+      "linkBookings": "الحجوزات",
+      "linkListings": "القوائم",
+      "linkInsights": "الرؤى",
+      "linkReviews": "التقييمات",
+      "linkInbox": "الوارد"
     }
   }
 }

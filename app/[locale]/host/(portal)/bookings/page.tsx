@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,15 +15,30 @@ import {
   normalizeHostVerificationStatus,
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
-import type { HostBooking, HostListingSummary, HostVerificationStatus } from "@/lib/stays-types";
+import type {
+  HostBooking,
+  HostListingSummary,
+  HostVerificationStatus,
+} from "@/lib/stays-types";
 import { HostBookingCenter } from "@/components/host/HostBookingCenter";
-import type { HostBookingFilterId } from "@/lib/host-booking-center";
+import {
+  HOST_BOOKING_FILTER_ORDER,
+  type HostBookingFilterId,
+} from "@/lib/host-booking-center";
 import { HostPortalPageHeader } from "@/components/host/portal/HostPortalPageHeader";
 import { AppLoader } from "@/components/AppLoader";
+
+function parseBookingFilter(raw: string | null): HostBookingFilterId {
+  if (raw && (HOST_BOOKING_FILTER_ORDER as readonly string[]).includes(raw)) {
+    return raw as HostBookingFilterId;
+  }
+  return "all";
+}
 
 export default function HostBookingsPage() {
   const { token } = useAuth();
   const { t, locale, localePath } = useLanguage();
+  const searchParams = useSearchParams();
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
   const [gateLoading, setGateLoading] = useState(true);
   const [gateError, setGateError] = useState<string | null>(null);
@@ -30,7 +46,9 @@ export default function HostBookingsPage() {
   const [bookings, setBookings] = useState<HostBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
-  const [bookingFilter, setBookingFilter] = useState<HostBookingFilterId>("all");
+  const [bookingFilter, setBookingFilter] = useState<HostBookingFilterId>(() =>
+    parseBookingFilter(searchParams.get("filter")),
+  );
   const [exportPeriod, setExportPeriod] = useState<
     "last_30_days" | "this_year" | "all" | "custom"
   >("all");
@@ -39,6 +57,10 @@ export default function HostBookingsPage() {
   const [exportListingId, setExportListingId] = useState("");
   const [exportStatus, setExportStatus] = useState("");
   const [exportSubmitting, setExportSubmitting] = useState(false);
+
+  useEffect(() => {
+    setBookingFilter(parseBookingFilter(searchParams.get("filter")));
+  }, [searchParams]);
 
   useEffect(() => {
     if (!token) return;
@@ -60,7 +82,9 @@ export default function HostBookingsPage() {
       setBookings(rows);
     } catch (e) {
       setBookings([]);
-      setBookingsError(formatUserError(e) || t("hostDashboard.failedLoadBookings"));
+      setBookingsError(
+        formatUserError(e) || t("hostDashboard.failedLoadBookings"),
+      );
     } finally {
       setBookingsLoading(false);
     }
@@ -86,7 +110,9 @@ export default function HostBookingsPage() {
         status: exportStatus || undefined,
       });
     } catch (e) {
-      setBookingsError(formatUserError(e) || t("hostDashboard.exportCsvFailed"));
+      setBookingsError(
+        formatUserError(e) || t("hostDashboard.exportCsvFailed"),
+      );
     } finally {
       setExportSubmitting(false);
     }

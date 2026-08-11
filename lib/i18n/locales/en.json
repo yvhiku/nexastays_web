@@ -2260,6 +2260,26 @@
     "top": {
       "portfolio": "Portfolio",
       "calendar": "Calendar"
+    },
+    "dashboard": {
+      "welcomeTitle": "Welcome back, {name}",
+      "welcomeSubtitle": "Here's what's happening with your properties today.",
+      "asOf": "Snapshot as of {asOf}",
+      "kpiRevenue": "Monthly revenue",
+      "kpiOccupancy": "Occupancy",
+      "kpiReservations": "Active stays",
+      "kpiReservationsHint": "{active} active · {upcoming} upcoming check-ins",
+      "kpiRating": "Guest rating",
+      "kpiRatingEmpty": "—",
+      "kpiRatingHintEmpty": "No reviews yet",
+      "toolsTitle": "Tools",
+      "toolsDesc": "Calendar sync and availability blocking",
+      "quickLinksTitle": "Quick links",
+      "linkBookings": "Bookings",
+      "linkListings": "Listings",
+      "linkInsights": "Insights",
+      "linkReviews": "Reviews",
+      "linkInbox": "Inbox"
     }
   }
 }

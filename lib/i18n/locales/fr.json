@@ -2260,6 +2260,26 @@
     "top": {
       "portfolio": "Portfolio",
       "calendar": "Calendrier"
+    },
+    "dashboard": {
+      "welcomeTitle": "Bon retour, {name}",
+      "welcomeSubtitle": "Voici ce qui se passe avec vos propriétés aujourd'hui.",
+      "asOf": "Instantané au {asOf}",
+      "kpiRevenue": "Revenus du mois",
+      "kpiOccupancy": "Occupation",
+      "kpiReservations": "Séjours actifs",
+      "kpiReservationsHint": "{active} actifs · {upcoming} arrivées à venir",
+      "kpiRating": "Note des voyageurs",
+      "kpiRatingEmpty": "—",
+      "kpiRatingHintEmpty": "Pas encore d'avis",
+      "toolsTitle": "Outils",
+      "toolsDesc": "Synchronisation du calendrier et blocage des disponibilités",
+      "quickLinksTitle": "Raccourcis",
+      "linkBookings": "Réservations",
+      "linkListings": "Annonces",
+      "linkInsights": "Analyses",
+      "linkReviews": "Avis",
+      "linkInbox": "Messages"
     }
   }
 }

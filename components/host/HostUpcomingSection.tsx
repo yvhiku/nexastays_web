@@ -86,17 +86,12 @@ export function HostUpcomingSection({
                   )}
             </p>
           </div>
-          <button
-            type="button"
+          <Link
+            href={localePath("/host/bookings")}
             className="text-sm text-nexa-primary font-medium shrink-0 hover:underline"
-            onClick={() =>
-              document
-                .getElementById("host-bookings")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }
           >
             {t("hostDashboard.viewBookingsLink")}
-          </button>
+          </Link>
         </div>
 
         {operations.next_guest_name || operations.next_checkin_date ? (

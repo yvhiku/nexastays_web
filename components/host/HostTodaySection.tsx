@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle2,
   CalendarCheck,
@@ -21,6 +22,8 @@ interface HostTodaySectionProps {
   dashboard: HostDashboardAggregate | null;
   loading?: boolean;
   t: TranslateFn;
+  /** Prefer real portal routes over in-page hash scroll. */
+  localePath?: (path: string) => string;
   onOpenBookings?: (filter: "checkin_today" | "checkout_today" | "awaiting_payment" | "today") => void;
 }
 
@@ -33,8 +36,10 @@ export function HostTodaySection({
   dashboard,
   loading,
   t,
+  localePath,
   onOpenBookings,
 }: HostTodaySectionProps) {
+  const router = useRouter();
   if (loading && !dashboard) {
     return (
       <section
@@ -241,6 +246,19 @@ export function HostTodaySection({
                   <button
                     type="button"
                     onClick={() => {
+                      if (localePath) {
+                        if (row.target === "host-bookings") {
+                          const q = row.bookingFilter
+                            ? `?filter=${row.bookingFilter}`
+                            : "";
+                          router.push(localePath(`/host/bookings${q}`));
+                          return;
+                        }
+                        if (row.target === "host-listings") {
+                          router.push(localePath("/host/listings"));
+                          return;
+                        }
+                      }
                       if (row.bookingFilter && onOpenBookings) {
                         onOpenBookings(row.bookingFilter);
                       }
