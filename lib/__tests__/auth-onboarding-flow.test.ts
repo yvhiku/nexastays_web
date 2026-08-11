@@ -73,3 +73,12 @@ test("registration exchanges an OTP session only after authoritative approval", 
     /r\.onboarding\?\.required === false[\s\S]*completeRegistration\(tok\)/,
   );
 });
+
+test("registration refreshes /users/me after approval when JWT already exists", () => {
+  const registration = read("app/[locale]/registration/page.tsx");
+  assert.match(registration, /tokenType === "jwt"[\s\S]*refreshUser\(\)/);
+  assert.match(
+    registration,
+    /tokenType === "otp_session"[\s\S]*exchangeOtpSessionForJwt|completeRegistration/,
+  );
+});

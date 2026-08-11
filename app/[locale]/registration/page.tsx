@@ -91,6 +91,7 @@ export default function RegistrationPage() {
     isAuthenticated,
     setAuthJwt,
     setOnboarding,
+    refreshUser,
     user,
   } = useAuth();
   const { localePath, locale } = useLanguage();
@@ -233,6 +234,13 @@ export default function RegistrationPage() {
         getToken
       );
 
+      // Keep AuthContext in sync — OTP already issues a JWT shell with empty PII.
+      if (tokenType === "jwt") {
+        await refreshUser().catch(() => {
+          /* non-blocking; profile will refresh after KYC */
+        });
+      }
+
       setFinalOutcome(null);
       setAwaitingDecision(false);
       setStep(2);
@@ -264,7 +272,12 @@ export default function RegistrationPage() {
         (status === "APPROVED" || status === "VERIFIED") &&
         canonicalOnboarding?.required === false
       ) {
-        await exchangeOtpSessionForJwt();
+        if (tokenType === "otp_session") {
+          await exchangeOtpSessionForJwt();
+        } else if (tokenType === "jwt") {
+          // JWT was already issued at OTP; reload /users/me so profile PII + KYC show.
+          await refreshUser();
+        }
       }
     } catch (e: unknown) {
       const apiErr = normalizeError(e);
@@ -306,13 +319,17 @@ export default function RegistrationPage() {
           r.onboarding?.required === false
         ) {
           try {
-            const result = await completeRegistration(tok);
-            if (!cancelled && result?.access_token) {
-              setAuthJwt(
-                result.access_token,
-                result.refresh_token,
-                r.onboarding,
-              );
+            if (tokenType === "otp_session") {
+              const result = await completeRegistration(tok);
+              if (!cancelled && result?.access_token) {
+                setAuthJwt(
+                  result.access_token,
+                  result.refresh_token,
+                  r.onboarding,
+                );
+              }
+            } else if (tokenType === "jwt" && !cancelled) {
+              await refreshUser();
             }
           } catch {
             //
@@ -336,7 +353,15 @@ export default function RegistrationPage() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [step, awaitingDecision, token, setAuthJwt, setOnboarding]);
+  }, [
+    step,
+    awaitingDecision,
+    token,
+    tokenType,
+    setAuthJwt,
+    setOnboarding,
+    refreshUser,
+  ]);
 
   if (!token) {
     return null;

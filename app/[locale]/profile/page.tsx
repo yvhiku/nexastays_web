@@ -33,6 +33,12 @@ function ProfilePageContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    void refreshUser().catch(() => {
+      /* keep cached user if refresh fails */
+    });
+  }, [refreshUser]);
+
+  useEffect(() => {
     setFullName(user?.full_name ?? "");
     setEmail(user?.email ?? "");
     setCity(user?.city ?? "");
