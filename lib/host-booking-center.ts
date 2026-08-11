@@ -278,3 +278,22 @@ export const HOST_BOOKING_FILTER_ORDER: HostBookingFilterId[] = [
   "completed",
   "cancelled",
 ];
+
+/** Every valid filter id (includes focused ops filters omitted from tab ORDER). */
+export const HOST_BOOKING_FILTER_IDS: readonly HostBookingFilterId[] = [
+  "all",
+  "today",
+  "checkin_today",
+  "checkout_today",
+  "upcoming",
+  "current",
+  "awaiting_payment",
+  "completed",
+  "cancelled",
+] as const;
+
+export function isHostBookingFilterId(
+  value: string,
+): value is HostBookingFilterId {
+  return (HOST_BOOKING_FILTER_IDS as readonly string[]).includes(value);
+}

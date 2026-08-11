@@ -2280,6 +2280,21 @@
       "linkInsights": "Insights",
       "linkReviews": "Reviews",
       "linkInbox": "Inbox"
+    },
+    "bookings": {
+      "guestLabel": "Guest",
+      "guestCount": "{count} guests",
+      "propertyLabel": "Property",
+      "summaryToday": "Today",
+      "summaryUpcoming": "Upcoming",
+      "summaryCurrent": "Current",
+      "summaryCompleted": "Completed",
+      "summaryReservations": "{count} reservations",
+      "summaryStays": "{count} stays",
+      "emptyNoneTitle": "No bookings yet",
+      "emptyNoneDesc": "Your reservations will appear here once guests start booking your properties.",
+      "emptyFilterTitle": "No reservations match this filter",
+      "emptyFilterHint": "Try another status or clear your filters."
     }
   }
 }

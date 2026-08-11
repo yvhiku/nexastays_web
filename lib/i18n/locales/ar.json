@@ -2280,6 +2280,21 @@
       "linkInsights": "الرؤى",
       "linkReviews": "التقييمات",
       "linkInbox": "الوارد"
+    },
+    "bookings": {
+      "guestLabel": "الضيف",
+      "guestCount": "{count} ضيوف",
+      "propertyLabel": "العقار",
+      "summaryToday": "اليوم",
+      "summaryUpcoming": "القادمة",
+      "summaryCurrent": "الحالية",
+      "summaryCompleted": "المكتملة",
+      "summaryReservations": "{count} حجوزات",
+      "summaryStays": "{count} إقامات",
+      "emptyNoneTitle": "لا حجوزات بعد",
+      "emptyNoneDesc": "ستظهر حجوزاتك هنا عندما يبدأ الضيوف بحجز عقاراتك.",
+      "emptyFilterTitle": "لا توجد حجوزات تطابق هذا الفلتر",
+      "emptyFilterHint": "جرّب حالة أخرى أو امسح الفلاتر."
     }
   }
 }

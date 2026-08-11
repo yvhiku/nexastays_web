@@ -2280,6 +2280,21 @@
       "linkInsights": "Analyses",
       "linkReviews": "Avis",
       "linkInbox": "Messages"
+    },
+    "bookings": {
+      "guestLabel": "Voyageur",
+      "guestCount": "{count} voyageurs",
+      "propertyLabel": "Propriété",
+      "summaryToday": "Aujourd'hui",
+      "summaryUpcoming": "À venir",
+      "summaryCurrent": "En cours",
+      "summaryCompleted": "Terminées",
+      "summaryReservations": "{count} réservations",
+      "summaryStays": "{count} séjours",
+      "emptyNoneTitle": "Aucune réservation pour le moment",
+      "emptyNoneDesc": "Vos réservations apparaîtront ici lorsque des voyageurs bookeront vos propriétés.",
+      "emptyFilterTitle": "Aucune réservation ne correspond à ce filtre",
+      "emptyFilterHint": "Essayez un autre statut ou effacez vos filtres."
     }
   }
 }

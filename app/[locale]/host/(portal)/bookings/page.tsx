@@ -2,9 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -20,26 +19,26 @@ import type {
   HostListingSummary,
   HostVerificationStatus,
 } from "@/lib/stays-types";
-import { HostBookingCenter } from "@/components/host/HostBookingCenter";
+import { HostBookingsPage } from "@/components/host/bookings/HostBookingsPage";
 import {
-  HOST_BOOKING_FILTER_ORDER,
+  isHostBookingFilterId,
   type HostBookingFilterId,
 } from "@/lib/host-booking-center";
-import { HostPortalPageHeader } from "@/components/host/portal/HostPortalPageHeader";
 import { AppLoader } from "@/components/AppLoader";
 
 function parseBookingFilter(raw: string | null): HostBookingFilterId {
-  if (raw && (HOST_BOOKING_FILTER_ORDER as readonly string[]).includes(raw)) {
-    return raw as HostBookingFilterId;
-  }
+  if (raw && isHostBookingFilterId(raw)) return raw;
   return "all";
 }
 
-export default function HostBookingsPage() {
+export default function HostBookingsRoutePage() {
   const { token } = useAuth();
   const { t, locale, localePath } = useLanguage();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
+  const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(
+    null,
+  );
   const [gateLoading, setGateLoading] = useState(true);
   const [gateError, setGateError] = useState<string | null>(null);
   const [listings, setListings] = useState<HostListingSummary[]>([]);
@@ -62,6 +61,21 @@ export default function HostBookingsPage() {
     setBookingFilter(parseBookingFilter(searchParams.get("filter")));
   }, [searchParams]);
 
+  const handleFilterChange = useCallback(
+    (next: HostBookingFilterId) => {
+      setBookingFilter(next);
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === "all") params.delete("filter");
+      else params.set("filter", next);
+      const q = params.toString();
+      router.replace(
+        localePath(`/host/bookings${q ? `?${q}` : ""}`),
+        { scroll: false },
+      );
+    },
+    [localePath, router, searchParams],
+  );
+
   useEffect(() => {
     if (!token) return;
     setGateLoading(true);
@@ -83,7 +97,7 @@ export default function HostBookingsPage() {
     } catch (e) {
       setBookings([]);
       setBookingsError(
-        formatUserError(e) || t("hostDashboard.failedLoadBookings"),
+        formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
       );
     } finally {
       setBookingsLoading(false);
@@ -131,7 +145,9 @@ export default function HostBookingsPage() {
       <div className="mx-auto max-w-lg py-16 text-center">
         <p className="mb-6 text-nexa-ink-3">{gateError}</p>
         <Button asChild>
-          <Link href={localePath("/host/dashboard")}>{t("hostPortal.nav.home")}</Link>
+          <Link href={localePath("/host/dashboard")}>
+            {t("hostPortal.nav.home")}
+          </Link>
         </Button>
       </div>
     );
@@ -142,53 +158,43 @@ export default function HostBookingsPage() {
       <div className="mx-auto max-w-lg py-16 text-center">
         <p className="mb-6 text-nexa-ink-3">{t("hostAnalytics.notApproved")}</p>
         <Button asChild>
-          <Link href={localePath("/host/dashboard")}>{t("hostPortal.nav.home")}</Link>
+          <Link href={localePath("/host/dashboard")}>
+            {t("hostPortal.nav.home")}
+          </Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div>
-      <HostPortalPageHeader
-        title={t("hostPortal.bookingsTitle")}
-        description={t("hostPortal.bookingsSubtitle")}
-      />
-      {bookingsError ? (
-        <ErrorAlert
-          error={bookingsError}
-          className="mb-4"
-          onDismiss={() => setBookingsError(null)}
-        />
-      ) : null}
-      <HostBookingCenter
-        bookings={bookings}
-        listings={listings}
-        loading={bookingsLoading}
-        error={bookingsError}
-        onRetry={() => void loadBookings()}
-        filter={bookingFilter}
-        onFilterChange={setBookingFilter}
-        t={t}
-        locale={locale}
-        localePath={localePath}
-        exportState={{
-          period: exportPeriod,
-          from: exportFrom,
-          to: exportTo,
-          listingId: exportListingId,
-          status: exportStatus,
-        }}
-        onExportStateChange={(patch) => {
-          if (patch.period != null) setExportPeriod(patch.period);
-          if (patch.from != null) setExportFrom(patch.from);
-          if (patch.to != null) setExportTo(patch.to);
-          if (patch.listingId != null) setExportListingId(patch.listingId);
-          if (patch.status != null) setExportStatus(patch.status);
-        }}
-        onExportCsv={() => void handleExportBookingsCsv()}
-        exportSubmitting={exportSubmitting}
-      />
-    </div>
+    <HostBookingsPage
+      bookings={bookings}
+      listings={listings}
+      loading={bookingsLoading}
+      error={bookingsError}
+      onRetry={() => void loadBookings()}
+      filter={bookingFilter}
+      onFilterChange={handleFilterChange}
+      t={t}
+      locale={locale}
+      localePath={localePath}
+      token={token}
+      exportState={{
+        period: exportPeriod,
+        from: exportFrom,
+        to: exportTo,
+        listingId: exportListingId,
+        status: exportStatus,
+      }}
+      onExportStateChange={(patch) => {
+        if (patch.period != null) setExportPeriod(patch.period);
+        if (patch.from != null) setExportFrom(patch.from);
+        if (patch.to != null) setExportTo(patch.to);
+        if (patch.listingId != null) setExportListingId(patch.listingId);
+        if (patch.status != null) setExportStatus(patch.status);
+      }}
+      onExportCsv={() => void handleExportBookingsCsv()}
+      exportSubmitting={exportSubmitting}
+    />
   );
 }
