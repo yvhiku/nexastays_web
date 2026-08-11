@@ -1,5 +1,8 @@
 # Host Dashboard
 
+> **Product contract for the redesign:** see [H1 — Host Dashboard Audit & Specification](./host/H1_HOST_DASHBOARD_SPEC.md).  
+> **KPI → data mappings:** see [H2 — Host Dashboard Data Contract](./host/H2_HOST_DASHBOARD_DATA_CONTRACT.md).
+
 Overview of what exists today on the Nexa Stays **host dashboard** in `nexastays_web`.
 
 **Route:** `/{locale}/host/dashboard`  
