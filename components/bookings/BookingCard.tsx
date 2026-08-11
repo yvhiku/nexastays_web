@@ -99,6 +99,7 @@ function BookingCardComponent({
       : PLACEHOLDER;
 
   const detailHref = localePath(`/bookings/${booking.id}`);
+  const checkoutHref = localePath(`/bookings/${booking.id}?checkout=1`);
   const listingHref = booking.listing
     ? localePath(`/listings/${booking.listing.id}`)
     : localePath("/listings");
@@ -215,6 +216,7 @@ function BookingCardComponent({
               lifecycle={lifecycle}
               booking={booking}
               detailHref={detailHref}
+              checkoutHref={checkoutHref}
               listingHref={listingHref}
               contactHref={contactHref}
               t={t}
@@ -234,6 +236,7 @@ function BookingCardComponent({
             lifecycle={lifecycle}
             booking={booking}
             detailHref={detailHref}
+            checkoutHref={checkoutHref}
             listingHref={listingHref}
             contactHref={contactHref}
             t={t}
@@ -269,6 +272,7 @@ interface BookingCardActionsProps {
   lifecycle: ReturnType<typeof resolveBookingLifecycle>;
   booking: StaysBooking;
   detailHref: string;
+  checkoutHref: string;
   listingHref: string;
   contactHref: string;
   t: (key: string) => string;
@@ -284,6 +288,7 @@ function BookingCardActions({
   lifecycle,
   booking,
   detailHref,
+  checkoutHref,
   listingHref,
   contactHref,
   t,
@@ -378,7 +383,7 @@ function BookingCardActions({
 
       {lifecycle === "PENDING_PAYMENT" && (
         <>
-          {primary(t("myBookings.completePayment"), detailHref)}
+          {primary(t("myBookings.completePayment"), checkoutHref)}
           {canCancelBooking(booking) && onCancel &&
             outline(t("myBookings.cancelBooking"), {
               onClick: () => onCancel(booking.id),

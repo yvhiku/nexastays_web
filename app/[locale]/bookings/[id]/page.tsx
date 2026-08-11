@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
 import {
   cancelBooking,
+  confirmMockPayment,
   createPaymentIntent,
   getBooking,
-  simulateCardPayment,
 } from "@/lib/stays-api";
 import { isMockPaymentProvider } from "@/lib/env";
 import { formatUserError } from "@/lib/errors";
@@ -49,6 +49,18 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+type PaymentUiPhase =
+  | "idle"
+  | "preparing"
+  | "ready"
+  | "confirming"
+  | "success"
+  | "failed";
+
+function paymentIdempotencyKey(bookingId: string): string {
+  return `web-card-${bookingId}`;
+}
+
 function formatDate(value: string): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
     return formatLocalDateOnly(value);
@@ -82,10 +94,13 @@ function Section({
 function BookingDetailPageInner() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { token } = useAuth();
   const { t, tf, localePath } = useLanguage();
   const { rates } = useStaysFees();
   const id = params.id as string;
+  const checkoutMode = searchParams.get("checkout") === "1";
+  const intentHint = searchParams.get("intent"); // ready | consent | error | null
 
   const [booking, setBooking] = useState<StaysBooking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,24 +109,28 @@ function BookingDetailPageInner() {
   const [consentAccepted, setConsentAccepted] = useState<boolean | null>(null);
   const [consentChecked, setConsentChecked] = useState(false);
   const [acceptingConsent, setAcceptingConsent] = useState(false);
-  const [creatingPayment, setCreatingPayment] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<PaymentUiPhase>("idle");
+  const [intentReady, setIntentReady] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [existingReview, setExistingReview] = useState<StaysReviewDetail | null>(null);
   const [openingMessage, setOpeningMessage] = useState(false);
+  const paymentConfirmRef = useRef(false);
+  const paymentPrepareAttemptedRef = useRef(false);
+  const paymentSectionRef = useRef<HTMLDivElement>(null);
 
-  const reloadBooking = () => {
-    setLoading(true);
+  const reloadBooking = useCallback((opts?: { soft?: boolean }) => {
+    if (!opts?.soft) setLoading(true);
     getBooking(id, token)
       .then(setBooking)
       .catch((err) => setError(formatUserError(err) || t("bookings.failedLoad")))
       .finally(() => setLoading(false));
-  };
+  }, [id, token, t]);
 
   useEffect(() => {
     reloadBooking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, token, t]);
+  }, [reloadBooking]);
 
   useEffect(() => {
     if (!token || !booking) return;
@@ -129,6 +148,72 @@ function BookingDetailPageInner() {
         .catch(() => setConsentAccepted(false));
     }
   }, [token, booking?.status, consentAccepted]);
+
+  useEffect(() => {
+    if (intentHint === "error" && booking?.status === "PAYMENT_PENDING") {
+      setPaymentError(t("bookings.paymentIntentFailed"));
+      setPaymentPhase("failed");
+    }
+  }, [intentHint, booking?.status, t]);
+
+  useEffect(() => {
+    if (!checkoutMode || booking?.status !== "PAYMENT_PENDING") return;
+    const timer = window.setTimeout(() => {
+      paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [checkoutMode, booking?.status, booking?.id]);
+
+  const preparePaymentIntent = useCallback(async (opts?: { force?: boolean }): Promise<boolean> => {
+    if (!token || !booking || booking.status !== "PAYMENT_PENDING") return false;
+    if (consentAccepted !== true) return false;
+    if (!opts?.force && paymentPrepareAttemptedRef.current) return false;
+    paymentPrepareAttemptedRef.current = true;
+    setPaymentPhase("preparing");
+    setPaymentError(null);
+    try {
+      trackEvent("payment_intent_started", {
+        booking_id: booking.id,
+        amount: booking.total_paid,
+        currency: booking.currency,
+      });
+      const intent = await createPaymentIntent(
+        booking.id,
+        token,
+        paymentIdempotencyKey(booking.id),
+      );
+      if (intent.redirect_url) {
+        setRedirectUrl(intent.redirect_url);
+      }
+      setIntentReady(true);
+      setPaymentPhase("ready");
+      return true;
+    } catch (err) {
+      setPaymentError(
+        formatUserError(err) || t("bookings.paymentIntentFailed"),
+      );
+      setPaymentPhase("failed");
+      setIntentReady(false);
+      return false;
+    }
+  }, [token, booking, consentAccepted, t]);
+
+  useEffect(() => {
+    if (booking?.status !== "PAYMENT_PENDING") return;
+    if (consentAccepted !== true) return;
+    if (intentReady) {
+      setPaymentPhase((prev) =>
+        prev === "idle" || prev === "failed" || prev === "preparing" ? "ready" : prev,
+      );
+      return;
+    }
+    void preparePaymentIntent();
+  }, [
+    booking?.status,
+    consentAccepted,
+    intentReady,
+    preparePaymentIntent,
+  ]);
 
   const handleMessageHost = async () => {
     if (!token || !booking) return;
@@ -178,31 +263,47 @@ function BookingDetailPageInner() {
   const isHostView = booking.viewer_role === "HOST";
   const canStartPayment = booking.status === "PAYMENT_PENDING" && consentAccepted === true;
   const mockPayment = isMockPaymentProvider();
+  const creatingPayment =
+    paymentPhase === "preparing" || paymentPhase === "confirming";
 
   const handleCardPayment = async () => {
-    if (!token) return;
+    if (!token || !booking) return;
+    if (paymentConfirmRef.current) return;
     if (consentAccepted !== true) {
       setPaymentError(t("bookings.termsFirst"));
       return;
     }
-    setCreatingPayment(true);
+    paymentConfirmRef.current = true;
+    setPaymentPhase("confirming");
     setPaymentError(null);
     try {
-      trackEvent("payment_intent_started", {
-        booking_id: booking.id,
-        amount: booking.total_paid,
-        currency: booking.currency,
-      });
+      let ready = intentReady;
+      if (!ready) {
+        paymentPrepareAttemptedRef.current = false;
+        ready = await preparePaymentIntent({ force: true });
+      }
+      if (!ready) {
+        throw new Error(t("bookings.paymentIntentFailed"));
+      }
+
+      if (mockPayment) {
+        await confirmMockPayment(booking.id, token);
+        setPaymentPhase("success");
+        reloadBooking({ soft: true });
+        return;
+      }
+
+      if (redirectUrl) {
+        window.location.assign(redirectUrl);
+        return;
+      }
+
+      // Refresh intent in case redirect_url was not cached yet (idempotent).
       const intent = await createPaymentIntent(
         booking.id,
         token,
-        `web-card-${booking.id}`,
+        paymentIdempotencyKey(booking.id),
       );
-      if (intent.provider === "mock") {
-        await simulateCardPayment(booking.id, token);
-        reloadBooking();
-        return;
-      }
       if (intent.redirect_url) {
         window.location.assign(intent.redirect_url);
         return;
@@ -210,8 +311,9 @@ function BookingDetailPageInner() {
       throw new Error(t("bookings.cardIntegrationPending"));
     } catch (err) {
       setPaymentError(formatUserError(err) || t("bookings.cardFailed"));
+      setPaymentPhase("failed");
     } finally {
-      setCreatingPayment(false);
+      paymentConfirmRef.current = false;
     }
   };
 
@@ -318,7 +420,11 @@ function BookingDetailPageInner() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h1 className="font-[family-name:var(--font-playfair)] text-2xl sm:text-3xl font-bold text-nexa-ink">
-                  {t("bookings.bookingDetails")}
+                  {paid
+                    ? t("bookings.bookingConfirmed")
+                    : checkoutMode && booking.status === "PAYMENT_PENDING"
+                      ? t("bookings.completePaymentTitle")
+                      : t("bookings.bookingDetails")}
                 </h1>
                 <p className="text-sm text-nexa-ink-4 mt-1 font-mono">{booking.id}</p>
               </div>
@@ -331,6 +437,31 @@ function BookingDetailPageInner() {
                 {lifecycleLabel}
               </span>
             </div>
+            {paid && (
+              <div
+                className="mt-4 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3"
+                role="status"
+              >
+                <CheckCircle2 className="h-5 w-5 text-green-700 shrink-0 mt-0.5" aria-hidden />
+                <div>
+                  <p className="text-sm font-semibold text-green-900">
+                    {t("bookings.paymentSuccessful")}
+                  </p>
+                  <p className="text-sm text-green-800 mt-0.5">
+                    {t("bookings.bookingConfirmedHint")}
+                  </p>
+                </div>
+              </div>
+            )}
+            {checkoutMode && booking.status === "PAYMENT_PENDING" && (
+              <p className="mt-3 text-sm text-nexa-ink-3" role="status" aria-live="polite">
+                {paymentPhase === "preparing"
+                  ? t("bookings.preparingPayment")
+                  : paymentPhase === "confirming"
+                    ? t("bookings.processing")
+                    : t("bookings.checkoutReadyHint")}
+              </p>
+            )}
           </header>
 
           {lifecycle === "COMPLETED" && booking.viewer_role !== "HOST" && (
@@ -428,8 +559,8 @@ function BookingDetailPageInner() {
               </Section>
             )}
 
-            <Section title={t("bookings.paymentSummary")}>
-              <div className="space-y-2 text-sm">
+            <Section title={t("bookings.paymentSummary")} id="booking-payment">
+              <div ref={paymentSectionRef} className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>{t("bookings.subtotal")}</span>
                   <span>
@@ -490,6 +621,7 @@ function BookingDetailPageInner() {
                           try {
                             await acceptMandatoryConsents(token);
                             setConsentAccepted(true);
+                            paymentPrepareAttemptedRef.current = false;
                           } catch {
                             setPaymentError(t("bookings.acceptFailed"));
                           } finally {
@@ -506,9 +638,11 @@ function BookingDetailPageInner() {
                   <h4 className="text-sm font-semibold text-nexa-ink mb-3">{t("bookings.payNow")}</h4>
                   <div className="mb-4 p-4 bg-nexa-bg-2 border border-nexa-line rounded-xl">
                     <p className="text-sm text-nexa-ink-3">
-                      {mockPayment
-                        ? t("bookings.mockPaymentHint")
-                        : t("bookings.cardIntegrationPending")}
+                      {paymentPhase === "preparing"
+                        ? t("bookings.preparingPayment")
+                        : mockPayment
+                          ? t("bookings.mockPaymentHint")
+                          : t("bookings.cardIntegrationPending")}
                     </p>
                   </div>
                   {paymentError && (
@@ -519,17 +653,34 @@ function BookingDetailPageInner() {
                       onDismiss={() => setPaymentError(null)}
                     />
                   )}
+                  {paymentPhase === "failed" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mb-3 w-full justify-center"
+                      disabled={creatingPayment}
+                      onClick={() => {
+                        paymentPrepareAttemptedRef.current = false;
+                        void preparePaymentIntent({ force: true });
+                      }}
+                    >
+                      {t("bookings.retryPaymentSetup")}
+                    </Button>
+                  )}
                   <div className="flex flex-col gap-3">
                     <Button
                       onClick={handleCardPayment}
-                      disabled={!canStartPayment || creatingPayment}
+                      disabled={!canStartPayment || creatingPayment || paymentPhase === "preparing"}
                       className="w-full justify-center"
+                      aria-busy={creatingPayment}
                     >
-                      {creatingPayment
-                        ? t("bookings.processing")
-                        : mockPayment
-                          ? t("bookings.simulatePayment")
-                          : t("bookings.payWithCard")}
+                      {paymentPhase === "preparing"
+                        ? t("bookings.preparingPayment")
+                        : paymentPhase === "confirming"
+                          ? t("bookings.processing")
+                          : mockPayment
+                            ? t("bookings.confirmPayment")
+                            : t("bookings.payWithCard")}
                     </Button>
                     <Button
                       variant="outline"
@@ -634,7 +785,7 @@ function BookingDetailPageInner() {
             </Section>
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 pb-24 sm:pb-0">
             <Button asChild className="flex-1 justify-center">
               <Link href={localePath("/my-bookings")}>{t("bookings.backToBookings")}</Link>
             </Button>
@@ -644,6 +795,30 @@ function BookingDetailPageInner() {
           </div>
         </div>
       </main>
+      {booking.status === "PAYMENT_PENDING" && (
+        <div className="fixed bottom-0 inset-x-0 z-layer-sticky border-t border-nexa-line bg-white/95 backdrop-blur-sm p-3 sm:hidden safe-area-pb">
+          <Button
+            onClick={() => {
+              paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              // Sticky CTA confirms only when checkout is ready; otherwise just focus payment.
+              if (canStartPayment && paymentPhase === "ready" && !creatingPayment) {
+                void handleCardPayment();
+              }
+            }}
+            disabled={creatingPayment || paymentPhase === "preparing"}
+            className="w-full justify-center"
+            aria-busy={creatingPayment}
+          >
+            {paymentPhase === "preparing"
+              ? t("bookings.preparingPayment")
+              : paymentPhase === "confirming"
+                ? t("bookings.processing")
+                : mockPayment
+                  ? t("bookings.confirmPayment")
+                  : t("bookings.payWithCard")}
+          </Button>
+        </div>
+      )}
       <Footer />
       <CancelBookingDialog
         booking={booking}

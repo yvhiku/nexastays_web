@@ -37,7 +37,15 @@ import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
 import { ErrorAlert } from "@/components/ui/Alert";
-import { getListing, createBooking, getListingMediaUrl, searchListings, getListingAvailability } from "@/lib/stays-api";
+import {
+  getListing,
+  createBooking,
+  createPaymentIntent,
+  getListingMediaUrl,
+  searchListings,
+  getListingAvailability,
+} from "@/lib/stays-api";
+import { getCurrentConsents } from "@/lib/consent-api";
 import { formatUserError } from "@/lib/errors";
 import { ListingHeroGallery } from "@/components/listing/ListingHeroGallery";
 import { ListingBookingCard } from "@/components/listing/ListingBookingCard";
@@ -135,6 +143,10 @@ export function ListingDetailPageClient({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [booking, setBooking] = useState(false);
+  /** Distinct copy while createBooking → payment intent runs. */
+  const [bookingPhase, setBookingPhase] = useState<"idle" | "creating" | "preparing_payment">(
+    "idle",
+  );
   const bookingSubmissionRef = useRef(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [openCalendarRequest, setOpenCalendarRequest] = useState(0);
@@ -362,6 +374,9 @@ export function ListingDetailPageClient({
     const guestCount = sanitizeGuestCount(guests, max) ?? 1;
     setBookingError(null);
     setBooking(true);
+    setBookingPhase("creating");
+    let createdBookingId: string | null = null;
+    let intentQuery = "";
     try {
       const b = await createBooking(
         {
@@ -373,6 +388,7 @@ export function ListingDetailPageClient({
         },
         token
       );
+      createdBookingId = b.id;
       trackEvent("booking_created", {
         booking_id: b.id,
         listing_id: id,
@@ -382,12 +398,38 @@ export function ListingDetailPageClient({
       void import("@/lib/pwa-engagement").then((m) => m.markPwaBookingCompleted());
       window.dispatchEvent(new Event("nexa-guidance-booking-success"));
       setShowVerificationStep(false);
-      router.push(localePath(`/bookings/${b.id}`));
+
+      // Immediately start checkout: create payment intent when consents already allow it.
+      setBookingPhase("preparing_payment");
+      try {
+        const consents = await getCurrentConsents(token);
+        if (consents.mandatoryAccepted) {
+          trackEvent("payment_intent_started", {
+            booking_id: b.id,
+            amount: b.total_paid,
+            currency: b.currency,
+          });
+          await createPaymentIntent(b.id, token, `web-card-${b.id}`);
+          intentQuery = "&intent=ready";
+        } else {
+          intentQuery = "&intent=consent";
+        }
+      } catch {
+        intentQuery = "&intent=error";
+      }
+
+      router.push(localePath(`/bookings/${b.id}?checkout=1${intentQuery}`));
     } catch (err) {
-      setBookingError(err instanceof Error ? err.message : "Booking failed");
+      if (createdBookingId) {
+        // Booking exists but something blocked navigation — still send user to checkout.
+        router.push(localePath(`/bookings/${createdBookingId}?checkout=1&intent=error`));
+      } else {
+        setBookingError(err instanceof Error ? err.message : "Booking failed");
+      }
     } finally {
       bookingSubmissionRef.current = false;
       setBooking(false);
+      setBookingPhase("idle");
     }
   };
 
@@ -838,6 +880,7 @@ export function ListingDetailPageClient({
                 total={total}
                 currency={currency}
                 booking={booking}
+                bookingPhase={bookingPhase}
                 bookingError={bookingError}
                 isAuthenticated={isAuthenticated}
                 userProfile={userProfile}

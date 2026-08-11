@@ -24,6 +24,8 @@ interface ListingBookingCardProps {
   total: number;
   currency: string;
   booking: boolean;
+  /** Distinct loading copy during booking → payment intent. */
+  bookingPhase?: "idle" | "creating" | "preparing_payment";
   bookingError: string | null;
   isAuthenticated: boolean;
   userProfile: { kyc_status: string } | null;
@@ -59,6 +61,7 @@ export function ListingBookingCard({
   total,
   currency,
   booking,
+  bookingPhase = "idle",
   bookingError,
   isAuthenticated,
   userProfile,
@@ -260,7 +263,9 @@ export function ListingBookingCard({
           }
         >
           {booking
-            ? t("listingDetail.booking")
+            ? bookingPhase === "preparing_payment"
+              ? t("listingDetail.preparingPayment")
+              : t("listingDetail.creatingBooking")
             : isAuthenticated
               ? t("listingDetail.requestToBook")
               : t("listingDetail.signInToBook")}

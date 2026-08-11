@@ -204,6 +204,21 @@ test("booking confirmation has an immediate duplicate-submission lock", () => {
   assert.match(listing, /finally \{[\s\S]*bookingSubmissionRef\.current = false/);
 });
 
+test("book flow immediately starts payment intent and routes to checkout", () => {
+  const listing = read("components/listing/ListingDetailPage.client.tsx");
+  const bookingPage = read("app/[locale]/bookings/[id]/page.tsx");
+
+  assert.match(listing, /createPaymentIntent/);
+  assert.match(listing, /getCurrentConsents/);
+  assert.match(listing, /setBookingPhase\("preparing_payment"\)/);
+  assert.match(listing, /\/bookings\/\$\{b\.id\}\?checkout=1/);
+  assert.match(bookingPage, /checkoutMode/);
+  assert.match(bookingPage, /confirmMockPayment/);
+  assert.match(bookingPage, /paymentConfirmRef/);
+  assert.match(bookingPage, /preparePaymentIntent/);
+  assert.match(bookingPage, /booking-payment/);
+});
+
 test("host draft autosaves are serialized so stale snapshots cannot arrive last", () => {
   const wizard = read("app/[locale]/host/listings/new/page.tsx");
 
