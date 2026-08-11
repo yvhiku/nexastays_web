@@ -3,14 +3,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { NavBar } from "@/components/navbar/NavBar";
 import { Button } from "@/components/ui/button";
 import { NexaSelect } from "@/components/ui/NexaSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { getHostVerification, getHostListings, getHostBookings, getHostDashboard, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock, exportHostBookingsCsv } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { showSaveToast } from "@/lib/save-toast";
@@ -861,14 +859,6 @@ function HostDashboardContent() {
 }
 
 export default function HostDashboardPage() {
-  return (
-    <>
-      <NavBar />
-      <main className="pt-[72px] min-h-screen bg-nexa-bg-1">
-        <ProtectedRoute>
-          <HostDashboardContent />
-        </ProtectedRoute>
-      </main>
-    </>
-  );
+  /* Portal layout supplies ProtectedRoute + HostPortalShell chrome. */
+  return <HostDashboardContent />;
 }

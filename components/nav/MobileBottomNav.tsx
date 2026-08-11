@@ -41,6 +41,7 @@ export function MobileBottomNav() {
 
   const isHostArea =
     pathname.includes("/host/dashboard") ||
+    pathname.includes("/host/bookings") ||
     pathname.includes("/host/listings") ||
     pathname.includes("/host/reviews") ||
     pathname.includes("/host/analytics");
@@ -129,21 +130,18 @@ export function MobileBottomNav() {
         href: localePath("/host/dashboard"),
         labelKey: "pwa.navDashboard",
         icon: LayoutDashboard,
-        match: (p) =>
-          p.includes("/host/dashboard") ||
-          p.includes("/host/reviews") ||
-          p.includes("/host/analytics"),
+        match: (p) => p.includes("/host/dashboard"),
       },
       {
         id: "bookings",
-        href: `${localePath("/host/dashboard")}#host-bookings`,
+        href: localePath("/host/bookings"),
         labelKey: "pwa.navBookings",
         icon: CalendarCheck,
-        match: () => false,
+        match: (p) => p.includes("/host/bookings"),
       },
       {
         id: "listings",
-        href: `${localePath("/host/dashboard")}#host-listings`,
+        href: localePath("/host/listings"),
         labelKey: "pwa.navListings",
         icon: Building2,
         match: (p) => p.includes("/host/listings"),

@@ -2232,5 +2232,34 @@
     "installSuccessOfflineSub": "الوصول للحجوزات دون إنترنت",
     "reviewTitle": "شكراً لتقييمك!",
     "reviewBody": "لقد ساعدت المسافرين القادمين على اتخاذ قرار أفضل."
+  },
+  "hostPortal": {
+    "brand": "Nexa Stays",
+    "tagline": "إدارة متميزة",
+    "title": "بوابة المضيف",
+    "hostLabel": "مضيف",
+    "profileFallback": "مضيف",
+    "navAria": "تنقل بوابة المضيف",
+    "topNavAria": "أقسام بوابة المضيف",
+    "mobileNavAria": "تنقل بوابة المضيف للجوال",
+    "openMenu": "فتح القائمة",
+    "switchToGuest": "التبديل إلى الضيف",
+    "bookingsTitle": "الحجوزات",
+    "bookingsSubtitle": "إدارة وتتبع الحجوزات عبر محفظتك.",
+    "listingsTitle": "قوائمي",
+    "listingsSubtitle": "إدارة محفظة العقارات والتوافر.",
+    "nav": {
+      "home": "الرئيسية",
+      "bookings": "الحجوزات",
+      "listings": "القوائم",
+      "inbox": "الوارد",
+      "insights": "الرؤى",
+      "settings": "الإعدادات",
+      "listNewProperty": "إضافة عقار"
+    },
+    "top": {
+      "portfolio": "المحفظة",
+      "calendar": "التقويم"
+    }
   }
 }

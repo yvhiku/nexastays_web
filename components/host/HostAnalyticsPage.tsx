@@ -267,7 +267,15 @@ function HostAnalyticsContent() {
   );
 }
 
-export default function HostAnalyticsPage() {
+export default function HostAnalyticsPage({
+  embeddedInPortal = false,
+}: {
+  embeddedInPortal?: boolean;
+} = {}) {
+  if (embeddedInPortal) {
+    return <HostAnalyticsContent />;
+  }
+
   return (
     <>
       <NavBar />

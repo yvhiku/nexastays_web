@@ -3,5 +3,5 @@
 import HostReviewsPage from "@/components/host/HostReviewsPage";
 
 export default function HostReviewsRoutePage() {
-  return <HostReviewsPage />;
+  return <HostReviewsPage embeddedInPortal />;
 }

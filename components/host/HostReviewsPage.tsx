@@ -223,7 +223,15 @@ function HostReviewsContent() {
   );
 }
 
-export default function HostReviewsPage() {
+export default function HostReviewsPage({
+  embeddedInPortal = false,
+}: {
+  embeddedInPortal?: boolean;
+} = {}) {
+  if (embeddedInPortal) {
+    return <HostReviewsContent />;
+  }
+
   return (
     <>
       <NavBar />

@@ -1,0 +1,45 @@
+/* Scoped to .host-portal only — does not alter guest Nexa tokens. */
+
+.host-portal {
+  --host-primary: #ae2250;
+  --host-primary-soft: #fff4f7;
+  --host-primary-border: #fce7ee;
+  --host-background: #faf8ff;
+  --host-surface: #ffffff;
+  --host-border: #f2dde4;
+  --host-muted: #584145;
+  --host-text: #131b2d;
+  --host-text-secondary: #584145;
+  --host-shadow: 0 4px 20px rgba(15, 23, 41, 0.04);
+  --host-shadow-hover: 0 6px 24px rgba(15, 23, 41, 0.06);
+  --host-radius: 10px;
+  --host-sidebar-width: 16rem;
+
+  color: var(--host-text);
+  background-color: var(--host-background);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+
+.host-portal-card {
+  background-color: var(--host-surface);
+  border: 1px solid var(--host-primary-border);
+  box-shadow: var(--host-shadow);
+  border-radius: var(--host-radius);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.host-portal-card--interactive:hover {
+  box-shadow: var(--host-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.host-portal-nav-active {
+  background-color: var(--host-primary-soft);
+  color: var(--host-primary);
+  border-inline-start: 4px solid var(--host-primary);
+  font-weight: 700;
+}
+
+.host-portal-drawer-backdrop {
+  background-color: rgba(19, 27, 45, 0.4);
+}

@@ -3,5 +3,5 @@
 import HostAnalyticsPage from "@/components/host/HostAnalyticsPage";
 
 export default function HostAnalyticsRoutePage() {
-  return <HostAnalyticsPage />;
+  return <HostAnalyticsPage embeddedInPortal />;
 }

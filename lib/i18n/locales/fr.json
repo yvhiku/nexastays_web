@@ -2232,5 +2232,34 @@
     "installSuccessOfflineSub": "Accédez aux réservations sans internet",
     "reviewTitle": "Merci pour votre avis !",
     "reviewBody": "Vous venez d'aider de futurs voyageurs à mieux choisir."
+  },
+  "hostPortal": {
+    "brand": "Nexa Stays",
+    "tagline": "Gestion premium",
+    "title": "Portail hôte",
+    "hostLabel": "Hôte",
+    "profileFallback": "Hôte",
+    "navAria": "Navigation du portail hôte",
+    "topNavAria": "Sections du portail hôte",
+    "mobileNavAria": "Navigation mobile du portail hôte",
+    "openMenu": "Ouvrir le menu",
+    "switchToGuest": "Passer en mode voyageur",
+    "bookingsTitle": "Réservations",
+    "bookingsSubtitle": "Gérez et suivez les réservations de votre portfolio.",
+    "listingsTitle": "Mes annonces",
+    "listingsSubtitle": "Gérez votre portfolio et vos disponibilités.",
+    "nav": {
+      "home": "Accueil",
+      "bookings": "Réservations",
+      "listings": "Annonces",
+      "inbox": "Messages",
+      "insights": "Analyses",
+      "settings": "Paramètres",
+      "listNewProperty": "Ajouter une propriété"
+    },
+    "top": {
+      "portfolio": "Portfolio",
+      "calendar": "Calendrier"
+    }
   }
 }
