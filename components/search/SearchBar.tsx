@@ -22,6 +22,8 @@ export type SearchBarProps = {
   className?: string;
   /** Compact variant for listings chrome */
   variant?: "home" | "listings";
+  /** Product-guidance spotlight anchor (e.g. home-search). */
+  guidanceTarget?: string;
 };
 
 function todayISO(): string {
@@ -41,6 +43,7 @@ export function SearchBar({
   locale = "en",
   className,
   variant = "home",
+  guidanceTarget,
 }: SearchBarProps) {
   const [open, setOpen] = useState<SearchOpenField>(null);
   const [destQuery, setDestQuery] = useState("");
@@ -143,6 +146,7 @@ export function SearchBar({
   return (
     <form
       ref={rootRef}
+      data-guidance-target={guidanceTarget || undefined}
       onSubmit={(e) => {
         e.preventDefault();
         setOpen(null);

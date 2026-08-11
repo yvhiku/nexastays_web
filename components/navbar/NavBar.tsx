@@ -13,10 +13,11 @@ import { LanguageSelector } from "@/components/ui/LanguageSelector";
 import { LanguagePill } from "@/components/mobile/LanguagePill";
 import { NotificationBell } from "@/components/mobile/NotificationBell";
 import { InboxBell } from "@/components/messaging/InboxBell";
-import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark } from "lucide-react";
+import { ChevronDown, User, LogOut, Menu, X, LayoutDashboard, CalendarCheck, Bookmark, Search } from "lucide-react";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { useHeaderState } from "@/components/navbar/HeaderStateProvider.client";
 import { AnchoredOverlayPortal, OverlayPortal } from "@/components/ui/OverlayPortal";
+import { useMobileSearch } from "@/components/search/MobileSearchProvider";
 
 const navLinks = [
   { href: "/listings", labelKey: "nav.stays", id: "listings" },
@@ -31,6 +32,7 @@ export const NavBar = () => {
   const { t, localePath, isRtl } = useLanguage();
   const { isAuthenticated, user, token, tokenType, logout } = useAuth();
   const { hostMode, pollingActive } = useHeaderState();
+  const { openSearch } = useMobileSearch();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const showBecomeHostLink = pollingActive ? !hostMode : true;
@@ -143,6 +145,25 @@ export const NavBar = () => {
           <div className="hidden md:block">
             <LanguageSelector />
           </div>
+          <button
+            type="button"
+            onClick={() => openSearch()}
+            data-guidance-target="desktop-search"
+            className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full text-nexa-ink-3 hover:bg-nexa-bg-2 hover:text-nexa-primary transition-colors"
+            aria-label={t("pwa.navSearch")}
+          >
+            <Search className="h-5 w-5" />
+          </button>
+          {isAuthenticated ? (
+            <Link
+              href={localePath("/saved-listings")}
+              data-guidance-target="desktop-saved"
+              className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full text-nexa-ink-3 hover:bg-nexa-bg-2 hover:text-nexa-primary transition-colors"
+              aria-label={t("nav.savedListings")}
+            >
+              <Bookmark className="h-5 w-5" />
+            </Link>
+          ) : null}
           <InboxBell />
           <NotificationBell />
           {isAuthenticated ? (

@@ -219,6 +219,20 @@ test("book flow immediately starts payment intent and routes to checkout", () =>
   assert.match(bookingPage, /booking-payment/);
 });
 
+test("welcome completion forces search spotlight past the normal cooldown", () => {
+  const provider = read("components/guidance/ProductGuidanceProvider.tsx");
+  const config = read("components/guidance/guidance-config.ts");
+  const navbar = read("components/navbar/NavBar.tsx");
+  const searchBar = read("components/search/SearchBar.tsx");
+
+  assert.match(provider, /forceRef\.current\.add\("search_fab"\)/);
+  assert.match(config, /target: "home-search\|search-fab\|desktop-search"/);
+  assert.match(config, /target: "nav-saved\|desktop-saved"/);
+  assert.match(navbar, /data-guidance-target="desktop-search"/);
+  assert.match(navbar, /data-guidance-target="desktop-saved"/);
+  assert.match(searchBar, /data-guidance-target=\{guidanceTarget/);
+});
+
 test("host draft autosaves are serialized so stale snapshots cannot arrive last", () => {
   const wizard = read("app/[locale]/host/listings/new/page.tsx");
 

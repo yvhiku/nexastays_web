@@ -174,6 +174,8 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
   const finishWelcome = useCallback(
     (mode: "complete" | "dismiss") => {
       const afterWelcome: GuideId[] = ["search_fab"];
+      // Always force the follow-up so the 30s normal cooldown cannot block the chain.
+      forceRef.current.add("search_fab");
       if (mode === "complete" && shouldOfferAndroidInstallAfterWelcome()) {
         afterWelcome.unshift("install_app");
         forceRef.current.add("install_app");
@@ -403,7 +405,15 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
           guideId="search_fab"
           onPrimary={() => {
             finishActive("complete");
-            openSearch();
+            const homeSearch = document.querySelector<HTMLElement>(
+              '[data-guidance-target="home-search"]',
+            );
+            if (homeSearch) {
+              homeSearch.scrollIntoView({ behavior: "smooth", block: "center" });
+              homeSearch.querySelector<HTMLElement>("button, input")?.focus?.();
+            } else {
+              openSearch();
+            }
           }}
           onNotNow={() => finishActive("dismiss")}
         />
@@ -421,7 +431,10 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       {active === "saved_tab" ? (
         <Spotlight
           guideId="saved_tab"
-          onPrimary={() => finishActive("complete")}
+          onPrimary={() => {
+            finishActive("complete");
+            router.push(localePath("/saved-listings"));
+          }}
           onNotNow={() => finishActive("dismiss")}
         />
       ) : null}

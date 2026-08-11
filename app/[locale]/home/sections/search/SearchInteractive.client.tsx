@@ -44,6 +44,7 @@ export function SearchSection({ variant = "standalone" }: { variant?: "standalon
         tf={tf}
         locale={locale}
         variant="home"
+        guidanceTarget="home-search"
       />
       <p className="text-center text-sm text-nexa-ink-4 max-w-[640px] mx-auto mt-4">
         {t("home.search.helperText")}
