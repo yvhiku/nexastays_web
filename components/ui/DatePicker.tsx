@@ -29,6 +29,10 @@ type DatePickerProps = {
 };
 
 type PanelPos = { top: number; left: number; width: number };
+type PanelMode = "days" | "months" | "years";
+
+const YEAR_PAGE_SIZE = 12;
+const DEFAULT_MIN_YEAR = 1900;
 
 const TRIGGER = {
   plain:
@@ -104,6 +108,7 @@ export function DatePicker({
   const [pos, setPos] = useState<PanelPos | null>(null);
   const selected = useMemo(() => (value ? parseISODate(value) : null), [value]);
   const [view, setView] = useState(() => selected ?? new Date());
+  const [panelMode, setPanelMode] = useState<PanelMode>("days");
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
@@ -115,6 +120,8 @@ export function DatePicker({
     () => new Set(disabledDates ?? []),
     [disabledDates],
   );
+  const minYear = minDate?.getFullYear() ?? DEFAULT_MIN_YEAR;
+  const maxYear = maxDate?.getFullYear() ?? today.getFullYear() + 20;
 
   const updatePosition = useCallback(() => {
     const el = rootRef.current;
@@ -138,9 +145,11 @@ export function DatePicker({
   useEffect(() => {
     if (open) {
       setView(selected ?? (minDate && isAfter(minDate, today) ? minDate : today));
+      setPanelMode("days");
       updatePosition();
     } else {
       setPos(null);
+      setPanelMode("days");
     }
   }, [open, selected, minDate, today, updatePosition]);
 
@@ -179,6 +188,47 @@ export function DatePicker({
       }).format(view),
     [locale, view],
   );
+
+  const yearPageStart = useMemo(() => {
+    const y = view.getFullYear();
+    return y - ((y - minYear) % YEAR_PAGE_SIZE);
+  }, [view, minYear]);
+
+  const years = useMemo(
+    () =>
+      Array.from({ length: YEAR_PAGE_SIZE }, (_, i) => {
+        const year = yearPageStart + i;
+        return {
+          year,
+          disabled: year < minYear || year > maxYear,
+        };
+      }),
+    [yearPageStart, minYear, maxYear],
+  );
+
+  const months = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { month: "short" });
+    const year = view.getFullYear();
+    return Array.from({ length: 12 }, (_, month) => {
+      const firstOfMonth = new Date(year, month, 1);
+      const lastOfMonth = new Date(year, month + 1, 0);
+      const disabled =
+        (minDate ? isAfter(minDate, lastOfMonth) : false) ||
+        (maxDate ? isBefore(maxDate, firstOfMonth) : false);
+      return {
+        month,
+        label: formatter.format(firstOfMonth),
+        disabled,
+      };
+    });
+  }, [locale, view, minDate, maxDate]);
+
+  const headerLabel =
+    panelMode === "years"
+      ? `${years[0]?.year ?? yearPageStart} – ${years[years.length - 1]?.year ?? yearPageStart}`
+      : panelMode === "months"
+        ? String(view.getFullYear())
+        : monthLabel;
 
   const weekdayLabels = useMemo(() => {
     const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
@@ -220,7 +270,54 @@ export function DatePicker({
     : "";
 
   const shiftMonth = (delta: number) => {
-    setView((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+    setView((prev) => {
+      const next = new Date(prev.getFullYear(), prev.getMonth() + delta, 1);
+      if (next.getFullYear() < minYear || next.getFullYear() > maxYear) return prev;
+      return next;
+    });
+  };
+
+  const shiftYearPage = (deltaPages: number) => {
+    setView((prev) => {
+      const nextYear = prev.getFullYear() + deltaPages * YEAR_PAGE_SIZE;
+      const clamped = Math.min(maxYear, Math.max(minYear, nextYear));
+      return new Date(clamped, prev.getMonth(), 1);
+    });
+  };
+
+  const shiftYear = (delta: number) => {
+    setView((prev) => {
+      const nextYear = prev.getFullYear() + delta;
+      if (nextYear < minYear || nextYear > maxYear) return prev;
+      return new Date(nextYear, prev.getMonth(), 1);
+    });
+  };
+
+  const selectYear = (year: number) => {
+    setView((prev) => new Date(year, prev.getMonth(), 1));
+    setPanelMode("months");
+  };
+
+  const selectMonth = (month: number) => {
+    setView((prev) => new Date(prev.getFullYear(), month, 1));
+    setPanelMode("days");
+  };
+
+  const onHeaderClick = () => {
+    if (panelMode === "days" || panelMode === "months") setPanelMode("years");
+    else setPanelMode("days");
+  };
+
+  const onNavUp = () => {
+    if (panelMode === "days") shiftMonth(1);
+    else if (panelMode === "months") shiftYear(1);
+    else shiftYearPage(1);
+  };
+
+  const onNavDown = () => {
+    if (panelMode === "days") shiftMonth(-1);
+    else if (panelMode === "months") shiftYear(-1);
+    else shiftYearPage(-1);
   };
 
   const selectDate = (date: Date) => {
@@ -254,65 +351,144 @@ export function DatePicker({
         className="rounded-2xl border border-nexa-line bg-white p-3 shadow-nexa-lg"
       >
         <div className="flex items-center justify-between gap-2 mb-3 px-1">
-          <p className="text-sm font-semibold text-nexa-ink capitalize">{monthLabel}</p>
+          <button
+            type="button"
+            onClick={onHeaderClick}
+            className="text-sm font-semibold text-nexa-ink capitalize hover:text-nexa-primary transition-colors rounded-md px-1 -mx-1"
+            aria-label={
+              panelMode === "years"
+                ? "Back to calendar"
+                : `Select year, currently ${monthLabel}`
+            }
+          >
+            {headerLabel}
+          </button>
           <div className="flex flex-col">
             <button
               type="button"
-              onClick={() => shiftMonth(1)}
+              onClick={onNavUp}
               className="p-0.5 text-nexa-ink-3 hover:text-nexa-primary transition-colors"
-              aria-label="Next month"
+              aria-label={
+                panelMode === "years"
+                  ? "Next years"
+                  : panelMode === "months"
+                    ? "Next year"
+                    : "Next month"
+              }
             >
               <ChevronUp className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
-              onClick={() => shiftMonth(-1)}
+              onClick={onNavDown}
               className="p-0.5 text-nexa-ink-3 hover:text-nexa-primary transition-colors"
-              aria-label="Previous month"
+              aria-label={
+                panelMode === "years"
+                  ? "Previous years"
+                  : panelMode === "months"
+                    ? "Previous year"
+                    : "Previous month"
+              }
             >
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-0.5 mb-1">
-          {weekdayLabels.map((label, i) => (
-            <div
-              key={`${label}-${i}`}
-              className="h-8 flex items-center justify-center text-[0.7rem] font-medium text-nexa-ink-3"
-            >
-              {label}
+        {panelMode === "years" ? (
+          <div className="grid grid-cols-3 gap-1.5 min-h-[228px] content-start">
+            {years.map(({ year, disabled: yearDisabled }) => {
+              const isSelected = selected?.getFullYear() === year;
+              const isCurrent = view.getFullYear() === year;
+              return (
+                <button
+                  key={year}
+                  type="button"
+                  disabled={yearDisabled}
+                  onClick={() => selectYear(year)}
+                  className={cn(
+                    "h-10 rounded-lg text-sm font-medium transition-colors",
+                    !isSelected && "text-nexa-ink hover:bg-nexa-primary-soft hover:text-nexa-primary",
+                    isCurrent && !isSelected && "ring-1 ring-inset ring-nexa-primary/35",
+                    isSelected &&
+                      "bg-nexa-primary text-white shadow-[0_2px_8px_rgba(232,80,122,0.35)] hover:bg-nexa-primary-dark hover:text-white",
+                    yearDisabled && "opacity-35 cursor-not-allowed hover:bg-transparent hover:text-inherit",
+                  )}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </div>
+        ) : panelMode === "months" ? (
+          <div className="grid grid-cols-3 gap-1.5 min-h-[228px] content-start">
+            {months.map(({ month, label, disabled: monthDisabled }) => {
+              const isSelected =
+                selected?.getFullYear() === view.getFullYear() &&
+                selected?.getMonth() === month;
+              const isCurrent = view.getMonth() === month;
+              return (
+                <button
+                  key={month}
+                  type="button"
+                  disabled={monthDisabled}
+                  onClick={() => selectMonth(month)}
+                  className={cn(
+                    "h-10 rounded-lg text-sm font-medium capitalize transition-colors",
+                    !isSelected && "text-nexa-ink hover:bg-nexa-primary-soft hover:text-nexa-primary",
+                    isCurrent && !isSelected && "ring-1 ring-inset ring-nexa-primary/35",
+                    isSelected &&
+                      "bg-nexa-primary text-white shadow-[0_2px_8px_rgba(232,80,122,0.35)] hover:bg-nexa-primary-dark hover:text-white",
+                    monthDisabled && "opacity-35 cursor-not-allowed hover:bg-transparent hover:text-inherit",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
+              {weekdayLabels.map((label, i) => (
+                <div
+                  key={`${label}-${i}`}
+                  className="h-8 flex items-center justify-center text-[0.7rem] font-medium text-nexa-ink-3"
+                >
+                  {label}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="grid grid-cols-7 gap-0.5">
-          {days.map(({ date, outside, disabled }) => {
-            const isSelected = selected ? sameDay(date, selected) : false;
-            const isToday = sameDay(date, today);
+            <div className="grid grid-cols-7 gap-0.5">
+              {days.map(({ date, outside, disabled }) => {
+                const isSelected = selected ? sameDay(date, selected) : false;
+                const isToday = sameDay(date, today);
 
-            return (
-              <button
-                key={toISODate(date)}
-                type="button"
-                disabled={disabled}
-                onClick={() => selectDate(date)}
-                className={cn(
-                  "h-9 w-full rounded-lg text-sm font-medium transition-colors",
-                  outside && !isSelected && "text-nexa-ink-4",
-                  !outside && !isSelected && "text-nexa-ink",
-                  !isSelected && !disabled && "hover:bg-nexa-primary-soft hover:text-nexa-primary",
-                  isToday && !isSelected && "ring-1 ring-inset ring-nexa-primary/35",
-                  isSelected &&
-                    "bg-nexa-primary text-white shadow-[0_2px_8px_rgba(232,80,122,0.35)] hover:bg-nexa-primary-dark hover:text-white",
-                  disabled && "opacity-35 cursor-not-allowed hover:bg-transparent hover:text-inherit",
-                )}
-              >
-                {date.getDate()}
-              </button>
-            );
-          })}
-        </div>
+                return (
+                  <button
+                    key={toISODate(date)}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => selectDate(date)}
+                    className={cn(
+                      "h-9 w-full rounded-lg text-sm font-medium transition-colors",
+                      outside && !isSelected && "text-nexa-ink-4",
+                      !outside && !isSelected && "text-nexa-ink",
+                      !isSelected && !disabled && "hover:bg-nexa-primary-soft hover:text-nexa-primary",
+                      isToday && !isSelected && "ring-1 ring-inset ring-nexa-primary/35",
+                      isSelected &&
+                        "bg-nexa-primary text-white shadow-[0_2px_8px_rgba(232,80,122,0.35)] hover:bg-nexa-primary-dark hover:text-white",
+                      disabled && "opacity-35 cursor-not-allowed hover:bg-transparent hover:text-inherit",
+                    )}
+                  >
+                    {date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         <div className="mt-3 pt-2.5 border-t border-nexa-line flex items-center justify-between px-1">
           <button
