@@ -445,7 +445,10 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
       {active === "trips_tab" ? (
         <Spotlight
           guideId="trips_tab"
-          onPrimary={() => finishActive("complete")}
+          onPrimary={() => {
+            finishActive("complete");
+            router.push(localePath("/my-bookings"));
+          }}
           onNotNow={() => finishActive("dismiss")}
         />
       ) : null}

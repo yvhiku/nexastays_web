@@ -788,7 +788,12 @@ function BookingDetailPageInner() {
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 pb-24 sm:pb-0">
             <Button asChild className="flex-1 justify-center">
-              <Link href={localePath("/my-bookings")}>{t("bookings.backToBookings")}</Link>
+              <Link
+                href={localePath("/my-bookings")}
+                data-guidance-target="my-bookings-cta"
+              >
+                {t("bookings.backToBookings")}
+              </Link>
             </Button>
             <Button variant="outline" asChild className="flex-1 justify-center">
               <Link href={localePath("/listings")}>{t("bookings.browseMore")}</Link>

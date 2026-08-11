@@ -87,7 +87,7 @@ export const GUIDE_CATALOG: GuideDefinition[] = [
     type: "spotlight",
     priority: "high",
     trigger: "after_booking_success",
-    target: "nav-trips",
+    target: "my-bookings-cta|nav-trips",
     cooldownSec: 0,
     once: true,
     enabled: true,
