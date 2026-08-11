@@ -7,6 +7,8 @@ import { OverlayPortal } from "@/components/ui/OverlayPortal";
 type Props = {
   children: React.ReactNode;
   className?: string;
+  /** Extra classes for the content shell (centering, safe area, etc.). */
+  contentClassName?: string;
   onBackdropClick?: () => void;
   labelledBy?: string;
   blur?: boolean;
@@ -16,6 +18,7 @@ type Props = {
 export function GuidanceOverlay({
   children,
   className,
+  contentClassName,
   onBackdropClick,
   labelledBy,
   blur = true,
@@ -66,26 +69,36 @@ export function GuidanceOverlay({
 
   return (
     <OverlayPortal layer="modal">
-    <div
-      ref={rootRef}
-      className={cn("fixed inset-0 z-layer-modal flex", className)}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={labelledBy}
-    >
-      <button
-        type="button"
-        aria-label="Close"
+      <div
+        ref={rootRef}
         className={cn(
-          "absolute inset-0 bg-[rgba(26,17,24,0.55)]",
-          blur && "backdrop-blur-[8px]",
+          "fixed inset-0 z-layer-modal flex p-4 sm:p-6",
+          "pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]",
+          className,
         )}
-        onClick={onBackdropClick}
-      />
-      <div className="relative z-layer-content flex w-full flex-col" aria-live="polite">
-        {children}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+      >
+        <button
+          type="button"
+          aria-label="Close"
+          className={cn(
+            "absolute inset-0 bg-[rgba(26,17,24,0.55)]",
+            blur && "backdrop-blur-[8px]",
+          )}
+          onClick={onBackdropClick}
+        />
+        <div
+          className={cn(
+            "relative z-layer-content flex w-full min-h-0 max-h-full flex-col items-center",
+            contentClassName,
+          )}
+          aria-live="polite"
+        >
+          {children}
+        </div>
       </div>
-    </div>
     </OverlayPortal>
   );
 }

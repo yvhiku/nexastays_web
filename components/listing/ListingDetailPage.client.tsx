@@ -396,7 +396,6 @@ export function ListingDetailPageClient({
         currency: b.currency,
       });
       void import("@/lib/pwa-engagement").then((m) => m.markPwaBookingCompleted());
-      window.dispatchEvent(new Event("nexa-guidance-booking-success"));
       setShowVerificationStep(false);
 
       // Immediately start checkout: create payment intent when consents already allow it.

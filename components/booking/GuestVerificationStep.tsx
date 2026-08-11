@@ -141,10 +141,10 @@ export function GuestVerificationStep({
 
   return (
     <OverlayPortal layer="modal">
-    <div className="fixed inset-0 z-layer-modal flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50">
       <div
         ref={dialogRef}
-        className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-2xl w-full max-h-[min(92dvh,800px)] overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="guest-verification-title"

@@ -59,14 +59,14 @@ export function CancelBookingDialog({
 
   return (
     <OverlayPortal layer="modal">
-    <div ref={dialogRef} className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-booking-title">
+    <div ref={dialogRef} className="fixed inset-0 z-layer-modal flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]" role="dialog" aria-modal="true" aria-labelledby="cancel-booking-title">
       <button
         type="button"
         className="absolute inset-0 bg-black/45"
         aria-label={t("common.close")}
         onClick={onClose}
       />
-      <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-nexa-card border border-nexa-line">
+      <div className="relative w-full max-w-lg max-h-[min(90dvh,640px)] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-nexa-card border border-nexa-line">
         <button
           type="button"
           onClick={onClose}

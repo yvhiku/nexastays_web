@@ -30,7 +30,8 @@ export function WelcomeModal({ onContinue, onNotNow }: Props) {
 
   return (
     <GuidanceOverlay
-      className="items-end justify-center md:items-center md:p-6"
+      className="items-end justify-center sm:items-center"
+      contentClassName="items-stretch justify-end sm:justify-center sm:items-center"
       onBackdropClick={onNotNow}
       labelledBy={titleId}
     >
@@ -39,13 +40,13 @@ export function WelcomeModal({ onContinue, onNotNow }: Props) {
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={TRANSITION}
         className={cn(
-          "mx-auto flex w-full flex-col overflow-hidden bg-white shadow-nexa-lg",
-          "max-w-md rounded-t-[28px] p-6 pb-8",
-          "md:max-w-[700px] md:rounded-[28px] md:p-8",
-          "lg:max-h-[550px] lg:max-w-[960px] lg:grid lg:grid-cols-[45%_55%] lg:rounded-[24px] lg:p-0",
+          "mx-auto flex w-full max-h-[min(90dvh,720px)] flex-col overflow-hidden bg-white shadow-nexa-lg",
+          "max-w-md rounded-t-[24px] p-5 pb-6",
+          "sm:max-w-lg sm:rounded-[24px] sm:p-6",
+          "lg:max-w-3xl lg:grid lg:grid-cols-[42%_58%] lg:rounded-[24px] lg:p-0",
         )}
       >
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-nexa-line lg:hidden" />
+        <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-nexa-line sm:hidden" />
 
         <motion.div
           key="welcome-art"
@@ -54,19 +55,19 @@ export function WelcomeModal({ onContinue, onNotNow }: Props) {
           transition={TRANSITION}
           className={cn(
             "relative shrink-0 overflow-hidden",
-            "mx-auto mb-6 aspect-[4/3] w-full max-w-sm rounded-2xl bg-[#FFF8FA]",
-            "md:mb-8 md:max-w-md",
+            "mx-auto mb-4 aspect-[4/3] w-full max-w-xs rounded-2xl bg-[#FFF8FA]",
+            "sm:mb-5 sm:max-w-sm",
             "lg:mb-0 lg:aspect-auto lg:h-full lg:max-w-none lg:rounded-none",
             "lg:bg-gradient-to-br lg:from-[#FFF8FA] lg:via-[#FFF0F4] lg:to-[#FFE8EE]",
           )}
         >
-          <div className="relative h-full min-h-[180px] w-full lg:min-h-[550px]">
+          <div className="relative h-full min-h-[140px] w-full lg:min-h-0 lg:h-full">
             <Image
               src={def.asset ?? "/guidance/welcom.png"}
               alt=""
               fill
-              className="object-contain p-5 md:p-6 lg:p-10"
-              sizes="(max-width: 1024px) 90vw, 420px"
+              className="object-contain p-4 sm:p-5 lg:p-8"
+              sizes="(max-width: 1024px) 90vw, 320px"
               priority
             />
           </div>
@@ -78,29 +79,29 @@ export function WelcomeModal({ onContinue, onNotNow }: Props) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ ...TRANSITION, delay: reduce ? 0 : 0.05 }}
           className={cn(
-            "flex flex-1 flex-col items-center text-center",
-            "lg:items-start lg:justify-center lg:px-12 lg:py-10 lg:text-left",
+            "flex min-h-0 flex-1 flex-col items-center overflow-y-auto text-center",
+            "lg:items-start lg:justify-center lg:px-10 lg:py-8 lg:text-left",
           )}
         >
           <GuidanceProgressDots
             step={step}
             total={total}
             label={progressLabel}
-            className="mb-5 justify-center lg:justify-start"
+            className="mb-4 justify-center lg:justify-start"
           />
 
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-nexa-ink-4">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-nexa-ink-4">
             {t("guidance.welcomeEyebrow")}
           </p>
 
           <h1
             id={titleId}
-            className="mb-4 max-w-md font-display text-[28px] font-bold leading-tight text-nexa-ink md:text-[32px] lg:text-[36px]"
+            className="mb-3 max-w-md font-display text-[1.5rem] font-bold leading-tight text-nexa-ink sm:text-[1.75rem] lg:text-[2rem]"
           >
             {t(def.titleKey)}
           </h1>
 
-          <p className="mb-8 max-w-md text-base leading-relaxed text-nexa-ink-3 md:text-[17px] lg:mb-10 lg:max-w-sm">
+          <p className="mb-6 max-w-md text-sm leading-relaxed text-nexa-ink-3 sm:text-base lg:mb-8 lg:max-w-sm">
             {t(def.bodyKey)}
           </p>
 

@@ -290,6 +290,7 @@ function BookingDetailPageInner() {
         await confirmMockPayment(booking.id, token);
         setPaymentPhase("success");
         reloadBooking({ soft: true });
+        window.dispatchEvent(new Event("nexa-guidance-booking-success"));
         return;
       }
 
