@@ -32,15 +32,16 @@ export function HostBookingUrgencyBadge({
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide border",
-        urgency === "checkout_today" || urgency === "checkin_today"
-          ? "bg-amber-50 text-amber-900 border-amber-200"
+        urgency === "checkout_today" ||
+        urgency === "checkin_today" ||
+        urgency === "checkin_tomorrow" ||
+        urgency === "staying"
+          ? "bg-nexa-bg-1 text-nexa-ink-2 border-nexa-line"
           : urgency === "awaiting_payment"
-            ? "bg-orange-50 text-orange-900 border-orange-200"
-            : urgency === "staying" || urgency === "checkin_tomorrow"
-              ? "bg-nexa-primary-soft text-nexa-primary border-nexa-primary/20"
-              : urgency === "cancelled"
-                ? "bg-red-50 text-red-800 border-red-100"
-                : "bg-nexa-bg-1 text-nexa-ink-3 border-nexa-line",
+            ? "bg-nexa-bg-1 text-nexa-ink-2 border-nexa-line"
+            : urgency === "cancelled"
+              ? "bg-red-50 text-red-800 border-red-100"
+              : "bg-nexa-bg-1 text-nexa-ink-3 border-nexa-line",
         className,
       )}
     >

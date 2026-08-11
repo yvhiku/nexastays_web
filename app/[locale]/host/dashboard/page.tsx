@@ -137,7 +137,13 @@ function HostDashboardContent() {
   useEffect(() => {
     if (loading) return;
     const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
-    if (hash !== "host-bookings" && hash !== "host-listings") return;
+    if (
+      hash !== "host-bookings" &&
+      hash !== "host-listings" &&
+      hash !== "host-calendar-sync"
+    ) {
+      return;
+    }
     const id = window.setTimeout(() => {
       document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);

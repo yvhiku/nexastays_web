@@ -9,8 +9,8 @@ import {
   CreditCard,
   Sparkles,
   Link2,
-  AlertTriangle,
-  ShieldAlert,
+  ListFilter,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { HostDashboardAggregate } from "@/lib/stays-types";
@@ -103,96 +103,88 @@ export function HostTodaySection({
     },
   ];
 
-  const actions: Array<{
+  const signals: Array<{
     key: string;
     label: string;
     target: string;
-    critical: boolean;
     bookingFilter?: "checkin_today" | "checkout_today" | "awaiting_payment" | "today";
   }> = [];
 
   if (today.checkins_today > 0) {
-    actions.push({
+    signals.push({
       key: "a-in",
       label: t("hostDashboard.actionCheckinsToday").replace(
         "{count}",
         String(today.checkins_today),
       ),
       target: "host-bookings",
-      critical: true,
       bookingFilter: "checkin_today",
     });
   }
   if (today.checkouts_today > 0) {
-    actions.push({
+    signals.push({
       key: "a-out",
       label: t("hostDashboard.actionCheckoutsToday").replace(
         "{count}",
         String(today.checkouts_today),
       ),
       target: "host-bookings",
-      critical: true,
       bookingFilter: "checkout_today",
     });
   }
   if (today.awaiting_guest_payment > 0) {
-    actions.push({
+    signals.push({
       key: "a-pay",
       label: t("hostDashboard.actionAwaitingPayment").replace(
         "{count}",
         String(today.awaiting_guest_payment),
       ),
       target: "host-bookings",
-      critical: true,
       bookingFilter: "awaiting_payment",
     });
   }
   if (calendar_status.listings_needing_attention > 0) {
-    actions.push({
+    signals.push({
       key: "a-cal",
       label: t("hostDashboard.actionCalendarIssue").replace(
         "{count}",
         String(calendar_status.listings_needing_attention),
       ),
       target: "host-calendar-sync",
-      critical: true,
     });
   }
   if ((listing_health.missing?.length ?? 0) > 0 || !listing_health.photos_complete) {
     const missingLabel =
       listing_health.missing?.[0]?.label ??
       t("hostDashboard.actionListingHealth");
-    actions.push({
+    signals.push({
       key: "a-list",
       label: missingLabel,
       target: "host-listings",
-      critical: false,
     });
   }
   if (today.checkouts_tomorrow > 0 && today.checkouts_today === 0) {
-    actions.push({
+    signals.push({
       key: "a-tmr",
       label: t("hostDashboard.actionCheckoutsTomorrow").replace(
         "{count}",
         String(today.checkouts_tomorrow),
       ),
       target: "host-bookings",
-      critical: false,
     });
   }
   if (today.new_bookings_today > 0) {
-    actions.push({
+    signals.push({
       key: "a-new",
       label: t("hostDashboard.actionNewBookingsToday").replace(
         "{count}",
         String(today.new_bookings_today),
       ),
       target: "host-bookings",
-      critical: false,
     });
   }
 
-  const hasWork = actions.some((a) => a.critical) || actions.length > 0;
+  const hasSignals = signals.length > 0;
 
   return (
     <section
@@ -219,7 +211,7 @@ export function HostTodaySection({
                 className={cn(
                   "rounded-xl border px-3 py-3",
                   m.emphasize
-                    ? "border-nexa-primary/40 bg-nexa-primary-soft/40"
+                    ? "border-nexa-line bg-nexa-bg-1"
                     : "border-nexa-line bg-nexa-bg-1",
                 )}
               >
@@ -235,47 +227,55 @@ export function HostTodaySection({
           })}
         </div>
 
-        {!hasWork ? (
+        {!hasSignals ? (
           <div className="flex items-center gap-3 rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3 text-sm text-nexa-ink-2">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" aria-hidden />
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-nexa-ink-4" aria-hidden />
             {t("hostDashboard.todayAllClear")}
           </div>
         ) : (
           <ul className="divide-y divide-nexa-line border border-nexa-line rounded-xl overflow-hidden">
-            {actions.map((row) => (
-              <li key={row.key}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (row.bookingFilter && onOpenBookings) {
-                      onOpenBookings(row.bookingFilter);
+            {signals.map((row) => {
+              const isFilter = Boolean(row.bookingFilter);
+              return (
+                <li key={row.key}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (row.bookingFilter && onOpenBookings) {
+                        onOpenBookings(row.bookingFilter);
+                      }
+                      scrollToId(row.target);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-nexa-bg-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-nexa-primary/30"
+                    aria-label={
+                      isFilter
+                        ? `${row.label}. ${t("hostDashboard.viewBookingsLink")}`
+                        : row.label
                     }
-                    scrollToId(row.target);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-nexa-bg-1 transition-colors"
-                >
-                  {row.critical ? (
-                    <AlertTriangle
-                      className="h-4 w-4 text-amber-600 shrink-0"
-                      aria-hidden
-                    />
-                  ) : (
-                    <ShieldAlert
-                      className="h-4 w-4 text-nexa-ink-4 shrink-0"
-                      aria-hidden
-                    />
-                  )}
-                  <span className="flex-1 text-sm text-nexa-ink">{row.label}</span>
-                  <span className="text-xs text-nexa-primary font-medium">
-                    {row.target === "host-bookings"
-                      ? t("hostDashboard.viewBookingsLink")
-                      : row.target === "host-calendar-sync"
-                        ? t("hostDashboard.calendarSyncCta")
-                        : t("hostDashboard.viewListingsLink")}
-                  </span>
-                </button>
-              </li>
-            ))}
+                  >
+                    {isFilter ? (
+                      <ListFilter
+                        className="h-4 w-4 text-nexa-ink-4 shrink-0"
+                        aria-hidden
+                      />
+                    ) : (
+                      <ChevronRight
+                        className="h-4 w-4 text-nexa-ink-4 shrink-0 rtl:rotate-180"
+                        aria-hidden
+                      />
+                    )}
+                    <span className="flex-1 text-sm text-nexa-ink">{row.label}</span>
+                    <span className="text-xs text-nexa-ink-3 font-medium">
+                      {row.target === "host-bookings"
+                        ? t("hostDashboard.viewBookingsLink")
+                        : row.target === "host-calendar-sync"
+                          ? t("hostDashboard.calendarSyncCta")
+                          : t("hostDashboard.viewListingsLink")}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
 

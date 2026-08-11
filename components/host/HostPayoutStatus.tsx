@@ -70,12 +70,12 @@ export function HostPayoutStatus({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
           <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
             {t("hostDashboard.pendingPayout")}
           </p>
-          <p className="mt-1 text-xl font-semibold text-nexa-ink">
+          <p className="mt-1 text-xl font-semibold text-nexa-ink tabular-nums">
             {showPending
               ? formatHostCurrency(payouts.pending, currency, locale)
               : formatHostCurrency(0, currency, locale)}
@@ -88,19 +88,42 @@ export function HostPayoutStatus({
         </div>
         <div className="rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
           <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
-            {t("hostDashboard.payoutMethodLabel")}
+            {t("hostDashboard.availablePayout")}
           </p>
-          <p className="mt-1 text-sm font-medium text-nexa-ink">
-            {simulated
-              ? t("hostDashboard.payoutMethodSimulated")
-              : t("hostDashboard.payoutMethodGeneric")
-                  .replace("{provider}", payouts.provider)
-                  .replace("{mode}", payouts.mode)}
+          <p className="mt-1 text-xl font-semibold text-nexa-ink tabular-nums">
+            {formatHostCurrency(payouts.available, currency, locale)}
           </p>
           <p className="mt-1 text-xs text-nexa-ink-4">
-            {t("hostDashboard.payoutWalletNotEnabled")}
+            {t("hostDashboard.availablePayoutHint")}
           </p>
         </div>
+        <div className="rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
+          <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
+            {t("hostDashboard.paidOutPayout")}
+          </p>
+          <p className="mt-1 text-xl font-semibold text-nexa-ink tabular-nums">
+            {formatHostCurrency(payouts.paid_out, currency, locale)}
+          </p>
+          <p className="mt-1 text-xs text-nexa-ink-4">
+            {t("hostDashboard.paidOutPayoutHint")}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
+        <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
+          {t("hostDashboard.payoutMethodLabel")}
+        </p>
+        <p className="mt-1 text-sm font-medium text-nexa-ink">
+          {simulated
+            ? t("hostDashboard.payoutMethodSimulated")
+            : t("hostDashboard.payoutMethodGeneric")
+                .replace("{provider}", payouts.provider)
+                .replace("{mode}", payouts.mode)}
+        </p>
+        <p className="mt-1 text-xs text-nexa-ink-4">
+          {t("hostDashboard.payoutWalletNotEnabled")}
+        </p>
       </div>
 
       <p
