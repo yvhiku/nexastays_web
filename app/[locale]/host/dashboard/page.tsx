@@ -11,13 +11,15 @@ import { Alert, ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { getHostVerification, getHostListings, getHostBookings, getHostStats, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock, exportHostBookingsCsv } from "@/lib/stays-api";
+import { getHostVerification, getHostListings, getHostBookings, getHostDashboard, pauseHostListing, resumeHostListing, normalizeHostVerificationStatus, setHostAvailabilityBlock, exportHostBookingsCsv } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { showSaveToast } from "@/lib/save-toast";
-import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardStats } from "@/lib/stays-types";
-import { computeHostDashboardStats } from "@/lib/host-dashboard-stats";
-import { HostKpiSection } from "@/components/host/HostKpiSection";
-import { HostTodayActionCenter } from "@/components/host/HostTodayActionCenter";
+import type { HostVerificationStatus, HostListingSummary, HostBooking, HostDashboardAggregate } from "@/lib/stays-types";
+import { HostDashboardHero } from "@/components/host/HostDashboardHero";
+import { HostPayoutStatus } from "@/components/host/HostPayoutStatus";
+import { HostTodaySection } from "@/components/host/HostTodaySection";
+import { HostUpcomingSection } from "@/components/host/HostUpcomingSection";
+import { HostBusinessSnapshot } from "@/components/host/HostBusinessSnapshot";
 import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
 import { AppLoader } from "@/components/AppLoader";
 import {
@@ -84,8 +86,9 @@ function HostDashboardContent() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [bookings, setBookings] = useState<HostBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
-  const [stats, setStats] = useState<HostDashboardStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
+  const [dashboard, setDashboard] = useState<HostDashboardAggregate | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [listingActionId, setListingActionId] = useState<string | null>(null);
@@ -156,39 +159,47 @@ function HostDashboardContent() {
       .finally(() => setBookingsLoading(false));
   }, [token]);
 
+  const loadDashboard = useCallback(() => {
+    if (!token || (hostStatus?.status ?? "") !== "APPROVED") {
+      return Promise.resolve();
+    }
+    setDashboardLoading(true);
+    setDashboardError(null);
+    return getHostDashboard(token)
+      .then((data) => setDashboard(data))
+      .catch((e) => {
+        setDashboard(null);
+        setDashboardError(
+          formatUserError(e) || t("hostDashboard.dashboardLoadFailed"),
+        );
+      })
+      .finally(() => setDashboardLoading(false));
+  }, [token, hostStatus?.status, t]);
+
   useEffect(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
-
     let cancelled = false;
-    setStatsLoading(true);
-
-    getHostStats(token)
+    setDashboardLoading(true);
+    setDashboardError(null);
+    getHostDashboard(token)
       .then((data) => {
-        if (!cancelled) setStats(data);
+        if (!cancelled) setDashboard(data);
       })
-      .catch(() => {
-        if (!cancelled) setStats(null);
+      .catch((e) => {
+        if (!cancelled) {
+          setDashboard(null);
+          setDashboardError(
+            formatUserError(e) || t("hostDashboard.dashboardLoadFailed"),
+          );
+        }
       })
       .finally(() => {
-        if (!cancelled) setStatsLoading(false);
+        if (!cancelled) setDashboardLoading(false);
       });
-
     return () => {
       cancelled = true;
     };
-  }, [token, hostStatus?.status]);
-
-  useEffect(() => {
-    if (
-      !token ||
-      (hostStatus?.status ?? "") !== "APPROVED" ||
-      statsLoading ||
-      stats !== null
-    ) {
-      return;
-    }
-    setStats(computeHostDashboardStats(bookings, listings));
-  }, [token, hostStatus?.status, statsLoading, stats, bookings, listings]);
+  }, [token, hostStatus?.status, t]);
 
   const refreshListings = useCallback(() => {
     if (!token) return;
@@ -315,7 +326,7 @@ function HostDashboardContent() {
           </h1>
           <p className="text-nexa-ink-3 mt-1">
             {status === "APPROVED"
-              ? t("hostDashboard.manageListings")
+              ? t("hostDashboard.dashboardSubtitle")
               : t("hostDashboard.applicationStatus")}
           </p>
         </div>
@@ -438,24 +449,60 @@ function HostDashboardContent() {
         </div>
       </div>
 
-      {/* KPI overview — approved hosts */}
-      {status === "APPROVED" && (
-        <HostKpiSection
-          stats={stats ?? computeHostDashboardStats(bookings, listings)}
-          t={t}
-          locale={locale}
-          loading={statsLoading && stats === null}
+      {status === "APPROVED" && dashboardError && (
+        <ErrorAlert
+          error={dashboardError}
+          className="mb-6"
+          onDismiss={() => setDashboardError(null)}
+          action={
+            <button
+              type="button"
+              className="text-sm font-medium text-nexa-primary underline"
+              onClick={() => loadDashboard()}
+            >
+              {t("hostDashboard.retryDashboard")}
+            </button>
+          }
         />
       )}
 
       {status === "APPROVED" && (
-        <HostTodayActionCenter
-          stats={stats ?? computeHostDashboardStats(bookings, listings)}
-          t={t}
-        />
+        <>
+          <HostDashboardHero
+            dashboard={dashboard}
+            loading={dashboardLoading}
+            t={t}
+            locale={locale}
+          />
+          <HostPayoutStatus
+            dashboard={dashboard}
+            loading={dashboardLoading}
+            t={t}
+            locale={locale}
+          />
+          <HostTodaySection
+            dashboard={dashboard}
+            loading={dashboardLoading}
+            t={t}
+          />
+          <HostUpcomingSection
+            dashboard={dashboard}
+            bookings={bookings}
+            bookingsLoading={bookingsLoading}
+            loading={dashboardLoading}
+            t={t}
+            localePath={localePath}
+          />
+          <HostBusinessSnapshot
+            dashboard={dashboard}
+            loading={dashboardLoading}
+            t={t}
+            locale={locale}
+          />
+        </>
       )}
 
-      {/* Calendar sync (iCal) — above bookings so hosts see it again */}
+      {/* Calendar sync (iCal) */}
       {status === "APPROVED" && listings.length > 0 && token && (
         <div id="host-calendar-sync" className="scroll-mt-24">
           <HostCalendarSyncPanel
@@ -613,13 +660,31 @@ function HostDashboardContent() {
                     className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-nexa-line hover:border-nexa-primary/30"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-nexa-ink">{b.listing?.title ?? t("hostDashboard.listing")}</p>
-                      <p className="text-sm text-nexa-ink-3">
-                        {b.guest_name ?? t("hostDashboard.guest")} · {b.checkin_date} – {b.checkout_date}
+                      <p className="font-medium text-nexa-ink">
+                        {b.guest_name ?? t("hostDashboard.guest")}
+                      </p>
+                      <p className="text-sm text-nexa-ink-3 truncate">
+                        {b.listing?.title ?? t("hostDashboard.listing")}
+                      </p>
+                      <p className="text-sm text-nexa-ink mt-1 tabular-nums">
+                        {b.checkin_date} → {b.checkout_date}
                       </p>
                       <p className="text-xs text-nexa-ink-4 mt-1">
-                        Status: <span className={b.status === "CONFIRMED" ? "text-green-600" : "text-amber-600"}>{b.status}</span>
-                        {b.total_paid != null && ` · ${b.total_paid} ${b.currency}`}
+                        <span
+                          className={
+                            b.status === "CONFIRMED" || b.status === "CHECKED_IN"
+                              ? "text-green-700"
+                              : b.status === "PAYMENT_PENDING" ||
+                                  b.status === "INITIATED"
+                                ? "text-amber-700"
+                                : "text-nexa-ink-3"
+                          }
+                        >
+                          {b.status}
+                        </span>
+                        {b.total_paid != null
+                          ? ` · ${b.total_paid} ${b.currency}`
+                          : null}
                       </p>
                     </div>
                     <Link href={localePath(`/bookings/${b.id}`)} className="inline-flex items-center gap-1 text-sm text-nexa-primary font-medium shrink-0 hover:underline">

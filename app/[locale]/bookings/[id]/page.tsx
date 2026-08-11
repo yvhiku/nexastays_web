@@ -671,7 +671,7 @@ function BookingDetailPageInner() {
                   <div className="flex flex-col gap-3">
                     <Button
                       onClick={handleCardPayment}
-                      disabled={!canStartPayment || creatingPayment || paymentPhase === "preparing"}
+                      disabled={!canStartPayment || creatingPayment}
                       className="w-full justify-center"
                       aria-busy={creatingPayment}
                     >
@@ -811,7 +811,7 @@ function BookingDetailPageInner() {
                 void handleCardPayment();
               }
             }}
-            disabled={creatingPayment || paymentPhase === "preparing"}
+            disabled={creatingPayment}
             className="w-full justify-center"
             aria-busy={creatingPayment}
           >

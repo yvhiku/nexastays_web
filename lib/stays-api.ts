@@ -36,6 +36,7 @@ import type {
   UpdateHostListingBody,
   HostBooking,
   HostDashboardStats,
+  HostDashboardAggregate,
   CreateHostListingBody,
   CreateDraftListingBody,
   ReplaceListingMediaBody,
@@ -475,7 +476,7 @@ export async function getBooking(
   return unwrap<StaysBooking>(res);
 }
 
-/** Get host dashboard KPI stats (requires JWT) */
+/** Get host dashboard KPI stats (requires JWT) — legacy flat shape. */
 export async function getHostStats(
   token?: string | null
 ): Promise<HostDashboardStats> {
@@ -484,6 +485,17 @@ export async function getHostStats(
     .get("/stays/host/stats", { headers })
     .catch(handleError);
   return unwrap<HostDashboardStats>(res);
+}
+
+/** H3 aggregated host dashboard (requires JWT). Primary source for the redesigned dashboard. */
+export async function getHostDashboard(
+  token?: string | null,
+): Promise<HostDashboardAggregate> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const res = await client
+    .get("/stays/host/dashboard", { headers })
+    .catch(handleError);
+  return unwrap<HostDashboardAggregate>(res);
 }
 
 /** Get host's bookings (requires JWT) */
@@ -1112,6 +1124,7 @@ export const staysApi = {
   getHostMe,
   getHostVerification,
   getHostStats,
+  getHostDashboard,
   submitHostOnboarding,
   getHostListings,
   getHostListingById,

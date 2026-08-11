@@ -340,6 +340,7 @@ export interface HostBooking {
   occupants?: BookingOccupantInfo[];
 }
 
+/** Legacy flat stats from GET /stays/host/stats (kept for backwards compatibility). */
 export interface HostDashboardStats {
   total_earnings: number;
   this_month_earnings: number;
@@ -379,6 +380,85 @@ export interface HostDashboardStats {
     photos_complete: boolean;
     avg_completion_pct: number;
     missing: Array<{ code: string; label: string; count?: number }>;
+  };
+}
+
+/** H3 aggregate from GET /stays/host/dashboard — nested contract. */
+export interface HostDashboardAggregate {
+  as_of: string;
+  timezone: string;
+  currency: string;
+  today: {
+    checkins_today: number;
+    checkouts_today: number;
+    checkouts_tomorrow: number;
+    currently_staying: number;
+    new_bookings_today: number;
+    awaiting_guest_payment: number;
+  };
+  earnings: {
+    gross_revenue_all_time: number;
+    net_host_earnings_all_time: number;
+    platform_fees_all_time: number;
+    this_month: {
+      gross_revenue: number;
+      net_host_earnings: number;
+      platform_fees: number;
+      mom_pct: number | null;
+    };
+    previous_month: {
+      gross_revenue: number;
+      net_host_earnings: number;
+      platform_fees: number;
+    };
+    upcoming_revenue_30d: number;
+  };
+  payouts: {
+    provider: string;
+    mode: string;
+    pending: number;
+    available: number;
+    paid_out: number;
+    currency: string;
+    disclaimer: string;
+  };
+  operations: {
+    upcoming_checkins: number;
+    next_checkin_date: string | null;
+    next_guest_name: string | null;
+  };
+  inventory: {
+    live_listings: number;
+    pending_listings: number;
+    total_listings: number;
+    occupancy_pct_this_month: number;
+    occupancy_basis: "BOOKED_OVER_CAPACITY_V1" | string;
+  };
+  reviews: {
+    avg_rating: number | null;
+    total_reviews: number;
+  };
+  messaging: {
+    unread_count: null;
+    status: "unavailable" | string;
+  };
+  calendar_status: {
+    healthy: boolean;
+    listings_needing_attention: number;
+  };
+  listing_health: {
+    verified_live: boolean;
+    calendar_synced: boolean;
+    photos_complete: boolean;
+    avg_completion_pct: number;
+    missing: Array<{ code: string; label: string; count?: number }>;
+  };
+  bookings_summary: {
+    total: number;
+    pending: number;
+    active: number;
+    completed: number;
+    cancelled: number;
   };
 }
 
