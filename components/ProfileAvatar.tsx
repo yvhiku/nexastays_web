@@ -10,6 +10,8 @@ interface ProfileAvatarProps {
   hasPhoto: boolean;
   /** JWT for auth - required to fetch photo */
   token: string | null;
+  /** Active account id — must change when switching users so stale blobs cannot linger */
+  userId?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -20,34 +22,61 @@ const sizeClasses = {
   lg: "w-24 h-24",
 };
 
-export function ProfileAvatar({ hasPhoto, token, size = "md", className }: ProfileAvatarProps) {
+export function ProfileAvatar({
+  hasPhoto,
+  token,
+  userId,
+  size = "md",
+  className,
+}: ProfileAvatarProps) {
   const [src, setSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!hasPhoto || !token) return;
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    const controller = new AbortController();
+
+    setSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+
+    if (!hasPhoto || !token) {
+      return () => {
+        cancelled = true;
+        controller.abort();
+      };
+    }
 
     const url = `${getIdentityApiBaseUrl()}/users/me/profile-photo`;
-    let objectUrl: string | null = null;
 
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    void fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then((r) => (r.ok ? r.blob() : null))
       .then((blob) => {
-        if (blob) {
-          objectUrl = URL.createObjectURL(blob);
-          setSrc(objectUrl);
-        }
+        if (cancelled || !blob) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSrc(objectUrl);
+      })
+      .catch(() => {
+        /* aborted or network — leave placeholder */
       });
 
     return () => {
+      cancelled = true;
+      controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [hasPhoto, token]);
+  }, [hasPhoto, token, userId]);
 
   const sizeClass = sizeClasses[size];
 
   if (src) {
     return (
-      // Signed profile URLs are runtime-authenticated and cannot use next/image.
+      // Authenticated profile blobs cannot use next/image.
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
@@ -62,11 +91,16 @@ export function ProfileAvatar({ hasPhoto, token, size = "md", className }: Profi
       className={cn(
         "rounded-full bg-nexa-primary/20 flex items-center justify-center shrink-0",
         sizeClass,
-        className
+        className,
       )}
       aria-hidden
     >
-      <User className={cn("text-nexa-primary", size === "sm" ? "h-4 w-4" : size === "md" ? "h-8 w-8" : "h-12 w-12")} />
+      <User
+        className={cn(
+          "text-nexa-primary",
+          size === "sm" ? "h-4 w-4" : size === "md" ? "h-8 w-8" : "h-12 w-12",
+        )}
+      />
     </div>
   );
 }

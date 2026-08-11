@@ -156,6 +156,7 @@ export const NavBar = () => {
                 <ProfileAvatar
                   hasPhoto={!!(user?.profile_photo_url && String(user.profile_photo_url).trim().length > 0)}
                   token={tokenType === "jwt" ? token : null}
+                  userId={user?.id ?? null}
                   size="sm"
                 />
                 <span className="text-sm font-medium hidden md:inline">{t("common.profile")}</span>

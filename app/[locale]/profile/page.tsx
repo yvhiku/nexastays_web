@@ -115,6 +115,7 @@ function ProfilePageContent() {
                   <ProfileAvatar
                     hasPhoto={hasPhoto}
                     token={getToken()}
+                    userId={user?.id ?? null}
                     size="lg"
                     className="ring-4 ring-white shadow-nexa-md"
                   />
