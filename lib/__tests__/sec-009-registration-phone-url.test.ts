@@ -121,6 +121,12 @@ test("AuthContext clears registration phone on JWT/logout paths", () => {
   );
 });
 
+test("AuthContext does not persist OTP binder in sessionStorage (SEC-008)", () => {
+  const auth = readFileSync(join(ROOT, "contexts/AuthContext.tsx"), "utf8");
+  assert.doesNotMatch(auth, /sessionStorage\.setItem/);
+  assert.match(auth, /otp-session-store/);
+});
+
 test("nexastays_web repo: no registration navigation with phone= query", () => {
   const files = walkTsFiles(ROOT);
   const offenders: string[] = [];

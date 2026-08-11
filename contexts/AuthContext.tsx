@@ -17,12 +17,17 @@ import {
   setMemoryAccessToken,
 } from "@/lib/access-token-store";
 import { clearRegistrationPhone } from "@/lib/registration-phone-store";
+import {
+  clearLegacyOtpSessionStorage,
+  clearOtpSessionToken,
+  getOtpSessionToken,
+  setOtpSessionToken,
+} from "@/lib/otp-session-store";
 import type { IdentityOnboardingState } from "@/lib/auth-api";
 
 const AUTH_TOKEN_REFRESHED = "nexa:auth:token-refreshed";
 const AUTH_LOGOUT = "nexa:auth:logout";
 
-const OTP_SESSION_KEY = "nexa_otp_session_token";
 const AUTH_CHANNEL = "nexa-auth";
 
 function broadcastAuth(type: "session" | "logout"): void {
@@ -88,8 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearStoredTokens = useCallback(() => {
     if (typeof window !== "undefined") {
-      sessionStorage.removeItem(OTP_SESSION_KEY);
+      clearLegacyOtpSessionStorage();
     }
+    clearOtpSessionToken();
     clearMemoryAccessToken();
     clearRegistrationPhone();
     setToken(null);
@@ -107,20 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void import("@/lib/pwa-sw-update").then((module) =>
       module.clearSensitiveRuntimeCaches(),
     );
-    const otp = sessionStorage.getItem(OTP_SESSION_KEY);
 
-    if (otp) {
-      setToken(otp);
-      setTokenType("otp_session");
-      setUser(null);
-      setOnboarding(null);
-      setReady(true);
-      return () => {
-        cancelled = true;
-      };
-    }
+    // SEC-008: wipe legacy sessionStorage binder; never rehydrate registration from it.
+    clearLegacyOtpSessionStorage();
 
-    // Restore using the HttpOnly refresh cookie. Access tokens stay in memory.
+    // Refresh-first hydrate (HttpOnly cookie). In-memory OTP binder is not restored
+    // across hard reload — mid-registration users re-verify OTP after refresh.
     setReady(false);
     setToken(null);
     setTokenType("none");
@@ -131,9 +129,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
       if (result.cleared || !result.accessToken) {
         if (result.cleared) clearStoredTokens();
+        // Soft SPA remount may still hold an in-memory binder from this heap.
+        const pendingOtp = getOtpSessionToken();
+        if (pendingOtp) {
+          setToken(pendingOtp);
+          setTokenType("otp_session");
+          setUser(null);
+          setOnboarding(null);
+        }
         setReady(true);
         return;
       }
+      // Durable JWT session wins over any leftover registration binder.
+      clearOtpSessionToken();
+      clearLegacyOtpSessionStorage();
       setToken(result.accessToken);
       setTokenType("jwt");
       setUser(result.user);
@@ -167,6 +176,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event.data?.type === "session") {
         void hydrateAuthSession().then((result) => {
           if (!result.accessToken) return;
+          clearOtpSessionToken();
+          clearLegacyOtpSessionStorage();
           setToken(result.accessToken);
           setTokenType("jwt");
           setUser(result.user);
@@ -201,9 +212,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     _refreshToken?: string,
     nextOnboarding?: IdentityOnboardingState,
   ) => {
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem(OTP_SESSION_KEY);
-    }
+    clearOtpSessionToken();
+    clearLegacyOtpSessionStorage();
     clearRegistrationPhone();
     setMemoryAccessToken(accessToken);
     setToken(accessToken);
@@ -228,9 +238,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     otpSessionToken: string,
     nextOnboarding?: IdentityOnboardingState,
   ) => {
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(OTP_SESSION_KEY, otpSessionToken);
-    }
+    // SEC-008: memory only — never sessionStorage.
+    clearLegacyOtpSessionStorage();
+    setOtpSessionToken(otpSessionToken);
     setToken(otpSessionToken);
     setTokenType("otp_session");
     setUser(null);
@@ -243,9 +253,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void logoutBrowserSession(access).catch(() => {
       // Local sign-out must still complete if the session already expired.
     });
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem(OTP_SESSION_KEY);
-    }
+    clearOtpSessionToken();
+    clearLegacyOtpSessionStorage();
     clearMemoryAccessToken();
     clearRegistrationPhone();
     setToken(null);

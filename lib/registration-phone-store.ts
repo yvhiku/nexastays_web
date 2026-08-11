@@ -2,7 +2,8 @@
  * SEC-009: ephemeral in-memory registration phone (SPA heap only).
  * Never write to URL query/hash or localStorage.
  * Cleared on logout / JWT auth / explicit clear.
- * Hard-refresh fallback: phone_number claim inside existing otp_session JWT (already in sessionStorage for SEC-008).
+ * Hard-refresh fallback: decode `phone_number` from an in-memory otp binder
+ * when the SPA remounts without re-running login (same JS heap only).
  */
 
 let registrationPhone: string | null = null;
