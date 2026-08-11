@@ -15,6 +15,43 @@ function legacyBase(): string | undefined {
   return process.env.NEXT_PUBLIC_API_BASE_URL;
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  const h = hostname.trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return h === "localhost" || h === "127.0.0.1" || h === "::1";
+}
+
+/**
+ * NODE_ENV=production builds must not silently fall back to loopback API hosts.
+ * Local development keeps localhost defaults.
+ */
+export function resolvePublicServiceUrl(
+  configured: string | undefined,
+  fallback: string,
+  label: string,
+  nodeEnv: string | undefined = process.env.NODE_ENV,
+): string {
+  const value = (configured || "").trim();
+  if (nodeEnv === "production") {
+    if (!value) {
+      throw new Error(
+        `${label} is required when NODE_ENV=production (no localhost fallback).`,
+      );
+    }
+    try {
+      if (isLoopbackHostname(new URL(value).hostname)) {
+        throw new Error(
+          `${label} must not target localhost / 127.0.0.1 / ::1 when NODE_ENV=production.`,
+        );
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes(label)) throw err;
+      throw new Error(`${label} must be a valid URL.`);
+    }
+    return value.replace(/\/$/, "");
+  }
+  return (value || fallback).replace(/\/$/, "");
+}
+
 let cookieSiteMismatchWarned = false;
 
 /**
@@ -44,26 +81,31 @@ function warnIfCookieSiteMismatch(apiBaseUrl: string): void {
 
 /** Nexa Identity — auth, users, KYC, consents */
 export function getIdentityApiBaseUrl(): string {
-  const url =
-    process.env.NEXT_PUBLIC_IDENTITY_API_BASE_URL ||
-    legacyBase() ||
-    DEFAULT_IDENTITY;
+  const url = resolvePublicServiceUrl(
+    process.env.NEXT_PUBLIC_IDENTITY_API_BASE_URL || legacyBase(),
+    DEFAULT_IDENTITY,
+    "NEXT_PUBLIC_IDENTITY_API_BASE_URL",
+  );
   warnIfCookieSiteMismatch(url);
   return url;
 }
 
 /** Nexa Stays — listings, bookings, hosts, payments */
 export function getStaysApiBaseUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_STAYS_API_BASE_URL ||
-    legacyBase() ||
-    DEFAULT_STAYS
+  return resolvePublicServiceUrl(
+    process.env.NEXT_PUBLIC_STAYS_API_BASE_URL || legacyBase(),
+    DEFAULT_STAYS,
+    "NEXT_PUBLIC_STAYS_API_BASE_URL",
   );
 }
 
 /** Public website origin used for canonical URLs, sitemap, and social cards. */
 export function getPublicSiteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE).replace(/\/$/, "");
+  return resolvePublicServiceUrl(
+    process.env.NEXT_PUBLIC_SITE_URL,
+    DEFAULT_SITE,
+    "NEXT_PUBLIC_SITE_URL",
+  );
 }
 
 /** @deprecated Prefer getIdentityApiBaseUrl or getStaysApiBaseUrl */
