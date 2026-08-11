@@ -188,6 +188,110 @@ export interface HostReviewsResponse {
   total: number;
 }
 
+/** H10 GET /stays/host/analytics period ids (locked). */
+export type HostAnalyticsPeriodId =
+  | "this_month"
+  | "previous_month"
+  | "all_time"
+  | "next_30d";
+
+export const HOST_ANALYTICS_PERIODS: readonly HostAnalyticsPeriodId[] = [
+  "this_month",
+  "previous_month",
+  "all_time",
+  "next_30d",
+] as const;
+
+export const HOST_ANALYTICS_OCCUPANCY_BASIS =
+  "BOOKED_NIGHTS_OVER_PERIOD_DAYS_V1" as const;
+
+export interface HostAnalyticsPeriod {
+  id: HostAnalyticsPeriodId;
+  start: string;
+  end_exclusive: string;
+}
+
+export interface HostAnalyticsPropertyBookings {
+  total: number;
+  payment_pending: number;
+  upcoming: number;
+  current: number;
+  completed: number;
+  cancelled: number;
+}
+
+export interface HostAnalyticsPropertyNights {
+  booked_in_period: number;
+}
+
+export interface HostAnalyticsPropertyEarnings {
+  gross_revenue: number;
+  net_host_earnings: number;
+  platform_fees: number;
+  upcoming_revenue_30d: number;
+}
+
+export interface HostAnalyticsPropertyOccupancy {
+  value: number | null;
+  basis: typeof HOST_ANALYTICS_OCCUPANCY_BASIS | string;
+}
+
+export interface HostAnalyticsPropertyReviews {
+  avg_rating: number | null;
+  total_reviews: number;
+}
+
+export interface HostAnalyticsPropertyOperations {
+  checkins_today: number;
+  checkouts_today: number;
+  next_checkin_date: string | null;
+  upcoming_bookings: number;
+  currently_staying: number;
+}
+
+export interface HostAnalyticsPropertyPayouts {
+  pending: number;
+  paid_out: number;
+}
+
+export interface HostAnalyticsHealthMissing {
+  code: string;
+  label: string;
+}
+
+export interface HostAnalyticsPropertyHealth {
+  completion_percentage: number;
+  photos_complete: boolean;
+  calendar_status: string;
+  missing: HostAnalyticsHealthMissing[];
+  attention: string[];
+}
+
+export interface HostAnalyticsProperty {
+  listing_id: string;
+  title: string;
+  city: string;
+  status: string;
+  bookings: HostAnalyticsPropertyBookings;
+  nights: HostAnalyticsPropertyNights;
+  earnings: HostAnalyticsPropertyEarnings;
+  occupancy: HostAnalyticsPropertyOccupancy;
+  reviews: HostAnalyticsPropertyReviews;
+  operations: HostAnalyticsPropertyOperations;
+  payouts: HostAnalyticsPropertyPayouts;
+  health: HostAnalyticsPropertyHealth;
+}
+
+/** Exact H10 response shape for GET /stays/host/analytics. */
+export interface HostAnalyticsResponse {
+  as_of: string;
+  timezone: string;
+  currency: string;
+  period: HostAnalyticsPeriod;
+  eligible_booking_statuses: string[];
+  properties: HostAnalyticsProperty[];
+}
+
 export interface StaysReviewDetail extends ListingReview {
   booking_id: string;
   status: string;

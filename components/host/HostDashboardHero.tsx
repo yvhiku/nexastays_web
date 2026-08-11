@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { HostDashboardAggregate } from "@/lib/stays-types";
@@ -14,6 +15,7 @@ interface HostDashboardHeroProps {
   loading?: boolean;
   t: TranslateFn;
   locale: Locale;
+  localePath?: (path: string) => string;
 }
 
 export function HostDashboardHero({
@@ -21,6 +23,7 @@ export function HostDashboardHero({
   loading,
   t,
   locale,
+  localePath,
 }: HostDashboardHeroProps) {
   if (loading && !dashboard) {
     return (
@@ -124,6 +127,17 @@ export function HostDashboardHero({
           dashboard.timezone,
         )}
       </p>
+
+      {localePath ? (
+        <p className="mt-4">
+          <Link
+            href={localePath("/host/analytics")}
+            className="text-sm font-medium text-nexa-primary hover:underline"
+          >
+            {t("hostAnalytics.viewAnalytics")}
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

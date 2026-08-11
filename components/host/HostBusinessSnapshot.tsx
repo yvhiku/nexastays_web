@@ -147,6 +147,12 @@ export function HostBusinessSnapshot({
           <p className="mt-2 text-[11px] text-nexa-ink-4">
             {t("hostDashboard.upcomingRevenueHint")}
           </p>
+          <Link
+            href={localePath("/host/analytics")}
+            className="mt-3 inline-flex text-xs font-medium text-nexa-primary hover:underline"
+          >
+            {t("hostAnalytics.viewAnalytics")}
+          </Link>
         </div>
       </div>
 

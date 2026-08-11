@@ -43,6 +43,8 @@ import type {
   ReplaceListingUnitTypesBody,
   ListingReviewsResponse,
   HostReviewsResponse,
+  HostAnalyticsResponse,
+  HostAnalyticsPeriodId,
   StaysReviewDetail,
   ReviewSort,
 } from "./stays-types";
@@ -56,6 +58,10 @@ import {
   clampHostReviewsLimit,
   normalizeHostReviewsPage,
 } from "./host-reviews";
+import {
+  buildHostAnalyticsPath,
+  parseHostAnalyticsPeriod,
+} from "./host-analytics";
 
 const API_BASE = getStaysApiBaseUrl();
 
@@ -519,6 +525,22 @@ export async function getHostReviews(
     .get(buildHostReviewsPath({ page, limit }), { headers })
     .catch(handleError);
   return unwrap<HostReviewsResponse>(res);
+}
+
+/**
+ * H10 property performance analytics (requires JWT).
+ * Host identity from JWT only — never send hostId.
+ */
+export async function getHostAnalytics(
+  token?: string | null,
+  opts?: { period?: HostAnalyticsPeriodId | string },
+): Promise<HostAnalyticsResponse> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const period = parseHostAnalyticsPeriod(opts?.period);
+  const res = await client
+    .get(buildHostAnalyticsPath(period), { headers })
+    .catch(handleError);
+  return unwrap<HostAnalyticsResponse>(res);
 }
 
 /** Get host's bookings (requires JWT) */
@@ -1149,6 +1171,7 @@ export const staysApi = {
   getHostStats,
   getHostDashboard,
   getHostReviews,
+  getHostAnalytics,
   submitHostOnboarding,
   getHostListings,
   getHostListingById,

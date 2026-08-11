@@ -487,6 +487,7 @@ function HostDashboardContent() {
             loading={dashboardLoading}
             t={t}
             locale={locale}
+            localePath={localePath}
           />
           <HostPayoutStatus
             dashboard={dashboard}
