@@ -182,24 +182,41 @@ describe("host-analytics web integration (source)", () => {
   });
 
   it("page supports four periods, occupancy footnote, empty/error/retry", () => {
-    const page = read("components/host/HostAnalyticsPage.tsx");
-    assert.match(page, /getHostAnalytics\(/);
-    assert.match(page, /parseHostAnalyticsPeriod/);
-    assert.match(page, /hostAnalytics\.retry/);
-    assert.match(page, /hostAnalytics\.emptyTitle/);
-    assert.match(page, /occupancyFootnote/);
-    assert.match(page, /HostAnalyticsPropertyTable/);
-    assert.match(page, /HostAnalyticsPropertyCard/);
-    assert.match(page, /localePath\("\/host\/reviews"\)/);
-    assert.doesNotMatch(page, /last_30_days|sparkline|LineChart|needs.?response/i);
-    assert.doesNotMatch(page, /\bm[lr]-|\bleft-|\bright-/);
+    const legacy = read("components/host/HostAnalyticsPage.tsx");
+    const insights = read("components/host/analytics/HostInsightsPage.tsx");
+    const route = read("app/[locale]/host/(portal)/analytics/page.tsx");
+    assert.match(route, /getHostAnalytics\(/);
+    assert.match(route, /parseHostAnalyticsPeriod/);
+    assert.match(route, /HostInsightsPage/);
+    assert.match(insights, /hostAnalytics\.retry/);
+    assert.match(insights, /hostAnalytics\.emptyTitle|HostInsightsEmptyState/);
+    assert.match(insights, /occupancyFootnote/);
+    assert.match(insights, /HostInsightsProperties/);
+    assert.match(
+      read("components/host/analytics/HostInsightsProperties.tsx"),
+      /localePath\("\/host\/reviews"\)/,
+    );
+    assert.doesNotMatch(insights, /last_30_days|sparkline|LineChart|needs.?response/i);
+    assert.doesNotMatch(insights, /\bm[lr]-|\bleft-|\bright-/);
+    assert.doesNotMatch(route, /last_30_days|sparkline|LineChart/i);
+    // Legacy reference retained (behavioral authority archive)
+    assert.match(legacy, /HostAnalyticsPropertyTable/);
+    assert.match(legacy, /HostAnalyticsPropertyCard/);
   });
 
   it("occupancy display helper used for null → N/A", () => {
     const card = read("components/host/HostAnalyticsPropertyCard.tsx");
     const table = read("components/host/HostAnalyticsPropertyTable.tsx");
+    const insightsCard = read(
+      "components/host/analytics/HostInsightsPropertyCard.tsx",
+    );
+    const insightsProps = read(
+      "components/host/analytics/HostInsightsProperties.tsx",
+    );
     assert.match(card, /formatOccupancyDisplay/);
     assert.match(table, /formatOccupancyDisplay/);
+    assert.match(insightsCard, /formatOccupancyDisplay/);
+    assert.match(insightsProps, /formatOccupancyDisplay/);
     assert.match(card, /occupancyUnavailable/);
     assert.match(table, /occupancyUnavailable/);
   });
@@ -207,11 +224,14 @@ describe("host-analytics web integration (source)", () => {
   it("dashboard CTAs navigate to analytics", () => {
     const hero = read("components/host/HostDashboardHero.tsx");
     const snapshot = read("components/host/HostBusinessSnapshot.tsx");
-    const dash = read("app/[locale]/host/dashboard/page.tsx");
+    const dash = read("app/[locale]/host/(portal)/dashboard/page.tsx");
     assert.match(hero, /localePath\("\/host\/analytics"\)/);
     assert.match(snapshot, /localePath\("\/host\/analytics"\)/);
     assert.match(dash, /localePath=\{localePath\}/);
-    assert.match(read("app/[locale]/host/analytics/page.tsx"), /HostAnalyticsPage/);
+    assert.match(
+      read("app/[locale]/host/(portal)/analytics/page.tsx"),
+      /HostInsightsPage/,
+    );
   });
 
   it("keeps EN/FR/AR hostAnalytics key parity", () => {

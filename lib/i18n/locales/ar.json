@@ -2324,6 +2324,19 @@
       "retry": "إعادة المحاولة",
       "loadFailed": "تعذر تحميل القوائم",
       "notApproved": "يلزم التحقق من المضيف قبل إدارة القوائم."
+    },
+    "analytics": {
+      "title": "الرؤى",
+      "subtitle": "أداء محفظتك لفترة محددة — أرقام حقيقية فقط.",
+      "asOf": "حتى {asOf}",
+      "timezone": "المنطقة الزمنية {timezone}",
+      "kpiNetHint": "صافي أرباح المضيف للفترة",
+      "quickLinksTitle": "روابط سريعة",
+      "linkDashboard": "لوحة التحكم",
+      "linkBookings": "الحجوزات",
+      "linkListings": "القوائم",
+      "linkReviews": "التقييمات",
+      "notApproved": "يلزم التحقق من المضيف قبل عرض الرؤى."
     }
   }
 }

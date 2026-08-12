@@ -2324,6 +2324,19 @@
       "retry": "Retry",
       "loadFailed": "Could not load listings",
       "notApproved": "Host verification is required before managing listings."
+    },
+    "analytics": {
+      "title": "Insights",
+      "subtitle": "Your portfolio performance for the selected period — real figures only.",
+      "asOf": "As of {asOf}",
+      "timezone": "Timezone {timezone}",
+      "kpiNetHint": "Net host earnings for the period",
+      "quickLinksTitle": "Quick links",
+      "linkDashboard": "Dashboard",
+      "linkBookings": "Bookings",
+      "linkListings": "Listings",
+      "linkReviews": "Reviews",
+      "notApproved": "Host verification is required before viewing insights."
     }
   }
 }

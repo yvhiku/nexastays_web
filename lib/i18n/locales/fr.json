@@ -2324,6 +2324,19 @@
       "retry": "Réessayer",
       "loadFailed": "Impossible de charger les annonces",
       "notApproved": "La vérification hôte est requise pour gérer les annonces."
+    },
+    "analytics": {
+      "title": "Analyses",
+      "subtitle": "Performance de votre portfolio pour la période sélectionnée — données réelles uniquement.",
+      "asOf": "Au {asOf}",
+      "timezone": "Fuseau {timezone}",
+      "kpiNetHint": "Gains nets hôte pour la période",
+      "quickLinksTitle": "Raccourcis",
+      "linkDashboard": "Tableau de bord",
+      "linkBookings": "Réservations",
+      "linkListings": "Annonces",
+      "linkReviews": "Avis",
+      "notApproved": "La vérification hôte est requise pour consulter les analyses."
     }
   }
 }
