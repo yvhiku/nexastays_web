@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Map as MapIcon, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { SlidersHorizontal } from "lucide-react";
 import { buildExploreFeed } from "./buildExploreFeed";
 import { ExploreFeedRail } from "./ExploreFeedRail";
 import { ExploreStickySearch } from "../ExploreStickySearch";
@@ -103,7 +102,7 @@ export function ExploreFeed(props: ExploreFeedProps) {
     onSelectNeighborhood,
     onClearCity,
     onLoadMore,
-    onOpenMap,
+    onOpenMap: _onOpenMap,
     onLayoutChange,
     loadMoreRef,
     t,
@@ -367,21 +366,6 @@ export function ExploreFeed(props: ExploreFeedProps) {
           return null;
         })}
       </div>
-
-      {/* Phone-only FAB; tablet uses ResultsHeader List/Map (md+). Bottom nav also toggles map below md. */}
-      {layout !== "map" && (
-        <button
-          type="button"
-          onClick={onOpenMap}
-          className={cn(
-            "fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky md:hidden",
-            "inline-flex items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg",
-          )}
-        >
-          <MapIcon className="h-4 w-4" aria-hidden />
-          {t("explore.openMap")}
-        </button>
-      )}
     </div>
   );
 }

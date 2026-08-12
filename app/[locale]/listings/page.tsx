@@ -573,6 +573,24 @@ export default function ListingsPage() {
       ? t("explore.updatedJustNow")
       : "";
 
+  /** Shared by ExploreFeed + tablet map ResultsHeader — one canonical sort contract. */
+  const exploreSortOptions = useMemo(
+    () => [
+      { value: "newest", label: t("listings.sortNewest") },
+      { value: "rating", label: t("listings.sortTopRated") },
+      { value: "price_desc", label: t("listings.sortMostExpensive") },
+      { value: "price_asc", label: t("listings.sortCheapest") },
+    ],
+    [t],
+  );
+
+  const handleExploreSortChange = (next: string) => {
+    const sort = SORT_OPTIONS.includes(next as SortOption)
+      ? (next as SortOption)
+      : "newest";
+    navigateWithParams(buildListingsParams({ sort }));
+  };
+
   // Resolve neighborhood display name from curated catalog first
   const neighborhoodDisplay =
     neighborhoodParam &&
@@ -698,26 +716,10 @@ export default function ListingsPage() {
                   isRevalidating={isRevalidating}
                   updatedLabel={updatedLabel}
                   sort={selectedSort}
-                  onSortChange={(next) => {
-                    const sort = SORT_OPTIONS.includes(next as SortOption)
-                      ? (next as SortOption)
-                      : "newest";
-                    navigateWithParams(buildListingsParams({ sort }));
-                  }}
+                  onSortChange={handleExploreSortChange}
                   layout={effectiveLayout}
                   onLayoutChange={setLayout}
-                  sortOptions={[
-                    { value: "newest", label: t("listings.sortNewest") },
-                    { value: "rating", label: t("listings.sortTopRated") },
-                    {
-                      value: "price_desc",
-                      label: t("listings.sortMostExpensive"),
-                    },
-                    {
-                      value: "price_asc",
-                      label: t("listings.sortCheapest"),
-                    },
-                  ]}
+                  sortOptions={exploreSortOptions}
                   t={t}
                   tf={tf}
                   leading={
@@ -767,26 +769,10 @@ export default function ListingsPage() {
                   neighborhoodDisplay={neighborhoodDisplay || undefined}
                   neighborhoodCount={cityContext?.neighborhoods.length}
                   updatedLabel={updatedLabel}
-                  sortOptions={[
-                    { value: "newest", label: t("listings.sortNewest") },
-                    { value: "rating", label: t("listings.sortTopRated") },
-                    {
-                      value: "price_desc",
-                      label: t("listings.sortMostExpensive"),
-                    },
-                    {
-                      value: "price_asc",
-                      label: t("listings.sortCheapest"),
-                    },
-                  ]}
+                  sortOptions={exploreSortOptions}
                   onSearch={commitSearch}
                   onQuickFilterToggle={onQuickFilterToggle}
-                  onSortChange={(next) => {
-                    const sort = SORT_OPTIONS.includes(next as SortOption)
-                      ? (next as SortOption)
-                      : "newest";
-                    navigateWithParams(buildListingsParams({ sort }));
-                  }}
+                  onSortChange={handleExploreSortChange}
                   onOpenFilters={() => setMobileFiltersOpen(true)}
                   onSelectCollection={applyCollection}
                   onSelectCity={onSelectCity}
@@ -888,15 +874,21 @@ export default function ListingsPage() {
                 <div
                   className={cn(
                     effectiveLayout === "split" &&
-                      "grid grid-cols-[minmax(0,1fr)_minmax(400px,44%)] items-start gap-0",
+                      "grid grid-cols-[minmax(0,1fr)_minmax(360px,46%)] items-start gap-0",
                   )}
                 >
-                  <div className="min-w-0">
+                  <div
+                    className={cn(
+                      "min-w-0",
+                      effectiveLayout === "split" && "@container/split-list pe-4",
+                    )}
+                  >
                     <div
                       className={cn(
                         "grid gap-4 mb-4",
                         effectiveLayout === "split"
-                          ? "grid-cols-1 2xl:grid-cols-2"
+                          ? // Pane-width driven: ~640px needed for two compact cards (validated vs blind xl).
+                            "grid-cols-1 @[40rem]/split-list:grid-cols-2 gap-3"
                           : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
                       )}
                       aria-busy={isRevalidating}
@@ -912,6 +904,9 @@ export default function ListingsPage() {
                           verifiedWalkthroughOnly={verifiedOnly}
                           instantBookingOnly={instantOnly}
                           listingType={selectedType}
+                          density={
+                            effectiveLayout === "split" ? "compact" : "default"
+                          }
                           t={t}
                           tf={tf}
                           localePath={localePath}
@@ -924,13 +919,19 @@ export default function ListingsPage() {
                         className={cn(
                           "mb-6 grid grid-cols-1 gap-4",
                           effectiveLayout === "split"
-                            ? "2xl:grid-cols-2"
+                            ? "@[40rem]/split-list:grid-cols-2 gap-3"
                             : "sm:grid-cols-2 lg:grid-cols-3",
                         )}
                         aria-busy="true"
                       >
                         <ListingCardSkeleton />
-                        <div className={effectiveLayout === "split" ? "hidden 2xl:block" : "hidden sm:block"}>
+                        <div
+                          className={
+                            effectiveLayout === "split"
+                              ? "hidden @[40rem]/split-list:block"
+                              : "hidden sm:block"
+                          }
+                        >
                           <ListingCardSkeleton />
                         </div>
                         {effectiveLayout !== "split" && (
@@ -959,7 +960,7 @@ export default function ListingsPage() {
                     )}
                   </div>
                   {effectiveLayout === "split" && (
-                    <aside className="sticky top-[72px] h-[calc(100vh-72px)] border-l border-nexa-line bg-white">
+                    <aside className="sticky top-[72px] h-[calc(100vh-72px)] min-h-0 overflow-hidden border-l border-nexa-line bg-white">
                       <ListingsMapPanel
                         variant="panel"
                         showHeader={false}
@@ -993,6 +994,38 @@ export default function ListingsPage() {
             <div className="xl:hidden p-4 sm:p-5 min-w-0 w-full max-w-full">
               {effectiveLayout === "map" && (
                 <>
+                  {/*
+                    Canonical ResultsHeader stays mounted in map mode so tablet
+                    (md to xl) can exit via List/Map. Same props as ExploreFeed.
+                    Phone List/Map stays on pink bottom-nav (compact hides toggle below md).
+                  */}
+                  <div className="sticky top-[72px] z-layer-sticky -mx-4 mb-3 border-b border-nexa-line bg-white/95 px-4 py-3 backdrop-blur-sm sm:-mx-5 sm:px-5">
+                    <ResultsHeader
+                      compact
+                      matchCount={displayListings.length}
+                      isLoading={isLoading}
+                      isRevalidating={isRevalidating}
+                      updatedLabel={updatedLabel}
+                      sort={selectedSort}
+                      onSortChange={handleExploreSortChange}
+                      layout={effectiveLayout}
+                      onLayoutChange={setLayout}
+                      sortOptions={exploreSortOptions}
+                      t={t}
+                      tf={tf}
+                      verifiedOnly={verifiedOnly}
+                      leading={
+                        <button
+                          type="button"
+                          onClick={() => setMobileFiltersOpen(true)}
+                          className="flex items-center gap-2 rounded-full border border-nexa-line px-4 py-2.5 min-h-[44px] text-sm font-medium"
+                        >
+                          <SlidersHorizontal className="h-4 w-4" />
+                          {t("listings.filters")}
+                        </button>
+                      }
+                    />
+                  </div>
                   {error && (
                     <ErrorAlert
                       error={error}
@@ -1021,13 +1054,6 @@ export default function ListingsPage() {
                     tf={tf}
                     labels={mapLabels}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setLayout("list")}
-                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky hidden items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg md:inline-flex"
-                  >
-                    {t("listings.listView")}
-                  </button>
                 </>
               )}
             </div>

@@ -72,11 +72,36 @@ test("mobile center FAB adapts from search to map and list", () => {
   assert.match(nav, /router\.replace\([\s\S]*\{ scroll: false \}/);
   assert.doesNotMatch(nav, /useSearchParams/);
   assert.match(listings, /new CustomEvent\("nexa:explore-mode"/);
-  assert.match(listings, /md:inline-flex/);
-  // Tablet gap: bottom nav is md:hidden; compact ResultsHeader must expose List/Map from md+.
+
+  // Phone: pink bottom-nav is sole map/list control — no black ExploreFeed Map FAB.
+  assert.doesNotMatch(feed, /explore\.openMap/);
+  assert.doesNotMatch(feed, /fixed bottom-\[calc\(5\.5rem/);
+
+  // Tablet: bottom nav is md:hidden; compact ResultsHeader exposes List/Map from md+.
   assert.match(header, /compact \? "hidden md:inline-flex" : "inline-flex"/);
   assert.match(feed, /onLayoutChange=\{onLayoutChange\}/);
-  assert.match(feed, /md:hidden/);
+
+  // Tablet map mode keeps a mounted ResultsHeader with canonical setLayout (no black List FAB).
+  assert.match(
+    listings,
+    /effectiveLayout === "map"[\s\S]*<ResultsHeader[\s\S]*onLayoutChange=\{setLayout\}/,
+  );
+  assert.doesNotMatch(
+    listings,
+    /md:inline-flex[\s\S]{0,120}listings\.listView/,
+  );
+  assert.doesNotMatch(
+    listings,
+    /listings\.listView[\s\S]{0,120}md:inline-flex/,
+  );
+
+  // Desktop split: compact cards + pane-width container columns (not blind xl 2-col).
+  assert.match(listings, /@container\/split-list/);
+  assert.match(listings, /@\[40rem\]\/split-list:grid-cols-2/);
+  assert.match(
+    listings,
+    /density=\{\s*\n?\s*effectiveLayout === "split" \? "compact"/,
+  );
 });
 
 test("mobile listing booking bar sits safely below the upper navigation", () => {
