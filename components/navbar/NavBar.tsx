@@ -104,10 +104,10 @@ export const NavBar = () => {
   return (
     <>
       <nav className="fixed inset-x-0 z-layer-header top-[var(--nexa-app-banner-h,0px)] h-[calc(72px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-[rgba(253,251,252,0.92)] backdrop-blur-xl border-b border-nexa-line flex items-center overflow-x-clip nexa-top-nav">
-      <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0">
+      <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4 min-w-0">
         <Link
           href={localePath("/")}
-          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0 min-w-0"
+          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0"
         >
           <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border-2 border-nexa-primary-soft shrink-0">
             <Image
@@ -118,12 +118,13 @@ export const NavBar = () => {
               className="object-cover"
             />
           </div>
-          <span className="font-display text-lg sm:text-xl font-bold text-nexa-ink truncate">
+          <span className="font-display text-lg sm:text-xl font-bold text-nexa-ink whitespace-nowrap">
             Nexa <span className="text-nexa-primary">Stays</span>
           </span>
         </Link>
 
-        <div className="hidden xl:flex flex-1 items-center justify-center gap-4 2xl:gap-7 min-w-0 overflow-hidden">
+        {/* Inline links only when width fits full labels (no overflow clipping). */}
+        <div className="hidden 2xl:flex flex-1 items-center justify-center gap-5 min-w-0">
           {visibleNavLinks.map(({ href, labelKey, id }) => (
             <Link
               key={id}
@@ -140,7 +141,7 @@ export const NavBar = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <LanguagePill />
           <div className="hidden md:block">
             <LanguageSelector />
@@ -180,8 +181,8 @@ export const NavBar = () => {
                   userId={user?.id ?? null}
                   size="sm"
                 />
-                <span className="text-sm font-medium hidden md:inline">{t("common.profile")}</span>
-                <ChevronDown className={cn("h-4 w-4 transition-transform hidden md:inline", profileOpen && "rotate-180")} />
+                <span className="text-sm font-medium hidden lg:inline">{t("common.profile")}</span>
+                <ChevronDown className={cn("h-4 w-4 transition-transform hidden lg:inline", profileOpen && "rotate-180")} />
               </button>
               {profileOpen && (
                 <AnchoredOverlayPortal
@@ -255,8 +256,9 @@ export const NavBar = () => {
           )}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="hidden md:flex xl:hidden items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
-            aria-label="Open menu"
+            className="inline-flex 2xl:hidden items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
+            aria-label={t("common.menu")}
+            aria-expanded={mobileMenuOpen}
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -264,11 +266,11 @@ export const NavBar = () => {
       </div>
     </nav>
 
-      {/* Mobile / tablet menu overlay */}
+      {/* Drawer for viewports that cannot fit full nav labels */}
     <OverlayPortal layer="drawer">
     <div
       className={cn(
-        "fixed inset-0 z-layer-drawer hidden md:block xl:hidden transition-opacity duration-300",
+        "fixed inset-0 z-layer-drawer 2xl:hidden transition-opacity duration-300",
         mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       aria-hidden={!mobileMenuOpen}
