@@ -931,7 +931,7 @@ export default function ListingsExploreClient() {
                         effectiveLayout === "split"
                           ? // Pane-width driven via .split-list-pane / @container (globals.css).
                             "split-list-cards grid-cols-1 gap-2.5 @[32rem]/split-list:grid-cols-2"
-                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4",
                       )}
                       aria-busy={isRevalidating}
                     >
@@ -967,7 +967,7 @@ export default function ListingsExploreClient() {
                           "mb-6 grid grid-cols-1",
                           effectiveLayout === "split"
                             ? "split-list-cards gap-2.5"
-                            : "sm:grid-cols-2 lg:grid-cols-3 gap-4",
+                            : "sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4",
                         )}
                         aria-busy="true"
                       >
