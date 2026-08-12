@@ -7,6 +7,7 @@ import { fetchSeoGuidePage, fetchSeoGuides } from "@/lib/seo/guide-api";
 import { fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoGuideJsonLd } from "@/lib/seo/json-ld";
+import { applyGuideLocaleIndexPolicy } from "@/lib/seo/locale-seo-copy";
 import { SeoGuidePageClient } from "@/components/seo/SeoGuidePage.client";
 import { staticParamsInDev } from "@/lib/seo/dev-static-params";
 import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
@@ -31,8 +32,9 @@ export async function generateStaticParams() {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoGuidePage(params.slug, locale);
-  if (!page) return {};
+  const raw = await fetchSeoGuidePage(params.slug, locale);
+  if (!raw) return {};
+  const page = applyGuideLocaleIndexPolicy(raw);
   return buildSeoMetadata({
     title: page.title,
     description: page.description,
@@ -40,14 +42,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     locale,
     ogImage: page.destination?.heroImageUrl ?? undefined,
     robots: page.robots,
+    // Only EN guide articles are treated as localized/indexable content.
+    hreflangLocales: ["en"],
   });
 }
 
 export default async function GuidePage(props: Props) {
   const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoGuidePage(params.slug, locale);
-  if (!page) notFound();
+  const raw = await fetchSeoGuidePage(params.slug, locale);
+  if (!raw) notFound();
+  const page = applyGuideLocaleIndexPolicy(raw);
 
   const listings =
     page.exploreFilters && Object.keys(page.exploreFilters).length > 0

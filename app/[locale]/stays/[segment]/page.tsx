@@ -11,6 +11,7 @@ import { SEO_LANDMARK_URL_SLUGS } from "@/lib/seo/catalog";
 import { fetchSeoDestinations, fetchSeoPage, fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
+import { localizeSeoPagePayload } from "@/lib/seo/locale-seo-copy";
 import { SeoLandingPageClient } from "@/components/seo/SeoLandingPage.client";
 import { staticParamsInDev } from "@/lib/seo/dev-static-params";
 import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
@@ -42,8 +43,9 @@ export async function generateStaticParams() {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoPage([params.segment], locale);
-  if (!page) return {};
+  const raw = await fetchSeoPage([params.segment], locale);
+  if (!raw) return {};
+  const page = localizeSeoPagePayload(raw);
   return buildSeoMetadata({
     title: page.title,
     description: page.description,
@@ -57,8 +59,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function SeoSegmentPage(props: Props) {
   const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoPage([params.segment], locale);
-  if (!page) notFound();
+  const raw = await fetchSeoPage([params.segment], locale);
+  if (!raw) notFound();
+  const page = localizeSeoPagePayload(raw);
 
   const listings = await fetchSeoListings(page.exploreFilters);
   const jsonLd = buildSeoPageJsonLd(page);

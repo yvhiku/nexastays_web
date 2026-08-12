@@ -24,15 +24,22 @@ export function buildSeoMetadata(args: {
   locale: SeoLocale;
   ogImage?: string | null;
   robots?: string;
+  /** Defaults to en/fr/ar. Guides with English-only content pass `["en"]`. */
+  hreflangLocales?: readonly SeoLocale[];
 }): Metadata {
   const canonicalPath = seoPathname(args.path);
+  const hreflangLocales = args.hreflangLocales?.length
+    ? args.hreflangLocales
+    : LOCALES;
   const languages = Object.fromEntries(
-    LOCALES.map((loc) => {
+    hreflangLocales.map((loc) => {
       const localized = canonicalPath.replace(/^\/(en|fr|ar)/, `/${loc}`);
       return [loc, toPublicAbsoluteUrl(localized)];
     }),
   );
   const canonical = toPublicAbsoluteUrl(canonicalPath);
+  const xDefault =
+    languages.en ?? languages[hreflangLocales[0]!] ?? canonical;
 
   const indexable = !args.robots?.includes("noindex");
   const image = args.ogImage
@@ -46,7 +53,7 @@ export function buildSeoMetadata(args: {
     description: args.description,
     alternates: {
       canonical,
-      languages: { ...languages, "x-default": languages.en ?? canonical },
+      languages: { ...languages, "x-default": xDefault },
     },
     robots: indexable
       ? { index: true, follow: true }

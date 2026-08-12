@@ -4,6 +4,7 @@ import {
   fetchSeoListingSitemapEntries,
   fetchSeoSitemapEntries,
 } from "@/lib/seo/seo-api";
+import { isNonEnglishGuideArticlePath } from "@/lib/seo/locale-seo-copy";
 
 const locales = ["en", "fr", "ar"] as const;
 const staticRoutes = [
@@ -48,17 +49,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchSeoSitemapEntries(),
     fetchSeoListingSitemapEntries(),
   ]);
-  const dynamicEntries: MetadataRoute.Sitemap = [...seoEntries, ...listingEntries].map(
-    (entry) => ({
-      url: toPublicAbsoluteUrl(entry.path),
-      lastModified: entry.lastmod ? new Date(entry.lastmod) : now,
-      changeFrequency: "daily" as const,
-      priority: entry.priority ?? 0.85,
-      alternates: {
-        languages: languageAlternates(entry.path),
-      },
-    }),
+  // FR/AR guide articles are English clones — exclude from sitemap (hubs stay).
+  const filteredSeoEntries = seoEntries.filter(
+    (entry) => !isNonEnglishGuideArticlePath(entry.path),
   );
+  const dynamicEntries: MetadataRoute.Sitemap = [
+    ...filteredSeoEntries,
+    ...listingEntries,
+  ].map((entry) => ({
+    url: toPublicAbsoluteUrl(entry.path),
+    lastModified: entry.lastmod ? new Date(entry.lastmod) : now,
+    changeFrequency: "daily" as const,
+    priority: entry.priority ?? 0.85,
+    alternates: {
+      languages: languageAlternates(entry.path),
+    },
+  }));
 
   const entries = [...staticEntries, ...dynamicEntries];
   return Array.from(new Map(entries.map((entry) => [entry.url, entry])).values());
