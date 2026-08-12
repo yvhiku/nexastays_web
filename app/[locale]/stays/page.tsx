@@ -42,6 +42,14 @@ export default async function StaysHubPage(props: Props) {
             <p className="mt-3 max-w-2xl text-nexa-muted">
               {t("seo.staysHubDescription")}
             </p>
+            <p className="mt-5">
+              <Link
+                href={localePath("/guides")}
+                className="inline-flex rounded-xl border border-nexa-primary/30 bg-white/70 px-4 py-2.5 text-sm font-semibold text-nexa-primary hover:bg-white"
+              >
+                {t("seo.staysHubBrowseGuides")}
+              </Link>
+            </p>
           </div>
         </section>
         <section className="py-12 sm:py-16">

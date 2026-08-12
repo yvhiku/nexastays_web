@@ -20,6 +20,7 @@ import {
   deriveGuideEntityGraph,
   semanticBreadcrumbsForGuide,
 } from "@/lib/seo/entity-graph";
+import { toClientSeoHref } from "@/lib/seo/guide-links";
 
 type Props = {
   page: SeoGuidePagePayload;
@@ -81,7 +82,7 @@ export function SeoGuidePageClient({ page, listings }: Props) {
                 {page.cityGuideLink && (
                   <p className="not-prose mt-6">
                     <Link
-                      href={localePath(page.cityGuideLink.href.replace(/^\/(en|fr|ar)/, ""))}
+                      href={toClientSeoHref(page.cityGuideLink.href, localePath)}
                       className="inline-flex items-center gap-1 text-nexa-primary font-medium hover:underline"
                     >
                       {page.cityGuideLink.label}

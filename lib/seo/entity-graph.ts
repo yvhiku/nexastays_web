@@ -1,4 +1,8 @@
 import type { StaysListing } from "@/lib/stays-types";
+import {
+  indexableGuideArticlePath,
+  isIndexableGuideArticleHref,
+} from "@/lib/seo/guide-links";
 import type {
   SeoGuidePagePayload,
   SeoGuideSummaryDto,
@@ -161,7 +165,8 @@ function guideEntity(
     locale,
     name: guide.title,
     summary: guide.description || undefined,
-    href: normalizedHref(guide.href, locale),
+    // Phase 5: always point to indexable EN guide articles (not FR/AR clones).
+    href: indexableGuideArticlePath(guide.slug),
     source: "editorial",
     lastUpdated,
   };
@@ -640,7 +645,10 @@ export function validateEntityGraph(graph: TravelEntityGraph): EntityGraphIssue[
     if (slugs.has(slugKey)) issues.push({ code: "duplicate_slug", entityId: entity.id });
     slugs.add(slugKey);
     if (!entity.name.trim()) issues.push({ code: "missing_name", entityId: entity.id });
-    if (!entity.href.startsWith(`/${graph.locale}/`)) {
+    const hrefOk =
+      entity.href.startsWith(`/${graph.locale}/`) ||
+      (entity.kind === "guide" && isIndexableGuideArticleHref(entity.href));
+    if (!hrefOk) {
       issues.push({ code: "invalid_href", entityId: entity.id });
     }
   }

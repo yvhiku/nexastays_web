@@ -40,11 +40,13 @@
     "staysHubEmpty": "Destinations are temporarily unavailable.",
     "staysHubEmptyHint": "You can still browse all verified listings while we reconnect.",
     "staysHubBrowseListings": "Browse listings",
+    "staysHubBrowseGuides": "Browse Morocco travel guides",
     "guidesHubTitle": "Morocco Travel Guides | Nexa Stays",
     "guidesHubDescription": "City travel guides, seasonal tips, and experience planning for Morocco — powered by live Nexa Stays marketplace data.",
     "guidesHubHeading": "Morocco travel guides",
     "guideForCity": "Plan your trip to {city} with verified stays and local insights.",
     "relatedGuides": "Related guides",
+    "relatedStayCategories": "Related stay types",
     "browseStaysIn": "Browse stays in {city}",
     "guideType": {
       "travel": "Travel guides",

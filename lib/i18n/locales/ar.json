@@ -40,11 +40,13 @@
     "staysHubEmpty": "الوجهات غير متاحة مؤقتاً.",
     "staysHubEmptyHint": "يمكنك ما زلت تصفح جميع القوائم الموثقة أثناء إعادة الاتصال.",
     "staysHubBrowseListings": "تصفح القوائم",
+    "staysHubBrowseGuides": "تصفح أدلة السفر في المغرب",
     "guidesHubTitle": "دلائل السفر في المغرب | Nexa Stays",
     "guidesHubDescription": "أدلة المدن ونصائح موسمية وتخطيط التجارب في المغرب — مدعومة ببيانات Nexa Stays.",
     "guidesHubHeading": "دلائل السفر في المغرب",
     "guideForCity": "خطط لرحلتك إلى {city} مع إقامات موثقة.",
     "relatedGuides": "أدلة ذات صلة",
+    "relatedStayCategories": "أنواع إقامات ذات صلة",
     "browseStaysIn": "تصفح الإقامات في {city}",
     "guideType": {
       "travel": "أدلة السفر",

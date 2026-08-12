@@ -18,6 +18,7 @@ import {
   type TravelEntityGraph,
   type TravelEntityKind,
 } from "@/lib/seo/entity-graph";
+import { toClientSeoHref } from "@/lib/seo/guide-links";
 
 type EntityGroup = {
   id: string;
@@ -217,7 +218,7 @@ function EntityLink({
   localePath: (path: string) => string;
 }) {
   const href = entity.href.startsWith("/")
-    ? localePath(entity.href.replace(/^\/(en|fr|ar)/, "") || "/")
+    ? toClientSeoHref(entity.href, localePath)
     : entity.href;
 
   return (

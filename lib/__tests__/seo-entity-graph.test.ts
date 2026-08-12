@@ -220,7 +220,17 @@ test("semantic page breadcrumbs follow Morocco, city, and neighborhood hierarchy
 test("guide graph and breadcrumbs preserve the requested locale", () => {
   const graph = deriveGuideEntityGraph(guide);
   assert.deepEqual(validateEntityGraph(graph), []);
-  assert.ok(graph.entities.every((entity) => entity.href.startsWith("/fr/")));
+  // Non-guide entities stay on the page locale; related guide articles use EN (Phase 5).
+  assert.ok(
+    graph.entities
+      .filter((entity) => entity.kind !== "guide" || entity.slug === guide.slug)
+      .every((entity) => entity.href.startsWith("/fr/")),
+  );
+  assert.ok(
+    graph.entities
+      .filter((entity) => entity.kind === "guide" && entity.slug !== guide.slug)
+      .every((entity) => entity.href.startsWith("/en/guides/")),
+  );
   assert.deepEqual(semanticBreadcrumbsForGuide(guide).map((crumb) => crumb.path), [
     "/fr/stays",
     "/fr/guides",

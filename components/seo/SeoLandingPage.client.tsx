@@ -24,12 +24,14 @@ import { SeoLandingPoiCards } from "@/components/seo/landing/SeoLandingPoiCards"
 import { SeoLandingComparisonTable } from "@/components/seo/landing/SeoLandingComparisonTable";
 import { SeoLandingFaq } from "@/components/seo/landing/SeoLandingFaq";
 import { SeoLandingClosingCta } from "@/components/seo/landing/SeoLandingClosingCta";
+import { SeoInternalLinkGrid } from "@/components/seo/SeoListingsGrid.client";
 import { areaLabel, formatLastmod } from "@/components/seo/landing/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SeoPagePayload } from "@/lib/seo/types";
 import type { StaysListing } from "@/lib/stays-types";
 import { buildListingsQueryPath } from "@/lib/seo/seo-api";
 import { deriveSeoPageEntityGraph } from "@/lib/seo/entity-graph";
+import { indexableGuideArticlePath } from "@/lib/seo/guide-links";
 
 type Props = {
   page: SeoPagePayload;
@@ -61,6 +63,54 @@ export function SeoLandingPageClient({ page, listings }: Props) {
     () => deriveSeoPageEntityGraph(page, listings),
     [page, listings],
   );
+
+  const relatedDestinationLinks = React.useMemo(() => {
+    const seen = new Set<string>();
+    const links: { href: string; label: string }[] = [];
+    for (const dest of [
+      ...(page.relatedDestinations ?? []),
+      ...(page.nearbyDestinations ?? []).map((d) => ({
+        slug: d.slug,
+        name: d.name,
+        href: `/${page.locale}/stays/${d.slug}`,
+      })),
+    ]) {
+      const href =
+        "href" in dest && typeof dest.href === "string"
+          ? dest.href
+          : `/${page.locale}/stays/${dest.slug}`;
+      if (seen.has(dest.slug)) continue;
+      seen.add(dest.slug);
+      links.push({ href, label: dest.name });
+      if (links.length >= 8) break;
+    }
+    return links;
+  }, [page]);
+
+  const stayCategoryLinks = React.useMemo(() => {
+    return [...(page.propertyTypeLinks ?? []), ...(page.amenityLinks ?? [])]
+      .slice(0, 10)
+      .map((link) => ({ href: link.href, label: link.label }));
+  }, [page.propertyTypeLinks, page.amenityLinks]);
+
+  const relatedGuideLinks = React.useMemo(() => {
+    const links: { href: string; label: string }[] = [];
+    if (page.cityGuideLink) {
+      links.push({
+        href: indexableGuideArticlePath(page.cityGuideLink.slug),
+        label: page.cityGuideLink.label,
+      });
+    }
+    for (const guide of page.relatedGuides ?? []) {
+      if (page.cityGuideLink?.slug === guide.slug) continue;
+      links.push({
+        href: indexableGuideArticlePath(guide.slug),
+        label: guide.title,
+      });
+      if (links.length >= 6) break;
+    }
+    return links;
+  }, [page.cityGuideLink, page.relatedGuides]);
 
   return (
     <>
@@ -203,6 +253,19 @@ export function SeoLandingPageClient({ page, listings }: Props) {
           )}
 
           <SeoLandingFaq title={t("seo.commonQuestions")} items={displayFaq} />
+
+          <SeoInternalLinkGrid
+            title={t("seo.relatedDestinations")}
+            links={relatedDestinationLinks}
+          />
+          <SeoInternalLinkGrid
+            title={t("seo.relatedStayCategories")}
+            links={stayCategoryLinks}
+          />
+          <SeoInternalLinkGrid
+            title={t("seo.relatedGuides")}
+            links={relatedGuideLinks}
+          />
 
           <EntityRelationshipHub graph={entityGraph} />
 

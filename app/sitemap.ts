@@ -5,6 +5,7 @@ import {
   fetchSeoSitemapEntries,
 } from "@/lib/seo/seo-api";
 import { isNonEnglishGuideArticlePath } from "@/lib/seo/locale-seo-copy";
+import { isEnglishGuideArticlePath } from "@/lib/seo/guide-links";
 
 const locales = ["en", "fr", "ar"] as const;
 const staticRoutes = [
@@ -23,6 +24,11 @@ const staticRoutes = [
 ] as const;
 
 function languageAlternates(path: string) {
+  // Phase 4/5: EN guide articles are the only indexable guide locales.
+  if (isEnglishGuideArticlePath(path)) {
+    const en = toPublicAbsoluteUrl(path.replace(/\/$/, "") || path);
+    return { en, "x-default": en };
+  }
   const suffix = path.replace(/^\/(en|fr|ar)(?=\/|$)/, "");
   return Object.fromEntries(
     locales.map((locale) => [locale, toPublicAbsoluteUrl(`/${locale}${suffix}`)]),

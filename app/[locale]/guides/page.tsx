@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer/Footer";
 import { getServerLocale, getServerTranslations } from "@/lib/i18n/server";
 import { fetchSeoGuides, guideTypeLabel } from "@/lib/seo/guide-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
+import { indexableGuideArticlePath } from "@/lib/seo/guide-links";
 import type { SeoGuideType, SeoLocale } from "@/lib/seo/types";
 
 export const revalidate = 86400;
@@ -58,19 +59,29 @@ export default async function GuidesHubPage(props: Props) {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {items.map((guide) => (
-                  <Link
+                  <article
                     key={guide.slug}
-                    href={localePath(guide.href.replace(/^\/(en|fr|ar)/, ""))}
                     className="rounded-2xl border border-nexa-border p-5 hover:border-nexa-primary hover:shadow-nexa-card transition-all"
                   >
-                    <h3 className="font-semibold text-lg text-nexa-ink">{guide.title}</h3>
-                    {guide.destinationName && (
+                    <Link href={indexableGuideArticlePath(guide.slug)}>
+                      <h3 className="font-semibold text-lg text-nexa-ink">{guide.title}</h3>
+                    </Link>
+                    {guide.destinationName && guide.destinationSlug ? (
+                      <p className="text-xs text-nexa-muted mt-1">
+                        <Link
+                          href={localePath(`/stays/${guide.destinationSlug}`)}
+                          className="hover:text-nexa-primary hover:underline"
+                        >
+                          {guide.destinationName}
+                        </Link>
+                      </p>
+                    ) : guide.destinationName ? (
                       <p className="text-xs text-nexa-muted mt-1">{guide.destinationName}</p>
-                    )}
+                    ) : null}
                     {guide.description && (
                       <p className="text-sm text-nexa-muted mt-2 line-clamp-2">{guide.description}</p>
                     )}
-                  </Link>
+                  </article>
                 ))}
               </div>
             </div>

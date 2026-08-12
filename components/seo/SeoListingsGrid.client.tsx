@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { StaysListing } from "@/lib/stays-types";
+import { toClientSeoHref } from "@/lib/seo/guide-links";
 
 type Props = {
   listings: StaysListing[];
@@ -52,7 +53,7 @@ export function SeoInternalLinkGrid({ title, links }: LinkGridProps) {
         {links.map((link) => (
           <Link
             key={link.href}
-            href={localePath(link.href.replace(/^\/(en|fr|ar)/, "") || link.href)}
+            href={toClientSeoHref(link.href, localePath)}
             className="inline-flex items-center rounded-full border border-nexa-border px-4 py-2 text-sm font-medium text-nexa-ink hover:border-nexa-primary hover:text-nexa-primary transition-colors"
           >
             {link.label}
