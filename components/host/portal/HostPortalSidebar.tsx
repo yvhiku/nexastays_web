@@ -55,9 +55,6 @@ export function HostPortalSidebar({ onNavigate, className }: Props) {
             Nexa <span className="text-[color:var(--host-primary)]">Stays</span>
           </span>
         </Link>
-        <p className="mt-1.5 ps-[2.875rem] text-sm text-[color:var(--host-text-secondary)]">
-          {t("hostPortal.tagline")}
-        </p>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-2" aria-label={t("hostPortal.navAria")}>
