@@ -86,6 +86,16 @@ test("sitemap publishes language alternates and removes duplicate URLs", () => {
   );
 });
 
+test("sitemap merges registry and eligible listing detail sources", () => {
+  const sitemap = read("app/sitemap.ts");
+  const seoApi = read("lib/seo/seo-api.ts");
+  assert.match(sitemap, /fetchSeoSitemapEntries/);
+  assert.match(sitemap, /fetchSeoListingSitemapEntries/);
+  assert.match(seoApi, /\/stays\/seo\/registry\/sitemap/);
+  assert.match(seoApi, /\/stays\/seo\/listings\/sitemap/);
+  assert.match(seoApi, /fetchSeoListingSitemapEntries/);
+});
+
 test("destination landing pages use CollectionPage rather than a fabricated lodging entity", () => {
   const payload = {
     locale: "en",

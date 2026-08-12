@@ -65,6 +65,13 @@ export async function fetchSeoSitemapEntries(): Promise<SitemapEntryDto[]> {
   return (await seoFetch<SitemapEntryDto[]>("/stays/seo/registry/sitemap", 3600)) ?? [];
 }
 
+/** LIVE+indexable listing detail paths for sitemap (full eligible universe). */
+export async function fetchSeoListingSitemapEntries(): Promise<SitemapEntryDto[]> {
+  return (
+    (await seoFetch<SitemapEntryDto[]>("/stays/seo/listings/sitemap", 3600)) ?? []
+  );
+}
+
 function seoFiltersToExploreFilters(filters: SeoExploreFiltersDto): ExploreFilters {
   return normalizeExploreFilters(filters as ExploreFilters);
 }

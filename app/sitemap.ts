@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getPublicSiteUrl } from "@/lib/env";
-import { fetchSeoSitemapEntries } from "@/lib/seo/seo-api";
+import {
+  fetchSeoListingSitemapEntries,
+  fetchSeoSitemapEntries,
+} from "@/lib/seo/seo-api";
 
 const locales = ["en", "fr", "ar"] as const;
 const staticRoutes = [
@@ -41,16 +44,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   );
 
-  const seoEntries = await fetchSeoSitemapEntries();
-  const dynamicEntries: MetadataRoute.Sitemap = seoEntries.map((entry) => ({
-    url: `${baseUrl}${entry.path}`,
-    lastModified: entry.lastmod ? new Date(entry.lastmod) : now,
-    changeFrequency: "daily",
-    priority: entry.priority ?? 0.85,
-    alternates: {
-      languages: languageAlternates(baseUrl, entry.path),
-    },
-  }));
+  const [seoEntries, listingEntries] = await Promise.all([
+    fetchSeoSitemapEntries(),
+    fetchSeoListingSitemapEntries(),
+  ]);
+  const dynamicEntries: MetadataRoute.Sitemap = [...seoEntries, ...listingEntries].map(
+    (entry) => ({
+      url: `${baseUrl}${entry.path}`,
+      lastModified: entry.lastmod ? new Date(entry.lastmod) : now,
+      changeFrequency: "daily" as const,
+      priority: entry.priority ?? 0.85,
+      alternates: {
+        languages: languageAlternates(baseUrl, entry.path),
+      },
+    }),
+  );
 
   const entries = [...staticEntries, ...dynamicEntries];
   return Array.from(new Map(entries.map((entry) => [entry.url, entry])).values());
