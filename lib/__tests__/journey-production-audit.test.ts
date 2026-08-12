@@ -57,6 +57,8 @@ test("mobile listings use the shared step-by-step search flow", () => {
 test("mobile center FAB adapts from search to map and list", () => {
   const nav = read("components/nav/MobileBottomNav.tsx");
   const listings = read("app/[locale]/listings/page.tsx");
+  const feed = read("components/explore/feed/ExploreFeed.tsx");
+  const header = read("components/explore/ResultsHeader.tsx");
 
   assert.match(nav, /const isExploreScreen = barePath === "\/listings"/);
   assert.match(
@@ -71,6 +73,10 @@ test("mobile center FAB adapts from search to map and list", () => {
   assert.doesNotMatch(nav, /useSearchParams/);
   assert.match(listings, /new CustomEvent\("nexa:explore-mode"/);
   assert.match(listings, /md:inline-flex/);
+  // Tablet gap: bottom nav is md:hidden; compact ResultsHeader must expose List/Map from md+.
+  assert.match(header, /compact \? "hidden md:inline-flex" : "inline-flex"/);
+  assert.match(feed, /onLayoutChange=\{onLayoutChange\}/);
+  assert.match(feed, /md:hidden/);
 });
 
 test("mobile listing booking bar sits safely below the upper navigation", () => {

@@ -794,6 +794,7 @@ export default function ListingsPage() {
                   onClearCity={onClearCity}
                   onLoadMore={loadMore}
                   onOpenMap={() => setLayout("map")}
+                  onLayoutChange={setLayout}
                   loadMoreRef={loadMoreRef}
                   t={t}
                   tf={tf}

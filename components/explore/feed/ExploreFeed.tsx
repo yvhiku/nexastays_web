@@ -61,6 +61,7 @@ export type ExploreFeedProps = {
   onClearCity: () => void;
   onLoadMore: () => void;
   onOpenMap: () => void;
+  onLayoutChange: (layout: ExploreLayout) => void;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
   t: (key: string) => string;
   tf: (key: string, vars?: Record<string, string | number>) => string;
@@ -83,6 +84,7 @@ export function ExploreFeed(props: ExploreFeedProps) {
     instantOnly,
     selectedType,
     selectedSort,
+    layout,
     activeCollection,
     city,
     checkin,
@@ -102,6 +104,7 @@ export function ExploreFeed(props: ExploreFeedProps) {
     onClearCity,
     onLoadMore,
     onOpenMap,
+    onLayoutChange,
     loadMoreRef,
     t,
     tf,
@@ -240,8 +243,8 @@ export function ExploreFeed(props: ExploreFeedProps) {
                 updatedLabel={updatedLabel}
                 sort={selectedSort}
                 onSortChange={onSortChange}
-                layout="list"
-                onLayoutChange={() => {}}
+                layout={layout}
+                onLayoutChange={onLayoutChange}
                 sortOptions={sortOptions}
                 t={t}
                 tf={tf}
@@ -365,12 +368,13 @@ export function ExploreFeed(props: ExploreFeedProps) {
         })}
       </div>
 
-      {mode === "searchResults" && (
+      {/* Phone-only FAB; tablet uses ResultsHeader List/Map (md+). Bottom nav also toggles map below md. */}
+      {layout !== "map" && (
         <button
           type="button"
           onClick={onOpenMap}
           className={cn(
-            "fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky",
+            "fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-layer-sticky md:hidden",
             "inline-flex items-center gap-2 rounded-full bg-nexa-ink px-4 py-3 text-sm font-semibold text-white shadow-lg",
           )}
         >

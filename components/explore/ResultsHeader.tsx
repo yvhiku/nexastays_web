@@ -20,7 +20,7 @@ export type ResultsHeaderProps = {
   tf: (key: string, vars?: Record<string, string | number>) => string;
   className?: string;
   leading?: React.ReactNode;
-  /** Compact mobile row — hides layout toggle and uses verified-stays copy when set. */
+  /** Compact mobile row — phones hide layout toggle (bottom-nav FAB); md+ shows it for tablet. */
   compact?: boolean;
   verifiedOnly?: boolean;
 };
@@ -94,9 +94,15 @@ export function ResultsHeader({
           options={sortOptions}
         />
       </label>
-      {!compact && (
+      {/*
+        Compact (phone feed) hides the toggle — map is via bottom-nav FAB.
+        From md up (tablet) the bottom nav is hidden, so show List/Map here.
+      */}
       <div
-        className="inline-flex rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto"
+        className={cn(
+          "rounded-full border border-nexa-line bg-nexa-bg-2 p-0.5 shrink-0 ms-auto",
+          compact ? "hidden md:inline-flex" : "inline-flex",
+        )}
         role="group"
         aria-label={t("listings.viewMode")}
       >
@@ -127,7 +133,6 @@ export function ResultsHeader({
           <span className="hidden sm:inline">{t("listings.mapView")}</span>
         </button>
       </div>
-      )}
     </div>
   );
 }
