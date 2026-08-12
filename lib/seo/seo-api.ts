@@ -18,7 +18,7 @@ import type {
 
 const REVALIDATE = 86400;
 /** Fail open quickly when the stays API is down/hung (local or prod). */
-const SEO_FETCH_TIMEOUT_MS = 8_000;
+const SEO_FETCH_TIMEOUT_MS = 3_000;
 
 async function seoFetch<T>(path: string, revalidate = REVALIDATE): Promise<T | null> {
   const base = getStaysApiBaseUrl().replace(/\/$/, "");

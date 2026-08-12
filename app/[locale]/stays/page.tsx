@@ -34,32 +34,56 @@ export default async function StaysHubPage(props: Props) {
     <>
       <NavBar />
       <main className="pt-[72px] min-h-screen">
-        <section className="py-12 sm:py-16 bg-gradient-to-br from-nexa-primary-soft to-nexa-bg">
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-            <h1 className="font-display text-3xl sm:text-4xl font-semibold text-nexa-ink">
+        <section className="bg-gradient-to-br from-nexa-primary-soft to-nexa-bg py-12 sm:py-16">
+          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+            <h1 className="font-display text-3xl font-semibold text-nexa-ink sm:text-4xl">
               {t("seo.staysHubHeading")}
             </h1>
-            <p className="text-nexa-muted mt-3 max-w-2xl">{t("seo.staysHubDescription")}</p>
+            <p className="mt-3 max-w-2xl text-nexa-muted">
+              {t("seo.staysHubDescription")}
+            </p>
           </div>
         </section>
         <section className="py-12 sm:py-16">
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {destinations.map((dest) => (
+          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+            {destinations.length === 0 ? (
+              <div className="rounded-2xl border border-nexa-border bg-white px-6 py-10 text-center">
+                <p className="text-base text-nexa-ink">
+                  {t("seo.staysHubEmpty")}
+                </p>
+                <p className="mt-2 text-sm text-nexa-muted">
+                  {t("seo.staysHubEmptyHint")}
+                </p>
                 <Link
-                  key={dest.slug}
-                  href={localePath(`/stays/${dest.slug}`)}
-                  className="rounded-2xl border border-nexa-border p-5 hover:border-nexa-primary hover:shadow-nexa-card transition-all"
+                  href={localePath("/listings")}
+                  className="mt-5 inline-flex rounded-xl bg-nexa-primary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95"
                 >
-                  <h2 className="font-semibold text-lg text-nexa-ink">{dest.name}</h2>
-                  <p className="text-sm text-nexa-muted mt-1">
-                    {dest.listingCountCache > 0
-                      ? t("seo.cityListingCount").replace("{count}", String(dest.listingCountCache))
-                      : t("seo.exploreCity")}
-                  </p>
+                  {t("seo.staysHubBrowseListings")}
                 </Link>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {destinations.map((dest) => (
+                  <Link
+                    key={dest.slug}
+                    href={localePath(`/stays/${dest.slug}`)}
+                    className="rounded-2xl border border-nexa-border p-5 transition-all hover:border-nexa-primary hover:shadow-nexa-card"
+                  >
+                    <h2 className="text-lg font-semibold text-nexa-ink">
+                      {dest.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-nexa-muted">
+                      {dest.listingCountCache > 0
+                        ? t("seo.cityListingCount").replace(
+                            "{count}",
+                            String(dest.listingCountCache),
+                          )
+                        : t("seo.exploreCity")}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>
