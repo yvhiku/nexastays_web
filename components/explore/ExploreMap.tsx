@@ -1,10 +1,9 @@
 "use client";
 
 import { matchCuratedNeighborhood } from "@/lib/explore-city-context";
-import { getListingMediaUrl } from "@/lib/stays-api";
 import { cn } from "@/lib/utils";
 import type { MapBounds, StaysListing } from "@/lib/stays-types";
-import { SaveButton } from "@/components/saved/SaveButton";
+import { ExploreMapListingPreview } from "@/components/explore/ExploreMapListingPreview";
 import {
   createPriceBubbleIcon,
   formatListingPriceLabel,
@@ -18,17 +17,12 @@ import {
   parseNeighborhood,
 } from "@/lib/listing-location";
 import {
-  BadgeCheck,
   Home,
   LocateFixed,
   Minus,
   Plus,
-  Star,
-  X,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import Image from "next/image";
-import Link from "next/link";
 import React, {
   useCallback,
   useEffect,
@@ -41,8 +35,6 @@ import React, {
 
 const FALLBACK = { lat: 31.6295, lng: -7.9811 };
 const BOUNDS_DEBOUNCE_MS = 350;
-const PLACEHOLDER_IMG =
-  "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80";
 
 const GLASS =
   "bg-white/[0.88] backdrop-blur-[12px] border border-nexa-line/80 shadow-sm";
@@ -182,7 +174,6 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       lng: number;
     } | null>(null);
     const [locating, setLocating] = useState(true);
-    const [coverError, setCoverError] = useState(false);
     const [exploringName, setExploringName] = useState<string | null>(null);
     const [exploringKey, setExploringKey] = useState(0);
     const [previewEnter, setPreviewEnter] = useState(false);
@@ -277,7 +268,6 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
     );
 
     useEffect(() => {
-      setCoverError(false);
       if (!selected) {
         setPreviewEnter(false);
         return;
@@ -551,20 +541,6 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       }
     };
 
-    const coverPhoto = selected?.media?.find((m) => m.kind === "PHOTO");
-    const coverSrc =
-      coverPhoto && !coverError
-        ? getListingMediaUrl(selected!.id, coverPhoto.asset_id)
-        : PLACEHOLDER_IMG;
-    const rating =
-      selected?.avg_rating != null ? Number(selected.avg_rating) : null;
-    const reviewCount = selected?.review_count ?? 0;
-    const hasWalkthrough = selected?.media?.some(
-      (m) => m.kind === "WALKTHROUGH",
-    );
-    const price = selected?.rate_plan?.base_price;
-    const currency = selected?.rate_plan?.currency || "MAD";
-    const neighborhood = selected ? parseNeighborhood(selected) : "";
     const detailHref = selected
       ? listingHref(selected, localePath, checkin, checkout, guests)
       : "#";
@@ -701,112 +677,14 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
           )}
         </div>
 
-        {/* Preview — prominent horizontal stay card */}
         {selected && (
-          <div className="absolute bottom-4 left-1/2 z-layer-popover w-[min(100%-1.75rem,26rem)] -translate-x-1/2">
-            <div
-              className={cn(
-                "overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.95] shadow-[0_12px_40px_rgba(15,23,42,0.18)] backdrop-blur-[14px] transition-all duration-150 ease-out",
-                previewEnter
-                  ? "translate-y-0 opacity-100"
-                  : "translate-y-3 opacity-0",
-              )}
-            >
-              <div className="relative flex items-stretch">
-                <Link
-                  href={detailHref}
-                  className="relative h-[148px] w-[148px] shrink-0 overflow-hidden bg-nexa-bg-2 sm:h-[160px] sm:w-[160px]"
-                >
-                  <Image
-                    src={coverSrc}
-                    alt={selected.title}
-                    fill
-                    sizes="160px"
-                    className="object-cover"
-                    unoptimized={Boolean(coverPhoto) && !coverError}
-                    onError={() => setCoverError(true)}
-                  />
-                </Link>
-
-                <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-3.5 pe-10 sm:p-4 sm:pe-11">
-                  <div className="min-w-0">
-                    <div className="flex items-start gap-2">
-                      <Link href={detailHref} className="min-w-0 flex-1">
-                        <h3 className="font-display text-base font-semibold leading-snug text-nexa-ink line-clamp-2 sm:text-[1.05rem]">
-                          {selected.title}
-                        </h3>
-                        {neighborhood && (
-                          <p className="mt-1 truncate text-xs text-nexa-ink-4">
-                            {neighborhood}
-                            {selected.city ? ` · ${selected.city}` : ""}
-                          </p>
-                        )}
-                      </Link>
-                      <SaveButton
-                        listingId={selected.id}
-                        snapshot={{
-                          id: selected.id,
-                          title: selected.title,
-                          city: selected.city,
-                          imageUrl: coverPhoto ? coverSrc : undefined,
-                        }}
-                        className="shrink-0"
-                      />
-                    </div>
-
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-nexa-ink-3">
-                      <span className="inline-flex items-center gap-1">
-                        <Star
-                          className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                          aria-hidden
-                        />
-                        <span className="font-semibold tabular-nums text-nexa-ink">
-                          {rating != null ? Number(rating).toFixed(1) : "0.0"}
-                        </span>
-                        <span className="text-nexa-ink-4">({reviewCount})</span>
-                      </span>
-                      {(hasWalkthrough || selected.instant_booking) && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-nexa-bg-2 px-2 py-0.5 text-[0.65rem] font-semibold text-nexa-ink">
-                          <BadgeCheck
-                            className="h-3 w-3 text-green-700"
-                            aria-hidden
-                          />
-                          Verified
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2.5">
-                    {price != null && (
-                      <p className="text-[0.95rem] font-bold tabular-nums text-nexa-ink">
-                        {Math.round(Number(price))} {currency}
-                        <span className="font-normal text-nexa-ink-4 text-xs">
-                          {" "}
-                          / night
-                        </span>
-                      </p>
-                    )}
-                    <Link
-                      href={detailHref}
-                      className="inline-flex w-full items-center justify-center rounded-full bg-nexa-primary px-3 py-2 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
-                    >
-                      {viewStayLabel}
-                    </Link>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(null)}
-                  className="absolute right-2.5 top-2.5 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/55"
-                  aria-label="Close"
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden />
-                </button>
-              </div>
-            </div>
-          </div>
+          <ExploreMapListingPreview
+            listing={selected}
+            detailHref={detailHref}
+            viewStayLabel={viewStayLabel}
+            previewEnter={previewEnter}
+            onClose={() => setSelectedId(null)}
+          />
         )}
       </div>
     );

@@ -29,10 +29,20 @@ test("selected map listing renders above Leaflet panes", () => {
     join(process.cwd(), "components", "explore", "ExploreMap.tsx"),
     "utf8",
   );
+  const preview = readFileSync(
+    join(
+      process.cwd(),
+      "components",
+      "explore",
+      "ExploreMapListingPreview.tsx",
+    ),
+    "utf8",
+  );
 
+  assert.match(exploreMap, /ExploreMapListingPreview/);
   assert.match(
-    exploreMap,
-    /Preview[\s\S]*absolute bottom-4 left-4 right-4 z-layer-popover/,
+    preview,
+    /absolute bottom-4 left-1\/2 z-layer-popover/,
   );
 });
 
