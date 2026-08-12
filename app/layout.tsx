@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { dmSans, playfair } from "@/app/fonts/brand-fonts";
 import "./globals.css";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
-import { getPublicSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl, toPublicAbsoluteUrl } from "@/lib/env";
 import { PWA_FAVICON_ICO, PWA_ICONS } from "@/lib/pwa-assets";
 import { NEXA_PWA_THEME } from "@/lib/pwa-theme";
 import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
@@ -31,10 +31,10 @@ export const metadata: Metadata = {
   },
   alternates: {
     languages: {
-      en: "/en",
-      fr: "/fr",
-      ar: "/ar",
-      "x-default": "/en",
+      en: toPublicAbsoluteUrl("/en"),
+      fr: toPublicAbsoluteUrl("/fr"),
+      ar: toPublicAbsoluteUrl("/ar"),
+      "x-default": toPublicAbsoluteUrl("/en"),
     },
   },
   openGraph: {

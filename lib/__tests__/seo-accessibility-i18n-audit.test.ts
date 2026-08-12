@@ -30,11 +30,12 @@ test("public static metadata is localized with canonical and hreflang URLs", () 
 
   assert.notEqual(english.title, french.title);
   assert.notEqual(french.title, arabic.title);
-  assert.equal(english.alternates?.canonical, "/en/contact");
-  assert.equal(french.alternates?.canonical, "/fr/contact");
-  assert.equal(arabic.alternates?.canonical, "/ar/contact");
-  assert.equal(arabic.alternates?.languages?.en, "/en/contact");
-  assert.equal(arabic.alternates?.languages?.["x-default"], "/en/contact");
+  assert.match(String(english.alternates?.canonical), /\/en\/contact$/);
+  assert.match(String(french.alternates?.canonical), /\/fr\/contact$/);
+  assert.match(String(arabic.alternates?.canonical), /\/ar\/contact$/);
+  assert.match(String(arabic.alternates?.languages?.en), /\/en\/contact$/);
+  assert.match(String(arabic.alternates?.languages?.["x-default"]), /\/en\/contact$/);
+  assert.match(String(english.alternates?.canonical), /^https?:\/\//);
   assert.equal(english.openGraph?.locale, "en_US");
   assert.equal(french.openGraph?.locale, "fr_FR");
   assert.equal(arabic.openGraph?.locale, "ar_MA");

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getPublicSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl, toPublicAbsoluteUrl } from "@/lib/env";
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = getPublicSiteUrl();
@@ -26,7 +26,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/_next/", ...localizedPrivatePaths],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: toPublicAbsoluteUrl("/sitemap.xml"),
     host: baseUrl,
   };
 }

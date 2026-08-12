@@ -1,4 +1,4 @@
-import { getPublicSiteUrl } from "@/lib/env";
+import { getPublicSiteUrl, toPublicAbsoluteUrl } from "@/lib/env";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import {
   deriveGuideEntityGraph,
@@ -13,10 +13,7 @@ import {
 } from "./entity-graph";
 import type { SeoGuidePagePayload, SeoListingPagePayload, SeoPagePayload } from "./types";
 
-function breadcrumbJsonLd(
-  breadcrumbs: SemanticBreadcrumb[],
-  siteUrl: string,
-): Record<string, unknown> {
+function breadcrumbJsonLd(breadcrumbs: SemanticBreadcrumb[]): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -24,12 +21,12 @@ function breadcrumbJsonLd(
       "@type": "ListItem",
       position: i + 1,
       name: crumb.name,
-      item: `${siteUrl}${crumb.path}`,
+      item: toPublicAbsoluteUrl(crumb.path),
     })),
   };
 }
 
-function schemaReference(entity: TravelEntity, siteUrl: string): Record<string, unknown> {
+function schemaReference(entity: TravelEntity): Record<string, unknown> {
   const type =
     entity.kind === "city"
       ? "City"
@@ -47,13 +44,15 @@ function schemaReference(entity: TravelEntity, siteUrl: string): Record<string, 
   return {
     "@type": type,
     name: entity.name,
-    url: entity.href.startsWith("http") ? entity.href : `${siteUrl}${entity.href}`,
+    url: entity.href.startsWith("http")
+      ? entity.href
+      : toPublicAbsoluteUrl(entity.href),
   };
 }
 
 export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
-  const pageUrl = `${siteUrl}${page.canonical}`;
+  const pageUrl = toPublicAbsoluteUrl(page.canonical);
   const graph = deriveSeoPageEntityGraph(page);
 
   const organization = {
@@ -61,7 +60,7 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
     "@type": "Organization",
     name: "Nexa Stays",
     url: siteUrl,
-    logo: `${siteUrl}${NEXA_STAYS_LOGO_SRC}`,
+    logo: toPublicAbsoluteUrl(NEXA_STAYS_LOGO_SRC),
   };
 
   const website = {
@@ -71,12 +70,12 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
     url: siteUrl,
     potentialAction: {
       "@type": "SearchAction",
-      target: `${siteUrl}/${page.locale}/listings?city={search_term_string}`,
+      target: `${toPublicAbsoluteUrl(`/${page.locale}/listings`)}?city={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };
 
-  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForSeoPage(page), siteUrl);
+  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForSeoPage(page));
 
   const nodes: Record<string, unknown>[] = [organization, website, breadcrumb];
 
@@ -111,7 +110,13 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
     };
     const qf = page.contentBlocks?.quick_facts;
     if (qf?.atmosphere) place.description = qf.atmosphere;
-    if (qf?.budget) place.additionalProperty = { "@type": "PropertyValue", name: "budget", value: qf.budget };
+    if (qf?.budget) {
+      place.additionalProperty = {
+        "@type": "PropertyValue",
+        name: "budget",
+        value: qf.budget,
+      };
+    }
     nodes.push(place);
   } else if (page.destination) {
     const touristDestination: Record<string, unknown> = {
@@ -147,7 +152,7 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
     },
   };
   const graphReferences = relatedEntities(graph).map(({ entity }) =>
-    schemaReference(entity, siteUrl),
+    schemaReference(entity),
   );
   if (graphReferences.length > 0) collectionPage.mentions = graphReferences;
   nodes.push(collectionPage);
@@ -172,10 +177,10 @@ export function buildSeoPageJsonLd(page: SeoPagePayload): Record<string, unknown
 
 export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
-  const pageUrl = `${siteUrl}${page.canonical}`;
+  const pageUrl = toPublicAbsoluteUrl(page.canonical);
   const graph = deriveGuideEntityGraph(page);
 
-  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForGuide(page), siteUrl);
+  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForGuide(page));
 
   const article: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -188,7 +193,7 @@ export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, u
       "@type": "Organization",
       name: "Nexa Stays",
       url: siteUrl,
-      logo: `${siteUrl}${NEXA_STAYS_LOGO_SRC}`,
+      logo: toPublicAbsoluteUrl(NEXA_STAYS_LOGO_SRC),
     },
     inLanguage: page.locale,
   };
@@ -201,7 +206,7 @@ export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, u
     };
   }
   const graphReferences = relatedEntities(graph)
-    .map(({ entity }) => schemaReference(entity, siteUrl))
+    .map(({ entity }) => schemaReference(entity))
     .filter((entity) => entity.url !== pageUrl);
   if (graphReferences.length > 0) article.mentions = graphReferences;
 
@@ -223,11 +228,10 @@ export function buildSeoGuideJsonLd(page: SeoGuidePagePayload): Record<string, u
 }
 
 export function buildListingJsonLd(page: SeoListingPagePayload): Record<string, unknown>[] {
-  const siteUrl = getPublicSiteUrl();
-  const pageUrl = `${siteUrl}${page.canonical}`;
+  const pageUrl = toPublicAbsoluteUrl(page.canonical);
   const graph = deriveListingEntityGraph(page);
 
-  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForListing(page), siteUrl);
+  const breadcrumb = breadcrumbJsonLd(semanticBreadcrumbsForListing(page));
 
   const lodging: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -274,7 +278,7 @@ export function buildListingJsonLd(page: SeoListingPagePayload): Record<string, 
     };
   }
   const graphReferences = relatedEntities(graph)
-    .map(({ entity }) => schemaReference(entity, siteUrl))
+    .map(({ entity }) => schemaReference(entity))
     .filter((entity) => entity.url !== pageUrl);
   if (graphReferences.length > 0) lodging.mentions = graphReferences;
 

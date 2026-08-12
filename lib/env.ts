@@ -108,6 +108,28 @@ export function getPublicSiteUrl(): string {
   );
 }
 
+/**
+ * Build an absolute public URL from an internal site-relative path only.
+ * Rejects absolute, protocol-relative, and scheme-bearing inputs.
+ */
+export function toPublicAbsoluteUrl(path: string): string {
+  const raw = (path ?? "").trim();
+  if (raw === "" || raw === "/") {
+    return getPublicSiteUrl();
+  }
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw) || raw.startsWith("//")) {
+    throw new Error(
+      "toPublicAbsoluteUrl only accepts site-relative paths (no absolute or protocol-relative URLs).",
+    );
+  }
+
+  // Pathname only — never inherit query/fragment into SEO joins accidentally.
+  const pathname = (raw.split(/[?#]/, 1)[0] ?? "").replace(/^\/+/, "");
+  const site = getPublicSiteUrl();
+  if (!pathname) return site;
+  return `${site}/${pathname}`;
+}
+
 /** @deprecated Prefer getIdentityApiBaseUrl or getStaysApiBaseUrl */
 export function getApiBaseUrl(): string {
   return getIdentityApiBaseUrl();

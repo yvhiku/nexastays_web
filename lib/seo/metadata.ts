@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
-import { getPublicSiteUrl } from "@/lib/env";
+import { toPublicAbsoluteUrl } from "@/lib/env";
 import type { SeoLocale } from "./types";
 
 const LOCALES: SeoLocale[] = ["en", "fr", "ar"];
@@ -10,6 +10,13 @@ const OPEN_GRAPH_LOCALES: Record<SeoLocale, string> = {
   ar: "ar_MA",
 };
 
+/** Pathname only — strip accidental query/fragment before canonical construction. */
+function seoPathname(path: string): string {
+  const trimmed = path.trim();
+  const withoutQuery = trimmed.split(/[?#]/, 1)[0] ?? "";
+  return withoutQuery.startsWith("/") ? withoutQuery : `/${withoutQuery}`;
+}
+
 export function buildSeoMetadata(args: {
   title: string;
   description: string;
@@ -18,35 +25,35 @@ export function buildSeoMetadata(args: {
   ogImage?: string | null;
   robots?: string;
 }): Metadata {
-  const siteUrl = getPublicSiteUrl();
-  const canonicalPath = args.path.startsWith("/") ? args.path : `/${args.path}`;
+  const canonicalPath = seoPathname(args.path);
   const languages = Object.fromEntries(
     LOCALES.map((loc) => {
       const localized = canonicalPath.replace(/^\/(en|fr|ar)/, `/${loc}`);
-      return [loc, localized];
+      return [loc, toPublicAbsoluteUrl(localized)];
     }),
   );
+  const canonical = toPublicAbsoluteUrl(canonicalPath);
 
   const indexable = !args.robots?.includes("noindex");
   const image = args.ogImage
     ? args.ogImage.startsWith("http")
       ? args.ogImage
-      : `${siteUrl}${args.ogImage}`
-    : `${siteUrl}${NEXA_STAYS_LOGO_SRC}`;
+      : toPublicAbsoluteUrl(args.ogImage)
+    : toPublicAbsoluteUrl(NEXA_STAYS_LOGO_SRC);
 
   return {
     title: args.title,
     description: args.description,
     alternates: {
-      canonical: canonicalPath,
-      languages: { ...languages, "x-default": languages.en ?? canonicalPath },
+      canonical,
+      languages: { ...languages, "x-default": languages.en ?? canonical },
     },
     robots: indexable
       ? { index: true, follow: true }
       : { index: false, follow: true },
     openGraph: {
       type: "website",
-      url: `${siteUrl}${canonicalPath}`,
+      url: toPublicAbsoluteUrl(canonicalPath),
       title: args.title,
       description: args.description,
       locale: OPEN_GRAPH_LOCALES[args.locale],
