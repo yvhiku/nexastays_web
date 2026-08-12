@@ -2,11 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
+import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import {
   PORTAL_CTA,
   PORTAL_PRIMARY_NAV,
@@ -35,10 +37,25 @@ export function HostPortalSidebar({ onNavigate, className }: Props) {
       )}
     >
       <div className="mb-8 px-6">
-        <p className="text-xl font-bold text-[color:var(--host-primary)]">
-          {t("hostPortal.brand")}
-        </p>
-        <p className="text-sm text-[color:var(--host-text-secondary)]">
+        <Link
+          href={localePath("/host/dashboard")}
+          onClick={onNavigate}
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+        >
+          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border-2 border-[color:var(--host-primary-border)]">
+            <Image
+              src={NEXA_STAYS_LOGO_SRC}
+              alt=""
+              fill
+              sizes="36px"
+              className="object-cover"
+            />
+          </div>
+          <span className="font-display text-xl font-bold leading-tight text-[color:var(--host-text)] whitespace-nowrap">
+            Nexa <span className="text-[color:var(--host-primary)]">Stays</span>
+          </span>
+        </Link>
+        <p className="mt-1.5 ps-[2.875rem] text-sm text-[color:var(--host-text-secondary)]">
           {t("hostPortal.tagline")}
         </p>
       </div>
@@ -87,7 +104,7 @@ export function HostPortalSidebar({ onNavigate, className }: Props) {
               : "text-[color:var(--host-text-secondary)] hover:bg-[color:var(--host-primary-soft)]",
           )}
         >
-          <PORTAL_SETTINGS_NAV.icon className="h-5 w-5" aria-hidden />
+          <PORTAL_SETTINGS_NAV.icon className="h-5 w-5 shrink-0" aria-hidden />
           {t(PORTAL_SETTINGS_NAV.labelKey)}
         </Link>
 
