@@ -164,6 +164,7 @@ describe("host-reviews web integration (source)", () => {
       source.indexOf("export interface HostReview "),
       source.indexOf("export interface HostReviewSummary"),
     );
+    assert.match(hostReviewBlock, /media\?:/);
     assert.doesNotMatch(hostReviewBlock, /response|unread|needs_response|sub_ratings/);
   });
 
@@ -191,6 +192,8 @@ describe("host-reviews web integration (source)", () => {
     assert.match(card, /listing_title/);
     assert.match(card, /guest_name/);
     assert.match(card, /created_at/);
+    assert.match(card, /getReviewMediaUrl/);
+    assert.match(card, /review\.media/);
     assert.match(pagination, /onPageChange/);
     assert.match(pagination, /hostReviews\.previous/);
     assert.match(pagination, /hostReviews\.next/);

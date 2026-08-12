@@ -166,6 +166,8 @@ export interface HostReview {
   rating: number;
   comment: string;
   created_at: string;
+  /** Guest-uploaded photos (same shape as listing reviews). Empty when none. */
+  media?: ListingReviewMedia[];
 }
 
 export interface HostReviewSummary {
