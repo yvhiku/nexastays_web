@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getServerLocale } from "@/lib/i18n/server";
 import type { SeoLocale } from "@/lib/seo/types";
-import { fetchSeoListingPage } from "@/lib/seo/listing-api";
+import { resolveListingDetailPage } from "@/lib/seo/listing-detail-access";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildListingJsonLd } from "@/lib/seo/json-ld";
 import { ListingDetailPageClient } from "@/components/listing/ListingDetailPage.client";
@@ -22,8 +22,8 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoListingPage(params.id, locale);
-  if (!page) return { robots: { index: false, follow: false } };
+  const page = await resolveListingDetailPage(params.id, locale);
+  if (!page) notFound();
 
   return buildSeoMetadata({
     title: page.title,
@@ -38,7 +38,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function ListingDetailPage(props: Props) {
   const params = await props.params;
   const locale = getServerLocale(params.locale) as SeoLocale;
-  const page = await fetchSeoListingPage(params.id, locale);
+  const page = await resolveListingDetailPage(params.id, locale);
   if (!page) notFound();
 
   const jsonLd = buildListingJsonLd(page);
