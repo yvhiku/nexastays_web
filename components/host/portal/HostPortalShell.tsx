@@ -13,6 +13,10 @@ type Props = {
   children: React.ReactNode;
 };
 
+/**
+ * Portal chrome only. Content padding / full-bleed is owned by nested route layouts
+ * (padded content group vs inbox bleed) — not by path detection here.
+ */
 export function HostPortalShell({ children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
@@ -28,9 +32,7 @@ export function HostPortalShell({ children }: Props) {
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ms-64">
         <HostPortalTopBar onOpenDrawer={openDrawer} drawerOpen={drawerOpen} />
-        <main className="flex-1 px-4 pb-24 pt-4 md:px-10 md:pb-10 md:pt-6">
-          <div className="mx-auto w-full max-w-[1280px]">{children}</div>
-        </main>
+        <main className="flex min-h-0 flex-1 flex-col">{children}</main>
       </div>
 
       <HostPortalMobileBottomNav />

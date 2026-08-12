@@ -70,7 +70,10 @@ export function HostPortalTopBar({ onOpenDrawer, drawerOpen = false }: Props) {
         >
           {t("hostPortal.switchToGuest")}
         </Link>
-        <InboxBell className="text-[color:var(--host-text-secondary)] hover:text-[color:var(--host-primary)]" />
+        <InboxBell
+          href="/host/inbox"
+          className="text-[color:var(--host-text-secondary)] hover:text-[color:var(--host-primary)]"
+        />
       </div>
     </header>
   );

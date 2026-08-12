@@ -169,7 +169,7 @@ describe("host-reviews web integration (source)", () => {
   });
 
   it("portal reviews route fetches; presentation composes summary/list/pagination", () => {
-    const route = read("app/[locale]/host/(portal)/reviews/page.tsx");
+    const route = read("app/[locale]/host/(portal)/(content)/reviews/page.tsx");
     const page = read("components/host/reviews/HostReviewsPage.tsx");
     const summary = read("components/host/reviews/HostReviewsSummary.tsx");
     const card = read("components/host/reviews/HostReviewCard.tsx");
@@ -216,14 +216,14 @@ describe("host-reviews web integration (source)", () => {
 
   it("dashboard CTA navigates to locale-aware /host/reviews", () => {
     const snapshot = read("components/host/HostBusinessSnapshot.tsx");
-    const dashboard = read("app/[locale]/host/(portal)/dashboard/page.tsx");
+    const dashboard = read("app/[locale]/host/(portal)/(content)/dashboard/page.tsx");
     const kpi = read("components/host/dashboard/HostDashboardKpiRow.tsx");
     assert.match(snapshot, /localePath\(\s*["']\/host\/reviews["']\s*\)/);
     assert.match(snapshot, /hostReviews\.viewReviews/);
     assert.match(kpi, /localePath\("\/host\/reviews"\)/);
     assert.match(dashboard, /localePath=\{localePath\}/);
     assert.match(
-      read("app/[locale]/host/(portal)/reviews/page.tsx"),
+      read("app/[locale]/host/(portal)/(content)/reviews/page.tsx"),
       /HostReviewsPage/,
     );
   });

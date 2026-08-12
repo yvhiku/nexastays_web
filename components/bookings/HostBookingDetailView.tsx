@@ -89,7 +89,7 @@ export function HostBookingDetailView({
     setMessaging(true);
     try {
       const conv = await openConversationForBooking(booking.id, token);
-      router.push(localePath(`/inbox/${conv.conversation.id}`));
+      router.push(localePath(`/host/inbox/${conv.conversation.id}`));
     } finally {
       setMessaging(false);
     }

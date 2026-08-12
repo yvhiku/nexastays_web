@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ErrorAlert } from "@/components/ui/Alert";
@@ -77,6 +77,7 @@ import {
   endMessagingMeasure,
   startMessagingMeasure,
 } from "@/lib/messaging/performance";
+import { inboxBasePathFromPathname } from "@/lib/messaging/thread-routes";
 import { BookingJourney } from "@/components/messaging/hospitality/BookingJourney";
 import { deriveJourneyIndex } from "@/components/messaging/hospitality/journey";
 import { ConversationWelcomeCard } from "@/components/messaging/polish/ConversationWelcomeCard";
@@ -167,10 +168,12 @@ function TabletContextDrawer({
 function ConversationPageInner() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname() ?? "";
   const conversationId = params.id as string;
   const { token, user } = useAuth();
   const { t, locale, localePath } = useLanguage();
   const reduceMotion = useReducedMotion();
+  const inboxBase = inboxBasePathFromPathname(pathname);
 
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [loadedConversationId, setLoadedConversationId] = useState<string | null>(null);
@@ -355,8 +358,8 @@ function ConversationPageInner() {
   }, []);
 
   const navigateBackToInbox = useCallback(() => {
-    router.push(localePath("/inbox"));
-  }, [localePath, router]);
+    router.push(localePath(inboxBase));
+  }, [inboxBase, localePath, router]);
 
   useEffect(() => {
     if (!contextOpen) return;
@@ -835,7 +838,7 @@ function ConversationPageInner() {
     try {
       await updateConversationVisibility(conversationId, action, token);
       trackEvent("conversation_archived", { conversation_id: conversationId, action });
-      router.push(localePath("/inbox"));
+      router.push(localePath(inboxBase));
     } catch (e) {
       setError(formatUserError(e));
     }
@@ -975,7 +978,7 @@ function ConversationPageInner() {
       <ConversationHeader
         conversation={conversation}
         compact={headerCompact}
-        backHref={localePath("/inbox")}
+        backHref={localePath(inboxBase)}
         backLabel={t("inbox.back")}
         onBack={navigateBackToInbox}
         menuLabels={menuLabels}

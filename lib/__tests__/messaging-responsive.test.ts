@@ -58,13 +58,14 @@ test("composer attachment chooser renders above the mobile conversation drawer",
   assert.match(composer, /onShareLocation/);
 });
 
-test("conversation back control always navigates to the localized inbox", () => {
+test("conversation back control always navigates to the localized inbox base", () => {
   const thread = read("app/[locale]/inbox/[id]/page.tsx");
 
   assert.match(
     thread,
-    /const navigateBackToInbox = useCallback\(\(\) => \{\s*router\.push\(localePath\("\/inbox"\)\)/,
+    /const navigateBackToInbox = useCallback\(\(\) => \{\s*router\.push\(localePath\(inboxBase\)\)/,
   );
+  assert.match(thread, /inboxBasePathFromPathname/);
   assert.match(thread, /onBack=\{navigateBackToInbox\}/);
   assert.doesNotMatch(thread, /ConversationListDrawer/);
 });

@@ -10,6 +10,8 @@ import { useHeaderState } from "@/components/navbar/HeaderStateProvider.client";
 
 type Props = {
   className?: string;
+  /** Override destination (e.g. `/host/inbox` inside the Host Portal). */
+  href?: string;
 };
 
 function formatBadge(count: number): string {
@@ -19,7 +21,7 @@ function formatBadge(count: number): string {
 }
 
 /** Header inbox icon with unread badge — links to inbox page. */
-export function InboxBell({ className }: Props) {
+export function InboxBell({ className, href }: Props) {
   const { t, localePath } = useLanguage();
   const { isAuthenticated } = useAuth();
   const { inboxCount } = useHeaderState();
@@ -30,7 +32,7 @@ export function InboxBell({ className }: Props) {
 
   return (
     <Link
-      href={localePath("/inbox")}
+      href={localePath(href ?? "/inbox")}
       className={cn(
         "relative flex h-10 w-10 items-center justify-center rounded-lg text-nexa-ink-3 transition-colors hover:bg-nexa-bg-2 hover:text-nexa-primary active:scale-95",
         className,

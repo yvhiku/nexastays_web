@@ -184,7 +184,7 @@ describe("host-analytics web integration (source)", () => {
   it("page supports four periods, occupancy footnote, empty/error/retry", () => {
     const legacy = read("components/host/HostAnalyticsPage.tsx");
     const insights = read("components/host/analytics/HostInsightsPage.tsx");
-    const route = read("app/[locale]/host/(portal)/analytics/page.tsx");
+    const route = read("app/[locale]/host/(portal)/(content)/analytics/page.tsx");
     assert.match(route, /getHostAnalytics\(/);
     assert.match(route, /parseHostAnalyticsPeriod/);
     assert.match(route, /HostInsightsPage/);
@@ -224,12 +224,12 @@ describe("host-analytics web integration (source)", () => {
   it("dashboard CTAs navigate to analytics", () => {
     const hero = read("components/host/HostDashboardHero.tsx");
     const snapshot = read("components/host/HostBusinessSnapshot.tsx");
-    const dash = read("app/[locale]/host/(portal)/dashboard/page.tsx");
+    const dash = read("app/[locale]/host/(portal)/(content)/dashboard/page.tsx");
     assert.match(hero, /localePath\("\/host\/analytics"\)/);
     assert.match(snapshot, /localePath\("\/host\/analytics"\)/);
     assert.match(dash, /localePath=\{localePath\}/);
     assert.match(
-      read("app/[locale]/host/(portal)/analytics/page.tsx"),
+      read("app/[locale]/host/(portal)/(content)/analytics/page.tsx"),
       /HostInsightsPage/,
     );
   });

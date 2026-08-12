@@ -64,7 +64,7 @@ describe("Phase 7 host portal integrity", () => {
     const recent = read(
       "components/host/dashboard/HostDashboardRecentReviews.tsx",
     );
-    const route = read("app/[locale]/host/(portal)/dashboard/page.tsx");
+    const route = read("app/[locale]/host/(portal)/(content)/dashboard/page.tsx");
     assert.match(recent, /error/);
     assert.match(recent, /onRetry/);
     assert.match(route, /recentReviewsError/);

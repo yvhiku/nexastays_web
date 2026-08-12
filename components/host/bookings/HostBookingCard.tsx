@@ -79,7 +79,7 @@ export function HostBookingCard({
     setMessageFailed(false);
     try {
       const conv = await openConversationForBooking(booking.id, token);
-      router.push(localePath(`/inbox/${conv.conversation.id}`));
+      router.push(localePath(`/host/inbox/${conv.conversation.id}`));
     } catch {
       setMessageFailed(true);
     } finally {

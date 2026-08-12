@@ -8,7 +8,7 @@ export const metadata = buildPrivateMetadata("Messages | Nexa Stays");
 export default function InboxLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
-      <InboxLayoutShell>{children}</InboxLayoutShell>
+      <InboxLayoutShell variant="guest">{children}</InboxLayoutShell>
     </ProtectedRoute>
   );
 }

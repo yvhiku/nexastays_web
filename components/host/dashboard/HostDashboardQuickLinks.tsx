@@ -40,7 +40,7 @@ const LINKS = [
     icon: Star,
   },
   {
-    href: "/inbox",
+    href: "/host/inbox",
     labelKey: "hostPortal.dashboard.linkInbox",
     icon: MessageCircle,
   },

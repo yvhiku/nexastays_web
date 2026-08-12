@@ -56,10 +56,10 @@ export const PORTAL_PRIMARY_NAV: PortalNavItem[] = [
   },
   {
     id: "inbox",
-    href: "/inbox",
+    href: "/host/inbox",
     labelKey: "hostPortal.nav.inbox",
     icon: MessageCircle,
-    match: (p) => p === "/inbox" || p.startsWith("/inbox/"),
+    match: (p) => p === "/host/inbox" || p.startsWith("/host/inbox/"),
   },
   {
     id: "insights",

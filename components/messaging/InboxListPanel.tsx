@@ -17,6 +17,7 @@ import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxFilters } from "@/components/messaging/InboxFilters";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePathname } from "next/navigation";
 import { useMessagingRealtime } from "@/components/messaging/hooks/useMessagingRealtime";
 import {
   listConversations,
@@ -30,6 +31,7 @@ import {
 } from "@/lib/messaging/inbox-optimistic";
 import { formatUserError } from "@/lib/errors";
 import { groupConversations } from "@/lib/messaging/selectors/group-conversations";
+import { inboxBasePathFromPathname } from "@/lib/messaging/thread-routes";
 
 function InboxSkeleton({ label }: { label: string }) {
   return (
@@ -136,6 +138,8 @@ type Props = {
 export function InboxListPanel({ activeConversationId = null }: Props) {
   const { token } = useAuth();
   const { t, localePath } = useLanguage();
+  const pathname = usePathname() ?? "";
+  const inboxBase = inboxBasePathFromPathname(pathname);
   const reduceMotion = useReducedMotion();
   const [filter, setFilter] = useState<InboxFilter>("active");
   const [query, setQuery] = useState("");
@@ -343,7 +347,7 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
                     >
                       <ConversationRow
                         item={item}
-                        href={localePath(`/inbox/${item.conversation.id}`)}
+                        href={localePath(`${inboxBase}/${item.conversation.id}`)}
                         optimistic={optimistic[item.conversation.id] ?? null}
                         isActive={item.conversation.id === activeConversationId}
                       />
