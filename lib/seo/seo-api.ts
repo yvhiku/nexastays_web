@@ -17,12 +17,15 @@ import type {
 } from "./types";
 
 const REVALIDATE = 86400;
+/** Fail open quickly when the stays API is down/hung (local or prod). */
+const SEO_FETCH_TIMEOUT_MS = 8_000;
 
 async function seoFetch<T>(path: string, revalidate = REVALIDATE): Promise<T | null> {
   const base = getStaysApiBaseUrl().replace(/\/$/, "");
   try {
     const res = await fetch(`${base}${path}`, {
       next: { revalidate },
+      signal: AbortSignal.timeout(SEO_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
     return (await res.json()) as T;
@@ -84,6 +87,7 @@ export async function fetchSeoListings(
   try {
     const res = await fetch(`${base}/stays/explore?${q.toString()}`, {
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(SEO_FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return [];
     const data = (await res.json()) as ExploreListEnvelope;

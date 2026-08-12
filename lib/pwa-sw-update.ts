@@ -27,7 +27,10 @@ export async function recoverBrokenDevServiceWorker(): Promise<void> {
 
   let broken = false;
   try {
-    const res = await fetch("/fallback-development.js", { cache: "no-store" });
+    const res = await fetch("/fallback-development.js", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(3_000),
+    });
     const contentType = res.headers.get("content-type") ?? "";
     broken = !res.ok || !contentType.includes("javascript");
   } catch {
