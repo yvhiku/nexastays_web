@@ -2337,6 +2337,16 @@
       "linkListings": "القوائم",
       "linkReviews": "التقييمات",
       "notApproved": "يلزم التحقق من المضيف قبل عرض الرؤى."
+    },
+    "reviews": {
+      "title": "التقييمات",
+      "subtitle": "ملاحظات الضيوف على عقاراتك — التقييمات المنشورة فقط.",
+      "quickLinksTitle": "روابط سريعة",
+      "linkDashboard": "لوحة التحكم",
+      "linkBookings": "الحجوزات",
+      "linkListings": "القوائم",
+      "linkInsights": "الرؤى",
+      "notApproved": "يلزم التحقق من المضيف قبل عرض التقييمات."
     }
   }
 }

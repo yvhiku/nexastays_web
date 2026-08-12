@@ -167,16 +167,25 @@ describe("host-reviews web integration (source)", () => {
     assert.doesNotMatch(hostReviewBlock, /response|unread|needs_response|sub_ratings/);
   });
 
-  it("review UI renders summary, list, empty, error, pagination markers", () => {
-    const page = read("components/host/HostReviewsPage.tsx");
-    const summary = read("components/host/HostReviewsSummary.tsx");
-    const card = read("components/host/HostReviewCard.tsx");
-    const pagination = read("components/host/HostReviewPagination.tsx");
+  it("portal reviews route fetches; presentation composes summary/list/pagination", () => {
+    const route = read("app/[locale]/host/(portal)/reviews/page.tsx");
+    const page = read("components/host/reviews/HostReviewsPage.tsx");
+    const summary = read("components/host/reviews/HostReviewsSummary.tsx");
+    const card = read("components/host/reviews/HostReviewCard.tsx");
+    const pagination = read("components/host/reviews/HostReviewPagination.tsx");
+    const empty = read("components/host/reviews/HostReviewsEmptyState.tsx");
+    const links = read("components/host/reviews/HostReviewsQuickLinks.tsx");
+    const legacy = read("components/host/HostReviewsPage.tsx");
 
-    assert.match(page, /getHostReviews\(/);
-    assert.match(page, /hostReviews\.emptyTitle/);
+    assert.match(route, /getHostReviews\(/);
+    assert.match(route, /HostReviewsPage/);
+    assert.match(route, /HOST_REVIEWS_DEFAULT_LIMIT/);
+    assert.doesNotMatch(route, /hostId/);
+    assert.doesNotMatch(page, /getHostReviews\(/);
     assert.match(page, /hostReviews\.retry/);
-    assert.match(page, /ErrorAlert/);
+    assert.match(page, /HostReviewsEmptyState|hostReviews\.emptyTitle/);
+    assert.match(page, /HostReviewsQuickLinks/);
+    assert.match(empty, /hostReviews\.emptyTitle/);
     assert.match(summary, /distribution_pct/);
     assert.match(summary, /overall_avg_rating/);
     assert.match(card, /listing_title/);
@@ -185,8 +194,15 @@ describe("host-reviews web integration (source)", () => {
     assert.match(pagination, /onPageChange/);
     assert.match(pagination, /hostReviews\.previous/);
     assert.match(pagination, /hostReviews\.next/);
+    assert.doesNotMatch(pagination, /first|last|pageSize|searchParams|\?page=/i);
+    assert.match(links, /\/host\/dashboard/);
+    assert.match(links, /\/host\/analytics/);
+    assert.doesNotMatch(page, /Reply|Respond|response_rate|needs.?response/i);
+    assert.doesNotMatch(route, /Reply|Respond|getHostDashboard|getHostAnalytics/i);
+    // Legacy retained (archive)
+    assert.match(legacy, /getHostReviews\(/);
 
-    for (const source of [page, summary, card, pagination]) {
+    for (const source of [page, summary, card, pagination, empty, links, route]) {
       assert.doesNotMatch(
         source,
         /needs.?response|unread_reviews|Reply|Respond|response_rate|Waiting for your response/i,
@@ -197,14 +213,19 @@ describe("host-reviews web integration (source)", () => {
 
   it("dashboard CTA navigates to locale-aware /host/reviews", () => {
     const snapshot = read("components/host/HostBusinessSnapshot.tsx");
-    const dashboard = read("app/[locale]/host/dashboard/page.tsx");
+    const dashboard = read("app/[locale]/host/(portal)/dashboard/page.tsx");
+    const kpi = read("components/host/dashboard/HostDashboardKpiRow.tsx");
     assert.match(snapshot, /localePath\(\s*["']\/host\/reviews["']\s*\)/);
     assert.match(snapshot, /hostReviews\.viewReviews/);
+    assert.match(kpi, /localePath\("\/host\/reviews"\)/);
     assert.match(dashboard, /localePath=\{localePath\}/);
-    assert.match(read("app/[locale]/host/reviews/page.tsx"), /HostReviewsPage/);
+    assert.match(
+      read("app/[locale]/host/(portal)/reviews/page.tsx"),
+      /HostReviewsPage/,
+    );
   });
 
-  it("keeps EN/FR/AR hostReviews key parity", () => {
+  it("keeps EN/FR/AR hostReviews and hostPortal.reviews key parity", () => {
     const en = JSON.parse(read("lib/i18n/locales/en.json"));
     const fr = JSON.parse(read("lib/i18n/locales/fr.json"));
     const ar = JSON.parse(read("lib/i18n/locales/ar.json"));
@@ -218,5 +239,13 @@ describe("host-reviews web integration (source)", () => {
     assert.ok(en.hostDashboard.viewReviews);
     assert.ok(fr.hostDashboard.viewReviews);
     assert.ok(ar.hostDashboard.viewReviews);
+    const portalEn = flattenKeys(en.hostPortal.reviews).sort();
+    const portalFr = flattenKeys(fr.hostPortal.reviews).sort();
+    const portalAr = flattenKeys(ar.hostPortal.reviews).sort();
+    assert.deepEqual(portalFr, portalEn);
+    assert.deepEqual(portalAr, portalEn);
+    assert.ok(portalEn.includes("title"));
+    assert.ok(portalEn.includes("notApproved"));
+    assert.ok(portalEn.includes("linkInsights"));
   });
 });

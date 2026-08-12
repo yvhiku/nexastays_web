@@ -2337,6 +2337,16 @@
       "linkListings": "Annonces",
       "linkReviews": "Avis",
       "notApproved": "La vérification hôte est requise pour consulter les analyses."
+    },
+    "reviews": {
+      "title": "Avis",
+      "subtitle": "Retours des voyageurs sur vos propriétés — avis publiés uniquement.",
+      "quickLinksTitle": "Raccourcis",
+      "linkDashboard": "Tableau de bord",
+      "linkBookings": "Réservations",
+      "linkListings": "Annonces",
+      "linkInsights": "Analyses",
+      "notApproved": "La vérification hôte est requise pour consulter les avis."
     }
   }
 }

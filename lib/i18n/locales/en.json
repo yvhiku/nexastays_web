@@ -2337,6 +2337,16 @@
       "linkListings": "Listings",
       "linkReviews": "Reviews",
       "notApproved": "Host verification is required before viewing insights."
+    },
+    "reviews": {
+      "title": "Reviews",
+      "subtitle": "Guest feedback across your properties — published reviews only.",
+      "quickLinksTitle": "Quick links",
+      "linkDashboard": "Dashboard",
+      "linkBookings": "Bookings",
+      "linkListings": "Listings",
+      "linkInsights": "Insights",
+      "notApproved": "Host verification is required before viewing reviews."
     }
   }
 }
