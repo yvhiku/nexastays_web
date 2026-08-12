@@ -6,7 +6,6 @@ import { PlusCircle } from "lucide-react";
 import type {
   HostBooking,
   HostDashboardAggregate,
-  HostListingSummary,
   HostReview,
 } from "@/lib/stays-types";
 import type { Locale } from "@/lib/i18n";
@@ -36,7 +35,7 @@ export type HostDashboardHomeProps = {
   bookingsLoading: boolean;
   bookingsError?: string | null;
   onRetryBookings?: () => void;
-  listings: HostListingSummary[];
+  listings: Array<{ id: string; title: string }>;
   recentReviews: HostReview[];
   recentReviewsLoading: boolean;
   recentReviewsError?: string | null;

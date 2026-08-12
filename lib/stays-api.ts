@@ -544,16 +544,68 @@ export async function getHostAnalytics(
   return unwrap<HostAnalyticsResponse>(res);
 }
 
-/** Get host's bookings (requires JWT) */
+/** Paginated host bookings (cursor/keyset). */
+export type HostBookingsListParams = {
+  limit?: number;
+  cursor?: string | null;
+  filter?: string;
+  search?: string;
+  listing_id?: string;
+  sort?: string;
+};
+
+export type HostListPagination = {
+  limit: number;
+  has_next: boolean;
+  next_cursor: string | null;
+};
+
+export type HostBookingsListResponse = {
+  items: HostBooking[];
+  pagination: HostListPagination;
+};
+
 export async function getHostBookings(
-  token?: string | null
-): Promise<HostBooking[]> {
+  token?: string | null,
+  params: HostBookingsListParams = {},
+): Promise<HostBookingsListResponse> {
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const query: Record<string, string | number> = {};
+  if (params.limit != null) query.limit = params.limit;
+  if (params.cursor) query.cursor = params.cursor;
+  if (params.filter) query.filter = params.filter;
+  if (params.search) query.search = params.search;
+  if (params.listing_id) query.listing_id = params.listing_id;
+  if (params.sort) query.sort = params.sort;
   const res = await client
-    .get("/stays/host/bookings", { headers })
+    .get("/stays/host/bookings", { headers, params: query })
     .catch(handleError);
-  const data = unwrap<HostBooking[]>(res);
-  return Array.isArray(data) ? data : [];
+  const data = unwrap<HostBookingsListResponse>(res);
+  return {
+    items: Array.isArray(data?.items) ? data.items : [],
+    pagination: data?.pagination ?? {
+      limit: params.limit ?? 20,
+      has_next: false,
+      next_cursor: null,
+    },
+  };
+}
+
+export type HostBookingsCounts = Record<string, number>;
+
+export async function getHostBookingsCounts(
+  token?: string | null,
+  params: { search?: string; listing_id?: string } = {},
+): Promise<HostBookingsCounts> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const query: Record<string, string> = {};
+  if (params.search) query.search = params.search;
+  if (params.listing_id) query.listing_id = params.listing_id;
+  const res = await client
+    .get("/stays/host/bookings/counts", { headers, params: query })
+    .catch(handleError);
+  const data = unwrap<HostBookingsCounts>(res);
+  return data && typeof data === "object" ? data : {};
 }
 
 export type HostBookingsExportFilters = {
@@ -616,15 +668,76 @@ export async function exportHostBookingsCsv(
   URL.revokeObjectURL(url);
 }
 
-/** Get host's listings (requires JWT, approved host) */
+/** Paginated host listings (cursor/keyset). */
+export type HostListingsListParams = {
+  limit?: number;
+  cursor?: string | null;
+  status?: string;
+  search?: string;
+  sort?: string;
+};
+
+export type HostListingsListResponse = {
+  items: HostListingSummary[];
+  pagination: HostListPagination;
+};
+
 export async function getHostListings(
-  token?: string | null
-): Promise<HostListingSummary[]> {
+  token?: string | null,
+  params: HostListingsListParams = {},
+): Promise<HostListingsListResponse> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const query: Record<string, string | number> = {};
+  if (params.limit != null) query.limit = params.limit;
+  if (params.cursor) query.cursor = params.cursor;
+  if (params.status) query.status = params.status;
+  if (params.search) query.search = params.search;
+  if (params.sort) query.sort = params.sort;
+  const res = await client
+    .get("/stays/host/listings", { headers, params: query })
+    .catch(handleError);
+  const data = unwrap<HostListingsListResponse>(res);
+  return {
+    items: Array.isArray(data?.items) ? data.items : [],
+    pagination: data?.pagination ?? {
+      limit: params.limit ?? 20,
+      has_next: false,
+      next_cursor: null,
+    },
+  };
+}
+
+export type HostListingsCounts = Record<string, number>;
+
+export async function getHostListingsCounts(
+  token?: string | null,
+  params: { search?: string } = {},
+): Promise<HostListingsCounts> {
+  const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
+  const query: Record<string, string> = {};
+  if (params.search) query.search = params.search;
+  const res = await client
+    .get("/stays/host/listings/counts", { headers, params: query })
+    .catch(handleError);
+  const data = unwrap<HostListingsCounts>(res);
+  return data && typeof data === "object" ? data : {};
+}
+
+export type HostListingOption = {
+  id: string;
+  title: string;
+  city: string;
+  status: string;
+};
+
+export async function getHostListingOptions(
+  token?: string | null,
+): Promise<HostListingOption[]> {
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
   const res = await client
-    .get("/stays/host/listings", { headers })
+    .get("/stays/host/listings/options", { headers })
     .catch(handleError);
-  const data = unwrap<HostListingSummary[]>(res);
+  const data = unwrap<HostListingOption[]>(res);
   return Array.isArray(data) ? data : [];
 }
 
@@ -1175,6 +1288,10 @@ export const staysApi = {
   getHostAnalytics,
   submitHostOnboarding,
   getHostListings,
+  getHostListingsCounts,
+  getHostListingOptions,
+  getHostBookings,
+  getHostBookingsCounts,
   getHostListingById,
   updateHostListing,
   pauseHostListing,

@@ -11,18 +11,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   getHostVerification,
-  getHostListings,
+  getHostListingOptions,
   getHostBookings,
   getHostDashboard,
   getHostReviews,
   normalizeHostVerificationStatus,
   setHostAvailabilityBlock,
+  type HostListingOption,
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
 import { showSaveToast } from "@/lib/save-toast";
 import type {
   HostVerificationStatus,
-  HostListingSummary,
   HostBooking,
   HostDashboardAggregate,
   HostReview,
@@ -46,7 +46,7 @@ function HostDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
-  const [listings, setListings] = useState<HostListingSummary[]>([]);
+  const [listings, setListings] = useState<HostListingOption[]>([]);
   const [bookings, setBookings] = useState<HostBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
@@ -114,7 +114,7 @@ function HostDashboardContent() {
 
   useEffect(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
-    getHostListings(token)
+    getHostListingOptions(token)
       .then(setListings)
       .catch(() => setListings([]));
   }, [token, hostStatus?.status]);
@@ -123,8 +123,13 @@ function HostDashboardContent() {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
     setBookingsLoading(true);
     setBookingsError(null);
-    getHostBookings(token)
-      .then(setBookings)
+    // Bounded upcoming page for dashboard strip — not the full portfolio
+    getHostBookings(token, {
+      limit: 20,
+      filter: "upcoming",
+      sort: "checkin",
+    })
+      .then((page) => setBookings(page.items))
       .catch((e) => {
         setBookings([]);
         setBookingsError(

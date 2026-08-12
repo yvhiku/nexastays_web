@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NexaSelect } from "@/components/ui/NexaSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
 import type { HostBooking, HostListingSummary } from "@/lib/stays-types";
+import type { HostListingOption } from "@/lib/stays-api";
+import {
+  getHostBookings,
+  getHostBookingsCounts,
+} from "@/lib/stays-api";
+import { formatUserError } from "@/lib/errors";
 import {
   HOST_BOOKING_FILTER_ORDER,
   addCalendarDaysYmd,
   casablancaYmd,
   exportStatusForBookingFilter,
-  filterHostBookings,
-  matchesHostBookingFilter,
-  sortHostBookings,
   type HostBookingFilterId,
   type HostBookingSortId,
 } from "@/lib/host-booking-center";
@@ -26,15 +29,12 @@ import { HostBookingsList } from "@/components/host/bookings/HostBookingsList";
 import { HostBookingSkeleton } from "@/components/host/bookings/HostBookingSkeleton";
 import { HostBookingEmptyState } from "@/components/host/bookings/HostBookingEmptyState";
 import { HostPortalCard } from "@/components/host/portal/HostPortalCard";
+import { useHostCursorList } from "@/lib/use-host-cursor-list";
 
 type TranslateFn = (key: string) => string;
 
 export type HostBookingsPageProps = {
-  bookings: HostBooking[];
-  listings: HostListingSummary[];
-  loading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
+  listingOptions: HostListingOption[];
   filter: HostBookingFilterId;
   onFilterChange: (filter: HostBookingFilterId) => void;
   t: TranslateFn;
@@ -47,16 +47,10 @@ export type HostBookingsPageProps = {
   exportSubmitting?: boolean;
 };
 
-/**
- * Presentation composer. Domain filtering/urgency/amounts stay in
- * lib/host-booking-center.ts — parity with HostBookingCenter behavior.
- */
+const PAGE_SIZE = 20;
+
 export function HostBookingsPage({
-  bookings,
-  listings,
-  loading,
-  error,
-  onRetry,
+  listingOptions,
   filter,
   onFilterChange,
   t,
@@ -69,9 +63,14 @@ export function HostBookingsPage({
   exportSubmitting,
 }: HostBookingsPageProps) {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [listingId, setListingId] = useState("");
   const [sort, setSort] = useState<HostBookingSortId>("ops");
   const [exportOpen, setExportOpen] = useState(false);
+  const [counts, setCounts] = useState<Partial<Record<HostBookingFilterId, number>>>(
+    {},
+  );
+  const [countsError, setCountsError] = useState<string | null>(null);
 
   const todayYmd = useMemo(() => casablancaYmd(), []);
   const tomorrowYmd = useMemo(
@@ -80,36 +79,110 @@ export function HostBookingsPage({
   );
 
   useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(id);
+  }, [search]);
+
+  useEffect(() => {
     if (exportState.listingId) setListingId(exportState.listingId);
   }, [exportState.listingId]);
 
-  const counts = useMemo(() => {
-    const result: Partial<Record<HostBookingFilterId, number>> = {};
-    for (const id of HOST_BOOKING_FILTER_ORDER) {
-      result[id] = bookings.filter((b) =>
-        matchesHostBookingFilter(b, id, todayYmd, tomorrowYmd),
-      ).length;
-    }
-    result.checkin_today = bookings.filter((b) =>
-      matchesHostBookingFilter(b, "checkin_today", todayYmd, tomorrowYmd),
-    ).length;
-    result.checkout_today = bookings.filter((b) =>
-      matchesHostBookingFilter(b, "checkout_today", todayYmd, tomorrowYmd),
-    ).length;
-    return result;
-  }, [bookings, todayYmd, tomorrowYmd]);
+  const queryKey = useMemo(
+    () =>
+      JSON.stringify({
+        filter,
+        search: debouncedSearch,
+        listingId,
+        sort,
+      }),
+    [filter, debouncedSearch, listingId, sort],
+  );
 
-  const visible = useMemo(() => {
-    const filtered = filterHostBookings({
-      bookings,
-      filter,
-      listingId: listingId || undefined,
-      search,
-      todayYmd,
-      tomorrowYmd,
-    });
-    return sortHostBookings(filtered, sort, todayYmd, tomorrowYmd);
-  }, [bookings, filter, listingId, search, sort, todayYmd, tomorrowYmd]);
+  const fetchPage = useCallback(
+    async (cursor: string | null) => {
+      if (!token) {
+        return {
+          items: [] as HostBooking[],
+          pagination: { limit: PAGE_SIZE, has_next: false, next_cursor: null },
+        };
+      }
+      try {
+        return await getHostBookings(token, {
+          limit: PAGE_SIZE,
+          cursor,
+          filter,
+          search: debouncedSearch || undefined,
+          listing_id: listingId || undefined,
+          sort,
+        });
+      } catch (e) {
+        throw new Error(
+          formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
+        );
+      }
+    },
+    [token, filter, debouncedSearch, listingId, sort, t],
+  );
+
+  const {
+    items: bookings,
+    loading,
+    loadingMore,
+    error,
+    loadMoreError,
+    hasNext,
+    loadMore,
+    reload,
+  } = useHostCursorList<HostBooking>({
+    enabled: Boolean(token),
+    queryKey,
+    fetchPage,
+  });
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    setCountsError(null);
+    getHostBookingsCounts(token, {
+      search: debouncedSearch || undefined,
+      listing_id: listingId || undefined,
+    })
+      .then((c) => {
+        if (cancelled) return;
+        const next: Partial<Record<HostBookingFilterId, number>> = {};
+        for (const id of HOST_BOOKING_FILTER_ORDER) {
+          next[id] = c[id] ?? 0;
+        }
+        next.checkin_today = c.checkin_today ?? 0;
+        next.checkout_today = c.checkout_today ?? 0;
+        setCounts(next);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setCountsError(
+          formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, debouncedSearch, listingId, t]);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasNext) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          void loadMore();
+        }
+      },
+      { rootMargin: "240px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasNext, loadMore, bookings.length]);
 
   const handleListingChange = (id: string) => {
     setListingId(id);
@@ -129,13 +202,26 @@ export function HostBookingsPage({
     handleFilterChange("all");
   };
 
+  const totalForHeader = counts.all ?? bookings.length;
   const countLabel =
     !loading && !error
       ? t("hostDashboard.bookingCenterCount").replace(
           "{count}",
-          String(bookings.length),
+          String(totalForHeader),
         )
       : null;
+
+  const listingSummariesForFilters = useMemo(
+    () =>
+      listingOptions.map(
+        (l) =>
+          ({
+            id: l.id,
+            title: l.title,
+          }) as HostListingSummary,
+      ),
+    [listingOptions],
+  );
 
   return (
     <div id="host-bookings" className="scroll-mt-24 pb-4">
@@ -193,7 +279,10 @@ export function HostBookingsPage({
               aria-label={t("hostDashboard.listing")}
               options={[
                 { value: "", label: t("hostDashboard.exportListingAll") },
-                ...listings.map((l) => ({ value: l.id, label: l.title })),
+                ...listingOptions.map((l) => ({
+                  value: l.id,
+                  label: l.title,
+                })),
               ]}
             />
             <NexaSelect
@@ -280,12 +369,18 @@ export function HostBookingsPage({
         />
       ) : null}
 
+      {countsError ? (
+        <p className="mb-2 text-xs text-[color:var(--host-text-secondary)]">
+          {countsError}
+        </p>
+      ) : null}
+
       <HostBookingsFilters
         filter={filter}
         onFilterChange={handleFilterChange}
         listingId={listingId}
         onListingChange={handleListingChange}
-        listings={listings}
+        listings={listingSummariesForFilters}
         search={search}
         onSearchChange={setSearch}
         sort={sort}
@@ -312,47 +407,74 @@ export function HostBookingsPage({
       ) : error && bookings.length === 0 ? (
         <HostPortalCard className="border-red-100 bg-red-50 px-4 py-5 text-sm text-red-900">
           <p>{error}</p>
-          {onRetry ? (
-            <button
-              type="button"
-              className="mt-2 font-medium text-[color:var(--host-primary)] underline"
-              onClick={onRetry}
-            >
-              {t("hostDashboard.retryDashboard")}
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="mt-2 font-medium text-[color:var(--host-primary)] underline"
+            onClick={() => void reload()}
+          >
+            {t("hostDashboard.retryDashboard")}
+          </button>
         </HostPortalCard>
       ) : (
         <>
           {error ? (
             <HostPortalCard className="mb-4 border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900">
               <p>{error}</p>
-              {onRetry ? (
-                <button
-                  type="button"
-                  className="mt-2 font-medium text-[color:var(--host-primary)] underline"
-                  onClick={onRetry}
-                >
-                  {t("hostDashboard.retryDashboard")}
-                </button>
-              ) : null}
+              <button
+                type="button"
+                className="mt-2 font-medium text-[color:var(--host-primary)] underline"
+                onClick={() => void reload()}
+              >
+                {t("hostDashboard.retryDashboard")}
+              </button>
             </HostPortalCard>
           ) : null}
-          {visible.length > 0 ? (
-            <HostBookingsList
-              bookings={visible}
-              todayYmd={todayYmd}
-              tomorrowYmd={tomorrowYmd}
-              t={t}
-              locale={locale}
-              localePath={localePath}
-              token={token}
-            />
+          {bookings.length > 0 ? (
+            <>
+              <HostBookingsList
+                bookings={bookings}
+                todayYmd={todayYmd}
+                tomorrowYmd={tomorrowYmd}
+                t={t}
+                locale={locale}
+                localePath={localePath}
+                token={token}
+              />
+              <div ref={sentinelRef} className="h-4" aria-hidden />
+              {loadMoreError ? (
+                <div className="mt-3 text-center text-sm text-red-800">
+                  <p>{loadMoreError}</p>
+                  <button
+                    type="button"
+                    className="mt-1 font-medium text-[color:var(--host-primary)] underline"
+                    onClick={() => void loadMore()}
+                  >
+                    {t("hostDashboard.retryDashboard")}
+                  </button>
+                </div>
+              ) : null}
+              {hasNext ? (
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={loadingMore}
+                    onClick={() => void loadMore()}
+                  >
+                    {loadingMore
+                      ? t("common.loading")
+                      : t("hostPortal.loadMore")}
+                  </Button>
+                </div>
+              ) : null}
+            </>
           ) : (
             <HostBookingEmptyState
               filter={filter}
-              hasAnyBookings={bookings.length > 0}
-              hasActiveSearchOrListing={Boolean(search.trim() || listingId)}
+              hasAnyBookings={(counts.all ?? 0) > 0}
+              hasActiveSearchOrListing={Boolean(
+                search.trim() || listingId || filter !== "all",
+              )}
               onClearFilter={handleClearToAll}
               t={t}
               localePath={localePath}

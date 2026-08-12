@@ -8,17 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   exportHostBookingsCsv,
-  getHostBookings,
-  getHostListings,
+  getHostListingOptions,
   getHostVerification,
   normalizeHostVerificationStatus,
+  type HostListingOption,
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
-import type {
-  HostBooking,
-  HostListingSummary,
-  HostVerificationStatus,
-} from "@/lib/stays-types";
+import type { HostVerificationStatus } from "@/lib/stays-types";
 import { HostBookingsPage } from "@/components/host/bookings/HostBookingsPage";
 import {
   isHostBookingFilterId,
@@ -41,10 +37,9 @@ export default function HostBookingsRoutePage() {
   );
   const [gateLoading, setGateLoading] = useState(true);
   const [gateError, setGateError] = useState<string | null>(null);
-  const [listings, setListings] = useState<HostListingSummary[]>([]);
-  const [bookings, setBookings] = useState<HostBooking[]>([]);
-  const [bookingsLoading, setBookingsLoading] = useState(false);
-  const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [listingOptions, setListingOptions] = useState<HostListingOption[]>(
+    [],
+  );
   const [bookingFilter, setBookingFilter] = useState<HostBookingFilterId>(() =>
     parseBookingFilter(searchParams.get("filter")),
   );
@@ -56,6 +51,7 @@ export default function HostBookingsRoutePage() {
   const [exportListingId, setExportListingId] = useState("");
   const [exportStatus, setExportStatus] = useState("");
   const [exportSubmitting, setExportSubmitting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     setBookingFilter(parseBookingFilter(searchParams.get("filter")));
@@ -68,10 +64,9 @@ export default function HostBookingsRoutePage() {
       if (next === "all") params.delete("filter");
       else params.set("filter", next);
       const q = params.toString();
-      router.replace(
-        localePath(`/host/bookings${q ? `?${q}` : ""}`),
-        { scroll: false },
-      );
+      router.replace(localePath(`/host/bookings${q ? `?${q}` : ""}`), {
+        scroll: false,
+      });
     },
     [localePath, router, searchParams],
   );
@@ -87,34 +82,17 @@ export default function HostBookingsRoutePage() {
       .finally(() => setGateLoading(false));
   }, [token, t]);
 
-  const loadBookings = useCallback(async () => {
-    if (!token) return;
-    setBookingsLoading(true);
-    setBookingsError(null);
-    try {
-      const rows = await getHostBookings(token);
-      setBookings(rows);
-    } catch (e) {
-      setBookings([]);
-      setBookingsError(
-        formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
-      );
-    } finally {
-      setBookingsLoading(false);
-    }
-  }, [token, t]);
-
   useEffect(() => {
     if ((hostStatus?.status ?? "") !== "APPROVED" || !token) return;
-    void loadBookings();
-    getHostListings(token)
-      .then(setListings)
-      .catch(() => setListings([]));
-  }, [hostStatus?.status, token, loadBookings]);
+    getHostListingOptions(token)
+      .then(setListingOptions)
+      .catch(() => setListingOptions([]));
+  }, [hostStatus?.status, token]);
 
   const handleExportBookingsCsv = async () => {
     if (!token) return;
     setExportSubmitting(true);
+    setExportError(null);
     try {
       await exportHostBookingsCsv(token, {
         period: exportPeriod,
@@ -124,7 +102,7 @@ export default function HostBookingsRoutePage() {
         status: exportStatus || undefined,
       });
     } catch (e) {
-      setBookingsError(
+      setExportError(
         formatUserError(e) || t("hostDashboard.exportCsvFailed"),
       );
     } finally {
@@ -167,34 +145,35 @@ export default function HostBookingsRoutePage() {
   }
 
   return (
-    <HostBookingsPage
-      bookings={bookings}
-      listings={listings}
-      loading={bookingsLoading}
-      error={bookingsError}
-      onRetry={() => void loadBookings()}
-      filter={bookingFilter}
-      onFilterChange={handleFilterChange}
-      t={t}
-      locale={locale}
-      localePath={localePath}
-      token={token}
-      exportState={{
-        period: exportPeriod,
-        from: exportFrom,
-        to: exportTo,
-        listingId: exportListingId,
-        status: exportStatus,
-      }}
-      onExportStateChange={(patch) => {
-        if (patch.period != null) setExportPeriod(patch.period);
-        if (patch.from != null) setExportFrom(patch.from);
-        if (patch.to != null) setExportTo(patch.to);
-        if (patch.listingId != null) setExportListingId(patch.listingId);
-        if (patch.status != null) setExportStatus(patch.status);
-      }}
-      onExportCsv={() => void handleExportBookingsCsv()}
-      exportSubmitting={exportSubmitting}
-    />
+    <>
+      {exportError ? (
+        <p className="mb-3 text-sm text-red-800">{exportError}</p>
+      ) : null}
+      <HostBookingsPage
+        listingOptions={listingOptions}
+        filter={bookingFilter}
+        onFilterChange={handleFilterChange}
+        t={t}
+        locale={locale}
+        localePath={localePath}
+        token={token}
+        exportState={{
+          period: exportPeriod,
+          from: exportFrom,
+          to: exportTo,
+          listingId: exportListingId,
+          status: exportStatus,
+        }}
+        onExportStateChange={(patch) => {
+          if (patch.period != null) setExportPeriod(patch.period);
+          if (patch.from != null) setExportFrom(patch.from);
+          if (patch.to != null) setExportTo(patch.to);
+          if (patch.listingId != null) setExportListingId(patch.listingId);
+          if (patch.status != null) setExportStatus(patch.status);
+        }}
+        onExportCsv={() => void handleExportBookingsCsv()}
+        exportSubmitting={exportSubmitting}
+      />
+    </>
   );
 }

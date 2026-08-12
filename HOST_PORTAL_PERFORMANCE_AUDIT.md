@@ -672,3 +672,21 @@ Architecture is fully traced end-to-end. Implementation path is clear. Main risk
 **STOP — await implementation approval.**
 
 No pagination, infinite scroll, API, UI, or database changes were implemented in this audit turn.
+
+---
+
+## Appendix A — Implementation EXPLAIN notes (2026-08-12)
+
+Measured locally with `EXPLAIN (ANALYZE, BUFFERS)` against stays DB (~1010 listings, ~222 bookings):
+
+| Query | Before | After `035_host_list_pagination_indexes.sql` |
+| ----- | ------ | --------------------------------------------- |
+| Listings `WHERE host_user_id ORDER BY created_at DESC, id DESC LIMIT 21` | Seq Scan + Sort (~0.43ms) | Index Only Scan on `idx_stays_listings_host_created_id` (~0.41ms) |
+| Bookings join host + `ORDER BY created_at DESC, id DESC LIMIT 21` | Hash Join + Sort (~0.80ms) | Listings side uses new host index; bookings table still Seq Scan at current cardinality (~0.41ms) |
+
+Indexes added (justified — not speculative search/trigram):
+
+- `idx_stays_bookings_listing_created_id (listing_id, created_at DESC, id DESC)`
+- `idx_stays_listings_host_created_id (host_user_id, created_at DESC, id DESC)`
+
+Counts remain on separate endpoints (not folded into list).

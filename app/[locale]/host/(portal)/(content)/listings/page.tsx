@@ -7,17 +7,13 @@ import { ErrorAlert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  getHostListings,
   getHostVerification,
   normalizeHostVerificationStatus,
   pauseHostListing,
   resumeHostListing,
 } from "@/lib/stays-api";
 import { formatUserError } from "@/lib/errors";
-import type {
-  HostListingSummary,
-  HostVerificationStatus,
-} from "@/lib/stays-types";
+import type { HostVerificationStatus } from "@/lib/stays-types";
 import { HostListingsPage } from "@/components/host/listings/HostListingsPage";
 import { AppLoader } from "@/components/AppLoader";
 
@@ -29,13 +25,11 @@ export default function HostListingsIndexPage() {
   );
   const [gateLoading, setGateLoading] = useState(true);
   const [gateError, setGateError] = useState<string | null>(null);
-  const [listings, setListings] = useState<HostListingSummary[]>([]);
-  const [listingsLoading, setListingsLoading] = useState(false);
-  const [listingsError, setListingsError] = useState<string | null>(null);
   const [listingActionId, setListingActionId] = useState<string | null>(null);
   const [listingActionError, setListingActionError] = useState<string | null>(
     null,
   );
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -48,25 +42,9 @@ export default function HostListingsIndexPage() {
       .finally(() => setGateLoading(false));
   }, [token, t]);
 
-  const refreshListings = useCallback(() => {
-    if (!token) return;
-    setListingsLoading(true);
-    setListingsError(null);
-    getHostListings(token)
-      .then(setListings)
-      .catch((e) => {
-        setListings([]);
-        setListingsError(
-          formatUserError(e) || t("hostPortal.listings.loadFailed"),
-        );
-      })
-      .finally(() => setListingsLoading(false));
-  }, [token, t]);
-
-  useEffect(() => {
-    if ((hostStatus?.status ?? "") !== "APPROVED") return;
-    refreshListings();
-  }, [hostStatus?.status, refreshListings]);
+  const bumpRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
 
   const handlePause = async (id: string) => {
     if (!token) return;
@@ -74,7 +52,7 @@ export default function HostListingsIndexPage() {
     setListingActionError(null);
     try {
       await pauseHostListing(id, token);
-      refreshListings();
+      bumpRefresh();
     } catch (e) {
       setListingActionError(
         formatUserError(e) || t("hostDashboard.pauseFailed"),
@@ -90,7 +68,7 @@ export default function HostListingsIndexPage() {
     setListingActionError(null);
     try {
       await resumeHostListing(id, token);
-      refreshListings();
+      bumpRefresh();
     } catch (e) {
       setListingActionError(
         formatUserError(e) || t("hostDashboard.resumeFailed"),
@@ -113,9 +91,7 @@ export default function HostListingsIndexPage() {
       <div className="mx-auto max-w-lg py-16 text-center">
         <p className="mb-6 text-nexa-ink-3">{gateError}</p>
         <Button asChild>
-          <Link href={localePath("/host/dashboard")}>
-            {t("hostPortal.nav.home")}
-          </Link>
+          <Link href={localePath("/host/dashboard")}>{t("hostPortal.nav.home")}</Link>
         </Button>
       </div>
     );
@@ -124,41 +100,33 @@ export default function HostListingsIndexPage() {
   if ((hostStatus?.status ?? "") !== "APPROVED") {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
-        <p className="mb-6 text-nexa-ink-3">
-          {t("hostPortal.listings.notApproved")}
-        </p>
+        <p className="mb-6 text-nexa-ink-3">{t("hostAnalytics.notApproved")}</p>
         <Button asChild>
-          <Link href={localePath("/host/dashboard")}>
-            {t("hostPortal.nav.home")}
-          </Link>
+          <Link href={localePath("/host/dashboard")}>{t("hostPortal.nav.home")}</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div>
+    <>
       {listingActionError ? (
         <ErrorAlert
           error={listingActionError}
           className="mb-4"
-          compact
           onDismiss={() => setListingActionError(null)}
         />
       ) : null}
-
       <HostListingsPage
-        listings={listings}
-        loading={listingsLoading}
-        error={listingsError}
-        onRetry={refreshListings}
         t={t}
         locale={locale}
         localePath={localePath}
+        token={token}
         listingActionId={listingActionId}
         onPause={(id) => void handlePause(id)}
         onResume={(id) => void handleResume(id)}
+        refreshKey={refreshKey}
       />
-    </div>
+    </>
   );
 }
