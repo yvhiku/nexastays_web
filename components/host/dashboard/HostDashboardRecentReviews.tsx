@@ -13,6 +13,8 @@ type TranslateFn = (key: string) => string;
 type Props = {
   reviews: HostReview[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   t: TranslateFn;
   locale: Locale;
   localePath: (path: string) => string;
@@ -20,10 +22,13 @@ type Props = {
 
 /**
  * Real recent reviews (incl. guest photos) for Home — not invented metrics.
+ * Error must not collapse into an empty/hidden section (P7-STATES).
  */
 export function HostDashboardRecentReviews({
   reviews,
   loading,
+  error,
+  onRetry,
   t,
   locale,
   localePath,
@@ -34,6 +39,33 @@ export function HostDashboardRecentReviews({
         <div className="mb-4 h-6 w-40 rounded bg-[color:var(--host-primary-soft)]" />
         <HostPortalCard className="h-28">
           <span className="sr-only">{t("hostReviews.loading")}</span>
+        </HostPortalCard>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="mb-8" aria-labelledby="host-dashboard-recent-reviews">
+        <h2
+          id="host-dashboard-recent-reviews"
+          className="mb-3 text-lg font-semibold text-[color:var(--host-text)]"
+        >
+          {t("hostPortal.dashboard.recentReviewsTitle")}
+        </h2>
+        <HostPortalCard className="border-red-100 bg-red-50 px-4 py-5 text-sm text-red-900">
+          <p>{error}</p>
+          {onRetry ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={onRetry}
+            >
+              {t("hostReviews.retry")}
+            </Button>
+          ) : null}
         </HostPortalCard>
       </section>
     );

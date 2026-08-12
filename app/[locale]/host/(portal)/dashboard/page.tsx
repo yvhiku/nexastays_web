@@ -49,11 +49,15 @@ function HostDashboardContent() {
   const [listings, setListings] = useState<HostListingSummary[]>([]);
   const [bookings, setBookings] = useState<HostBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<HostDashboardAggregate | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [recentReviews, setRecentReviews] = useState<HostReview[]>([]);
   const [recentReviewsLoading, setRecentReviewsLoading] = useState(false);
+  const [recentReviewsError, setRecentReviewsError] = useState<string | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [blockListingId, setBlockListingId] = useState("");
@@ -118,11 +122,17 @@ function HostDashboardContent() {
   const loadBookings = useCallback(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
     setBookingsLoading(true);
+    setBookingsError(null);
     getHostBookings(token)
       .then(setBookings)
-      .catch(() => setBookings([]))
+      .catch((e) => {
+        setBookings([]);
+        setBookingsError(
+          formatUserError(e) || t("hostDashboard.bookingsLoadFailed"),
+        );
+      })
       .finally(() => setBookingsLoading(false));
-  }, [token, hostStatus?.status]);
+  }, [token, hostStatus?.status, t]);
 
   useEffect(() => {
     loadBookings();
@@ -147,14 +157,24 @@ function HostDashboardContent() {
     loadDashboard();
   }, [loadDashboard]);
 
-  useEffect(() => {
+  const loadRecentReviews = useCallback(() => {
     if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
     setRecentReviewsLoading(true);
+    setRecentReviewsError(null);
     getHostReviews(token, { page: 1, limit: 3 })
       .then((res) => setRecentReviews(res.reviews ?? []))
-      .catch(() => setRecentReviews([]))
+      .catch((e) => {
+        setRecentReviews([]);
+        setRecentReviewsError(
+          formatUserError(e) || t("hostReviews.failedLoad"),
+        );
+      })
       .finally(() => setRecentReviewsLoading(false));
-  }, [token, hostStatus?.status]);
+  }, [token, hostStatus?.status, t]);
+
+  useEffect(() => {
+    loadRecentReviews();
+  }, [loadRecentReviews]);
 
   const handleAvailabilityBlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -287,9 +307,13 @@ function HostDashboardContent() {
         onRetryDashboard={loadDashboard}
         bookings={bookings}
         bookingsLoading={bookingsLoading}
+        bookingsError={bookingsError}
+        onRetryBookings={loadBookings}
         listings={listings}
         recentReviews={recentReviews}
         recentReviewsLoading={recentReviewsLoading}
+        recentReviewsError={recentReviewsError}
+        onRetryRecentReviews={loadRecentReviews}
         token={token}
         t={t}
         locale={locale}

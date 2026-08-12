@@ -12,6 +12,8 @@ interface HostUpcomingSectionProps {
   dashboard: HostDashboardAggregate | null;
   bookings: HostBooking[];
   bookingsLoading?: boolean;
+  bookingsError?: string | null;
+  onRetryBookings?: () => void;
   loading?: boolean;
   t: TranslateFn;
   localePath: (path: string) => string;
@@ -23,6 +25,8 @@ export function HostUpcomingSection({
   dashboard,
   bookings,
   bookingsLoading,
+  bookingsError,
+  onRetryBookings,
   loading,
   t,
   localePath,
@@ -87,7 +91,7 @@ export function HostUpcomingSection({
             </p>
           </div>
           <Link
-            href={localePath("/host/bookings")}
+            href={localePath("/host/bookings?filter=upcoming")}
             className="text-sm text-nexa-primary font-medium shrink-0 hover:underline"
           >
             {t("hostDashboard.viewBookingsLink")}
@@ -109,6 +113,19 @@ export function HostUpcomingSection({
           <p className="text-sm text-nexa-ink-4 py-4">
             {t("hostDashboard.loadingBookings")}
           </p>
+        ) : bookingsError ? (
+          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-4 text-sm text-red-900">
+            <p>{bookingsError}</p>
+            {onRetryBookings ? (
+              <button
+                type="button"
+                className="mt-2 text-sm font-medium text-nexa-primary underline"
+                onClick={onRetryBookings}
+              >
+                {t("hostDashboard.retryDashboard")}
+              </button>
+            ) : null}
+          </div>
         ) : upcomingRows.length === 0 ? (
           <div className="rounded-xl border-2 border-dashed border-nexa-line bg-nexa-bg-1 p-5 text-center">
             <p className="text-sm text-nexa-ink-3">

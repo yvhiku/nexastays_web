@@ -34,9 +34,13 @@ export type HostDashboardHomeProps = {
   onRetryDashboard: () => void;
   bookings: HostBooking[];
   bookingsLoading: boolean;
+  bookingsError?: string | null;
+  onRetryBookings?: () => void;
   listings: HostListingSummary[];
   recentReviews: HostReview[];
   recentReviewsLoading: boolean;
+  recentReviewsError?: string | null;
+  onRetryRecentReviews?: () => void;
   token: string;
   t: TranslateFn;
   locale: Locale;
@@ -52,9 +56,13 @@ export function HostDashboardHome({
   onRetryDashboard,
   bookings,
   bookingsLoading,
+  bookingsError,
+  onRetryBookings,
   listings,
   recentReviews,
   recentReviewsLoading,
+  recentReviewsError,
+  onRetryRecentReviews,
   token,
   t,
   locale,
@@ -117,6 +125,8 @@ export function HostDashboardHome({
             dashboard={dashboard}
             bookings={bookings}
             bookingsLoading={bookingsLoading}
+            bookingsError={bookingsError}
+            onRetryBookings={onRetryBookings}
             loading={dashboardLoading}
             t={t}
             localePath={localePath}
@@ -150,6 +160,8 @@ export function HostDashboardHome({
       <HostDashboardRecentReviews
         reviews={recentReviews}
         loading={recentReviewsLoading}
+        error={recentReviewsError}
+        onRetry={onRetryRecentReviews}
         t={t}
         locale={locale}
         localePath={localePath}

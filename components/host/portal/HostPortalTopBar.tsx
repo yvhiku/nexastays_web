@@ -14,9 +14,10 @@ import {
 
 type Props = {
   onOpenDrawer: () => void;
+  drawerOpen?: boolean;
 };
 
-export function HostPortalTopBar({ onOpenDrawer }: Props) {
+export function HostPortalTopBar({ onOpenDrawer, drawerOpen = false }: Props) {
   const { t, localePath } = useLanguage();
   const pathname = usePathname() || "";
   const path = portalPathnameWithoutLocale(pathname);
@@ -29,6 +30,8 @@ export function HostPortalTopBar({ onOpenDrawer }: Props) {
           className="rounded-lg p-2 text-[color:var(--host-text-secondary)] hover:bg-[color:var(--host-primary-soft)] hover:text-[color:var(--host-primary)] md:hidden"
           onClick={onOpenDrawer}
           aria-label={t("hostPortal.openMenu")}
+          aria-expanded={drawerOpen}
+          aria-controls="host-portal-mobile-drawer"
         >
           <Menu className="h-5 w-5" aria-hidden />
         </button>

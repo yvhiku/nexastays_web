@@ -29,7 +29,9 @@ interface HostTodaySectionProps {
 
 function scrollToId(id: string) {
   if (typeof document === "undefined") return;
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const el = document.getElementById(id);
+  if (el instanceof HTMLDetailsElement) el.open = true;
+  el?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export function HostTodaySection({

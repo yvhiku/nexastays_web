@@ -36,8 +36,13 @@ export function HostPortalMobileDrawer({ open, onClose }: DrawerProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={t("hostPortal.navAria")}>
-      <button
+    <div
+      id="host-portal-mobile-drawer"
+      className="fixed inset-0 z-50 md:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("hostPortal.navAria")}
+    >      <button
         type="button"
         className="host-portal-drawer-backdrop absolute inset-0"
         aria-label={t("common.close")}
