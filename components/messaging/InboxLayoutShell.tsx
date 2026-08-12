@@ -26,10 +26,17 @@ export function InboxLayoutShell({
   const isPortal = variant === "portal";
 
   const body = (
-    <div className="mx-auto flex min-h-0 w-full max-w-[1500px] flex-1 overflow-hidden overflow-x-hidden">
+    <div
+      className={cn(
+        "flex min-h-0 w-full flex-1 overflow-hidden overflow-x-hidden",
+        // Guest inbox stays capped/centered; portal fills the Host Portal main.
+        !isPortal && "mx-auto max-w-[1500px]",
+      )}
+    >
       <aside
         className={cn(
-          "flex min-h-0 w-full shrink-0 flex-col overflow-x-hidden border-e border-nexa-line bg-white/95 shadow-messaging-1 backdrop-blur-xl min-[1100px]:w-72",
+          "flex min-h-0 w-full shrink-0 flex-col overflow-x-hidden border-e border-nexa-line bg-white/95 shadow-messaging-1 backdrop-blur-xl",
+          isPortal ? "min-[1100px]:w-80 lg:min-[1100px]:w-96" : "min-[1100px]:w-72",
           isThread ? "hidden min-[1100px]:flex" : "flex",
         )}
       >
@@ -49,7 +56,7 @@ export function InboxLayoutShell({
 
   if (isPortal) {
     return (
-      <div className="messaging-ui flex h-full min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(253,240,243,0.8),transparent_34%),#fdfbfc] pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:pb-0">
+      <div className="messaging-ui flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden overflow-x-hidden bg-[color:var(--host-surface,#fff)] pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:pb-0">
         {body}
       </div>
     );

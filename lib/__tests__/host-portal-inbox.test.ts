@@ -52,6 +52,8 @@ describe("host portal inbox routes", () => {
     const shell = read("components/messaging/InboxLayoutShell.tsx");
     assert.match(shell, /variant === "portal"/);
     assert.match(shell, /NavBar/);
+    // Portal full-bleed: max-width only when not portal.
+    assert.match(shell, /!isPortal && "mx-auto max-w-\[1500px\]"/);
   });
 
   it("portal nav and host entry points target /host/inbox", () => {
@@ -70,6 +72,6 @@ describe("host portal inbox routes", () => {
   it("HostPortalShell does not hardcode /host/inbox path detection", () => {
     const shell = read("components/host/portal/HostPortalShell.tsx");
     assert.doesNotMatch(shell, /host\/inbox/);
-    assert.match(shell, /<main className="flex min-h-0 flex-1 flex-col">/);
+    assert.match(shell, /flex min-h-0 flex-1 flex-col overflow-y-auto/);
   });
 });

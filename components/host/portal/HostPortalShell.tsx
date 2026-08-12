@@ -23,16 +23,18 @@ export function HostPortalShell({ children }: Props) {
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   return (
-    <div className="host-portal flex min-h-screen">
+    <div className="host-portal flex h-dvh min-h-0 overflow-hidden">
       <div className="fixed inset-y-0 start-0 z-40 hidden md:block">
         <HostPortalSidebar />
       </div>
 
       <HostPortalMobileDrawer open={drawerOpen} onClose={closeDrawer} />
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:ms-64">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:ms-64">
         <HostPortalTopBar onOpenDrawer={openDrawer} drawerOpen={drawerOpen} />
-        <main className="flex min-h-0 flex-1 flex-col">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {children}
+        </main>
       </div>
 
       <HostPortalMobileBottomNav />
