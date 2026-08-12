@@ -131,6 +131,16 @@ export default function ListingsPage() {
   const [searchDraft, setSearchDraft] = useState<SearchBarValue>(urlSearch);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [fetchedAt, setFetchedAt] = useState<number | null>(null);
+  /** Transient list→map hover highlight (desktop split presentation only). */
+  const [highlightedListingId, setHighlightedListingId] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    if (effectiveLayout !== "split") {
+      setHighlightedListingId(null);
+    }
+  }, [effectiveLayout]);
 
   useEffect(() => {
     setSearchDraft(urlSearch);
@@ -647,7 +657,8 @@ export default function ListingsPage() {
                       variant="listings"
                     />
                   </div>
-                  {filtersCta}
+                  {/* Split: Filters live only in sticky list toolbar (no duplicate). */}
+                  {effectiveLayout !== "split" ? filtersCta : null}
                 </div>
                 <QuickFilters
                   state={{
@@ -786,8 +797,12 @@ export default function ListingsPage() {
                     sortOptions={exploreSortOptions}
                     t={t}
                     tf={tf}
+                    hideUpdated={effectiveLayout === "split"}
                     destinationTitle={
                       effectiveLayout === "list" ? undefined : destinationTitle
+                    }
+                    leading={
+                      effectiveLayout === "split" ? filtersCta : undefined
                     }
                   />
                 </div>
@@ -876,17 +891,17 @@ export default function ListingsPage() {
                 <div
                   className={cn(
                     effectiveLayout === "split" &&
-                      "grid grid-cols-[minmax(0,1fr)_minmax(360px,44%)] items-start gap-0",
+                      "grid grid-cols-[minmax(0,1fr)_minmax(340px,42%)] items-start gap-0",
                   )}
                 >
                   <div
                     className={cn(
                       "min-w-0",
                       effectiveLayout === "split" &&
-                        "@container/split-list ps-4 sm:ps-6 xl:ps-8 pe-4",
+                        "split-list-pane @container/split-list ps-4 sm:ps-6 xl:ps-8 pe-3",
                     )}
                   >
-                    <div className="sticky top-[72px] z-layer-sticky -mx-1 mb-3 border-b border-nexa-line bg-nexa-bg/95 px-1 py-3 backdrop-blur-sm">
+                    <div className="sticky top-[72px] z-layer-sticky -mx-1 mb-2.5 border-b border-nexa-line bg-nexa-bg/95 px-1 py-2.5 backdrop-blur-sm">
                       <ResultsHeader
                         matchCount={displayListings.length}
                         isLoading={isLoading}
@@ -899,20 +914,24 @@ export default function ListingsPage() {
                         sortOptions={exploreSortOptions}
                         t={t}
                         tf={tf}
+                        hideUpdated={effectiveLayout === "split"}
                         destinationTitle={
                           effectiveLayout === "split"
                             ? destinationTitle
                             : undefined
                         }
+                        leading={
+                          effectiveLayout === "split" ? filtersCta : undefined
+                        }
                       />
                     </div>
                     <div
                       className={cn(
-                        "grid gap-4 mb-4",
+                        "grid mb-4",
                         effectiveLayout === "split"
-                          ? // Pane-width driven: ~640px needed for two compact cards (validated vs blind xl).
-                            "grid-cols-1 @[40rem]/split-list:grid-cols-2 gap-3"
-                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+                          ? // Pane-width driven via .split-list-pane / @container (globals.css).
+                            "split-list-cards grid-cols-1 gap-2.5 @[32rem]/split-list:grid-cols-2"
+                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
                       )}
                       aria-busy={isRevalidating}
                     >
@@ -930,6 +949,11 @@ export default function ListingsPage() {
                           density={
                             effectiveLayout === "split" ? "compact" : "default"
                           }
+                          onHighlightChange={
+                            effectiveLayout === "split"
+                              ? setHighlightedListingId
+                              : undefined
+                          }
                           t={t}
                           tf={tf}
                           localePath={localePath}
@@ -940,22 +964,32 @@ export default function ListingsPage() {
                     {isLoadingMore && (
                       <div
                         className={cn(
-                          "mb-6 grid grid-cols-1 gap-4",
+                          "mb-6 grid grid-cols-1",
                           effectiveLayout === "split"
-                            ? "@[40rem]/split-list:grid-cols-2 gap-3"
-                            : "sm:grid-cols-2 lg:grid-cols-3",
+                            ? "split-list-cards gap-2.5"
+                            : "sm:grid-cols-2 lg:grid-cols-3 gap-4",
                         )}
                         aria-busy="true"
                       >
-                        <ListingCardSkeleton />
+                        <ListingCardSkeleton
+                          density={
+                            effectiveLayout === "split" ? "compact" : "default"
+                          }
+                        />
                         <div
                           className={
                             effectiveLayout === "split"
-                              ? "hidden @[40rem]/split-list:block"
+                              ? "split-list-skeleton-second"
                               : "hidden sm:block"
                           }
                         >
-                          <ListingCardSkeleton />
+                          <ListingCardSkeleton
+                            density={
+                              effectiveLayout === "split"
+                                ? "compact"
+                                : "default"
+                            }
+                          />
                         </div>
                         {effectiveLayout !== "split" && (
                           <div className="hidden lg:block">
@@ -1004,6 +1038,7 @@ export default function ListingsPage() {
                         t={t}
                         tf={tf}
                         labels={mapLabels}
+                        highlightedId={highlightedListingId}
                         className="h-full mb-0"
                       />
                     </aside>

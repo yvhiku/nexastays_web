@@ -5,6 +5,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Desktop split list pane — container-width 2-col (not blind xl). */
+.split-list-pane {
+  container-type: inline-size;
+  container-name: split-list;
+}
+
+@container split-list (min-width: 32rem) {
+  .split-list-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .split-list-skeleton-second {
+    display: block;
+  }
+}
+
+.split-list-skeleton-second {
+  display: none;
+}
+
 @layer base {
   :root {
     --primary: 342 65% 47%;
@@ -172,6 +192,15 @@
   transform: scale(1.08);
 }
 
+/* Transient list-card hover — presentation only; no cluster open/spiderfy */
+.nexa-price-bubble.is-highlighted .nexa-price-bubble__body {
+  background: #fdf0f3;
+  color: #c93a62;
+  border-color: #e8507a;
+  box-shadow: 0 4px 14px rgba(232, 80, 122, 0.28);
+  transform: scale(1.06);
+}
+
 .nexa-price-bubble:hover .nexa-price-bubble__body {
   transform: scale(1.08);
   box-shadow: 0 4px 14px rgba(26, 10, 15, 0.16);
@@ -179,6 +208,10 @@
 
 .nexa-price-bubble.is-selected:hover .nexa-price-bubble__body {
   transform: scale(1.08);
+}
+
+.nexa-price-bubble.is-highlighted:hover .nexa-price-bubble__body {
+  transform: scale(1.06);
 }
 
 /* Explore cluster pills — "N stays" */

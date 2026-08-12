@@ -39,6 +39,8 @@ export type ListingsMapPanelProps = {
     exploreCity: string;
   };
   className?: string;
+  /** Transient list→map hover highlight (presentation only). */
+  highlightedId?: string | null;
 };
 
 export function ListingsMapPanel({
@@ -62,6 +64,7 @@ export function ListingsMapPanel({
   tf,
   labels,
   className,
+  highlightedId = null,
 }: ListingsMapPanelProps) {
   const map = (
     <ExploreMap
@@ -86,6 +89,7 @@ export function ListingsMapPanel({
       exploreCityLabel={labels.exploreCity}
       onBoundsChange={onBoundsChange}
       onSelectCity={onSelectCity}
+      highlightedId={highlightedId}
     />
   );
 

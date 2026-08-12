@@ -76,6 +76,11 @@ export interface ExploreMapProps {
   /** Called when user explores (initial, CTA, or programmatic). */
   onBoundsChange?: (bounds: MapBounds) => void;
   onSelectCity?: (city: string) => void;
+  /**
+   * Transient list-card hover highlight (presentation only).
+   * Does not spiderfy, zoom, or open clusters when the marker is clustered.
+   */
+  highlightedId?: string | null;
 }
 
 function listingHref(
@@ -152,6 +157,7 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       sizeVariant = "default",
       onBoundsChange,
       onSelectCity,
+      highlightedId = null,
     },
     ref,
   ) {
@@ -456,14 +462,20 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
           const lng = Number(listing.geo_lng);
           const label = formatListingPriceLabel(listing, locale);
           const isSelected = listing.id === selectedId;
-          const icon = await createPriceBubbleIcon(label, isSelected);
+          const isHighlighted =
+            !isSelected && listing.id === highlightedId;
+          const icon = await createPriceBubbleIcon(
+            label,
+            isSelected,
+            isHighlighted,
+          );
           if (cancelled || !clusterRef.current) return;
 
           const existing = markersRef.current.get(listing.id);
           if (existing) {
             existing.setLatLng([lat, lng]);
             existing.setIcon(icon);
-            existing.setZIndexOffset(isSelected ? 1000 : 0);
+            existing.setZIndexOffset(isSelected || isHighlighted ? 1000 : 0);
             continue;
           }
 
@@ -498,7 +510,14 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
       return () => {
         cancelled = true;
       };
-    }, [mappable, ready, selectedId, preferListingsCenter, locale]);
+    }, [
+      mappable,
+      ready,
+      selectedId,
+      highlightedId,
+      preferListingsCenter,
+      locale,
+    ]);
 
     const goToUser = async () => {
       const coords = userCenter ?? (await readUserLocation());

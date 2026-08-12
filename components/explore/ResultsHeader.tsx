@@ -25,6 +25,8 @@ export type ResultsHeaderProps = {
   verifiedOnly?: boolean;
   /** Destination name owned by ResultsHeader (desktop split / list pane). */
   destinationTitle?: string;
+  /** Hide the “Updated …” caption (desktop split chrome). */
+  hideUpdated?: boolean;
 };
 
 export function ResultsHeader({
@@ -44,6 +46,7 @@ export function ResultsHeader({
   compact,
   verifiedOnly,
   destinationTitle,
+  hideUpdated,
 }: ResultsHeaderProps) {
   const countLabel =
     isLoading && matchCount === 0
@@ -84,7 +87,7 @@ export function ResultsHeader({
         <span className="inline-flex items-center gap-2 whitespace-nowrap truncate">
           {countLabel}
         </span>
-        {!compact && !isLoading && matchCount > 0 && (
+        {!compact && !hideUpdated && !isLoading && matchCount > 0 && (
           <span className="hidden sm:inline whitespace-nowrap">{updatedLabel}</span>
         )}
       </div>

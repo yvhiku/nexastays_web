@@ -17,11 +17,13 @@ import { cn } from "@/lib/utils";
 import { SaveButton } from "@/components/saved/SaveButton";
 import {
   LISTING_CARD_IMAGE_RATIO,
+  LISTING_CARD_IMAGE_RATIO_COMPACT,
   LISTING_CARD_RADIUS,
 } from "@/components/listing/listing-card-dims";
 
 export {
   LISTING_CARD_IMAGE_RATIO,
+  LISTING_CARD_IMAGE_RATIO_COMPACT,
   LISTING_CARD_RADIUS,
 } from "@/components/listing/listing-card-dims";
 
@@ -52,7 +54,10 @@ export interface ListingCardProps {
   t: (key: string) => string;
   tf?: (key: string, vars: Record<string, string | number>) => string;
   localePath: (path: string) => string;
+  /** Split-pane presentation only — does not change default card consumers. */
   density?: "default" | "compact";
+  /** Transient map highlight (presentation); clear on mouse leave. */
+  onHighlightChange?: (listingId: string | null) => void;
 }
 
 export function ListingCard({
@@ -68,9 +73,11 @@ export function ListingCard({
   tf,
   localePath,
   density = "default",
+  onHighlightChange,
 }: ListingCardProps) {
   const router = useRouter();
   const { locale } = useLanguage();
+  const compact = density === "compact";
   const price = listing.rate_plan?.base_price ?? 0;
   const currency = listing.rate_plan?.currency || "MAD";
   const cover = listing.media?.find((m) => m.kind === "PHOTO");
@@ -107,19 +114,27 @@ export function ListingCard({
       ? Number(listing.avg_rating)
       : 0;
   const reviewCount = Math.max(0, Number(listing.review_count ?? 0));
+  const imageRatio = compact
+    ? LISTING_CARD_IMAGE_RATIO_COMPACT
+    : LISTING_CARD_IMAGE_RATIO;
 
   return (
     <article
       className={cn(
-        "group bg-white overflow-hidden shadow-nexa-card border border-nexa-line/50 transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5 min-w-0 w-full",
+        "group bg-white overflow-hidden border border-nexa-line/50 min-w-0 w-full",
         LISTING_CARD_RADIUS,
+        compact
+          ? "shadow-nexa-sm transition-shadow duration-200 hover:shadow-nexa-md hover:border-nexa-line"
+          : "shadow-nexa-card transition-all duration-300 hover:shadow-nexa-md hover:border-nexa-line hover:-translate-y-0.5",
       )}
+      onMouseEnter={() => onHighlightChange?.(listing.id)}
+      onMouseLeave={() => onHighlightChange?.(null)}
     >
       <div className="relative block">
         <button
           type="button"
           className="relative block w-full overflow-hidden rounded-t-2xl bg-nexa-bg-2"
-          style={{ aspectRatio: LISTING_CARD_IMAGE_RATIO }}
+          style={{ aspectRatio: imageRatio }}
           onClick={() => router.push(linkHref)}
           aria-label={title}
         >
@@ -127,7 +142,11 @@ export function ListingCard({
             src={imgError ? placeholderImg : coverSrc}
             alt={title}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes={
+              compact
+                ? "(max-width: 1280px) 50vw, 25vw"
+                : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            }
             className={cn(
               "object-cover transition-[opacity,transform] duration-300 group-hover:scale-[1.03]",
               imgLoaded ? "opacity-100" : "opacity-0",
@@ -142,10 +161,29 @@ export function ListingCard({
           />
         </button>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 pointer-events-none rounded-t-2xl" />
+        <div
+          className={cn(
+            "absolute inset-0 pointer-events-none rounded-t-2xl",
+            compact
+              ? "bg-gradient-to-t from-black/30 via-transparent to-black/5"
+              : "bg-gradient-to-t from-black/45 via-transparent to-black/10",
+          )}
+        />
 
-        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2 z-layer-content">
-          <span className="inline-flex px-2.5 py-1 rounded-full text-[0.65rem] font-semibold uppercase tracking-wide bg-white/95 text-nexa-ink shadow-sm font-sans">
+        <div
+          className={cn(
+            "absolute left-3 right-3 flex items-start justify-between gap-2 z-layer-content",
+            compact ? "top-2.5" : "top-3",
+          )}
+        >
+          <span
+            className={cn(
+              "inline-flex rounded-full font-semibold uppercase tracking-wide bg-white/95 text-nexa-ink shadow-sm font-sans",
+              compact
+                ? "px-2 py-0.5 text-[0.6rem]"
+                : "px-2.5 py-1 text-[0.65rem]",
+            )}
+          >
             {listingTypeLabel(listing.listing_type)}
           </span>
           <SaveButton
@@ -160,10 +198,21 @@ export function ListingCard({
           />
         </div>
 
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2 z-layer-content pointer-events-none">
-          {/* Ranking badges reserved (Recommended / Best Value / …) — Phase 2 */}
-          <div className="flex flex-wrap items-center gap-1.5 min-h-[1.5rem]">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.65rem] font-semibold bg-white/95 text-nexa-ink shadow-sm font-sans">
+        <div
+          className={cn(
+            "absolute left-3 right-3 flex items-end justify-between gap-2 z-layer-content pointer-events-none",
+            compact ? "bottom-2.5" : "bottom-3",
+          )}
+        >
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full font-semibold bg-white/95 text-nexa-ink shadow-sm font-sans",
+                compact
+                  ? "px-2 py-0.5 text-[0.6rem]"
+                  : "px-2.5 py-1 text-[0.65rem]",
+              )}
+            >
               {listing.instant_booking ? (
                 <>
                   <Zap className="w-3 h-3 text-nexa-primary fill-nexa-primary" />
@@ -185,59 +234,103 @@ export function ListingCard({
         </div>
       </div>
 
-      <div className={cn("font-sans", density === "compact" ? "p-3.5 sm:p-4" : "p-4 sm:p-5")}>
-        <div className={cn("mb-1 flex items-start justify-between gap-3", density === "compact" && "mb-0.5")}>
-        <p className="text-xs font-medium text-nexa-ink-4 tracking-wider">
-            {getShortLocationLabel(listing)}
-          </p>
-          <div
-            className="shrink-0 text-right"
-            aria-label={`${avgRating.toFixed(1)} out of 5, ${reviewCount} reviews`}
+      {compact ? (
+        <div className="font-sans p-2.5 sm:p-3">
+          <Link
+            href={linkHref}
+            className="block hover:text-nexa-primary transition-colors"
           >
-            <p className="inline-flex items-center gap-1 text-sm font-semibold tabular-nums text-nexa-ink">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
+            <h3 className="font-display font-semibold text-sm text-nexa-ink line-clamp-1 mb-1">
+              {title}
+            </h3>
+          </Link>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5">
+            <p
+              className="inline-flex items-center gap-1 text-xs font-semibold tabular-nums text-nexa-ink"
+              aria-label={`${avgRating.toFixed(1)} out of 5, ${reviewCount} reviews`}
+            >
+              <Star
+                className="h-3 w-3 fill-amber-400 text-amber-400"
+                aria-hidden
+              />
               {avgRating.toFixed(1)}
+              <span className="font-medium text-nexa-ink-4">
+                ({reviewCount})
+              </span>
             </p>
-            <p className="text-[0.65rem] leading-tight text-nexa-ink-4 tabular-nums">
-              {tf
-                ? tf("listings.reviewCount", { count: reviewCount })
-                : t("listings.reviewCount").replace(
-                    "{count}",
-                    String(reviewCount),
-                  )}
-            </p>
-          </div>
-        </div>
-        <Link href={linkHref} className="block hover:text-nexa-primary transition-colors">
-          <h3 className="font-display font-semibold text-base text-nexa-ink mb-1.5 line-clamp-1">
-            {title}
-          </h3>
-        </Link>
-        <p className={cn(
-          "text-sm text-nexa-ink-3 line-clamp-2 leading-relaxed",
-          density === "compact" ? "mb-3 min-h-[2.25rem]" : "mb-4 min-h-[2.5rem]",
-        )}>
-          {listing.description?.trim()
-            ? description
-            : getShortLocationLabel(listing)}
-        </p>
-
-        <div className="flex items-center justify-between gap-3 pt-3 border-t border-nexa-line/60">
-          <div className="min-w-0">
-            <span className="font-bold text-lg text-nexa-ink tabular-nums">
-              {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}
+            <span className="text-nexa-ink-4 text-xs" aria-hidden>
+              ·
             </span>
+            <p className="text-xs font-medium text-nexa-ink-4 truncate min-w-0">
+              {getShortLocationLabel(listing)}
+            </p>
           </div>
-          <Button size="sm" asChild className="rounded-xl font-medium shrink-0 shadow-nexa-sm">
-            <Link href={linkHref}>{t("listings.viewStay")}</Link>
-          </Button>
+          <p className="font-bold text-sm text-nexa-ink tabular-nums">
+            {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}
+          </p>
         </div>
+      ) : (
+        <div className="font-sans p-4 sm:p-5">
+          <div className="mb-1 flex items-start justify-between gap-3">
+            <p className="text-xs font-medium text-nexa-ink-4 tracking-wider">
+              {getShortLocationLabel(listing)}
+            </p>
+            <div
+              className="shrink-0 text-right"
+              aria-label={`${avgRating.toFixed(1)} out of 5, ${reviewCount} reviews`}
+            >
+              <p className="inline-flex items-center gap-1 text-sm font-semibold tabular-nums text-nexa-ink">
+                <Star
+                  className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                  aria-hidden
+                />
+                {avgRating.toFixed(1)}
+              </p>
+              <p className="text-[0.65rem] leading-tight text-nexa-ink-4 tabular-nums">
+                {tf
+                  ? tf("listings.reviewCount", { count: reviewCount })
+                  : t("listings.reviewCount").replace(
+                      "{count}",
+                      String(reviewCount),
+                    )}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={linkHref}
+            className="block hover:text-nexa-primary transition-colors"
+          >
+            <h3 className="font-display font-semibold text-base text-nexa-ink mb-1.5 line-clamp-1">
+              {title}
+            </h3>
+          </Link>
+          <p className="text-sm text-nexa-ink-3 line-clamp-2 leading-relaxed mb-4 min-h-[2.5rem]">
+            {listing.description?.trim()
+              ? description
+              : getShortLocationLabel(listing)}
+          </p>
 
-        <p className="text-[0.7rem] text-nexa-ink-4 pt-3 mt-3 border-t border-nexa-line/40 flex items-center gap-1.5 leading-snug">
-          <Lock className="w-3 h-3 text-nexa-accent shrink-0" />
-          <span>{t("listings.contactRevealed")}</span>
-        </p>
-      </div>
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-nexa-line/60">
+            <div className="min-w-0">
+              <span className="font-bold text-lg text-nexa-ink tabular-nums">
+                {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              asChild
+              className="rounded-xl font-medium shrink-0 shadow-nexa-sm"
+            >
+              <Link href={linkHref}>{t("listings.viewStay")}</Link>
+            </Button>
+          </div>
+
+          <p className="text-[0.7rem] text-nexa-ink-4 pt-3 mt-3 border-t border-nexa-line/40 flex items-center gap-1.5 leading-snug">
+            <Lock className="w-3 h-3 text-nexa-accent shrink-0" />
+            <span>{t("listings.contactRevealed")}</span>
+          </p>
+        </div>
+      )}
     </article>
   );
 }

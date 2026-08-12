@@ -97,7 +97,9 @@ test("mobile center FAB adapts from search to map and list", () => {
 
   // Desktop split: compact cards + pane-width container columns (not blind xl 2-col).
   assert.match(listings, /@container\/split-list/);
-  assert.match(listings, /@\[40rem\]\/split-list:grid-cols-2/);
+  assert.match(listings, /split-list-pane/);
+  assert.match(listings, /split-list-cards/);
+  assert.match(listings, /@\[32rem\]\/split-list:grid-cols-2/);
   assert.match(
     listings,
     /density=\{\s*\n?\s*effectiveLayout === "split" \? "compact"/,
@@ -117,12 +119,31 @@ test("mobile center FAB adapts from search to map and list", () => {
   );
   assert.match(
     listings,
-    /grid-cols-\[minmax\(0,1fr\)_minmax\(360px,44%\)\]/,
+    /grid-cols-\[minmax\(0,1fr\)_minmax\(340px,42%\)\]/,
   );
+  // Split: Filters only in sticky toolbar — not duplicated in search chrome.
+  assert.match(
+    listings,
+    /effectiveLayout !== "split" \? filtersCta : null/,
+  );
+  assert.match(
+    listings,
+    /leading=\{\s*\n?\s*effectiveLayout === "split" \? filtersCta/,
+  );
+  assert.match(listings, /highlightedId=\{highlightedListingId\}/);
+  assert.match(listings, /onHighlightChange=/);
   assert.match(header, /listings\.splitView/);
   assert.match(header, /onLayoutChange\("split"\)/);
   assert.match(header, /layout === "map"/);
   assert.doesNotMatch(header, /layout === "map" \|\| layout === "split"/);
+
+  // Compact is presentation-only; default ListingCard keeps description/CTA/footer.
+  const card = read("components/listing/ListingCard.tsx");
+  assert.match(card, /density === "compact"/);
+  assert.match(card, /listings\.viewStay/);
+  assert.match(card, /listings\.contactRevealed/);
+  assert.match(card, /LISTING_CARD_IMAGE_RATIO_COMPACT/);
+  assert.match(card, /onMouseLeave=\{\(\) => onHighlightChange\?\.\(null\)\}/);
 });
 
 test("mobile listing booking bar sits safely below the upper navigation", () => {

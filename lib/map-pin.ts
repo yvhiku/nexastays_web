@@ -26,6 +26,7 @@ export async function createNexaMapPinIcon(
 export async function createPriceBubbleIcon(
   label: string,
   selected = false,
+  highlighted = false,
 ): Promise<DivIcon> {
   const L = (await import("leaflet")).default;
   const safe = label
@@ -36,9 +37,14 @@ export async function createPriceBubbleIcon(
 
   const width = Math.max(68, Math.min(148, 30 + safe.length * 7.5));
   const height = 32;
+  const stateClass = selected
+    ? " is-selected"
+    : highlighted
+      ? " is-highlighted"
+      : "";
 
   return L.divIcon({
-    className: `nexa-price-bubble${selected ? " is-selected" : ""}`,
+    className: `nexa-price-bubble${stateClass}`,
     html: `<div class="nexa-price-bubble__body">${safe}</div>`,
     iconSize: [width, height],
     iconAnchor: [width / 2, height / 2],
