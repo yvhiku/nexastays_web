@@ -70,8 +70,8 @@ export function HostPayoutStatus({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
+      <div className="mt-5 grid grid-cols-1 gap-4">
+        <div className="min-w-0 rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
           <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
             {t("hostDashboard.pendingPayout")}
           </p>
@@ -86,7 +86,7 @@ export function HostPayoutStatus({
             </p>
           ) : null}
         </div>
-        <div className="rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
+        <div className="min-w-0 rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
           <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
             {t("hostDashboard.availablePayout")}
           </p>
@@ -97,7 +97,7 @@ export function HostPayoutStatus({
             {t("hostDashboard.availablePayoutHint")}
           </p>
         </div>
-        <div className="rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
+        <div className="min-w-0 rounded-xl bg-nexa-bg-1 border border-nexa-line px-4 py-3">
           <p className="text-xs text-nexa-ink-4 uppercase tracking-wide">
             {t("hostDashboard.paidOutPayout")}
           </p>

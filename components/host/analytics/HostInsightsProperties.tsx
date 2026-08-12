@@ -77,7 +77,7 @@ export function HostInsightsProperties({
         />
       </div>
 
-      <HostPortalCard className="mb-4 hidden overflow-x-auto p-0 lg:block">
+      <HostPortalCard className="mb-4 hidden overflow-x-auto p-0 xl:block">
         <table className="w-full min-w-[56rem] text-start text-sm">
           <thead>
             <tr className="border-b border-[color:var(--host-border)] bg-[color:var(--host-background)] text-xs uppercase tracking-wide text-[color:var(--host-muted)]">
@@ -178,7 +178,7 @@ export function HostInsightsProperties({
         </table>
       </HostPortalCard>
 
-      <ul className="space-y-4 lg:hidden">
+      <ul className="space-y-4 xl:hidden">
         {sorted.map((p) => (
           <li key={p.listing_id}>
             <HostInsightsPropertyCard

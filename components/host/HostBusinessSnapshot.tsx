@@ -67,11 +67,13 @@ export function HostBusinessSnapshot({
         {t("hostDashboard.businessSnapshotDesc")}
       </p>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
-          <div className="flex items-center gap-2 text-nexa-ink-3 mb-2">
-            <BarChart3 className="h-3.5 w-3.5" aria-hidden />
-            <span className="text-xs">{t("hostDashboard.occupancyThisMonth")}</span>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="min-w-0 rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
+          <div className="mb-2 flex items-center gap-2 text-nexa-ink-3">
+            <BarChart3 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="min-w-0 text-xs leading-tight">
+              {t("hostDashboard.occupancyThisMonth")}
+            </span>
           </div>
           <p className="text-2xl font-bold text-nexa-ink tabular-nums">
             {occupancy.toFixed(1)}%
@@ -84,10 +86,12 @@ export function HostBusinessSnapshot({
           </p>
         </div>
 
-        <div className="rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
-          <div className="flex items-center gap-2 text-nexa-ink-3 mb-2">
-            <Building2 className="h-3.5 w-3.5" aria-hidden />
-            <span className="text-xs">{t("hostDashboard.liveListings")}</span>
+        <div className="min-w-0 rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
+          <div className="mb-2 flex items-center gap-2 text-nexa-ink-3">
+            <Building2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="min-w-0 text-xs leading-tight">
+              {t("hostDashboard.liveListings")}
+            </span>
           </div>
           <p className="text-2xl font-bold text-nexa-ink tabular-nums">
             {inventory.live_listings}
@@ -99,18 +103,20 @@ export function HostBusinessSnapshot({
           </p>
         </div>
 
-        <div className="rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
-          <div className="flex items-center gap-2 text-nexa-ink-3 mb-2">
-            <Star className="h-3.5 w-3.5" aria-hidden />
-            <span className="text-xs">{t("hostDashboard.avgRating")}</span>
+        <div className="min-w-0 rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
+          <div className="mb-2 flex items-center gap-2 text-nexa-ink-3">
+            <Star className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="min-w-0 text-xs leading-tight">
+              {t("hostDashboard.avgRating")}
+            </span>
           </div>
           {reviews.avg_rating == null ? (
-            <p className="text-sm text-nexa-ink-3 mt-1">
+            <p className="mt-1 text-sm text-nexa-ink-3">
               {t("hostDashboard.noReviewsYet")}
             </p>
           ) : (
             <>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <p className="text-2xl font-bold text-nexa-ink tabular-nums">
                   {reviews.avg_rating.toFixed(1)}
                 </p>
@@ -132,12 +138,14 @@ export function HostBusinessSnapshot({
           </Link>
         </div>
 
-        <div className="rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
-          <div className="flex items-center gap-2 text-nexa-ink-3 mb-2">
-            <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-            <span className="text-xs">{t("hostDashboard.upcomingRevenue")}</span>
+        <div className="min-w-0 rounded-xl border border-nexa-line bg-nexa-bg-1 p-4">
+          <div className="mb-2 flex items-center gap-2 text-nexa-ink-3">
+            <TrendingUp className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="min-w-0 text-xs leading-tight">
+              {t("hostDashboard.upcomingRevenue")}
+            </span>
           </div>
-          <p className="text-lg font-bold text-nexa-ink tabular-nums leading-tight">
+          <p className="text-lg font-bold leading-tight text-nexa-ink tabular-nums break-words">
             {formatHostCurrency(
               earnings.upcoming_revenue_30d,
               currency,

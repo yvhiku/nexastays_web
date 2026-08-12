@@ -284,8 +284,10 @@ export function HostTodaySection({
                         aria-hidden
                       />
                     )}
-                    <span className="flex-1 text-sm text-nexa-ink">{row.label}</span>
-                    <span className="text-xs text-nexa-ink-3 font-medium">
+                    <span className="min-w-0 flex-1 text-sm text-nexa-ink">
+                      {row.label}
+                    </span>
+                    <span className="shrink-0 text-xs font-medium text-nexa-ink-3">
                       {row.target === "host-bookings"
                         ? t("hostDashboard.viewBookingsLink")
                         : row.target === "host-calendar-sync"

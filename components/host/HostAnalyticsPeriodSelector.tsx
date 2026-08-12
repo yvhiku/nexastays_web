@@ -35,7 +35,7 @@ export function HostAnalyticsPeriodSelector({
       >
         {t("hostAnalytics.periodLabel")}
       </label>
-      <div className="min-w-[12rem]">
+      <div className="min-w-0 w-full sm:w-auto sm:min-w-[12rem]">
         <NexaSelect
           id="host-analytics-period"
           variant="field"

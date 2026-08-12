@@ -46,52 +46,60 @@ export function HostInsightsPropertyCard({
         <HostPortalStatusBadge tone="neutral">{p.status}</HostPortalStatusBadge>
       </div>
 
-      <dl className="grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <dt className="text-xs text-[color:var(--host-muted)]">
-            {t("hostAnalytics.netEarnings")}
-          </dt>
-          <dd className="mt-0.5 font-semibold tabular-nums text-[color:var(--host-text)]">
-            {formatHostCurrency(p.earnings.net_host_earnings, currency, locale)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-[color:var(--host-muted)]">
-            {t("hostAnalytics.grossRevenue")}
-          </dt>
-          <dd className="mt-0.5 font-medium tabular-nums text-[color:var(--host-text)]">
-            {formatHostCurrency(p.earnings.gross_revenue, currency, locale)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-[color:var(--host-muted)]">
-            {t("hostAnalytics.bookingsTotal")}
-          </dt>
-          <dd className="mt-0.5 tabular-nums">{p.bookings.total}</dd>
-          <dd className="text-[11px] text-[color:var(--host-muted)]">
+      <dl className="space-y-2.5 text-sm">
+        <div className="space-y-0.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="min-w-0 text-xs text-[color:var(--host-muted)]">
+              {t("hostAnalytics.bookingsTotal")}
+            </dt>
+            <dd className="shrink-0 text-end tabular-nums text-[color:var(--host-text)]">
+              {p.bookings.total}
+            </dd>
+          </div>
+          <p className="text-[11px] text-[color:var(--host-muted)]">
             {t("hostAnalytics.bookingsBreakdown")
               .replace("{upcoming}", String(p.bookings.upcoming))
               .replace("{current}", String(p.bookings.current))
               .replace("{pending}", String(p.bookings.payment_pending))}
-          </dd>
+          </p>
         </div>
-        <div>
-          <dt className="text-xs text-[color:var(--host-muted)]">
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="min-w-0 text-xs text-[color:var(--host-muted)]">
             {t("hostAnalytics.bookedNights")}
           </dt>
-          <dd className="mt-0.5 tabular-nums">{p.nights.booked_in_period}</dd>
+          <dd className="shrink-0 text-end tabular-nums text-[color:var(--host-text)]">
+            {p.nights.booked_in_period}
+          </dd>
         </div>
-        <div>
-          <dt className="text-xs text-[color:var(--host-muted)]">
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="min-w-0 text-xs text-[color:var(--host-muted)]">
+            {t("hostAnalytics.netEarnings")}
+          </dt>
+          <dd className="shrink-0 text-end font-semibold tabular-nums text-[color:var(--host-text)]">
+            {formatHostCurrency(p.earnings.net_host_earnings, currency, locale)}
+          </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="min-w-0 text-xs text-[color:var(--host-muted)]">
+            {t("hostAnalytics.grossRevenue")}
+          </dt>
+          <dd className="shrink-0 text-end font-medium tabular-nums text-[color:var(--host-text)]">
+            {formatHostCurrency(p.earnings.gross_revenue, currency, locale)}
+          </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="min-w-0 text-xs text-[color:var(--host-muted)]">
             {t("hostAnalytics.occupancy")}
           </dt>
-          <dd className="mt-0.5 tabular-nums">{occupancyLabel}</dd>
+          <dd className="shrink-0 text-end tabular-nums text-[color:var(--host-text)]">
+            {occupancyLabel}
+          </dd>
         </div>
-        <div>
-          <dt className="text-xs text-[color:var(--host-muted)]">
+        <div className="flex items-start justify-between gap-3">
+          <dt className="min-w-0 pt-0.5 text-xs text-[color:var(--host-muted)]">
             {t("hostAnalytics.rating")}
           </dt>
-          <dd className="mt-0.5 flex items-center gap-1.5">
+          <dd className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
             {p.reviews.avg_rating != null ? (
               <>
                 <span className="font-medium tabular-nums">
