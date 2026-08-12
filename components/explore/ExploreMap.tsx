@@ -701,12 +701,12 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
           )}
         </div>
 
-        {/* Preview — compact horizontal mini-card */}
+        {/* Preview — prominent horizontal stay card */}
         {selected && (
-          <div className="absolute bottom-3 left-1/2 z-layer-popover w-[min(100%-1.5rem,20rem)] -translate-x-1/2">
+          <div className="absolute bottom-4 left-1/2 z-layer-popover w-[min(100%-1.75rem,26rem)] -translate-x-1/2">
             <div
               className={cn(
-                "overflow-hidden rounded-2xl border border-nexa-line/80 bg-white/[0.92] shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
+                "overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.95] shadow-[0_12px_40px_rgba(15,23,42,0.18)] backdrop-blur-[14px] transition-all duration-150 ease-out",
                 previewEnter
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0",
@@ -715,28 +715,28 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
               <div className="relative flex items-stretch">
                 <Link
                   href={detailHref}
-                  className="relative h-[112px] w-[112px] shrink-0 overflow-hidden bg-nexa-bg-2"
+                  className="relative h-[148px] w-[148px] shrink-0 overflow-hidden bg-nexa-bg-2 sm:h-[160px] sm:w-[160px]"
                 >
                   <Image
                     src={coverSrc}
                     alt={selected.title}
                     fill
-                    sizes="112px"
+                    sizes="160px"
                     className="object-cover"
                     unoptimized={Boolean(coverPhoto) && !coverError}
                     onError={() => setCoverError(true)}
                   />
                 </Link>
 
-                <div className="flex min-w-0 flex-1 flex-col justify-between p-2.5 pe-8 sm:p-3 sm:pe-9">
+                <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-3.5 pe-10 sm:p-4 sm:pe-11">
                   <div className="min-w-0">
-                    <div className="flex items-start gap-1.5">
+                    <div className="flex items-start gap-2">
                       <Link href={detailHref} className="min-w-0 flex-1">
-                        <h3 className="font-display text-sm font-semibold leading-snug text-nexa-ink line-clamp-1">
+                        <h3 className="font-display text-base font-semibold leading-snug text-nexa-ink line-clamp-2 sm:text-[1.05rem]">
                           {selected.title}
                         </h3>
                         {neighborhood && (
-                          <p className="mt-0.5 truncate text-[0.7rem] text-nexa-ink-4">
+                          <p className="mt-1 truncate text-xs text-nexa-ink-4">
                             {neighborhood}
                             {selected.city ? ` · ${selected.city}` : ""}
                           </p>
@@ -754,10 +754,10 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
                       />
                     </div>
 
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[0.7rem] text-nexa-ink-3">
-                      <span className="inline-flex items-center gap-0.5">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-nexa-ink-3">
+                      <span className="inline-flex items-center gap-1">
                         <Star
-                          className="h-3 w-3 fill-amber-400 text-amber-400"
+                          className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
                           aria-hidden
                         />
                         <span className="font-semibold tabular-nums text-nexa-ink">
@@ -766,9 +766,9 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
                         <span className="text-nexa-ink-4">({reviewCount})</span>
                       </span>
                       {(hasWalkthrough || selected.instant_booking) && (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-nexa-bg-2 px-1.5 py-0.5 text-[0.6rem] font-semibold text-nexa-ink">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-nexa-bg-2 px-2 py-0.5 text-[0.65rem] font-semibold text-nexa-ink">
                           <BadgeCheck
-                            className="h-2.5 w-2.5 text-green-700"
+                            className="h-3 w-3 text-green-700"
                             aria-hidden
                           />
                           Verified
@@ -777,21 +777,19 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
                     </div>
                   </div>
 
-                  <div className="mt-1.5 flex items-center justify-between gap-2">
-                    {price != null ? (
-                      <p className="min-w-0 truncate text-sm font-bold tabular-nums text-nexa-ink">
+                  <div className="flex flex-col gap-2.5">
+                    {price != null && (
+                      <p className="text-[0.95rem] font-bold tabular-nums text-nexa-ink">
                         {Math.round(Number(price))} {currency}
-                        <span className="font-normal text-nexa-ink-4 text-[0.7rem]">
+                        <span className="font-normal text-nexa-ink-4 text-xs">
                           {" "}
                           / night
                         </span>
                       </p>
-                    ) : (
-                      <span />
                     )}
                     <Link
                       href={detailHref}
-                      className="shrink-0 rounded-full bg-nexa-primary px-2.5 py-1 text-[0.7rem] font-semibold text-white hover:bg-nexa-primary-dark"
+                      className="inline-flex w-full items-center justify-center rounded-full bg-nexa-primary px-3 py-2 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
                     >
                       {viewStayLabel}
                     </Link>
@@ -801,10 +799,10 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
                 <button
                   type="button"
                   onClick={() => setSelectedId(null)}
-                  className="absolute right-1.5 top-1.5 rounded-full bg-black/35 p-1 text-white hover:bg-black/50"
+                  className="absolute right-2.5 top-2.5 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/55"
                   aria-label="Close"
                 >
-                  <X className="h-3 w-3" aria-hidden />
+                  <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
               </div>
             </div>
