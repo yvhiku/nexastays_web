@@ -2295,6 +2295,35 @@
       "emptyNoneDesc": "Your reservations will appear here once guests start booking your properties.",
       "emptyFilterTitle": "No reservations match this filter",
       "emptyFilterHint": "Try another status or clear your filters."
+    },
+    "listings": {
+      "count": "{count} properties",
+      "filterAll": "All",
+      "filterActive": "Active",
+      "filterPending": "Pending",
+      "filterPaused": "Paused",
+      "filterDraft": "Draft",
+      "filterNeedsChanges": "Needs changes",
+      "filtersAria": "Filter listings by status",
+      "searchLabel": "Search listings",
+      "searchPlaceholder": "Search by title or city…",
+      "continueSetup": "Continue setup",
+      "setupProgress": "Setup {pct}% complete",
+      "noImage": "No property photo",
+      "statusNeedsChanges": "Needs Changes",
+      "statusInReview": "In review",
+      "statusDraft": "Draft",
+      "statusLive": "Live",
+      "statusApproved": "Approved",
+      "statusPaused": "Paused",
+      "emptyNoneTitle": "Your portfolio is empty",
+      "emptyNoneDesc": "List a property to start welcoming guests.",
+      "emptyFilterTitle": "No properties match",
+      "emptyFilterDesc": "Try another status or clear your search.",
+      "clearFilter": "Clear filters",
+      "retry": "Retry",
+      "loadFailed": "Could not load listings",
+      "notApproved": "Host verification is required before managing listings."
     }
   }
 }

@@ -2295,6 +2295,35 @@
       "emptyNoneDesc": "ستظهر حجوزاتك هنا عندما يبدأ الضيوف بحجز عقاراتك.",
       "emptyFilterTitle": "لا توجد حجوزات تطابق هذا الفلتر",
       "emptyFilterHint": "جرّب حالة أخرى أو امسح الفلاتر."
+    },
+    "listings": {
+      "count": "{count} عقارات",
+      "filterAll": "الكل",
+      "filterActive": "نشطة",
+      "filterPending": "قيد المراجعة",
+      "filterPaused": "متوقفة",
+      "filterDraft": "مسودات",
+      "filterNeedsChanges": "تحتاج تعديلات",
+      "filtersAria": "تصفية القوائم حسب الحالة",
+      "searchLabel": "البحث في القوائم",
+      "searchPlaceholder": "ابحث بالعنوان أو المدينة…",
+      "continueSetup": "متابعة الإعداد",
+      "setupProgress": "الإعداد مكتمل بنسبة {pct}%",
+      "noImage": "لا توجد صورة للعقار",
+      "statusNeedsChanges": "تحتاج تعديلات",
+      "statusInReview": "قيد المراجعة",
+      "statusDraft": "مسودة",
+      "statusLive": "منشورة",
+      "statusApproved": "معتمدة",
+      "statusPaused": "متوقفة",
+      "emptyNoneTitle": "محفظتك فارغة",
+      "emptyNoneDesc": "أضف عقاراً لبدء استقبال الضيوف.",
+      "emptyFilterTitle": "لا عقارات مطابقة",
+      "emptyFilterDesc": "جرّب حالة أخرى أو امسح البحث.",
+      "clearFilter": "مسح الفلاتر",
+      "retry": "إعادة المحاولة",
+      "loadFailed": "تعذر تحميل القوائم",
+      "notApproved": "يلزم التحقق من المضيف قبل إدارة القوائم."
     }
   }
 }

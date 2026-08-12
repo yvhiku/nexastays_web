@@ -2295,6 +2295,35 @@
       "emptyNoneDesc": "Vos réservations apparaîtront ici lorsque des voyageurs bookeront vos propriétés.",
       "emptyFilterTitle": "Aucune réservation ne correspond à ce filtre",
       "emptyFilterHint": "Essayez un autre statut ou effacez vos filtres."
+    },
+    "listings": {
+      "count": "{count} propriétés",
+      "filterAll": "Toutes",
+      "filterActive": "Actives",
+      "filterPending": "En attente",
+      "filterPaused": "En pause",
+      "filterDraft": "Brouillons",
+      "filterNeedsChanges": "À corriger",
+      "filtersAria": "Filtrer les annonces par statut",
+      "searchLabel": "Rechercher des annonces",
+      "searchPlaceholder": "Rechercher par titre ou ville…",
+      "continueSetup": "Continuer la configuration",
+      "setupProgress": "Configuration à {pct} %",
+      "noImage": "Aucune photo de propriété",
+      "statusNeedsChanges": "À corriger",
+      "statusInReview": "En revue",
+      "statusDraft": "Brouillon",
+      "statusLive": "En ligne",
+      "statusApproved": "Approuvée",
+      "statusPaused": "En pause",
+      "emptyNoneTitle": "Votre portfolio est vide",
+      "emptyNoneDesc": "Ajoutez une propriété pour commencer à accueillir des voyageurs.",
+      "emptyFilterTitle": "Aucune propriété ne correspond",
+      "emptyFilterDesc": "Essayez un autre statut ou effacez votre recherche.",
+      "clearFilter": "Effacer les filtres",
+      "retry": "Réessayer",
+      "loadFailed": "Impossible de charger les annonces",
+      "notApproved": "La vérification hôte est requise pour gérer les annonces."
     }
   }
 }
