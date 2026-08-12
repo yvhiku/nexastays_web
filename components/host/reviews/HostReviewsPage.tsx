@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { HostReviewsResponse } from "@/lib/stays-types";
+import type { HostReviewsResponse, ReviewSort } from "@/lib/stays-types";
 import type { Locale } from "@/lib/i18n";
 import {
   HOST_REVIEWS_DEFAULT_LIMIT,
@@ -26,6 +26,8 @@ export type HostReviewsPageProps = {
   error: string | null;
   page: number;
   onPageChange: (page: number) => void;
+  sort: ReviewSort;
+  onSortChange: (sort: ReviewSort) => void;
   onRetry: () => void;
   t: TranslateFn;
   locale: Locale;
@@ -33,7 +35,7 @@ export type HostReviewsPageProps = {
 };
 
 /**
- * Presentation composer. Gate/fetch/page state stay in route page.tsx.
+ * Presentation composer. Gate/fetch/page/sort state stay in route page.tsx.
  * Pagination: local page only — no ?page= URL sync (matches prior behavior).
  */
 export function HostReviewsPage({
@@ -42,6 +44,8 @@ export function HostReviewsPage({
   error,
   page,
   onPageChange,
+  sort,
+  onSortChange,
   onRetry,
   t,
   locale,
@@ -56,7 +60,12 @@ export function HostReviewsPage({
 
   return (
     <div className="pb-4">
-      <HostReviewsHeader t={t} />
+      <HostReviewsHeader
+        t={t}
+        sort={sort}
+        onSortChange={onSortChange}
+        sortDisabled={loading && !payload}
+      />
 
       {error ? (
         <HostPortalCard className="mb-6 border-red-100 bg-red-50 px-4 py-5 text-sm text-red-900">

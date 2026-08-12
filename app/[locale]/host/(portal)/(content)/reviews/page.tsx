@@ -15,13 +15,18 @@ import { formatUserError } from "@/lib/errors";
 import type {
   HostReviewsResponse,
   HostVerificationStatus,
+  ReviewSort,
 } from "@/lib/stays-types";
-import { HOST_REVIEWS_DEFAULT_LIMIT } from "@/lib/host-reviews";
+import {
+  HOST_REVIEWS_DEFAULT_LIMIT,
+  HOST_REVIEWS_DEFAULT_SORT,
+} from "@/lib/host-reviews";
 import { HostReviewsPage } from "@/components/host/reviews/HostReviewsPage";
 
 /**
- * Orchestrator: verification + getHostReviews + local page state.
+ * Orchestrator: verification + getHostReviews + local page/sort state.
  * Pagination stays in React state (not ?page=) — Phase 6 parity.
+ * Changing sort resets page to 1 (server-side ordering).
  */
 export default function HostReviewsRoutePage() {
   const { token } = useAuth();
@@ -34,6 +39,7 @@ export default function HostReviewsRoutePage() {
   const [gateError, setGateError] = useState<string | null>(null);
 
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<ReviewSort>(HOST_REVIEWS_DEFAULT_SORT);
   const [payload, setPayload] = useState<HostReviewsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +57,7 @@ export default function HostReviewsRoutePage() {
   }, [token, t]);
 
   const loadReviews = useCallback(
-    async (pageNum: number) => {
+    async (pageNum: number, sortVal: ReviewSort) => {
       if (!token) return;
       setLoading(true);
       setError(null);
@@ -59,6 +65,7 @@ export default function HostReviewsRoutePage() {
         const res = await getHostReviews(token, {
           page: pageNum,
           limit: HOST_REVIEWS_DEFAULT_LIMIT,
+          sort: sortVal,
         });
         setPayload(res);
       } catch (e) {
@@ -75,8 +82,13 @@ export default function HostReviewsRoutePage() {
 
   useEffect(() => {
     if (!token || !approved) return;
-    void loadReviews(page);
-  }, [token, approved, page, loadReviews]);
+    void loadReviews(page, sort);
+  }, [token, approved, page, sort, loadReviews]);
+
+  const handleSortChange = (next: ReviewSort) => {
+    setSort(next);
+    setPage(1);
+  };
 
   if (gateLoading) {
     return (
@@ -121,7 +133,9 @@ export default function HostReviewsRoutePage() {
       error={error}
       page={page}
       onPageChange={setPage}
-      onRetry={() => void loadReviews(page)}
+      sort={sort}
+      onSortChange={handleSortChange}
+      onRetry={() => void loadReviews(page, sort)}
       t={t}
       locale={locale}
       localePath={localePath}

@@ -13,6 +13,7 @@ import {
   hostReviewsTotalPages,
   isHostReviewsEmpty,
   normalizeHostReviewsPage,
+  parseHostReviewSort,
 } from "../host-reviews";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -32,16 +33,34 @@ function flattenKeys(obj: unknown, prefix = ""): string[] {
 }
 
 describe("host-reviews helpers", () => {
-  it("builds the host reviews path with page and limit and never includes hostId", () => {
+  it("builds the host reviews path with page, limit, sort and never includes hostId", () => {
     assert.equal(
       buildHostReviewsPath({ page: 2, limit: 20 }),
-      "/stays/host/reviews?page=2&limit=20",
+      "/stays/host/reviews?page=2&limit=20&sort=newest",
     );
     assert.equal(
       buildHostReviewsPath(),
-      `/stays/host/reviews?page=1&limit=${HOST_REVIEWS_DEFAULT_LIMIT}`,
+      `/stays/host/reviews?page=1&limit=${HOST_REVIEWS_DEFAULT_LIMIT}&sort=newest`,
+    );
+    assert.equal(
+      buildHostReviewsPath({ page: 1, limit: 10, sort: "highest" }),
+      "/stays/host/reviews?page=1&limit=10&sort=highest",
+    );
+    assert.equal(
+      buildHostReviewsPath({ sort: "lowest" }),
+      `/stays/host/reviews?page=1&limit=${HOST_REVIEWS_DEFAULT_LIMIT}&sort=lowest`,
+    );
+    assert.equal(
+      buildHostReviewsPath({ sort: "bogus" }),
+      `/stays/host/reviews?page=1&limit=${HOST_REVIEWS_DEFAULT_LIMIT}&sort=newest`,
     );
     assert.doesNotMatch(buildHostReviewsPath({ page: 1, limit: 10 }), /hostId|host_id|listing_id/);
+  });
+
+  it("parseHostReviewSort defaults invalid values to newest", () => {
+    assert.equal(parseHostReviewSort(undefined), "newest");
+    assert.equal(parseHostReviewSort("bogus"), "newest");
+    assert.equal(parseHostReviewSort("highest"), "highest");
   });
 
   it("clamps limit to backend max of 50", () => {
@@ -181,8 +200,12 @@ describe("host-reviews web integration (source)", () => {
     assert.match(route, /getHostReviews\(/);
     assert.match(route, /HostReviewsPage/);
     assert.match(route, /HOST_REVIEWS_DEFAULT_LIMIT/);
+    assert.match(route, /sort: sortVal/);
+    assert.match(route, /setPage\(1\)/);
+    assert.match(route, /handleSortChange/);
     assert.doesNotMatch(route, /hostId/);
     assert.doesNotMatch(page, /getHostReviews\(/);
+    assert.match(page, /onSortChange/);
     assert.match(page, /hostReviews\.retry/);
     assert.match(page, /HostReviewsEmptyState|hostReviews\.emptyTitle/);
     assert.match(page, /HostReviewsQuickLinks/);

@@ -1,8 +1,19 @@
-import type { HostReviewSummary, HostReviewsResponse } from "@/lib/stays-types";
+import type {
+  HostReviewSummary,
+  HostReviewsResponse,
+  ReviewSort,
+} from "@/lib/stays-types";
 
 export const HOST_REVIEWS_DEFAULT_PAGE = 1;
 export const HOST_REVIEWS_DEFAULT_LIMIT = 20;
 export const HOST_REVIEWS_MAX_LIMIT = 50;
+export const HOST_REVIEWS_DEFAULT_SORT: ReviewSort = "newest";
+
+export const HOST_REVIEW_SORT_ORDER: ReviewSort[] = [
+  "newest",
+  "highest",
+  "lowest",
+];
 
 /** Clamp limit to backend contract [1, 50]. */
 export function clampHostReviewsLimit(limit?: number): number {
@@ -15,16 +26,26 @@ export function normalizeHostReviewsPage(page?: number): number {
   return Math.max(1, Math.trunc(raw));
 }
 
+export function parseHostReviewSort(
+  raw?: string | null,
+): ReviewSort {
+  if (raw === "highest" || raw === "lowest" || raw === "newest") return raw;
+  return HOST_REVIEWS_DEFAULT_SORT;
+}
+
 /** Build query path for GET /stays/host/reviews (no hostId). */
 export function buildHostReviewsPath(opts?: {
   page?: number;
   limit?: number;
+  sort?: ReviewSort | string | null;
 }): string {
   const page = normalizeHostReviewsPage(opts?.page);
   const limit = clampHostReviewsLimit(opts?.limit);
+  const sort = parseHostReviewSort(opts?.sort);
   const q = new URLSearchParams();
   q.set("page", String(page));
   q.set("limit", String(limit));
+  q.set("sort", sort);
   return `/stays/host/reviews?${q.toString()}`;
 }
 

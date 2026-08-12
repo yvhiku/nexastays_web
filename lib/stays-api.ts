@@ -516,13 +516,14 @@ export async function getHostDashboard(
  */
 export async function getHostReviews(
   token?: string | null,
-  opts?: { page?: number; limit?: number },
+  opts?: { page?: number; limit?: number; sort?: ReviewSort },
 ): Promise<HostReviewsResponse> {
   const headers = token ? { Authorization: `Bearer ${token}` } : getAuthHeaders();
   const page = normalizeHostReviewsPage(opts?.page);
   const limit = clampHostReviewsLimit(opts?.limit);
+  const sort = opts?.sort;
   const res = await client
-    .get(buildHostReviewsPath({ page, limit }), { headers })
+    .get(buildHostReviewsPath({ page, limit, sort }), { headers })
     .catch(handleError);
   return unwrap<HostReviewsResponse>(res);
 }

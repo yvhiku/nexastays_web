@@ -2366,7 +2366,10 @@
       "linkBookings": "Réservations",
       "linkListings": "Annonces",
       "linkInsights": "Analyses",
-      "notApproved": "La vérification hôte est requise pour consulter les avis."
+      "notApproved": "La vérification hôte est requise pour consulter les avis.",
+      "sortNewest": "Plus récents",
+      "sortHighest": "Mieux notés",
+      "sortLowest": "Moins bien notés"
     }
   }
 }

@@ -2366,7 +2366,10 @@
       "linkBookings": "الحجوزات",
       "linkListings": "القوائم",
       "linkInsights": "الرؤى",
-      "notApproved": "يلزم التحقق من المضيف قبل عرض التقييمات."
+      "notApproved": "يلزم التحقق من المضيف قبل عرض التقييمات.",
+      "sortNewest": "الأحدث",
+      "sortHighest": "الأعلى تقييماً",
+      "sortLowest": "الأقل تقييماً"
     }
   }
 }

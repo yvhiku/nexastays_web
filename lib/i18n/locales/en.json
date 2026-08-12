@@ -2366,7 +2366,10 @@
       "linkBookings": "Bookings",
       "linkListings": "Listings",
       "linkInsights": "Insights",
-      "notApproved": "Host verification is required before viewing reviews."
+      "notApproved": "Host verification is required before viewing reviews.",
+      "sortNewest": "Newest",
+      "sortHighest": "Highest rated",
+      "sortLowest": "Lowest rated"
     }
   }
 }
