@@ -43,7 +43,11 @@ import {
   getCollectionById,
   type ExploreCollection,
 } from "@/lib/explore-collections";
-import { getCityContextByCity, slugifyNeighborhood } from "@/lib/explore-city-context";
+import {
+  getCityContextByCity,
+  MOROCCO_CONTEXT,
+  slugifyNeighborhood,
+} from "@/lib/explore-city-context";
 import { resolveExploreLayout, showsExploreMap, type ExploreLayout } from "@/lib/explore-layout";
 import { ListingsMapPanel } from "@/components/explore/ListingsMapPanel";
 import { parseNeighborhood } from "@/lib/listing-location";
@@ -512,17 +516,16 @@ export default function ListingsPage() {
   const setLayout = (next: ExploreLayout) => {
     if (viewport === "desktop") {
       if (next === "list") {
-        navigateWithParams(
-          buildListingsParams({
-            layout: effectiveLayout === "map" ? null : "list",
-          }),
-        );
+        navigateWithParams(buildListingsParams({ layout: "list" }));
         return;
       }
       if (next === "map") {
         navigateWithParams(buildListingsParams({ layout: "map" }));
         return;
       }
+      // Default desktop = split (clear layout param).
+      navigateWithParams(buildListingsParams({ layout: null }));
+      return;
     }
     navigateWithParams(
       buildListingsParams({ layout: next === "map" ? "map" : null }),
@@ -602,105 +605,50 @@ export default function ListingsPage() {
       ) ??
       neighborhoodParam);
 
+  const destinationTitle = useMemo(() => {
+    if (neighborhoodDisplay && city) {
+      return `${neighborhoodDisplay}, ${city}`;
+    }
+    if (city) {
+      return cityContext ? t(cityContext.titleKey) : city;
+    }
+    return t(MOROCCO_CONTEXT.titleKey);
+  }, [neighborhoodDisplay, city, cityContext, t]);
+
+  const filtersCta = (
+    <button
+      type="button"
+      onClick={() => setMobileFiltersOpen(true)}
+      className="flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full border border-nexa-line hover:border-nexa-primary text-sm font-medium"
+    >
+      <SlidersHorizontal className="h-4 w-4" />
+      {t("listings.filters")}
+    </button>
+  );
+
   return (
     <>
       <NavBar />
       <main className="pt-[72px] min-h-screen min-w-0">
         <h1 className="sr-only">{t("listings.staysTitle")}</h1>
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,260px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,280px)_minmax(0,1fr)] w-full">
-          <aside className="hidden xl:block bg-white border-r border-nexa-line p-5 2xl:p-7 px-5 2xl:px-6 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto overflow-x-hidden min-w-0">
-            <h2 className="mb-5">{t("listings.filters")}</h2>
-            <div className="mb-7">
-              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">
-                {t("explore.filterVerified")}
-              </h4>
-              <button
-                type="button"
-                aria-pressed={verifiedOnly}
-                onClick={() => setVerifiedOnly(!verifiedOnly)}
-                className={cn(
-                  "flex w-full items-center justify-between gap-2 py-2.5 px-3.5 rounded-xl border text-sm mb-2 transition-all text-left",
-                  verifiedOnly
-                    ? "border-nexa-primary text-nexa-primary bg-nexa-primary-soft"
-                    : "border-nexa-line text-nexa-ink-3 hover:border-nexa-primary",
-                )}
-              >
-                <span className="min-w-0 leading-snug">
-                  🎬 {t("listings.verifiedWalkthroughOnly")}
-                </span>
-                <span
-                  className={cn(
-                    "h-4 w-4 rounded border shrink-0",
-                    verifiedOnly
-                      ? "bg-nexa-primary border-nexa-primary"
-                      : "border-nexa-line bg-white",
-                  )}
-                  aria-hidden
-                />
-              </button>
-              <button
-                type="button"
-                aria-pressed={instantOnly}
-                onClick={() => setInstantOnly(!instantOnly)}
-                className={cn(
-                  "flex w-full items-center justify-between gap-2 py-2.5 px-3.5 rounded-xl border text-sm mb-2 transition-all text-left",
-                  instantOnly
-                    ? "border-nexa-primary text-nexa-primary bg-nexa-primary-soft"
-                    : "border-nexa-line text-nexa-ink-3 hover:border-nexa-primary",
-                )}
-              >
-                <span className="min-w-0 leading-snug">
-                  ⚡ {t("listings.instantBooking")}
-                </span>
-                <span
-                  className={cn(
-                    "h-4 w-4 rounded border shrink-0",
-                    instantOnly
-                      ? "bg-nexa-primary border-nexa-primary"
-                      : "border-nexa-line bg-white",
-                  )}
-                  aria-hidden
-                />
-              </button>
-            </div>
-            <div className="mb-7">
-              <h4 className="text-[0.78rem] font-bold uppercase tracking-wider text-nexa-ink-3 mb-3.5">
-                {t("explore.filterProperty")}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {["all", ...LISTING_TYPES].map((type) => (
-                  <button
-                    type="button"
-                    key={type}
-                    onClick={() => setPropertyType(type)}
-                    className={cn(
-                      "py-1.5 px-3.5 rounded-full text-[0.78rem] border transition-all",
-                      selectedType === type
-                        ? "border-nexa-primary text-nexa-primary bg-nexa-primary-soft"
-                        : "border-nexa-line text-nexa-ink-3 hover:border-nexa-primary",
-                    )}
-                  >
-                    {type === "all"
-                      ? t("listings.all")
-                      : type.charAt(0) + type.slice(1).toLowerCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
-
+        <div className="w-full">
           <div className="bg-nexa-bg min-w-0 w-full max-w-full">
             <div className="hidden xl:block bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 lg:px-6 xl:px-8 min-w-0 w-full">
               <div className="flex flex-col gap-3 min-w-0 w-full">
-                <SearchBar
-                  value={searchDraft}
-                  onChange={setSearchDraft}
-                  onSearch={commitSearch}
-                  t={t}
-                  tf={tf}
-                  locale={locale}
-                  variant="listings"
-                />
+                <div className="flex flex-wrap items-start gap-3 min-w-0 w-full">
+                  <div className="min-w-0 flex-1">
+                    <SearchBar
+                      value={searchDraft}
+                      onChange={setSearchDraft}
+                      onSearch={commitSearch}
+                      t={t}
+                      tf={tf}
+                      locale={locale}
+                      variant="listings"
+                    />
+                  </div>
+                  {filtersCta}
+                </div>
                 <QuickFilters
                   state={{
                     verified: verifiedOnly,
@@ -709,29 +657,6 @@ export default function ListingsPage() {
                   }}
                   onToggle={onQuickFilterToggle}
                   t={t}
-                />
-                <ResultsHeader
-                  matchCount={displayListings.length}
-                  isLoading={isLoading}
-                  isRevalidating={isRevalidating}
-                  updatedLabel={updatedLabel}
-                  sort={selectedSort}
-                  onSortChange={handleExploreSortChange}
-                  layout={effectiveLayout}
-                  onLayoutChange={setLayout}
-                  sortOptions={exploreSortOptions}
-                  t={t}
-                  tf={tf}
-                  leading={
-                    <button
-                      type="button"
-                      onClick={() => setMobileFiltersOpen(true)}
-                      className="xl:hidden flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-full border border-nexa-line hover:border-nexa-primary text-sm font-medium"
-                    >
-                      <SlidersHorizontal className="h-4 w-4" />
-                      {t("listings.filters")}
-                    </button>
-                  }
                 />
               </div>
             </div>
@@ -790,9 +715,20 @@ export default function ListingsPage() {
               ) : null}
             </div>
 
-            <div className="hidden xl:block p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8 min-w-0 w-full max-w-full">
+            <div
+              className={cn(
+                "hidden xl:block min-w-0 w-full max-w-full",
+                effectiveLayout === "split"
+                  ? "pt-4 pb-6"
+                  : "p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8",
+              )}
+            >
               {effectiveLayout !== "map" && (
-                <>
+                <div
+                  className={cn(
+                    effectiveLayout === "split" && "px-4 sm:px-6 xl:px-8",
+                  )}
+                >
                   <DestinationContext
                     city={city}
                     neighborhood={neighborhoodDisplay || undefined}
@@ -805,27 +741,73 @@ export default function ListingsPage() {
                     onClearCity={onClearCity}
                     t={t}
                     tf={tf}
+                    chipsOnly={effectiveLayout === "split"}
                   />
-                  <ExploreCollections
-                    activeId={activeCollection?.id ?? null}
-                    onSelect={applyCollection}
-                    t={t}
-                  />
-                </>
+                  {effectiveLayout !== "split" && (
+                    <ExploreCollections
+                      activeId={activeCollection?.id ?? null}
+                      onSelect={applyCollection}
+                      t={t}
+                    />
+                  )}
+                </div>
               )}
 
               {error && (
                 <ErrorAlert
                   error={error}
-                  className="mb-6"
+                  className={cn(
+                    "mb-6",
+                    effectiveLayout === "split" && "mx-4 sm:mx-6 xl:mx-8",
+                  )}
                   onDismiss={() => setError(null)}
                 />
               )}
 
+              {effectiveLayout !== "map" &&
+              (isInitialLoading || displayListings.length === 0) ? (
+                <div
+                  className={cn(
+                    "sticky top-[72px] z-layer-sticky mb-3 border-b border-nexa-line bg-nexa-bg/95 py-3 backdrop-blur-sm",
+                    effectiveLayout === "split"
+                      ? "mx-4 sm:mx-6 xl:mx-8"
+                      : "",
+                  )}
+                >
+                  <ResultsHeader
+                    matchCount={displayListings.length}
+                    isLoading={isLoading}
+                    isRevalidating={isRevalidating}
+                    updatedLabel={updatedLabel}
+                    sort={selectedSort}
+                    onSortChange={handleExploreSortChange}
+                    layout={effectiveLayout}
+                    onLayoutChange={setLayout}
+                    sortOptions={exploreSortOptions}
+                    t={t}
+                    tf={tf}
+                    destinationTitle={
+                      effectiveLayout === "list" ? undefined : destinationTitle
+                    }
+                  />
+                </div>
+              ) : null}
+
               {isInitialLoading ? (
-                <ListingGridSkeleton variant="explore" />
+                <div
+                  className={cn(
+                    effectiveLayout === "split" && "px-4 sm:px-6 xl:px-8",
+                  )}
+                >
+                  <ListingGridSkeleton variant="explore" />
+                </div>
               ) : displayListings.length === 0 ? (
-                <div className="text-center py-16 text-nexa-ink-4">
+                <div
+                  className={cn(
+                    "text-center py-16 text-nexa-ink-4",
+                    effectiveLayout === "split" && "px-4 sm:px-6 xl:px-8",
+                  )}
+                >
                   <p className="text-lg font-medium mb-2">{t("listings.noStaysFound")}</p>
                   <p className="text-sm">{t("listings.tryAdjusting")}</p>
                   {(verifiedOnly ||
@@ -849,40 +831,81 @@ export default function ListingsPage() {
                   )}
                 </div>
               ) : effectiveLayout === "map" ? (
-                <ListingsMapPanel
-                  variant="full"
-                  showHeader
-                  mapRef={exploreMapRef}
-                  listings={mapListings}
-                  localePath={localePath}
-                  checkin={checkin || undefined}
-                  checkout={checkout || undefined}
-                  guests={guests}
-                  city={city}
-                  neighborhood={neighborhoodDisplay || undefined}
-                  mapLoading={mapLoading}
-                  isRevalidating={isRevalidating}
-                  onSelectNeighborhood={onSelectNeighborhood}
-                  onSelectCity={onSelectCity}
-                  onClearCity={onClearCity}
-                  onBoundsChange={handleMapBounds}
-                  t={t}
-                  tf={tf}
-                  labels={mapLabels}
-                />
+                <>
+                  <div className="sticky top-[72px] z-layer-sticky mb-3 border-b border-nexa-line bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-6 xl:px-8">
+                    <ResultsHeader
+                      matchCount={displayListings.length}
+                      isLoading={isLoading}
+                      isRevalidating={isRevalidating}
+                      updatedLabel={updatedLabel}
+                      sort={selectedSort}
+                      onSortChange={handleExploreSortChange}
+                      layout={effectiveLayout}
+                      onLayoutChange={setLayout}
+                      sortOptions={exploreSortOptions}
+                      t={t}
+                      tf={tf}
+                      destinationTitle={destinationTitle}
+                    />
+                  </div>
+                  <div className="px-4 sm:px-6 xl:px-8">
+                    <ListingsMapPanel
+                      variant="full"
+                      showHeader
+                      mapRef={exploreMapRef}
+                      listings={mapListings}
+                      localePath={localePath}
+                      checkin={checkin || undefined}
+                      checkout={checkout || undefined}
+                      guests={guests}
+                      city={city}
+                      neighborhood={neighborhoodDisplay || undefined}
+                      mapLoading={mapLoading}
+                      isRevalidating={isRevalidating}
+                      onSelectNeighborhood={onSelectNeighborhood}
+                      onSelectCity={onSelectCity}
+                      onClearCity={onClearCity}
+                      onBoundsChange={handleMapBounds}
+                      t={t}
+                      tf={tf}
+                      labels={mapLabels}
+                    />
+                  </div>
+                </>
               ) : (
                 <div
                   className={cn(
                     effectiveLayout === "split" &&
-                      "grid grid-cols-[minmax(0,1fr)_minmax(360px,46%)] items-start gap-0",
+                      "grid grid-cols-[minmax(0,1fr)_minmax(360px,44%)] items-start gap-0",
                   )}
                 >
                   <div
                     className={cn(
                       "min-w-0",
-                      effectiveLayout === "split" && "@container/split-list pe-4",
+                      effectiveLayout === "split" &&
+                        "@container/split-list ps-4 sm:ps-6 xl:ps-8 pe-4",
                     )}
                   >
+                    <div className="sticky top-[72px] z-layer-sticky -mx-1 mb-3 border-b border-nexa-line bg-nexa-bg/95 px-1 py-3 backdrop-blur-sm">
+                      <ResultsHeader
+                        matchCount={displayListings.length}
+                        isLoading={isLoading}
+                        isRevalidating={isRevalidating}
+                        updatedLabel={updatedLabel}
+                        sort={selectedSort}
+                        onSortChange={handleExploreSortChange}
+                        layout={effectiveLayout}
+                        onLayoutChange={setLayout}
+                        sortOptions={exploreSortOptions}
+                        t={t}
+                        tf={tf}
+                        destinationTitle={
+                          effectiveLayout === "split"
+                            ? destinationTitle
+                            : undefined
+                        }
+                      />
+                    </div>
                     <div
                       className={cn(
                         "grid gap-4 mb-4",
@@ -960,7 +983,7 @@ export default function ListingsPage() {
                     )}
                   </div>
                   {effectiveLayout === "split" && (
-                    <aside className="sticky top-[72px] h-[calc(100vh-72px)] min-h-0 overflow-hidden border-l border-nexa-line bg-white">
+                    <aside className="sticky top-[72px] h-[calc(100vh-72px)] min-h-0 overflow-hidden border-s border-nexa-line bg-white">
                       <ListingsMapPanel
                         variant="panel"
                         showHeader={false}
@@ -988,7 +1011,14 @@ export default function ListingsPage() {
                 </div>
               )}
 
-              <TrustStrip localePath={localePath} t={t} className="mt-2" />
+              <TrustStrip
+                localePath={localePath}
+                t={t}
+                className={cn(
+                  "mt-2",
+                  effectiveLayout === "split" && "mx-4 sm:mx-6 xl:mx-8",
+                )}
+              />
             </div>
 
             <div className="xl:hidden p-4 sm:p-5 min-w-0 w-full max-w-full">
@@ -1060,11 +1090,11 @@ export default function ListingsPage() {
           </div>
         </div>
 
-        {/* Mobile filters drawer */}
+        {/* Filters drawer — shared mobile + desktop */}
         <OverlayPortal layer="drawer">
         <div
           className={cn(
-            "fixed inset-0 z-layer-drawer xl:hidden transition-opacity duration-300",
+            "fixed inset-0 z-layer-drawer transition-opacity duration-300",
             mobileFiltersOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
           aria-hidden={!mobileFiltersOpen}

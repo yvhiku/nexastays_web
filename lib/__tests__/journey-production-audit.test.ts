@@ -102,6 +102,27 @@ test("mobile center FAB adapts from search to map and list", () => {
     listings,
     /density=\{\s*\n?\s*effectiveLayout === "split" \? "compact"/,
   );
+  assert.doesNotMatch(
+    listings,
+    /xl:grid-cols-\[minmax\(0,260px\)/,
+  );
+  assert.doesNotMatch(
+    listings,
+    /z-layer-drawer xl:hidden/,
+  );
+  assert.match(listings, /chipsOnly=\{effectiveLayout === "split"\}/);
+  assert.match(
+    listings,
+    /effectiveLayout !== "split" && \(\s*\n?\s*<ExploreCollections/,
+  );
+  assert.match(
+    listings,
+    /grid-cols-\[minmax\(0,1fr\)_minmax\(360px,44%\)\]/,
+  );
+  assert.match(header, /listings\.splitView/);
+  assert.match(header, /onLayoutChange\("split"\)/);
+  assert.match(header, /layout === "map"/);
+  assert.doesNotMatch(header, /layout === "map" \|\| layout === "split"/);
 });
 
 test("mobile listing booking bar sits safely below the upper navigation", () => {

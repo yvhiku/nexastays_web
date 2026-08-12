@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { List, Map as MapIcon } from "lucide-react";
+import { Columns2, List, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexaSelect } from "@/components/ui/NexaSelect";
 import type { ExploreLayout } from "@/lib/explore-layout";
@@ -23,6 +23,8 @@ export type ResultsHeaderProps = {
   /** Compact mobile row — phones hide layout toggle (bottom-nav FAB); md+ shows it for tablet. */
   compact?: boolean;
   verifiedOnly?: boolean;
+  /** Destination name owned by ResultsHeader (desktop split / list pane). */
+  destinationTitle?: string;
 };
 
 export function ResultsHeader({
@@ -41,6 +43,7 @@ export function ResultsHeader({
   leading,
   compact,
   verifiedOnly,
+  destinationTitle,
 }: ResultsHeaderProps) {
   const countLabel =
     isLoading && matchCount === 0
@@ -73,6 +76,11 @@ export function ResultsHeader({
     >
       {leading}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] text-nexa-ink-4 min-w-0 flex-1">
+        {destinationTitle ? (
+          <span className="font-display text-base sm:text-lg font-semibold text-nexa-ink truncate max-w-full">
+            {destinationTitle}
+          </span>
+        ) : null}
         <span className="inline-flex items-center gap-2 whitespace-nowrap truncate">
           {countLabel}
         </span>
@@ -95,8 +103,8 @@ export function ResultsHeader({
         />
       </label>
       {/*
-        Compact (phone feed) hides the toggle — map is via bottom-nav FAB.
-        From md up (tablet) the bottom nav is hidden, so show List/Map here.
+        Compact (phone feed / tablet): List|Map only — map via bottom-nav FAB on phones.
+        Desktop (non-compact): List|Split|Map with selected state matching canonical layout.
       */}
       <div
         className={cn(
@@ -119,12 +127,27 @@ export function ResultsHeader({
           <List className="h-3.5 w-3.5" aria-hidden />
           <span className="hidden sm:inline">{t("listings.listView")}</span>
         </button>
+        {!compact && (
+          <button
+            type="button"
+            onClick={() => onLayoutChange("split")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+              layout === "split"
+                ? "bg-white text-nexa-ink shadow-sm"
+                : "text-nexa-ink-4 hover:text-nexa-ink",
+            )}
+          >
+            <Columns2 className="h-3.5 w-3.5" aria-hidden />
+            <span className="hidden sm:inline">{t("listings.splitView")}</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onLayoutChange("map")}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-            layout === "map" || layout === "split"
+            layout === "map"
               ? "bg-white text-nexa-ink shadow-sm"
               : "text-nexa-ink-4 hover:text-nexa-ink",
           )}

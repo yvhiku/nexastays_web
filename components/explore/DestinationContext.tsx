@@ -47,7 +47,25 @@ export function DestinationContext({
   );
 
   if (!city) {
-    if (chipsOnly) return null;
+    const cityChips = (
+      <div className="flex flex-wrap gap-2">
+        {MOROCCO_CONTEXT.popularCities.map((c) => (
+          <button
+            type="button"
+            key={c}
+            onClick={() => onSelectCity(c)}
+            className="rounded-full border border-nexa-line bg-white px-3.5 py-1.5 text-xs font-semibold text-nexa-ink-2 hover:border-nexa-primary hover:text-nexa-primary transition-colors"
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+    );
+    if (chipsOnly) {
+      return (
+        <section className={cn("mb-4 min-w-0", className)}>{cityChips}</section>
+      );
+    }
     return (
       <section className={cn("mb-6 sm:mb-7 min-w-0", className)}>
         <h1 className="font-display text-xl sm:text-2xl font-semibold text-nexa-ink mb-1">
@@ -56,18 +74,7 @@ export function DestinationContext({
         <p className="text-sm text-nexa-ink-3 mb-4 max-w-2xl">
           {t(MOROCCO_CONTEXT.subtitleKey)}
         </p>
-        <div className="flex flex-wrap gap-2">
-          {MOROCCO_CONTEXT.popularCities.map((c) => (
-            <button
-              type="button"
-              key={c}
-              onClick={() => onSelectCity(c)}
-              className="rounded-full border border-nexa-line bg-white px-3.5 py-1.5 text-xs font-semibold text-nexa-ink-2 hover:border-nexa-primary hover:text-nexa-primary transition-colors"
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        {cityChips}
       </section>
     );
   }

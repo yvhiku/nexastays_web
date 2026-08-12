@@ -555,6 +555,7 @@
     "failedLoad": "Failed to load listings",
     "viewMode": "View mode",
     "listView": "List",
+    "splitView": "Split",
     "mapView": "Map",
     "mapEmptyTitle": "No stays nearby on the map yet",
     "mapEmptyMessage": "Pan the map or clear filters to explore other areas.",

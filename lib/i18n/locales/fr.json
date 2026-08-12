@@ -555,6 +555,7 @@
     "failedLoad": "Échec du chargement des annonces",
     "viewMode": "Mode d'affichage",
     "listView": "Liste",
+    "splitView": "Split",
     "mapView": "Carte",
     "mapEmptyTitle": "Aucun séjour à proximité sur la carte",
     "mapEmptyMessage": "Déplacez la carte ou effacez les filtres pour explorer d'autres zones.",

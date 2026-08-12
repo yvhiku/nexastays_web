@@ -1,8 +1,8 @@
 # Desktop Listings Split — Information Architecture
 
-**Status:** AUDIT COMPLETE / IMPLEMENTATION NOT STARTED  
-**Scope:** Desktop (`xl+`) guest `/[locale]/listings` composition when `layout=split` — design / IA only  
-**Does not authorize:** ListingCard redesign, map interaction redesign, pagination changes, explore API changes, Host Portal edits, or Phase 1 product UI until a separate implementation prompt  
+**Status:** PHASE 1 IMPLEMENTED  
+**Scope:** Desktop (`xl+`) guest `/[locale]/listings` composition when `layout=split`  
+**Does not authorize:** ListingCard redesign, map interaction redesign, pagination changes, explore API changes, Host Portal edits, or Phase 2 polish 
 
 **Upstream / related:**
 
