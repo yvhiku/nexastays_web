@@ -7,6 +7,7 @@ import type {
   HostBooking,
   HostDashboardAggregate,
   HostListingSummary,
+  HostReview,
 } from "@/lib/stays-types";
 import type { Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,6 @@ import { HostBusinessSnapshot } from "@/components/host/HostBusinessSnapshot";
 import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
 import { HostDashboardTools } from "@/components/host/dashboard/HostDashboardTools";
 import { ErrorAlert } from "@/components/ui/Alert";
-import type { HostReview } from "@/lib/stays-types";
 
 type TranslateFn = (key: string) => string;
 
