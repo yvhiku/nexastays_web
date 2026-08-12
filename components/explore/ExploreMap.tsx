@@ -701,105 +701,112 @@ export const ExploreMap = forwardRef<ExploreMapHandle, ExploreMapProps>(
           )}
         </div>
 
-        {/* Preview — Apple Maps style mini travel card */}
+        {/* Preview — compact horizontal mini-card */}
         {selected && (
-          <div
-            className={cn(
-              "absolute bottom-4 left-4 right-4 z-layer-popover mx-auto max-w-md overflow-hidden rounded-3xl border border-nexa-line/80 bg-white/[0.88] p-0 shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
-              previewEnter
-                ? "translate-y-0 opacity-100"
-                : "translate-y-3 opacity-0",
-            )}
-          >
-            <Link
-              href={detailHref}
-              className="relative block h-40 w-full overflow-hidden bg-nexa-bg-2 sm:h-44"
-            >
-              <Image
-                src={coverSrc}
-                alt={selected.title}
-                fill
-                sizes="400px"
-                className="object-cover"
-                unoptimized={Boolean(coverPhoto) && !coverError}
-                onError={() => setCoverError(true)}
-              />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedId(null);
-                }}
-                className="absolute right-3 top-3 rounded-full bg-black/40 p-1.5 text-white"
-                aria-label="Close"
-              >
-                <X className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            </Link>
-
-            <div className="p-4 sm:p-5">
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-lg font-semibold leading-snug text-nexa-ink line-clamp-2">
-                    {selected.title}
-                  </h3>
-                  {neighborhood && (
-                    <p className="mt-1 text-xs text-nexa-ink-4">
-                      {neighborhood}
-                      {selected.city ? ` · ${selected.city}` : ""}
-                    </p>
-                  )}
-                </div>
-                <SaveButton
-                  listingId={selected.id}
-                  snapshot={{
-                    id: selected.id,
-                    title: selected.title,
-                    city: selected.city,
-                    imageUrl: coverPhoto ? coverSrc : undefined,
-                  }}
-                  className="shrink-0"
-                />
-              </div>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-nexa-ink-3">
-                <span className="inline-flex items-center gap-1">
-                  <Star
-                    className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                    aria-hidden
-                  />
-                  <span className="font-semibold tabular-nums text-nexa-ink">
-                    {rating != null ? Number(rating).toFixed(1) : "0.0"}
-                  </span>
-                  <span className="text-nexa-ink-4">
-                    ({reviewCount})
-                  </span>
-                </span>
-                {(hasWalkthrough || selected.instant_booking) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-nexa-bg-2 px-2 py-0.5 text-[0.65rem] font-semibold text-nexa-ink">
-                    <BadgeCheck className="h-3 w-3 text-green-700" aria-hidden />
-                    Verified
-                  </span>
-                )}
-              </div>
-
-              {price != null && (
-                <p className="mt-2 text-base font-bold tabular-nums text-nexa-ink">
-                  {Math.round(Number(price))} {currency}
-                  <span className="font-normal text-nexa-ink-4 text-sm">
-                    {" "}
-                    / night
-                  </span>
-                </p>
+          <div className="absolute bottom-3 left-1/2 z-layer-popover w-[min(100%-1.5rem,20rem)] -translate-x-1/2">
+            <div
+              className={cn(
+                "overflow-hidden rounded-2xl border border-nexa-line/80 bg-white/[0.92] shadow-xl backdrop-blur-[12px] transition-all duration-150 ease-out",
+                previewEnter
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-3 opacity-0",
               )}
+            >
+              <div className="relative flex items-stretch">
+                <Link
+                  href={detailHref}
+                  className="relative h-[112px] w-[112px] shrink-0 overflow-hidden bg-nexa-bg-2"
+                >
+                  <Image
+                    src={coverSrc}
+                    alt={selected.title}
+                    fill
+                    sizes="112px"
+                    className="object-cover"
+                    unoptimized={Boolean(coverPhoto) && !coverError}
+                    onError={() => setCoverError(true)}
+                  />
+                </Link>
 
-              <Link
-                href={detailHref}
-                className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-nexa-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-nexa-primary-dark"
-              >
-                {viewStayLabel}
-              </Link>
+                <div className="flex min-w-0 flex-1 flex-col justify-between p-2.5 pe-8 sm:p-3 sm:pe-9">
+                  <div className="min-w-0">
+                    <div className="flex items-start gap-1.5">
+                      <Link href={detailHref} className="min-w-0 flex-1">
+                        <h3 className="font-display text-sm font-semibold leading-snug text-nexa-ink line-clamp-1">
+                          {selected.title}
+                        </h3>
+                        {neighborhood && (
+                          <p className="mt-0.5 truncate text-[0.7rem] text-nexa-ink-4">
+                            {neighborhood}
+                            {selected.city ? ` · ${selected.city}` : ""}
+                          </p>
+                        )}
+                      </Link>
+                      <SaveButton
+                        listingId={selected.id}
+                        snapshot={{
+                          id: selected.id,
+                          title: selected.title,
+                          city: selected.city,
+                          imageUrl: coverPhoto ? coverSrc : undefined,
+                        }}
+                        className="shrink-0"
+                      />
+                    </div>
+
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[0.7rem] text-nexa-ink-3">
+                      <span className="inline-flex items-center gap-0.5">
+                        <Star
+                          className="h-3 w-3 fill-amber-400 text-amber-400"
+                          aria-hidden
+                        />
+                        <span className="font-semibold tabular-nums text-nexa-ink">
+                          {rating != null ? Number(rating).toFixed(1) : "0.0"}
+                        </span>
+                        <span className="text-nexa-ink-4">({reviewCount})</span>
+                      </span>
+                      {(hasWalkthrough || selected.instant_booking) && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-nexa-bg-2 px-1.5 py-0.5 text-[0.6rem] font-semibold text-nexa-ink">
+                          <BadgeCheck
+                            className="h-2.5 w-2.5 text-green-700"
+                            aria-hidden
+                          />
+                          Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    {price != null ? (
+                      <p className="min-w-0 truncate text-sm font-bold tabular-nums text-nexa-ink">
+                        {Math.round(Number(price))} {currency}
+                        <span className="font-normal text-nexa-ink-4 text-[0.7rem]">
+                          {" "}
+                          / night
+                        </span>
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    <Link
+                      href={detailHref}
+                      className="shrink-0 rounded-full bg-nexa-primary px-2.5 py-1 text-[0.7rem] font-semibold text-white hover:bg-nexa-primary-dark"
+                    >
+                      {viewStayLabel}
+                    </Link>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(null)}
+                  className="absolute right-1.5 top-1.5 rounded-full bg-black/35 p-1 text-white hover:bg-black/50"
+                  aria-label="Close"
+                >
+                  <X className="h-3 w-3" aria-hidden />
+                </button>
+              </div>
             </div>
           </div>
         )}
