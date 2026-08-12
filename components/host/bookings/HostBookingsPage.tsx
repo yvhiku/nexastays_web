@@ -30,6 +30,7 @@ import { HostBookingSkeleton } from "@/components/host/bookings/HostBookingSkele
 import { HostBookingEmptyState } from "@/components/host/bookings/HostBookingEmptyState";
 import { HostPortalCard } from "@/components/host/portal/HostPortalCard";
 import { useHostCursorList } from "@/lib/use-host-cursor-list";
+import { findHostPortalScrollRoot } from "@/lib/host-portal-scroll-root";
 
 type TranslateFn = (key: string) => string;
 
@@ -172,13 +173,14 @@ export function HostBookingsPage({
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || !hasNext) return;
+    const root = findHostPortalScrollRoot(el);
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           void loadMore();
         }
       },
-      { rootMargin: "240px" },
+      { root, rootMargin: "240px" },
     );
     obs.observe(el);
     return () => obs.disconnect();

@@ -22,6 +22,7 @@ import { HostListingsEmptyState } from "@/components/host/listings/HostListingsE
 import { HostPortalCard } from "@/components/host/portal/HostPortalCard";
 import { Button } from "@/components/ui/button";
 import { useHostCursorList } from "@/lib/use-host-cursor-list";
+import { findHostPortalScrollRoot } from "@/lib/host-portal-scroll-root";
 
 type TranslateFn = (key: string) => string;
 
@@ -152,11 +153,12 @@ export function HostListingsPage({
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || !hasNext) return;
+    const root = findHostPortalScrollRoot(el);
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) void loadMore();
       },
-      { rootMargin: "240px" },
+      { root, rootMargin: "240px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
