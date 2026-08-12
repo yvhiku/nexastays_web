@@ -29,8 +29,9 @@ test("web logout calls Identity /auth/logout with optional Bearer access token",
   assert.doesNotMatch(auth, /localStorage/);
 });
 
-test("web logout does not rely on clearing localStorage for refresh revocation", () => {
+test("refreshToken single-flights parallel callers to avoid logout races", () => {
   const api = read("lib/auth-api.ts");
-  assert.doesNotMatch(api, /localStorage\.removeItem/);
-  assert.match(api, /\/auth\/logout/);
+  assert.match(api, /let refreshInflight/);
+  assert.match(api, /if \(refreshInflight\) return refreshInflight/);
+  assert.match(api, /\.finally\(\(\) => \{\s*refreshInflight = null/);
 });

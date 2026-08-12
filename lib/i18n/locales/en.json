@@ -2274,6 +2274,8 @@
       "kpiRatingHintEmpty": "No reviews yet",
       "toolsTitle": "Tools",
       "toolsDesc": "Calendar sync and availability blocking",
+      "recentReviewsTitle": "Recent reviews",
+      "recentReviewsDesc": "Latest guest feedback — including photos when guests added them.",
       "quickLinksTitle": "Quick links",
       "linkBookings": "Bookings",
       "linkListings": "Listings",

@@ -14,6 +14,7 @@ import {
   getHostListings,
   getHostBookings,
   getHostDashboard,
+  getHostReviews,
   normalizeHostVerificationStatus,
   setHostAvailabilityBlock,
 } from "@/lib/stays-api";
@@ -24,6 +25,7 @@ import type {
   HostListingSummary,
   HostBooking,
   HostDashboardAggregate,
+  HostReview,
 } from "@/lib/stays-types";
 import { HostDashboardHome } from "@/components/host/dashboard/HostDashboardHome";
 import { AppLoader } from "@/components/AppLoader";
@@ -50,6 +52,8 @@ function HostDashboardContent() {
   const [dashboard, setDashboard] = useState<HostDashboardAggregate | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [recentReviews, setRecentReviews] = useState<HostReview[]>([]);
+  const [recentReviewsLoading, setRecentReviewsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [blockListingId, setBlockListingId] = useState("");
@@ -142,6 +146,15 @@ function HostDashboardContent() {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  useEffect(() => {
+    if (!token || (hostStatus?.status ?? "") !== "APPROVED") return;
+    setRecentReviewsLoading(true);
+    getHostReviews(token, { page: 1, limit: 3 })
+      .then((res) => setRecentReviews(res.reviews ?? []))
+      .catch(() => setRecentReviews([]))
+      .finally(() => setRecentReviewsLoading(false));
+  }, [token, hostStatus?.status]);
 
   const handleAvailabilityBlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -275,6 +288,8 @@ function HostDashboardContent() {
         bookings={bookings}
         bookingsLoading={bookingsLoading}
         listings={listings}
+        recentReviews={recentReviews}
+        recentReviewsLoading={recentReviewsLoading}
         token={token}
         t={t}
         locale={locale}

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { HostDashboardWelcome } from "@/components/host/dashboard/HostDashboardWelcome";
 import { HostDashboardKpiRow } from "@/components/host/dashboard/HostDashboardKpiRow";
 import { HostDashboardQuickLinks } from "@/components/host/dashboard/HostDashboardQuickLinks";
+import { HostDashboardRecentReviews } from "@/components/host/dashboard/HostDashboardRecentReviews";
 import { HostTodaySection } from "@/components/host/HostTodaySection";
 import { HostUpcomingSection } from "@/components/host/HostUpcomingSection";
 import { HostPayoutStatus } from "@/components/host/HostPayoutStatus";
@@ -21,6 +22,7 @@ import { HostBusinessSnapshot } from "@/components/host/HostBusinessSnapshot";
 import { HostCalendarSyncPanel } from "@/components/host/HostCalendarSyncPanel";
 import { HostDashboardTools } from "@/components/host/dashboard/HostDashboardTools";
 import { ErrorAlert } from "@/components/ui/Alert";
+import type { HostReview } from "@/lib/stays-types";
 
 type TranslateFn = (key: string) => string;
 
@@ -33,6 +35,8 @@ export type HostDashboardHomeProps = {
   bookings: HostBooking[];
   bookingsLoading: boolean;
   listings: HostListingSummary[];
+  recentReviews: HostReview[];
+  recentReviewsLoading: boolean;
   token: string;
   t: TranslateFn;
   locale: Locale;
@@ -49,6 +53,8 @@ export function HostDashboardHome({
   bookings,
   bookingsLoading,
   listings,
+  recentReviews,
+  recentReviewsLoading,
   token,
   t,
   locale,
@@ -136,6 +142,14 @@ export function HostDashboardHome({
       <HostBusinessSnapshot
         dashboard={dashboard}
         loading={dashboardLoading}
+        t={t}
+        locale={locale}
+        localePath={localePath}
+      />
+
+      <HostDashboardRecentReviews
+        reviews={recentReviews}
+        loading={recentReviewsLoading}
         t={t}
         locale={locale}
         localePath={localePath}

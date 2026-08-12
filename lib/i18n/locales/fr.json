@@ -2274,6 +2274,8 @@
       "kpiRatingHintEmpty": "Pas encore d'avis",
       "toolsTitle": "Outils",
       "toolsDesc": "Synchronisation du calendrier et blocage des disponibilités",
+      "recentReviewsTitle": "Avis récents",
+      "recentReviewsDesc": "Derniers retours des voyageurs — photos incluses lorsqu’ils en ont ajouté.",
       "quickLinksTitle": "Raccourcis",
       "linkBookings": "Réservations",
       "linkListings": "Annonces",

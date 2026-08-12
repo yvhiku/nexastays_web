@@ -141,14 +141,24 @@ export async function completeRegistration(
   };
 }
 
-/** Refresh access token using refresh_token (for persistent sessions) */
-export async function refreshToken(
-): Promise<{ access_token: string }> {
-  const res = await client.post("/auth/refresh", {});
-  const raw = res.data?.data ?? res.data ?? {};
-  return {
-    access_token: raw.access_token,
-  };
+/** Refresh access token using refresh_token (for persistent sessions).
+ * Single-flight: parallel 401 retries share one /auth/refresh so rotating
+ * cookies don't race and force a false logout (host dashboard burst).
+ */
+let refreshInflight: Promise<{ access_token: string }> | null = null;
+
+export async function refreshToken(): Promise<{ access_token: string }> {
+  if (refreshInflight) return refreshInflight;
+  refreshInflight = (async () => {
+    const res = await client.post("/auth/refresh", {});
+    const raw = res.data?.data ?? res.data ?? {};
+    return {
+      access_token: raw.access_token as string,
+    };
+  })().finally(() => {
+    refreshInflight = null;
+  });
+  return refreshInflight;
 }
 
 /** Revoke the browser refresh session and clear HttpOnly authentication cookies. */
