@@ -7,6 +7,7 @@ import {
   formatOccupancyDisplay,
   isHostAnalyticsEmpty,
   parseHostAnalyticsPeriod,
+  sortHostInsightsProperties,
   sumHostAnalyticsProperties,
 } from "../host-analytics";
 import { HOST_ANALYTICS_PERIODS, type HostAnalyticsProperty } from "../stays-types";
@@ -219,6 +220,62 @@ describe("host-analytics web integration (source)", () => {
     assert.match(insightsProps, /formatOccupancyDisplay/);
     assert.match(card, /occupancyUnavailable/);
     assert.match(table, /occupancyUnavailable/);
+  });
+
+  it("sortHostInsightsProperties rating uses index as final tie-breaker", () => {
+    const rows = [
+      property({
+        listing_id: "a",
+        title: "Zed",
+        reviews: { avg_rating: 4.5, total_reviews: 2 },
+        bookings: {
+          total: 1,
+          payment_pending: 0,
+          upcoming: 0,
+          current: 0,
+          completed: 0,
+          cancelled: 0,
+        },
+      }),
+      property({
+        listing_id: "b",
+        title: "Amy",
+        reviews: { avg_rating: 4.5, total_reviews: 1 },
+        bookings: {
+          total: 3,
+          payment_pending: 0,
+          upcoming: 0,
+          current: 0,
+          completed: 0,
+          cancelled: 0,
+        },
+      }),
+      property({
+        listing_id: "c",
+        title: "Bo",
+        reviews: { avg_rating: 3, total_reviews: 1 },
+        bookings: {
+          total: 2,
+          payment_pending: 0,
+          upcoming: 0,
+          current: 0,
+          completed: 0,
+          cancelled: 0,
+        },
+      }),
+    ];
+    assert.deepEqual(
+      sortHostInsightsProperties(rows, "rating").map((p) => p.listing_id),
+      ["c", "a", "b"],
+    );
+    assert.deepEqual(
+      sortHostInsightsProperties(rows, "title").map((p) => p.listing_id),
+      ["b", "c", "a"],
+    );
+    assert.deepEqual(
+      sortHostInsightsProperties(rows, "default").map((p) => p.listing_id),
+      ["a", "b", "c"],
+    );
   });
 
   it("dashboard CTAs navigate to analytics", () => {

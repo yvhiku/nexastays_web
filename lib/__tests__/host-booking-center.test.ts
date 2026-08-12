@@ -10,6 +10,7 @@ import {
   matchesHostBookingFilter,
   matchesHostBookingSearch,
   sortHostBookingsForOps,
+  sortHostBookings,
   toBookingDateYmd,
 } from "../host-booking-center";
 
@@ -155,6 +156,22 @@ describe("host-booking-center", () => {
     assert.deepEqual(
       sortHostBookingsForOps(rows, today, tomorrow).map((b) => b.id),
       ["out", "in", "up"],
+    );
+  });
+
+  it("sortHostBookings amount uses index as final tie-breaker", () => {
+    const rows = [
+      booking({ id: "a", status: "CONFIRMED", total_subtotal: 500, guest_name: "Zed" }),
+      booking({ id: "b", status: "CONFIRMED", total_subtotal: 500, guest_name: "Amy" }),
+      booking({ id: "c", status: "CONFIRMED", total_subtotal: 200, guest_name: "Bo" }),
+    ];
+    assert.deepEqual(
+      sortHostBookings(rows, "amount", today, tomorrow).map((b) => b.id),
+      ["c", "a", "b"],
+    );
+    assert.deepEqual(
+      sortHostBookings(rows, "guest", today, tomorrow).map((b) => b.id),
+      ["b", "c", "a"],
     );
   });
 

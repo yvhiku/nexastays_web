@@ -13,6 +13,7 @@ import {
   listingNightlyAmount,
   matchesHostListingFilter,
   matchesHostListingSearch,
+  sortHostListings,
 } from "../host-listings-center";
 
 function listing(
@@ -102,6 +103,26 @@ describe("host-listings-center", () => {
     assert.equal(counts.pending, 1);
     assert.equal(counts.paused, 1);
     assert.equal(counts.needs_changes, 1);
+  });
+
+  it("sortHostListings title uses index as final tie-breaker", () => {
+    const rows = [
+      listing({ id: "1", status: "LIVE", title: "Alpha", city: "Fes" }),
+      listing({ id: "2", status: "LIVE", title: "Alpha", city: "Rabat" }),
+      listing({ id: "3", status: "LIVE", title: "Beta", city: "Casablanca" }),
+    ];
+    assert.deepEqual(
+      sortHostListings(rows, "title").map((r) => r.id),
+      ["1", "2", "3"],
+    );
+    assert.deepEqual(
+      sortHostListings(rows, "city").map((r) => r.id),
+      ["3", "1", "2"],
+    );
+    assert.deepEqual(
+      sortHostListings(rows, "default").map((r) => r.id),
+      ["1", "2", "3"],
+    );
   });
 
   it("listingNightlyAmount hides invalid prices", () => {

@@ -13,7 +13,9 @@ import {
   exportStatusForBookingFilter,
   filterHostBookings,
   matchesHostBookingFilter,
+  sortHostBookings,
   type HostBookingFilterId,
+  type HostBookingSortId,
 } from "@/lib/host-booking-center";
 import { HostBookingFilters } from "@/components/host/HostBookingFilters";
 import { HostBookingRow } from "@/components/host/HostBookingRow";
@@ -77,6 +79,7 @@ export function HostBookingCenter({
 }: HostBookingCenterProps) {
   const [search, setSearch] = useState("");
   const [listingId, setListingId] = useState("");
+  const [sort, setSort] = useState<HostBookingSortId>("ops");
   const [exportOpen, setExportOpen] = useState(false);
 
   const todayYmd = useMemo(() => casablancaYmd(), []);
@@ -99,18 +102,17 @@ export function HostBookingCenter({
     return result;
   }, [bookings, todayYmd, tomorrowYmd]);
 
-  const visible = useMemo(
-    () =>
-      filterHostBookings({
-        bookings,
-        filter,
-        listingId: listingId || undefined,
-        search,
-        todayYmd,
-        tomorrowYmd,
-      }),
-    [bookings, filter, listingId, search, todayYmd, tomorrowYmd],
-  );
+  const visible = useMemo(() => {
+    const filtered = filterHostBookings({
+      bookings,
+      filter,
+      listingId: listingId || undefined,
+      search,
+      todayYmd,
+      tomorrowYmd,
+    });
+    return sortHostBookings(filtered, sort, todayYmd, tomorrowYmd);
+  }, [bookings, filter, listingId, search, sort, todayYmd, tomorrowYmd]);
 
   const handleListingChange = (id: string) => {
     setListingId(id);
@@ -282,6 +284,8 @@ export function HostBookingCenter({
           listings={listings}
           search={search}
           onSearchChange={setSearch}
+          sort={sort}
+          onSortChange={setSort}
           counts={counts}
           t={t}
         />

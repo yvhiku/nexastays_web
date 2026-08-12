@@ -6,7 +6,9 @@ import type { Locale } from "@/lib/i18n";
 import {
   countHostListingsByFilter,
   filterHostListings,
+  sortHostListings,
   type HostListingFilterId,
+  type HostListingSortId,
 } from "@/lib/host-listings-center";
 import { HostListingsHeader } from "@/components/host/listings/HostListingsHeader";
 import { HostListingsSummary } from "@/components/host/listings/HostListingsSummary";
@@ -33,7 +35,7 @@ export type HostListingsPageProps = {
 
 /**
  * Presentation composer. Domain fetch/pause/resume stay in page.tsx.
- * Filtering uses lib/host-listings-center only (no invented sorts).
+ * Filtering/sorting uses lib/host-listings-center.
  */
 export function HostListingsPage({
   listings,
@@ -49,16 +51,17 @@ export function HostListingsPage({
 }: HostListingsPageProps) {
   const [filter, setFilter] = useState<HostListingFilterId>("all");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<HostListingSortId>("default");
 
   const counts = useMemo(
     () => countHostListingsByFilter(listings),
     [listings],
   );
 
-  const visible = useMemo(
-    () => filterHostListings({ listings, filter, search }),
-    [listings, filter, search],
-  );
+  const visible = useMemo(() => {
+    const filtered = filterHostListings({ listings, filter, search });
+    return sortHostListings(filtered, sort);
+  }, [listings, filter, search, sort]);
 
   const clearFilter = () => {
     setFilter("all");
@@ -126,6 +129,8 @@ export function HostListingsPage({
                 onFilterChange={setFilter}
                 search={search}
                 onSearchChange={setSearch}
+                sort={sort}
+                onSortChange={setSort}
                 counts={counts}
                 t={t}
               />

@@ -2248,6 +2248,7 @@
     "bookingsSubtitle": "Gérez et suivez les réservations de votre portfolio.",
     "listingsTitle": "Mes annonces",
     "listingsSubtitle": "Gérez votre portfolio et vos disponibilités.",
+    "sortBy": "Trier par",
     "nav": {
       "home": "Accueil",
       "bookings": "Réservations",
@@ -2296,7 +2297,12 @@
       "emptyNoneTitle": "Aucune réservation pour le moment",
       "emptyNoneDesc": "Vos réservations apparaîtront ici lorsque des voyageurs bookeront vos propriétés.",
       "emptyFilterTitle": "Aucune réservation ne correspond à ce filtre",
-      "emptyFilterHint": "Essayez un autre statut ou effacez vos filtres."
+      "emptyFilterHint": "Essayez un autre statut ou effacez vos filtres.",
+      "sortOps": "Priorité ops",
+      "sortCheckin": "Arrivée",
+      "sortCheckout": "Départ",
+      "sortAmount": "Montant",
+      "sortGuest": "Nom du voyageur"
     },
     "listings": {
       "count": "{count} propriétés",
@@ -2325,7 +2331,13 @@
       "clearFilter": "Effacer les filtres",
       "retry": "Réessayer",
       "loadFailed": "Impossible de charger les annonces",
-      "notApproved": "La vérification hôte est requise pour gérer les annonces."
+      "notApproved": "La vérification hôte est requise pour gérer les annonces.",
+      "sortDefault": "Par défaut",
+      "sortTitle": "Titre",
+      "sortCity": "Ville",
+      "sortStatus": "Statut",
+      "sortUpdated": "Récemment mis à jour",
+      "sortPrice": "Prix de base"
     },
     "analytics": {
       "title": "Analyses",
@@ -2338,7 +2350,13 @@
       "linkBookings": "Réservations",
       "linkListings": "Annonces",
       "linkReviews": "Avis",
-      "notApproved": "La vérification hôte est requise pour consulter les analyses."
+      "notApproved": "La vérification hôte est requise pour consulter les analyses.",
+      "sortDefault": "Par défaut",
+      "sortTitle": "Propriété",
+      "sortBookings": "Réservations",
+      "sortNet": "Gains nets",
+      "sortOccupancy": "Occupation",
+      "sortRating": "Note"
     },
     "reviews": {
       "title": "Avis",

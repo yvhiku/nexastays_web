@@ -74,3 +74,72 @@ export function isHostAnalyticsEmpty(
 ): boolean {
   return payload.properties.length === 0;
 }
+
+/**
+ * Audited fields: title, bookings.total, earnings.net_host_earnings,
+ * occupancy.value, reviews.avg_rating. `default` keeps API order.
+ */
+export type HostInsightsPropertySortId =
+  | "default"
+  | "title"
+  | "bookings"
+  | "net"
+  | "occupancy"
+  | "rating";
+
+export const HOST_INSIGHTS_PROPERTY_SORT_ORDER: HostInsightsPropertySortId[] = [
+  "default",
+  "title",
+  "bookings",
+  "net",
+  "occupancy",
+  "rating",
+];
+
+export function isHostInsightsPropertySortId(
+  value: string | null | undefined,
+): value is HostInsightsPropertySortId {
+  return (
+    !!value &&
+    (HOST_INSIGHTS_PROPERTY_SORT_ORDER as readonly string[]).includes(value)
+  );
+}
+
+/** Client sort with original-index final tie-breaker. */
+export function sortHostInsightsProperties(
+  properties: HostAnalyticsProperty[],
+  sort: HostInsightsPropertySortId,
+): HostAnalyticsProperty[] {
+  if (sort === "default") return [...properties];
+
+  const indexed = properties.map((item, index) => ({ item, index }));
+  indexed.sort((a, b) => {
+    let cmp = 0;
+    if (sort === "title") {
+      cmp = (a.item.title || "").localeCompare(b.item.title || "", undefined, {
+        sensitivity: "base",
+      });
+    } else if (sort === "bookings") {
+      cmp = a.item.bookings.total - b.item.bookings.total;
+    } else if (sort === "net") {
+      cmp =
+        a.item.earnings.net_host_earnings - b.item.earnings.net_host_earnings;
+    } else if (sort === "occupancy") {
+      const oa = a.item.occupancy.value;
+      const ob = b.item.occupancy.value;
+      if (oa == null && ob == null) cmp = 0;
+      else if (oa == null) cmp = 1;
+      else if (ob == null) cmp = -1;
+      else cmp = oa - ob;
+    } else if (sort === "rating") {
+      const ra = a.item.reviews.avg_rating;
+      const rb = b.item.reviews.avg_rating;
+      if (ra == null && rb == null) cmp = 0;
+      else if (ra == null) cmp = 1;
+      else if (rb == null) cmp = -1;
+      else cmp = ra - rb;
+    }
+    return cmp !== 0 ? cmp : a.index - b.index;
+  });
+  return indexed.map(({ item }) => item);
+}

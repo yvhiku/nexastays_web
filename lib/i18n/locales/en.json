@@ -2248,6 +2248,7 @@
     "bookingsSubtitle": "Manage and track reservations across your portfolio.",
     "listingsTitle": "My Listings",
     "listingsSubtitle": "Manage your property portfolio and availability.",
+    "sortBy": "Sort by",
     "nav": {
       "home": "Home",
       "bookings": "Bookings",
@@ -2296,7 +2297,12 @@
       "emptyNoneTitle": "No bookings yet",
       "emptyNoneDesc": "Your reservations will appear here once guests start booking your properties.",
       "emptyFilterTitle": "No reservations match this filter",
-      "emptyFilterHint": "Try another status or clear your filters."
+      "emptyFilterHint": "Try another status or clear your filters.",
+      "sortOps": "Ops priority",
+      "sortCheckin": "Check-in",
+      "sortCheckout": "Check-out",
+      "sortAmount": "Amount",
+      "sortGuest": "Guest name"
     },
     "listings": {
       "count": "{count} properties",
@@ -2325,7 +2331,13 @@
       "clearFilter": "Clear filters",
       "retry": "Retry",
       "loadFailed": "Could not load listings",
-      "notApproved": "Host verification is required before managing listings."
+      "notApproved": "Host verification is required before managing listings.",
+      "sortDefault": "Default",
+      "sortTitle": "Title",
+      "sortCity": "City",
+      "sortStatus": "Status",
+      "sortUpdated": "Recently updated",
+      "sortPrice": "Base price"
     },
     "analytics": {
       "title": "Insights",
@@ -2338,7 +2350,13 @@
       "linkBookings": "Bookings",
       "linkListings": "Listings",
       "linkReviews": "Reviews",
-      "notApproved": "Host verification is required before viewing insights."
+      "notApproved": "Host verification is required before viewing insights.",
+      "sortDefault": "Default",
+      "sortTitle": "Property",
+      "sortBookings": "Bookings",
+      "sortNet": "Net earnings",
+      "sortOccupancy": "Occupancy",
+      "sortRating": "Rating"
     },
     "reviews": {
       "title": "Reviews",

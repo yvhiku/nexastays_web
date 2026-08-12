@@ -4,10 +4,13 @@ import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   HOST_BOOKING_FILTER_ORDER,
+  HOST_BOOKING_SORT_ORDER,
   type HostBookingFilterId,
+  type HostBookingSortId,
 } from "@/lib/host-booking-center";
 import type { HostListingSummary } from "@/lib/stays-types";
 import { NexaSelect } from "@/components/ui/NexaSelect";
+import { HostPortalSortSelect } from "@/components/host/portal/HostPortalSortSelect";
 
 type TranslateFn = (key: string) => string;
 
@@ -23,6 +26,14 @@ const FILTER_LABEL_KEYS: Record<HostBookingFilterId, string> = {
   cancelled: "hostDashboard.bookingFilterCancelled",
 };
 
+const SORT_LABEL_KEYS: Record<HostBookingSortId, string> = {
+  ops: "hostPortal.bookings.sortOps",
+  checkin: "hostPortal.bookings.sortCheckin",
+  checkout: "hostPortal.bookings.sortCheckout",
+  amount: "hostPortal.bookings.sortAmount",
+  guest: "hostPortal.bookings.sortGuest",
+};
+
 type Props = {
   filter: HostBookingFilterId;
   onFilterChange: (filter: HostBookingFilterId) => void;
@@ -31,6 +42,8 @@ type Props = {
   listings: HostListingSummary[];
   search: string;
   onSearchChange: (q: string) => void;
+  sort: HostBookingSortId;
+  onSortChange: (sort: HostBookingSortId) => void;
   counts: Partial<Record<HostBookingFilterId, number>>;
   t: TranslateFn;
 };
@@ -44,6 +57,8 @@ export function HostBookingsFilters({
   listings,
   search,
   onSearchChange,
+  sort,
+  onSortChange,
   counts,
   t,
 }: Props) {
@@ -98,7 +113,7 @@ export function HostBookingsFilters({
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="block">
           <span className="sr-only">{t("hostDashboard.bookingSearchLabel")}</span>
           <input
@@ -121,6 +136,15 @@ export function HostBookingsFilters({
             ]}
           />
         ) : null}
+        <HostPortalSortSelect
+          label={t("hostPortal.sortBy")}
+          value={sort}
+          onChange={(v) => onSortChange(v as HostBookingSortId)}
+          options={HOST_BOOKING_SORT_ORDER.map((id) => ({
+            value: id,
+            label: t(SORT_LABEL_KEYS[id]),
+          }))}
+        />
       </div>
     </div>
   );

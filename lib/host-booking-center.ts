@@ -211,6 +211,76 @@ export function sortHostBookingsForOps(
   });
 }
 
+/** Audited fields: checkin_date, checkout_date, total_subtotal, guest_name. */
+export type HostBookingSortId =
+  | "ops"
+  | "checkin"
+  | "checkout"
+  | "amount"
+  | "guest";
+
+export const HOST_BOOKING_SORT_ORDER: HostBookingSortId[] = [
+  "ops",
+  "checkin",
+  "checkout",
+  "amount",
+  "guest",
+];
+
+export function isHostBookingSortId(
+  value: string | null | undefined,
+): value is HostBookingSortId {
+  return (
+    !!value &&
+    (HOST_BOOKING_SORT_ORDER as readonly string[]).includes(value)
+  );
+}
+
+function compareNullableStringAsc(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
+}
+
+/**
+ * Client sort with original-index final tie-breaker (except ops, which keeps
+ * its existing urgency → check-in → id ordering).
+ */
+export function sortHostBookings(
+  bookings: HostBooking[],
+  sort: HostBookingSortId,
+  todayYmd: string,
+  tomorrowYmd: string = addCalendarDaysYmd(todayYmd, 1),
+): HostBooking[] {
+  if (sort === "ops") {
+    return sortHostBookingsForOps(bookings, todayYmd, tomorrowYmd);
+  }
+
+  const indexed = bookings.map((item, index) => ({ item, index }));
+  indexed.sort((a, b) => {
+    let cmp = 0;
+    if (sort === "checkin") {
+      cmp = compareNullableStringAsc(
+        toBookingDateYmd(a.item.checkin_date),
+        toBookingDateYmd(b.item.checkin_date),
+      );
+    } else if (sort === "checkout") {
+      cmp = compareNullableStringAsc(
+        toBookingDateYmd(a.item.checkout_date),
+        toBookingDateYmd(b.item.checkout_date),
+      );
+    } else if (sort === "amount") {
+      cmp = Number(a.item.total_subtotal) - Number(b.item.total_subtotal);
+    } else if (sort === "guest") {
+      cmp = compareNullableStringAsc(
+        (a.item.guest_name ?? "").trim(),
+        (b.item.guest_name ?? "").trim(),
+      );
+    }
+    return cmp !== 0 ? cmp : a.index - b.index;
+  });
+  return indexed.map(({ item }) => item);
+}
+
+/** Filter + search only — preserves input relative order (sort separately). */
 export function filterHostBookings(options: {
   bookings: HostBooking[];
   filter: HostBookingFilterId;
@@ -221,7 +291,7 @@ export function filterHostBookings(options: {
 }): HostBooking[] {
   const tomorrow =
     options.tomorrowYmd ?? addCalendarDaysYmd(options.todayYmd, 1);
-  const filtered = options.bookings.filter((b) => {
+  return options.bookings.filter((b) => {
     if (options.listingId && b.listing_id !== options.listingId) return false;
     if (!matchesHostBookingFilter(b, options.filter, options.todayYmd, tomorrow)) {
       return false;
@@ -229,7 +299,6 @@ export function filterHostBookings(options: {
     if (!matchesHostBookingSearch(b, options.search ?? "")) return false;
     return true;
   });
-  return sortHostBookingsForOps(filtered, options.todayYmd, tomorrow);
 }
 
 export function hostBookingNights(booking: HostBooking): number {

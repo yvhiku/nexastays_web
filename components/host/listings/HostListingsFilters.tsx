@@ -4,8 +4,11 @@ import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   HOST_LISTING_FILTER_ORDER,
+  HOST_LISTING_SORT_ORDER,
   type HostListingFilterId,
+  type HostListingSortId,
 } from "@/lib/host-listings-center";
+import { HostPortalSortSelect } from "@/components/host/portal/HostPortalSortSelect";
 
 type TranslateFn = (key: string) => string;
 
@@ -18,11 +21,22 @@ const FILTER_LABEL_KEYS: Record<HostListingFilterId, string> = {
   needs_changes: "hostPortal.listings.filterNeedsChanges",
 };
 
+const SORT_LABEL_KEYS: Record<HostListingSortId, string> = {
+  default: "hostPortal.listings.sortDefault",
+  title: "hostPortal.listings.sortTitle",
+  city: "hostPortal.listings.sortCity",
+  status: "hostPortal.listings.sortStatus",
+  updated: "hostPortal.listings.sortUpdated",
+  price: "hostPortal.listings.sortPrice",
+};
+
 type Props = {
   filter: HostListingFilterId;
   onFilterChange: (filter: HostListingFilterId) => void;
   search: string;
   onSearchChange: (q: string) => void;
+  sort: HostListingSortId;
+  onSortChange: (sort: HostListingSortId) => void;
   counts: Record<HostListingFilterId, number>;
   t: TranslateFn;
 };
@@ -32,6 +46,8 @@ export function HostListingsFilters({
   onFilterChange,
   search,
   onSearchChange,
+  sort,
+  onSortChange,
   counts,
   t,
 }: Props) {
@@ -81,16 +97,27 @@ export function HostListingsFilters({
         })}
       </div>
 
-      <label className="block max-w-xl">
-        <span className="sr-only">{t("hostPortal.listings.searchLabel")}</span>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={t("hostPortal.listings.searchPlaceholder")}
-          className="h-10 w-full rounded-xl border border-[color:var(--host-border)] bg-[color:var(--host-surface)] px-3 text-sm text-[color:var(--host-text)] placeholder:text-[color:var(--host-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--host-primary)]/30"
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="sr-only">{t("hostPortal.listings.searchLabel")}</span>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder={t("hostPortal.listings.searchPlaceholder")}
+            className="h-10 w-full rounded-xl border border-[color:var(--host-border)] bg-[color:var(--host-surface)] px-3 text-sm text-[color:var(--host-text)] placeholder:text-[color:var(--host-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--host-primary)]/30"
+          />
+        </label>
+        <HostPortalSortSelect
+          label={t("hostPortal.sortBy")}
+          value={sort}
+          onChange={(v) => onSortChange(v as HostListingSortId)}
+          options={HOST_LISTING_SORT_ORDER.map((id) => ({
+            value: id,
+            label: t(SORT_LABEL_KEYS[id]),
+          }))}
         />
-      </label>
+      </div>
     </div>
   );
 }

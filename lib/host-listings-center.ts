@@ -120,7 +120,7 @@ export function matchesHostListingSearch(
   return title.includes(q) || city.includes(q);
 }
 
-/** Filter + search only — preserves API response order (no invented sorts). */
+/** Filter + search only — preserves API response order. */
 export function filterHostListings(params: {
   listings: HostListingSummary[];
   filter: HostListingFilterId;
@@ -132,6 +132,77 @@ export function filterHostListings(params: {
       matchesHostListingFilter(l, filter) &&
       matchesHostListingSearch(l, search),
   );
+}
+
+/**
+ * Audited fields: title, city, status, last_edited_at, rate_plan.base_price.
+ * `default` keeps API / filter order.
+ */
+export type HostListingSortId =
+  | "default"
+  | "title"
+  | "city"
+  | "status"
+  | "updated"
+  | "price";
+
+export const HOST_LISTING_SORT_ORDER: HostListingSortId[] = [
+  "default",
+  "title",
+  "city",
+  "status",
+  "updated",
+  "price",
+];
+
+export function isHostListingSortId(
+  value: string | null | undefined,
+): value is HostListingSortId {
+  return (
+    !!value &&
+    (HOST_LISTING_SORT_ORDER as readonly string[]).includes(value)
+  );
+}
+
+function compareStringAsc(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
+}
+
+/** Client sort with original-index final tie-breaker. */
+export function sortHostListings(
+  listings: HostListingSummary[],
+  sort: HostListingSortId,
+): HostListingSummary[] {
+  if (sort === "default") return [...listings];
+
+  const indexed = listings.map((item, index) => ({ item, index }));
+  indexed.sort((a, b) => {
+    let cmp = 0;
+    if (sort === "title") {
+      cmp = compareStringAsc(a.item.title || "", b.item.title || "");
+    } else if (sort === "city") {
+      cmp = compareStringAsc(a.item.city || "", b.item.city || "");
+    } else if (sort === "status") {
+      cmp = compareStringAsc(a.item.status || "", b.item.status || "");
+    } else if (sort === "updated") {
+      // Newest edits first; missing last_edited_at sorts last.
+      const ua = a.item.last_edited_at || "";
+      const ub = b.item.last_edited_at || "";
+      if (!ua && !ub) cmp = 0;
+      else if (!ua) cmp = 1;
+      else if (!ub) cmp = -1;
+      else cmp = ub.localeCompare(ua);
+    } else if (sort === "price") {
+      const pa = a.item.rate_plan?.base_price;
+      const pb = b.item.rate_plan?.base_price;
+      if (pa == null && pb == null) cmp = 0;
+      else if (pa == null) cmp = 1;
+      else if (pb == null) cmp = -1;
+      else cmp = Number(pa) - Number(pb);
+    }
+    return cmp !== 0 ? cmp : a.index - b.index;
+  });
+  return indexed.map(({ item }) => item);
 }
 
 export function countHostListingsByFilter(

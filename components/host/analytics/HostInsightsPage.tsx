@@ -31,7 +31,7 @@ export type HostInsightsPageProps = {
 /**
  * Presentation composer for Host Insights.
  * Domain fetch/gate/period URL stay in page.tsx.
- * Property order = API order (no client ranking).
+ * Property order defaults to API order; optional client sort in HostInsightsProperties.
  */
 export function HostInsightsPage({
   payload,

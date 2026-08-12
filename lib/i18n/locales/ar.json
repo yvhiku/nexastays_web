@@ -2248,6 +2248,7 @@
     "bookingsSubtitle": "إدارة وتتبع الحجوزات عبر محفظتك.",
     "listingsTitle": "قوائمي",
     "listingsSubtitle": "إدارة محفظة العقارات والتوافر.",
+    "sortBy": "ترتيب حسب",
     "nav": {
       "home": "الرئيسية",
       "bookings": "الحجوزات",
@@ -2296,7 +2297,12 @@
       "emptyNoneTitle": "لا حجوزات بعد",
       "emptyNoneDesc": "ستظهر حجوزاتك هنا عندما يبدأ الضيوف بحجز عقاراتك.",
       "emptyFilterTitle": "لا توجد حجوزات تطابق هذا الفلتر",
-      "emptyFilterHint": "جرّب حالة أخرى أو امسح الفلاتر."
+      "emptyFilterHint": "جرّب حالة أخرى أو امسح الفلاتر.",
+      "sortOps": "أولوية التشغيل",
+      "sortCheckin": "تسجيل الوصول",
+      "sortCheckout": "تسجيل المغادرة",
+      "sortAmount": "المبلغ",
+      "sortGuest": "اسم الضيف"
     },
     "listings": {
       "count": "{count} عقارات",
@@ -2325,7 +2331,13 @@
       "clearFilter": "مسح الفلاتر",
       "retry": "إعادة المحاولة",
       "loadFailed": "تعذر تحميل القوائم",
-      "notApproved": "يلزم التحقق من المضيف قبل إدارة القوائم."
+      "notApproved": "يلزم التحقق من المضيف قبل إدارة القوائم.",
+      "sortDefault": "الافتراضي",
+      "sortTitle": "العنوان",
+      "sortCity": "المدينة",
+      "sortStatus": "الحالة",
+      "sortUpdated": "الأحدث تحديثاً",
+      "sortPrice": "السعر الأساسي"
     },
     "analytics": {
       "title": "الرؤى",
@@ -2338,7 +2350,13 @@
       "linkBookings": "الحجوزات",
       "linkListings": "القوائم",
       "linkReviews": "التقييمات",
-      "notApproved": "يلزم التحقق من المضيف قبل عرض الرؤى."
+      "notApproved": "يلزم التحقق من المضيف قبل عرض الرؤى.",
+      "sortDefault": "الافتراضي",
+      "sortTitle": "العقار",
+      "sortBookings": "الحجوزات",
+      "sortNet": "صافي الأرباح",
+      "sortOccupancy": "الإشغال",
+      "sortRating": "التقييم"
     },
     "reviews": {
       "title": "التقييمات",

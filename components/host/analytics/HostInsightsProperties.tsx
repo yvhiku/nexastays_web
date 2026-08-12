@@ -1,12 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import type { HostAnalyticsProperty } from "@/lib/stays-types";
 import type { Locale } from "@/lib/i18n";
 import { formatHostCurrency } from "@/lib/host-dashboard-stats";
-import { formatOccupancyDisplay } from "@/lib/host-analytics";
+import {
+  formatOccupancyDisplay,
+  HOST_INSIGHTS_PROPERTY_SORT_ORDER,
+  sortHostInsightsProperties,
+  type HostInsightsPropertySortId,
+} from "@/lib/host-analytics";
 import { HostPortalCard } from "@/components/host/portal/HostPortalCard";
+import { HostPortalSortSelect } from "@/components/host/portal/HostPortalSortSelect";
 import { HostInsightsPropertyCard } from "@/components/host/analytics/HostInsightsPropertyCard";
 
 type TranslateFn = (key: string) => string;
@@ -19,9 +25,16 @@ type Props = {
   t: TranslateFn;
 };
 
-/**
- * Property insights list. Preserves API order — no client ranking/sort.
- */
+const SORT_LABEL_KEYS: Record<HostInsightsPropertySortId, string> = {
+  default: "hostPortal.analytics.sortDefault",
+  title: "hostPortal.analytics.sortTitle",
+  bookings: "hostPortal.analytics.sortBookings",
+  net: "hostPortal.analytics.sortNet",
+  occupancy: "hostPortal.analytics.sortOccupancy",
+  rating: "hostPortal.analytics.sortRating",
+};
+
+/** Property insights list with optional client sort (index-stable ties). */
 export function HostInsightsProperties({
   properties,
   currency,
@@ -29,21 +42,39 @@ export function HostInsightsProperties({
   localePath,
   t,
 }: Props) {
+  const [sort, setSort] = useState<HostInsightsPropertySortId>("default");
+  const sorted = useMemo(
+    () => sortHostInsightsProperties(properties, sort),
+    [properties, sort],
+  );
+
   return (
     <section className="mb-8" aria-labelledby="host-insights-properties-heading">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-        <h2
-          id="host-insights-properties-heading"
-          className="text-lg font-semibold text-[color:var(--host-text)]"
-        >
-          {t("hostAnalytics.propertiesTitle")}
-        </h2>
-        <Link
-          href={localePath("/host/reviews")}
-          className="text-sm font-medium text-[color:var(--host-primary)] underline-offset-2 hover:underline"
-        >
-          {t("hostAnalytics.viewReviews")}
-        </Link>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h2
+            id="host-insights-properties-heading"
+            className="text-lg font-semibold text-[color:var(--host-text)]"
+          >
+            {t("hostAnalytics.propertiesTitle")}
+          </h2>
+          <Link
+            href={localePath("/host/reviews")}
+            className="mt-1 inline-block text-sm font-medium text-[color:var(--host-primary)] underline-offset-2 hover:underline"
+          >
+            {t("hostAnalytics.viewReviews")}
+          </Link>
+        </div>
+        <HostPortalSortSelect
+          className="w-full max-w-xs sm:w-56"
+          label={t("hostPortal.sortBy")}
+          value={sort}
+          onChange={(v) => setSort(v as HostInsightsPropertySortId)}
+          options={HOST_INSIGHTS_PROPERTY_SORT_ORDER.map((id) => ({
+            value: id,
+            label: t(SORT_LABEL_KEYS[id]),
+          }))}
+        />
       </div>
 
       <HostPortalCard className="mb-4 hidden overflow-x-auto p-0 lg:block">
@@ -77,7 +108,7 @@ export function HostInsightsProperties({
             </tr>
           </thead>
           <tbody>
-            {properties.map((p) => (
+            {sorted.map((p) => (
               <tr
                 key={p.listing_id}
                 className="border-b border-[color:var(--host-border)] align-top last:border-0"
@@ -148,7 +179,7 @@ export function HostInsightsProperties({
       </HostPortalCard>
 
       <ul className="space-y-4 lg:hidden">
-        {properties.map((p) => (
+        {sorted.map((p) => (
           <li key={p.listing_id}>
             <HostInsightsPropertyCard
               property={p}
