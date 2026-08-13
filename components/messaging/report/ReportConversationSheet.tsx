@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   reportConversation,
+  uploadReportEvidence,
   type ConversationReportCategory,
 } from "@/lib/messaging/messages-api";
 import { trackEvent } from "@/lib/analytics";
@@ -12,6 +13,7 @@ import { ReportDetailsStep } from "./ReportDetailsStep";
 import { ReportConfirmation } from "./ReportConfirmation";
 import { ReportFlowShell, ReportStickyCta } from "./ReportFlowShell";
 import { formatReportReason, REPORT_CATEGORIES } from "./report-categories";
+import type { ReportScreenshotDraft } from "./ReportScreenshotsField";
 
 type Step = "category" | "details" | "done";
 
@@ -34,6 +36,7 @@ export function ReportConversationSheet({
     null,
   );
   const [details, setDetails] = useState("");
+  const [screenshots, setScreenshots] = useState<ReportScreenshotDraft[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +45,10 @@ export function ReportConversationSheet({
     setStep("category");
     setCategory(null);
     setDetails("");
+    setScreenshots((prev) => {
+      for (const item of prev) URL.revokeObjectURL(item.previewUrl);
+      return [];
+    });
     setSubmitting(false);
     setError(null);
   }, [open]);
@@ -74,10 +81,27 @@ export function ReportConversationSheet({
     setError(null);
     const reason = formatReportReason(category, details);
     try {
-      await reportConversation(conversationId, reason, token);
+      const attachmentIds: string[] = [];
+      for (const shot of screenshots) {
+        const uploaded = await uploadReportEvidence(
+          conversationId,
+          shot.file,
+          token,
+        );
+        attachmentIds.push(uploaded.id);
+      }
+      await reportConversation(
+        conversationId,
+        {
+          reason,
+          ...(attachmentIds.length ? { attachmentIds } : {}),
+        },
+        token,
+      );
       trackEvent("conversation_reported", {
         conversation_id: conversationId,
         category,
+        screenshot_count: attachmentIds.length,
       });
       setStep("done");
     } catch {
@@ -131,6 +155,12 @@ export function ReportConversationSheet({
               placeholder={t("inbox.reportFlow.detailsPlaceholder")}
               helperText={t("inbox.reportFlow.detailsHelper")}
               disabled={submitting}
+              screenshots={screenshots}
+              onScreenshotsChange={setScreenshots}
+              screenshotsLabel={t("inbox.reportFlow.screenshotsLabel")}
+              addScreenshotLabel={t("inbox.reportFlow.addScreenshot")}
+              removeScreenshotLabel={t("inbox.reportFlow.removeScreenshot")}
+              screenshotsHint={t("inbox.reportFlow.screenshotsHint")}
             />
             {error ? (
               <p

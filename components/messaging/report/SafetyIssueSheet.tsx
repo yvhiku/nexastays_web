@@ -5,6 +5,7 @@ import { Phone } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   reportSafetyIssue,
+  uploadReportEvidence,
   type SafetyIssueCategory,
 } from "@/lib/messaging/messages-api";
 import { trackEvent } from "@/lib/analytics";
@@ -17,6 +18,7 @@ import {
   SAFETY_CATEGORIES,
   type SafetyBookingContext,
 } from "./report-categories";
+import type { ReportScreenshotDraft } from "./ReportScreenshotsField";
 
 type Step = "category" | "details" | "done" | "emergency";
 
@@ -41,6 +43,7 @@ export function SafetyIssueSheet({
   const [step, setStep] = useState<Step>("category");
   const [category, setCategory] = useState<SafetyIssueCategory | null>(null);
   const [details, setDetails] = useState("");
+  const [screenshots, setScreenshots] = useState<ReportScreenshotDraft[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [supportUrl, setSupportUrl] = useState<string | null>(null);
@@ -50,6 +53,10 @@ export function SafetyIssueSheet({
     setStep("category");
     setCategory(null);
     setDetails("");
+    setScreenshots((prev) => {
+      for (const item of prev) URL.revokeObjectURL(item.previewUrl);
+      return [];
+    });
     setSubmitting(false);
     setError(null);
     setSupportUrl(null);
@@ -103,17 +110,28 @@ export function SafetyIssueSheet({
     setSubmitting(true);
     setError(null);
     try {
+      const attachmentIds: string[] = [];
+      for (const shot of screenshots) {
+        const uploaded = await uploadReportEvidence(
+          conversationId,
+          shot.file,
+          token,
+        );
+        attachmentIds.push(uploaded.id);
+      }
       const result = await reportSafetyIssue(
         conversationId,
         {
           category,
           details: details.trim() || undefined,
+          ...(attachmentIds.length ? { attachmentIds } : {}),
         },
         token,
       );
       trackEvent("conversation_safety_reported", {
         conversation_id: conversationId,
         category,
+        screenshot_count: attachmentIds.length,
       });
       setSupportUrl(result.supportUrl || null);
       setStep("done");
@@ -208,6 +226,12 @@ export function SafetyIssueSheet({
               label={t("inbox.safetyFlow.whatHappened")}
               placeholder={t("inbox.safetyFlow.detailsPlaceholder")}
               disabled={submitting}
+              screenshots={screenshots}
+              onScreenshotsChange={setScreenshots}
+              screenshotsLabel={t("inbox.safetyFlow.screenshotsLabel")}
+              addScreenshotLabel={t("inbox.safetyFlow.addScreenshot")}
+              removeScreenshotLabel={t("inbox.safetyFlow.removeScreenshot")}
+              screenshotsHint={t("inbox.safetyFlow.screenshotsHint")}
             />
             {showStay ? (
               <div className="rounded-xl border border-nexa-line bg-white px-4 py-3 shadow-messaging-1">

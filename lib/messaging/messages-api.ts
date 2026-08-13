@@ -454,16 +454,31 @@ export type SafetyIssueCategory =
 export interface SafetyIssueInput {
   category: SafetyIssueCategory;
   details?: string;
+  attachmentIds?: string[];
+}
+
+export interface ConversationReportInput {
+  reason: string;
+  attachmentIds?: string[];
 }
 
 export async function reportConversation(
   conversationId: string,
-  reason: string | undefined,
+  input: ConversationReportInput | string | undefined,
   token?: string | null,
 ): Promise<void> {
+  const payload =
+    typeof input === "string" || input === undefined
+      ? { reason: input ?? "" }
+      : {
+          reason: input.reason,
+          ...(input.attachmentIds?.length
+            ? { attachmentIds: input.attachmentIds }
+            : {}),
+        };
   await client.post(
     `/messaging/conversations/${encodeURIComponent(conversationId)}/report`,
-    { reason: reason ?? "" },
+    payload,
     { headers: getAuthHeaders(token) },
   );
 }
@@ -479,6 +494,29 @@ export async function blockConversation(
   );
 }
 
+export async function uploadReportEvidence(
+  conversationId: string,
+  file: File,
+  token?: string | null,
+  onProgress?: (pct: number) => void,
+): Promise<AttachmentDto> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await client.post(
+    `/messaging/conversations/${encodeURIComponent(conversationId)}/report-evidence`,
+    form,
+    {
+      headers: { ...getAuthHeaders(token), "Content-Type": "multipart/form-data" },
+      onUploadProgress: (evt) => {
+        if (evt.total && onProgress) {
+          onProgress(Math.round((evt.loaded / evt.total) * 100));
+        }
+      },
+    },
+  );
+  return unwrap<AttachmentDto>(res);
+}
+
 export async function reportSafetyIssue(
   conversationId: string,
   input: SafetyIssueInput,
@@ -490,6 +528,9 @@ export async function reportSafetyIssue(
     {
       category: input.category,
       ...(details ? { details: details.slice(0, 500) } : {}),
+      ...(input.attachmentIds?.length
+        ? { attachmentIds: input.attachmentIds }
+        : {}),
     },
     { headers: getAuthHeaders(token) },
   );
