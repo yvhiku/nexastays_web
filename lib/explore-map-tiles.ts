@@ -1,16 +1,19 @@
 /**
  * Explore map basemap — CARTO CDN (no API key).
- * Primary: Positron (calm, marker-first). Voyager kept as named fallback only
- * (swap NEXA_EXPLORE_TILE_URL manually if Positron fails QA — no runtime switch).
+ * Primary: Voyager (geographic color hierarchy). Positron archived as named constant only
+ * (no runtime provider switching).
  */
 
-/** Named fallback — previous production Voyager style. */
+/** Active basemap — CARTO Voyager. */
 export const NEXA_EXPLORE_TILE_URL_VOYAGER =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" as const;
 
-/** Primary: CARTO Positron (light_all). */
-export const NEXA_EXPLORE_TILE_URL =
+/** Archived — Positron (light_all); too washed out for Explore. Do not use as primary. */
+export const NEXA_EXPLORE_TILE_URL_POSITRON =
   "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" as const;
+
+/** Primary tile URL — Voyager. */
+export const NEXA_EXPLORE_TILE_URL = NEXA_EXPLORE_TILE_URL_VOYAGER;
 
 /**
  * Linked OSM + CARTO attribution (required). No Leaflet prefix —
