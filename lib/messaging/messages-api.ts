@@ -642,6 +642,89 @@ export async function createSupportTicket(
   return unwrap<CreateSupportTicketResult>(res);
 }
 
+export type SupportTicketListItem = {
+  id: string;
+  status: string;
+  conversation_id?: string;
+  subject?: string;
+};
+
+export async function listSupportTickets(
+  token?: string | null,
+  limit = 50,
+): Promise<SupportTicketListItem[]> {
+  const res = await client.get(`/support/tickets?limit=${limit}`, {
+    headers: getAuthHeaders(token),
+  });
+  const data = unwrap<{ items?: Record<string, unknown>[] }>(res);
+  return (data.items ?? []).map((row) => ({
+    id: String(row.id ?? ""),
+    status: String(row.status ?? ""),
+    conversation_id: (row.conversation_id ?? row.conversationId) as
+      | string
+      | undefined,
+    subject: row.subject as string | undefined,
+  }));
+}
+
+export type SupportCsatState = {
+  submitted: boolean;
+  csat: {
+    rating: number;
+    comment: string | null;
+    submitted_at: string;
+  } | null;
+};
+
+export async function getSupportTicketCsat(
+  ticketId: string,
+  token?: string | null,
+): Promise<SupportCsatState> {
+  const res = await client.get(
+    `/support/tickets/${encodeURIComponent(ticketId)}/csat`,
+    { headers: getAuthHeaders(token) },
+  );
+  const data = unwrap<Record<string, unknown>>(res);
+  const csat = data.csat as Record<string, unknown> | null | undefined;
+  return {
+    submitted: Boolean(data.submitted),
+    csat: csat
+      ? {
+          rating: Number(csat.rating ?? 0),
+          comment: (csat.comment as string | null) ?? null,
+          submitted_at: String(csat.submitted_at ?? csat.submittedAt ?? ""),
+        }
+      : null,
+  };
+}
+
+export async function submitSupportTicketCsat(
+  ticketId: string,
+  input: { rating: number; comment?: string },
+  token?: string | null,
+): Promise<SupportCsatState> {
+  const res = await client.post(
+    `/support/tickets/${encodeURIComponent(ticketId)}/csat`,
+    {
+      rating: input.rating,
+      ...(input.comment?.trim() ? { comment: input.comment.trim() } : {}),
+    },
+    { headers: getAuthHeaders(token) },
+  );
+  const data = unwrap<Record<string, unknown>>(res);
+  const csat = data.csat as Record<string, unknown> | null | undefined;
+  return {
+    submitted: Boolean(data.submitted ?? true),
+    csat: csat
+      ? {
+          rating: Number(csat.rating ?? 0),
+          comment: (csat.comment as string | null) ?? null,
+          submitted_at: String(csat.submitted_at ?? csat.submittedAt ?? ""),
+        }
+      : null,
+  };
+}
+
 export async function getConversationByBooking(
   bookingId: string,
   token?: string | null,

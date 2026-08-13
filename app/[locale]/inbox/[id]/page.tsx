@@ -14,6 +14,7 @@ import { loadAttachmentDraft, clearAttachmentDraft } from "@/lib/messaging/attac
 import { shouldRefreshAttachments } from "@/lib/messaging/attachment-sync";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { MessageComposer } from "@/components/messaging/MessageComposer";
+import { SupportCsatPrompt } from "@/components/messaging/SupportCsatPrompt";
 import { TimelineRenderer } from "@/components/messaging/TimelineRenderer";
 import { useBatchedRead } from "@/components/messaging/hooks/useBatchedRead";
 import { useConversationDraft } from "@/components/messaging/hooks/useConversationDraft";
@@ -1219,6 +1220,11 @@ function ConversationPageInner() {
               );
             }}
             onDismiss={() => setShowDraftRecovery(false)}
+          />
+          <SupportCsatPrompt
+            conversationId={conversationId}
+            conversationType={conversation.conversation.type}
+            token={token}
           />
           <MessageComposer
             value={draft}
