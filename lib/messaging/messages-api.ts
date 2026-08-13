@@ -506,7 +506,16 @@ export async function uploadReportEvidence(
     `/messaging/conversations/${encodeURIComponent(conversationId)}/report-evidence`,
     form,
     {
-      headers: { ...getAuthHeaders(token), "Content-Type": "multipart/form-data" },
+      headers: getAuthHeaders(token),
+      transformRequest: [
+        (data, headers) => {
+          if (typeof FormData !== "undefined" && data instanceof FormData) {
+            // Drop axios default application/json so the browser sets multipart boundary.
+            delete (headers as Record<string, unknown>)["Content-Type"];
+          }
+          return data;
+        },
+      ],
       onUploadProgress: (evt) => {
         if (evt.total && onProgress) {
           onProgress(Math.round((evt.loaded / evt.total) * 100));
