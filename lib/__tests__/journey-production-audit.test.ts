@@ -299,7 +299,7 @@ test("welcome completion forces search spotlight past the normal cooldown", () =
   const searchBar = read("components/search/SearchBar.tsx");
 
   assert.match(provider, /forceRef\.current\.add\("search_fab"\)/);
-  assert.match(config, /target: "home-search\|search-fab\|desktop-search"/);
+  assert.match(config, /target: "search-fab\|home-search\|desktop-search"/);
   assert.match(config, /target: "nav-saved\|desktop-saved"/);
   assert.match(navbar, /data-guidance-target="desktop-search"/);
   assert.match(navbar, /data-guidance-target="desktop-saved"/);

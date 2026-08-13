@@ -23,7 +23,7 @@ export const GUIDE_CATALOG: GuideDefinition[] = [
     type: "spotlight",
     priority: "high",
     trigger: "after_welcome",
-    target: "home-search|search-fab|desktop-search",
+    target: "search-fab|home-search|desktop-search",
     cooldownSec: 0,
     once: true,
     enabled: true,

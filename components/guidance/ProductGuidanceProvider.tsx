@@ -405,6 +405,17 @@ export function ProductGuidanceProvider({ children }: { children: React.ReactNod
           guideId="search_fab"
           onPrimary={() => {
             finishActive("complete");
+            const fab = document.querySelector<HTMLElement>(
+              '[data-guidance-target="search-fab"]',
+            );
+            const fabVisible =
+              fab &&
+              window.getComputedStyle(fab).display !== "none" &&
+              window.getComputedStyle(fab).visibility !== "hidden";
+            if (fabVisible) {
+              openSearch();
+              return;
+            }
             const homeSearch = document.querySelector<HTMLElement>(
               '[data-guidance-target="home-search"]',
             );

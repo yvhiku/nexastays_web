@@ -273,12 +273,15 @@ export function Spotlight({ guideId, onPrimary, onNotNow, onTargetReady }: Props
           >
             <div
               className={cn(
-                "pointer-events-none absolute h-3.5 w-3.5 bg-white",
+                "pointer-events-none absolute",
                 placement.caret === "down" ? "-bottom-1.5" : "-top-1.5",
               )}
-              style={{ left: caretLeft, transform: "translateX(-50%) rotate(45deg)" }}
+              style={{ left: caretLeft, transform: "translateX(-50%)" }}
               aria-hidden
-            />
+            >
+              {/* Nested rotate so translateX stays axis-aligned (centers on target). */}
+              <div className="h-3.5 w-3.5 rotate-45 bg-white shadow-sm" />
+            </div>
             <h2
               id={titleId}
               className="mb-2 font-display text-xl font-bold text-nexa-ink-2 sm:text-2xl"
