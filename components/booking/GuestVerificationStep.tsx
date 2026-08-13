@@ -11,9 +11,10 @@ import {
 } from "@/lib/booking-verification-validators";
 import type { GuestIdentityFormData } from "@/lib/booking-verification-types";
 import type { CreateBookingOccupantDto } from "@/lib/stays-types";
-import { Shield, X, BadgeCheck } from "lucide-react";
+import { Shield, X, BadgeCheck, Check } from "lucide-react";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import { useModalDialog } from "@/components/ui/useModalDialog";
+import { cn } from "@/lib/utils";
 
 interface GuestVerificationStepProps {
   open: boolean;
@@ -226,14 +227,30 @@ export function GuestVerificationStep({
             ))}
           </div>
 
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={acknowledgeName}
-              onChange={(e) => setAcknowledgeName(e.target.checked)}
-              className="mt-1 rounded border-nexa-line"
-            />
-            <span className="text-sm text-nexa-ink-3">{t("bookingVerification.acknowledgeName")}</span>
+          <label className="flex cursor-pointer items-start gap-3">
+            <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+              <input
+                type="checkbox"
+                checked={acknowledgeName}
+                onChange={(e) => setAcknowledgeName(e.target.checked)}
+                className="peer absolute inset-0 z-layer-content h-full w-full cursor-pointer opacity-0"
+                aria-describedby="guest-ack-label"
+              />
+              <span
+                className={cn(
+                  "pointer-events-none flex h-5 w-5 items-center justify-center rounded-md border-2 transition-colors",
+                  acknowledgeName
+                    ? "border-nexa-primary bg-nexa-primary text-white"
+                    : "border-nexa-line bg-white peer-focus-visible:border-nexa-primary peer-focus-visible:ring-2 peer-focus-visible:ring-nexa-primary/20",
+                )}
+                aria-hidden
+              >
+                {acknowledgeName && <Check className="h-3 w-3" strokeWidth={3} />}
+              </span>
+            </span>
+            <span id="guest-ack-label" className="text-sm text-nexa-ink-3">
+              {t("bookingVerification.acknowledgeName")}
+            </span>
           </label>
 
           {validationError && (
