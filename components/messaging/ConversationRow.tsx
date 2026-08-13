@@ -12,6 +12,7 @@ import {
   Mic,
   Paperclip,
   UserRound,
+  Headphones,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -127,6 +128,9 @@ function statusTone(label: string): string {
   if (normalized.includes("archive")) {
     return "border-slate-200/80 bg-slate-50 text-slate-600";
   }
+  if (normalized.includes("support")) {
+    return "border-nexa-primary/15 bg-nexa-primary-soft text-nexa-primary";
+  }
   if (normalized.includes("upcoming") || normalized.includes("pending")) {
     return "border-violet-200/70 bg-violet-50 text-violet-700";
   }
@@ -184,18 +188,23 @@ function ConversationRowInner({
   const avatarMedia =
     presentation.avatar ?? presentation.reservation.coverMedia;
   const counterpartLabel =
-    viewerRole === "host"
-      ? t("inbox.guestRole")
-      : presentation.counterpart.verified
-        ? t("inbox.verifiedHostRole")
-        : t("inbox.hostRole");
-  const RoleIcon = usesPropertyFallback
-    ? Home
-    : presentation.counterpart.verified
-      ? BadgeCheck
+    conversation.type === "SUPPORT"
+      ? t("inbox.filters.support")
       : viewerRole === "host"
-        ? UserRound
-        : Home;
+        ? t("inbox.guestRole")
+        : presentation.counterpart.verified
+          ? t("inbox.verifiedHostRole")
+          : t("inbox.hostRole");
+  const RoleIcon =
+    conversation.type === "SUPPORT"
+      ? Headphones
+      : usesPropertyFallback
+        ? Home
+        : presentation.counterpart.verified
+          ? BadgeCheck
+          : viewerRole === "host"
+            ? UserRound
+            : Home;
 
   return (
     <Link

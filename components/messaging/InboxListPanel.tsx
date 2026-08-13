@@ -171,6 +171,7 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
       const data = await listConversations(token, filter, debouncedQuery || undefined);
       setItems(data);
     } catch (e) {
+      setItems([]);
       setError(formatUserError(e));
     } finally {
       setLoading(false);
