@@ -41,7 +41,9 @@ export function ReportConversationSheet({
   const [screenshots, setScreenshots] = useState<ReportScreenshotDraft[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reportId, setReportId] = useState<string | null>(null);
+  const [supportConversationId, setSupportConversationId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!open) return;
@@ -54,7 +56,7 @@ export function ReportConversationSheet({
     });
     setSubmitting(false);
     setError(null);
-    setReportId(null);
+    setSupportConversationId(null);
   }, [open]);
 
   const title =
@@ -107,7 +109,7 @@ export function ReportConversationSheet({
         category,
         screenshot_count: attachmentIds.length,
       });
-      setReportId(result.reportId ?? null);
+      setSupportConversationId(result.supportConversationId ?? null);
       setStep("done");
     } catch {
       setError(t("inbox.reportFlow.submitError"));
@@ -188,21 +190,19 @@ export function ReportConversationSheet({
         <ReportConfirmation
           title={t("inbox.reportFlow.confirmationTitle")}
           body={t("inbox.reportFlow.confirmationBody")}
-          doneLabel={t("inbox.reportFlow.done")}
-          onDone={onClose}
-          secondaryAction={
-            reportId
-              ? {
-                  label: t("inbox.reportFlow.contactSupport"),
-                  onClick: () => {
-                    onContactSupport?.(
-                      `/contact?report_id=${encodeURIComponent(reportId)}`,
-                    );
-                    onClose();
-                  },
-                }
-              : undefined
+          doneLabel={
+            supportConversationId
+              ? t("inbox.reportFlow.viewSupportRequest")
+              : t("inbox.reportFlow.done")
           }
+          onDone={() => {
+            if (supportConversationId) {
+              onContactSupport?.(
+                `/inbox/${encodeURIComponent(supportConversationId)}`,
+              );
+            }
+            onClose();
+          }}
         />
       ) : null}
     </ReportFlowShell>

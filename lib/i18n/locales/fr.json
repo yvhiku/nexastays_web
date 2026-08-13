@@ -846,6 +846,7 @@
       "confirmationTitle": "Signalement reçu",
       "confirmationBody": "Merci de nous en avoir informés. Notre équipe examinera votre signalement.",
       "contactSupport": "Contacter le support",
+      "viewSupportRequest": "Voir la demande d’assistance",
       "done": "Terminé"
     },
     "safetyFlow": {
@@ -879,6 +880,7 @@
       "confirmationTitle": "Signalement de sécurité reçu",
       "confirmationBody": "Votre signalement a été transmis à notre équipe.",
       "contactSupport": "Contacter le support",
+      "viewSupportRequest": "Voir la demande d’assistance",
       "done": "Terminé"
     },
     "attachmentMenu": {

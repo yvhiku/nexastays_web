@@ -462,11 +462,36 @@ export interface ConversationReportInput {
   attachmentIds?: string[];
 }
 
+export type ReportConversationResult = {
+  ok: boolean;
+  reportId?: string;
+  ticketId?: string;
+  ticketNumber?: string;
+  supportConversationId?: string;
+};
+
+export type SafetyIssueResult = {
+  supportUrl?: string;
+  safetyIssueId?: string;
+  ticketId?: string;
+  ticketNumber?: string;
+  supportConversationId?: string;
+};
+
+function asSupportThreadFields(raw: Record<string, unknown>) {
+  return {
+    ticketId: (raw.ticketId ?? raw.ticket_id) as string | undefined,
+    ticketNumber: (raw.ticketNumber ?? raw.ticket_number) as string | undefined,
+    supportConversationId: (raw.supportConversationId ??
+      raw.support_conversation_id) as string | undefined,
+  };
+}
+
 export async function reportConversation(
   conversationId: string,
   input: ConversationReportInput | string | undefined,
   token?: string | null,
-): Promise<{ ok: boolean; reportId?: string }> {
+): Promise<ReportConversationResult> {
   const payload =
     typeof input === "string" || input === undefined
       ? { reason: input ?? "" }
@@ -481,7 +506,12 @@ export async function reportConversation(
     payload,
     { headers: getAuthHeaders(token) },
   );
-  return unwrap<{ ok: boolean; reportId?: string }>(res);
+  const raw = unwrap<Record<string, unknown>>(res);
+  return {
+    ok: Boolean(raw.ok ?? true),
+    reportId: (raw.reportId ?? raw.report_id) as string | undefined,
+    ...asSupportThreadFields(raw),
+  };
 }
 
 export async function blockConversation(
@@ -531,7 +561,7 @@ export async function reportSafetyIssue(
   conversationId: string,
   input: SafetyIssueInput,
   token?: string | null,
-): Promise<{ supportUrl: string; safetyIssueId?: string }> {
+): Promise<SafetyIssueResult> {
   const details = input.details?.trim();
   const res = await client.post(
     `/messaging/conversations/${encodeURIComponent(conversationId)}/safety`,
@@ -544,7 +574,14 @@ export async function reportSafetyIssue(
     },
     { headers: getAuthHeaders(token) },
   );
-  return unwrap<{ supportUrl: string; safetyIssueId?: string }>(res);
+  const raw = unwrap<Record<string, unknown>>(res);
+  return {
+    supportUrl: (raw.supportUrl ?? raw.support_url) as string | undefined,
+    safetyIssueId: (raw.safetyIssueId ?? raw.safety_issue_id) as
+      | string
+      | undefined,
+    ...asSupportThreadFields(raw),
+  };
 }
 
 export type SupportTicketCategory =

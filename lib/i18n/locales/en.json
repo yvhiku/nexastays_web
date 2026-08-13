@@ -846,6 +846,7 @@
       "confirmationTitle": "Report received",
       "confirmationBody": "Thank you for letting us know. Our team will review your report.",
       "contactSupport": "Contact Support",
+      "viewSupportRequest": "View support request",
       "done": "Done"
     },
     "safetyFlow": {
@@ -879,6 +880,7 @@
       "confirmationTitle": "Safety report received",
       "confirmationBody": "Your report has been sent to our team.",
       "contactSupport": "Contact support",
+      "viewSupportRequest": "View support request",
       "done": "Done"
     },
     "attachmentMenu": {

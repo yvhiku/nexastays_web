@@ -846,6 +846,7 @@
       "confirmationTitle": "تم استلام البلاغ",
       "confirmationBody": "شكرًا لإبلاغنا. سيراجع فريقنا بلاغك.",
       "contactSupport": "اتصل بالدعم",
+      "viewSupportRequest": "عرض طلب الدعم",
       "done": "تم"
     },
     "safetyFlow": {
@@ -879,6 +880,7 @@
       "confirmationTitle": "تم استلام بلاغ الأمان",
       "confirmationBody": "تم إرسال بلاغك إلى فريقنا.",
       "contactSupport": "اتصل بالدعم",
+      "viewSupportRequest": "عرض طلب الدعم",
       "done": "تم"
     },
     "attachmentMenu": {

@@ -46,7 +46,9 @@ export function SafetyIssueSheet({
   const [screenshots, setScreenshots] = useState<ReportScreenshotDraft[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [supportUrl, setSupportUrl] = useState<string | null>(null);
+  const [supportConversationId, setSupportConversationId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     if (!open) return;
@@ -59,7 +61,7 @@ export function SafetyIssueSheet({
     });
     setSubmitting(false);
     setError(null);
-    setSupportUrl(null);
+    setSupportConversationId(null);
   }, [open]);
 
   const title =
@@ -133,7 +135,7 @@ export function SafetyIssueSheet({
         category,
         screenshot_count: attachmentIds.length,
       });
-      setSupportUrl(result.supportUrl || null);
+      setSupportConversationId(result.supportConversationId ?? null);
       setStep("done");
     } catch {
       setError(t("inbox.safetyFlow.submitError"));
@@ -269,19 +271,19 @@ export function SafetyIssueSheet({
         <ReportConfirmation
           title={t("inbox.safetyFlow.confirmationTitle")}
           body={t("inbox.safetyFlow.confirmationBody")}
-          doneLabel={t("inbox.safetyFlow.done")}
-          onDone={onClose}
-          secondaryAction={
-            supportUrl
-              ? {
-                  label: t("inbox.safetyFlow.contactSupport"),
-                  onClick: () => {
-                    onContactSupport?.(supportUrl);
-                    onClose();
-                  },
-                }
-              : undefined
+          doneLabel={
+            supportConversationId
+              ? t("inbox.safetyFlow.viewSupportRequest")
+              : t("inbox.safetyFlow.done")
           }
+          onDone={() => {
+            if (supportConversationId) {
+              onContactSupport?.(
+                `/inbox/${encodeURIComponent(supportConversationId)}`,
+              );
+            }
+            onClose();
+          }}
         />
       ) : null}
     </ReportFlowShell>
