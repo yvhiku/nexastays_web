@@ -45,9 +45,8 @@ type Props = {
     safety: string;
     mute: string;
     unmute: string;
-    reportPrompt: string;
   };
-  onReport: (reason?: string) => void;
+  onReport: () => void;
   onSafety: () => void;
   onMuteChange: (muted: boolean) => void;
 };
@@ -192,8 +191,7 @@ export function ConversationMenu({
                 role="menuitem"
                 className={itemClass}
                 onClick={() => {
-                  const reason = window.prompt(labels.reportPrompt) ?? undefined;
-                  onReport(reason);
+                  onReport();
                   setOpen(false);
                 }}
               >

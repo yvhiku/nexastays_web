@@ -19,7 +19,7 @@ type Props = {
   backLabel: string;
   onBack?: () => void;
   menuLabels: React.ComponentProps<typeof ConversationMenu>["labels"];
-  onReport: (reason?: string) => void;
+  onReport: () => void;
   onSafety: () => void;
   onMuteChange: (muted: boolean) => void;
   muted: boolean;

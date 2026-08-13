@@ -24,13 +24,13 @@ import {
   isConversationMuted,
   setConversationMuted,
 } from "@/components/messaging/ConversationMenu";
+import { ReportConversationSheet } from "@/components/messaging/report/ReportConversationSheet";
+import { SafetyIssueSheet } from "@/components/messaging/report/SafetyIssueSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   getConversation,
   listMessages,
-  reportConversation,
-  reportSafetyIssue,
   sendMessage,
   type ConversationDetail,
   type MessageDto,
@@ -183,6 +183,8 @@ function ConversationPageInner() {
   const [sending, setSending] = useState(false);
   const [online, setOnline] = useState(true);
   const [muted, setMuted] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [safetyOpen, setSafetyOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
   const [contextCollapsed, setContextCollapsed] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
@@ -837,7 +839,6 @@ function ConversationPageInner() {
     safety: t("inbox.safety"),
     mute: t("inbox.mute"),
     unmute: t("inbox.unmute"),
-    reportPrompt: t("inbox.reportPrompt"),
   };
 
   if (loading || loadedConversationId !== conversationId) {
@@ -966,18 +967,8 @@ function ConversationPageInner() {
         onBack={navigateBackToInbox}
         menuLabels={menuLabels}
         muted={muted}
-        onReport={(reason) => {
-          if (!token) return;
-          void reportConversation(conversationId, reason, token).then(() => {
-            trackEvent("conversation_reported", { conversation_id: conversationId });
-          });
-        }}
-        onSafety={() => {
-          if (!token) return;
-          void reportSafetyIssue(conversationId, token).then(({ supportUrl }) => {
-            router.push(supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl);
-          });
-        }}
+        onReport={() => setReportOpen(true)}
+        onSafety={() => setSafetyOpen(true)}
         onMuteChange={(next) => {
           setConversationMuted(conversationId, next);
           setMuted(next);
@@ -1346,6 +1337,32 @@ function ConversationPageInner() {
           onClose={() => setResponsiveContextOpen(false)}
         />
       </BottomSheet>
+
+      <ReportConversationSheet
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        conversationId={conversationId}
+        token={token}
+      />
+      <SafetyIssueSheet
+        open={safetyOpen}
+        onClose={() => setSafetyOpen(false)}
+        conversationId={conversationId}
+        token={token}
+        bookingContext={{
+          listingName:
+            conversation.presentation.reservation.listingTitle ||
+            conversation.presentation.listing.title ||
+            undefined,
+          checkIn: conversation.presentation.reservation.checkinDate || undefined,
+          checkOut: conversation.presentation.reservation.checkoutDate || undefined,
+        }}
+        onContactSupport={(supportUrl) => {
+          router.push(
+            supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl,
+          );
+        }}
+      />
       </ConversationThemeProvider>
     </section>
   );

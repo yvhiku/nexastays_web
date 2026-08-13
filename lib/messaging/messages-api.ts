@@ -437,6 +437,25 @@ export async function updateConversationVisibility(
   );
 }
 
+export type ConversationReportCategory =
+  | "SPAM_SCAM"
+  | "HARASSMENT"
+  | "SUSPICIOUS_ACTIVITY"
+  | "MISLEADING_INFORMATION"
+  | "OTHER";
+
+export type SafetyIssueCategory =
+  | "FEEL_UNSAFE"
+  | "SUSPICIOUS_FRAUDULENT"
+  | "PROPERTY_PROBLEM"
+  | "THREATS_HARASSMENT"
+  | "OTHER";
+
+export interface SafetyIssueInput {
+  category: SafetyIssueCategory;
+  details?: string;
+}
+
 export async function reportConversation(
   conversationId: string,
   reason: string | undefined,
@@ -462,11 +481,16 @@ export async function blockConversation(
 
 export async function reportSafetyIssue(
   conversationId: string,
+  input: SafetyIssueInput,
   token?: string | null,
 ): Promise<{ supportUrl: string }> {
+  const details = input.details?.trim();
   const res = await client.post(
     `/messaging/conversations/${encodeURIComponent(conversationId)}/safety`,
-    {},
+    {
+      category: input.category,
+      ...(details ? { details: details.slice(0, 500) } : {}),
+    },
     { headers: getAuthHeaders(token) },
   );
   return unwrap<{ supportUrl: string }>(res);
