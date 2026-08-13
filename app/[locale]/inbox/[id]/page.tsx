@@ -27,13 +27,11 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  blockConversation,
   getConversation,
   listMessages,
   reportConversation,
   reportSafetyIssue,
   sendMessage,
-  updateConversationVisibility,
   type ConversationDetail,
   type MessageDto,
 } from "@/lib/messaging/messages-api";
@@ -833,24 +831,9 @@ function ConversationPageInner() {
     }
   };
 
-  const handleVisibility = async (action: "archive" | "delete" | "restore") => {
-    if (!token) return;
-    try {
-      await updateConversationVisibility(conversationId, action, token);
-      trackEvent("conversation_archived", { conversation_id: conversationId, action });
-      router.push(localePath(inboxBase));
-    } catch (e) {
-      setError(formatUserError(e));
-    }
-  };
-
   const menuLabels = {
     menu: t("inbox.menu"),
-    archive: t("inbox.archive"),
-    delete: t("inbox.delete"),
-    restore: t("inbox.restore"),
     report: t("inbox.report"),
-    block: t("inbox.block"),
     safety: t("inbox.safety"),
     mute: t("inbox.mute"),
     unmute: t("inbox.unmute"),
@@ -983,19 +966,10 @@ function ConversationPageInner() {
         onBack={navigateBackToInbox}
         menuLabels={menuLabels}
         muted={muted}
-        onArchive={() => void handleVisibility("archive")}
-        onDelete={() => void handleVisibility("delete")}
         onReport={(reason) => {
           if (!token) return;
           void reportConversation(conversationId, reason, token).then(() => {
             trackEvent("conversation_reported", { conversation_id: conversationId });
-          });
-        }}
-        onBlock={() => {
-          if (!token) return;
-          void blockConversation(conversationId, token).then(() => {
-            trackEvent("conversation_blocked", { conversation_id: conversationId });
-            void loadConversation();
           });
         }}
         onSafety={() => {

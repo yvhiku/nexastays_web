@@ -19,10 +19,7 @@ type Props = {
   backLabel: string;
   onBack?: () => void;
   menuLabels: React.ComponentProps<typeof ConversationMenu>["labels"];
-  onArchive: () => void;
-  onDelete: () => void;
   onReport: (reason?: string) => void;
-  onBlock: () => void;
   onSafety: () => void;
   onMuteChange: (muted: boolean) => void;
   muted: boolean;
@@ -37,10 +34,7 @@ export function ConversationHeader({
   backLabel,
   onBack,
   menuLabels,
-  onArchive,
-  onDelete,
   onReport,
-  onBlock,
   onSafety,
   onMuteChange,
   muted,
@@ -144,10 +138,7 @@ export function ConversationHeader({
             permissions={permissions as ConversationPermissions}
             labels={menuLabels}
             muted={muted}
-            onArchive={onArchive}
-            onDelete={onDelete}
             onReport={onReport}
-            onBlock={onBlock}
             onSafety={onSafety}
             onMuteChange={onMuteChange}
           />

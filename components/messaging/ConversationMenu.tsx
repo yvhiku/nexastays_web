@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Archive, Ban, BellOff, BellRing, Flag, MoreVertical, ShieldAlert, Trash2 } from "lucide-react";
+import { BellOff, BellRing, Flag, MoreVertical, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ConversationPermissions } from "@/lib/messaging/messages-api";
 import { AnchoredOverlayPortal } from "@/components/ui/OverlayPortal";
@@ -41,20 +41,13 @@ type Props = {
   muted: boolean;
   labels: {
     menu: string;
-    archive: string;
-    delete: string;
-    restore: string;
     report: string;
-    block: string;
     safety: string;
     mute: string;
     unmute: string;
     reportPrompt: string;
   };
-  onArchive: () => void;
-  onDelete: () => void;
   onReport: (reason?: string) => void;
-  onBlock: () => void;
   onSafety: () => void;
   onMuteChange: (muted: boolean) => void;
 };
@@ -63,10 +56,7 @@ export function ConversationMenu({
   permissions,
   muted,
   labels,
-  onArchive,
-  onDelete,
   onReport,
-  onBlock,
   onSafety,
   onMuteChange,
 }: Props) {
@@ -173,99 +163,57 @@ export function ConversationMenu({
           maxWidth={208}
           className="rounded-messaging-dropdown border border-nexa-line bg-white/95 p-2 shadow-messaging-3 backdrop-blur-2xl"
         >
-        <motion.div
-          ref={panelRef}
-          role="menu"
-          onKeyDown={handleMenuKeyDown}
-          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{
-            duration: reduceMotion ? 0 : MESSAGING_MOTION.button,
-            ease: MESSAGING_EASE_OUT,
-          }}
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className={itemClass}
-            onClick={() => {
-              onMuteChange(!muted);
-              setOpen(false);
+          <motion.div
+            ref={panelRef}
+            role="menu"
+            onKeyDown={handleMenuKeyDown}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              duration: reduceMotion ? 0 : MESSAGING_MOTION.button,
+              ease: MESSAGING_EASE_OUT,
             }}
           >
-            {muted ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-            {muted ? labels.unmute : labels.mute}
-          </button>
-          {permissions.canReport ? (
             <button
               type="button"
               role="menuitem"
               className={itemClass}
               onClick={() => {
-                const reason = window.prompt(labels.reportPrompt) ?? undefined;
-                onReport(reason);
+                onMuteChange(!muted);
                 setOpen(false);
               }}
             >
-              <Flag className="h-4 w-4" />
-              {labels.report}
+              {muted ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              {muted ? labels.unmute : labels.mute}
             </button>
-          ) : null}
-          <button
-            type="button"
-            role="menuitem"
-            className={itemClass}
-            onClick={() => {
-              onSafety();
-              setOpen(false);
-            }}
-          >
-            <ShieldAlert className="h-4 w-4 text-red-600" />
-            {labels.safety}
-          </button>
-          {permissions.canBlock ? (
-            <button
-              type="button"
-              role="menuitem"
-              className={cn(itemClass, "text-red-600")}
-              onClick={() => {
-                if (window.confirm(labels.block)) onBlock();
-                setOpen(false);
-              }}
-            >
-              <Ban className="h-4 w-4" />
-              {labels.block}
-            </button>
-          ) : null}
-          {permissions.canArchive ? (
+            {permissions.canReport ? (
+              <button
+                type="button"
+                role="menuitem"
+                className={itemClass}
+                onClick={() => {
+                  const reason = window.prompt(labels.reportPrompt) ?? undefined;
+                  onReport(reason);
+                  setOpen(false);
+                }}
+              >
+                <Flag className="h-4 w-4" />
+                {labels.report}
+              </button>
+            ) : null}
             <button
               type="button"
               role="menuitem"
               className={itemClass}
               onClick={() => {
-                onArchive();
+                onSafety();
                 setOpen(false);
               }}
             >
-              <Archive className="h-4 w-4" />
-              {labels.archive}
+              <ShieldAlert className="h-4 w-4 text-red-600" />
+              {labels.safety}
             </button>
-          ) : null}
-          {permissions.canDelete ? (
-            <button
-              type="button"
-              role="menuitem"
-              className={cn(itemClass, "text-red-600")}
-              onClick={() => {
-                if (window.confirm(labels.delete)) onDelete();
-                setOpen(false);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-              {labels.delete}
-            </button>
-          ) : null}
-        </motion.div>
+          </motion.div>
         </AnchoredOverlayPortal>
       ) : null}
     </div>
