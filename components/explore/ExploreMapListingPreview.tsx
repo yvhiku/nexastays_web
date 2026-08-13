@@ -32,6 +32,8 @@ export type ExploreMapListingPreviewProps = {
   detailHref: string;
   viewStayLabel: string;
   previewEnter: boolean;
+  /** Matches ExploreMap sizeVariant — full map allows a wider card. */
+  sizeVariant?: "default" | "panel";
   onClose: () => void;
 };
 
@@ -40,10 +42,10 @@ export function ExploreMapListingPreview({
   detailHref,
   viewStayLabel,
   previewEnter,
+  sizeVariant = "default",
   onClose,
 }: ExploreMapListingPreviewProps) {
-  const photos =
-    listing.media?.filter((m) => m.kind === "PHOTO") ?? [];
+  const photos = listing.media?.filter((m) => m.kind === "PHOTO") ?? [];
   const cover = photos[0];
   const photoCount = photos.length;
   const [coverError, setCoverError] = useState(false);
@@ -73,46 +75,46 @@ export function ExploreMapListingPreview({
       ? ("verified" as const)
       : null;
 
+  const maxWidth =
+    sizeVariant === "default"
+      ? "sm:w-[min(100%-2rem,45rem)]"
+      : "sm:w-[min(100%-2rem,40rem)]";
+
   return (
+    /* Outer shell does not capture map pan/zoom — only the card is interactive */
     <div
       className={cn(
-        "absolute bottom-4 left-1/2 z-layer-popover w-[min(100%-1rem,24rem)] -translate-x-1/2 sm:w-[min(100%-2rem,40rem)]",
+        "pointer-events-none absolute bottom-4 left-1/2 z-layer-popover w-[min(100%-1rem,24rem)] -translate-x-1/2",
+        maxWidth,
       )}
     >
-      {/* Upward caret linking card to map selection */}
-      <div
-        className="pointer-events-none absolute -top-2 left-1/2 z-layer-content h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-nexa-line bg-white"
-        aria-hidden
-      />
-
       <div
         className={cn(
-          "group relative overflow-hidden rounded-[22px] border border-nexa-line bg-white shadow-[0_16px_48px_rgba(15,23,42,0.16)] transition-all duration-150 ease-out hover:shadow-[0_20px_56px_rgba(15,23,42,0.2)]",
+          "pointer-events-auto group relative overflow-hidden rounded-[22px] border border-nexa-line bg-white shadow-[0_16px_48px_rgba(15,23,42,0.16)] transition-all duration-150 ease-out hover:shadow-[0_20px_56px_rgba(15,23,42,0.2)]",
           previewEnter
             ? "translate-y-0 opacity-100"
-            : "translate-y-3 opacity-0",
+            : "translate-y-2 opacity-0",
         )}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 z-layer-content flex h-8 w-8 items-center justify-center rounded-full border border-nexa-line/80 bg-white text-nexa-ink-3 shadow-sm hover:bg-nexa-bg-2 hover:text-nexa-ink"
+          className="absolute right-3 top-3 z-layer-content flex h-8 w-8 items-center justify-center rounded-full border border-nexa-line/80 bg-white text-nexa-ink-3 shadow-sm hover:bg-nexa-bg-2 hover:text-nexa-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40"
           aria-label="Close"
         >
           <X className="h-3.5 w-3.5" aria-hidden />
         </button>
 
-        <div className="flex flex-col sm:min-h-[20rem] sm:flex-row">
-          {/* Image */}
+        <div className="flex flex-col sm:min-h-[19rem] sm:flex-row">
           <Link
             href={detailHref}
-            className="relative block h-[168px] w-full shrink-0 overflow-hidden bg-nexa-bg-2 sm:h-auto sm:w-[42%] sm:min-h-[20rem]"
+            className="relative block h-[168px] w-full shrink-0 overflow-hidden bg-nexa-bg-2 sm:h-auto sm:w-[42%] sm:min-h-[19rem]"
           >
             <Image
               src={coverSrc}
               alt={title}
               fill
-              sizes="(max-width: 640px) 90vw, 280px"
+              sizes="(max-width: 640px) 90vw, 300px"
               className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               unoptimized={Boolean(cover) && !coverError}
               onError={() => setCoverError(true)}
@@ -141,7 +143,6 @@ export function ExploreMapListingPreview({
             )}
           </Link>
 
-          {/* Content */}
           <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-4 pe-12 sm:p-5 sm:pe-12 sm:py-6">
             <div className="min-w-0">
               <Link href={detailHref} className="block min-w-0">
@@ -198,8 +199,8 @@ export function ExploreMapListingPreview({
               {price != null ? (
                 <div className="min-w-0">
                   <p className="text-xl font-bold tabular-nums tracking-tight text-nexa-ink sm:text-2xl">
-                    {currency}{" "}
-                    {Math.round(Number(price)).toLocaleString("en-MA")}
+                    {Math.round(Number(price)).toLocaleString("en-MA")}{" "}
+                    {currency}
                   </p>
                   <p className="text-xs text-nexa-ink-4">per night</p>
                 </div>
@@ -209,7 +210,7 @@ export function ExploreMapListingPreview({
 
               <Link
                 href={detailHref}
-                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-nexa-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-nexa-primary-dark"
+                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-nexa-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-nexa-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/40"
               >
                 {viewStayLabel}
                 <ArrowRight className="h-4 w-4" aria-hidden />
