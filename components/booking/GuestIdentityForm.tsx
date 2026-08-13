@@ -111,7 +111,7 @@ export function GuestIdentityForm({
           <Input
             placeholder={t("bookingVerification.fullNamePlaceholder")}
             value={guest.full_name}
-            onChange={(e) => onChange({ ...guest, full_name: e.target.value.trim() })}
+            onChange={(e) => onChange({ ...guest, full_name: e.target.value })}
           />
         </div>
 
@@ -134,7 +134,7 @@ export function GuestIdentityForm({
                 type="email"
                 placeholder="you@example.com"
                 value={guest.email ?? ""}
-                onChange={(e) => onChange({ ...guest, email: e.target.value.trim() })}
+                onChange={(e) => onChange({ ...guest, email: e.target.value })}
               />
             </div>
           </>
@@ -147,7 +147,7 @@ export function GuestIdentityForm({
           <Input
             placeholder={t("bookingVerification.idNumberPlaceholder")}
             value={guest.id_number}
-            onChange={(e) => onChange({ ...guest, id_number: e.target.value.trim() })}
+            onChange={(e) => onChange({ ...guest, id_number: e.target.value })}
           />
         </div>
 

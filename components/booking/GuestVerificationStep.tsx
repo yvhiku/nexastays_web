@@ -28,11 +28,11 @@ interface GuestVerificationStepProps {
 
 function toOccupantDto(g: GuestIdentityFormData): CreateBookingOccupantDto {
   return {
-    full_name: g.full_name,
-    id_number: g.id_number || undefined,
+    full_name: g.full_name.trim(),
+    id_number: g.id_number.trim() || undefined,
     is_primary: g.is_primary,
-    phone: g.phone || undefined,
-    email: g.email || undefined,
+    phone: g.phone?.trim() || undefined,
+    email: g.email?.trim() || undefined,
     gender: g.gender,
     id_document_front_asset_id: g.id_document_front_asset_id,
     id_document_back_asset_id: g.id_document_back_asset_id,
