@@ -8,6 +8,7 @@ import {
 } from "framer-motion";
 import {
   Archive,
+  Headphones,
   MailCheck,
   MessageCircle,
   SearchX,
@@ -17,7 +18,7 @@ import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxFilters } from "@/components/messaging/InboxFilters";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMessagingRealtime } from "@/components/messaging/hooks/useMessagingRealtime";
 import {
   listConversations,
@@ -80,7 +81,9 @@ function InboxEmptyState({
       ? Archive
       : filter === "unread"
         ? MailCheck
-        : MessageCircle;
+        : filter === "support"
+          ? Headphones
+          : MessageCircle;
 
   return (
     <div className="flex min-h-[320px] flex-col items-center justify-center px-7 py-12 text-center">
@@ -138,6 +141,7 @@ type Props = {
 export function InboxListPanel({ activeConversationId = null }: Props) {
   const { token } = useAuth();
   const { t, localePath } = useLanguage();
+  const router = useRouter();
   const pathname = usePathname() ?? "";
   const inboxBase = inboxBasePathFromPathname(pathname);
   const reduceMotion = useReducedMotion();
@@ -218,6 +222,42 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
     setFilter("active");
   };
 
+  const openContactSupport = () => {
+    router.push(localePath("/contact"));
+  };
+
+  const emptyTitle = debouncedQuery
+    ? t("inbox.emptySearchTitle")
+    : filter === "archived"
+      ? t("inbox.archivedBannerTitle")
+      : filter === "support"
+        ? t("inbox.emptySupportTitle")
+        : t("inbox.emptyTitle");
+
+  const emptyBody = debouncedQuery
+    ? t("inbox.emptySearchBody")
+    : filter === "archived"
+      ? t("inbox.archivedBannerBody")
+      : filter === "support"
+        ? t("inbox.emptySupportBody")
+        : t("inbox.emptyBody");
+
+  const emptyActionLabel = debouncedQuery
+    ? t("common.clear")
+    : filter === "support"
+      ? t("inbox.contactSupport")
+      : filter !== "active"
+        ? t("inbox.filters.active")
+        : undefined;
+
+  const emptyAction = debouncedQuery
+    ? clearEmptyState
+    : filter === "support"
+      ? openContactSupport
+      : filter !== "active"
+        ? clearEmptyState
+        : undefined;
+
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-x-hidden bg-[linear-gradient(180deg,#fff_0%,#fdfbfc_100%)]">
       <div className="flex min-h-[68px] items-end justify-between gap-3 px-5 pb-2 pt-4">
@@ -274,34 +314,12 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
 
         {!loading && sorted.length === 0 ? (
           <InboxEmptyState
-            title={
-              debouncedQuery
-                ? t("inbox.emptySearchTitle")
-                : filter === "archived"
-                  ? t("inbox.archivedBannerTitle")
-                  : t("inbox.emptyTitle")
-            }
-            body={
-              debouncedQuery
-                ? t("inbox.emptySearchBody")
-                : filter === "archived"
-                  ? t("inbox.archivedBannerBody")
-                  : t("inbox.emptyBody")
-            }
+            title={emptyTitle}
+            body={emptyBody}
             filter={filter}
             search={Boolean(debouncedQuery)}
-            actionLabel={
-              debouncedQuery || filter !== "active"
-                ? debouncedQuery
-                  ? t("common.clear")
-                  : t("inbox.filters.active")
-                : undefined
-            }
-            onAction={
-              debouncedQuery || filter !== "active"
-                ? clearEmptyState
-                : undefined
-            }
+            actionLabel={emptyActionLabel}
+            onAction={emptyAction}
           />
         ) : null}
 

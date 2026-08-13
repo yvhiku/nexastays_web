@@ -761,6 +761,8 @@
     "searchPlaceholder": "البحث في المحادثات",
     "emptyTitle": "لا توجد رسائل بعد",
     "emptyBody": "عند حجز إقامة، ستظهر محادثتك مع المضيف هنا.",
+    "emptySupportTitle": "لا توجد رسائل دعم بعد",
+    "emptySupportBody": "عند تواصلك مع دعم Nexa، ستظهر محادثاتك مع فريقنا هنا.",
     "emptySearchTitle": "لم يتم العثور على محادثات",
     "emptySearchBody": "جرّب اسمًا أو عقارًا أو عامل تصفية مختلفًا.",
     "emptyThreadTitle": "ابدأ المحادثة",

@@ -761,6 +761,8 @@
     "searchPlaceholder": "Search conversations",
     "emptyTitle": "No messages yet",
     "emptyBody": "When you book a stay, your conversation with the host will appear here.",
+    "emptySupportTitle": "No support messages yet",
+    "emptySupportBody": "When you contact Nexa support, your conversations with our team will appear here.",
     "emptySearchTitle": "No conversations found",
     "emptySearchBody": "Try a different name, property, or filter.",
     "emptyThreadTitle": "Start the conversation",

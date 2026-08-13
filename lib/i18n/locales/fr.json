@@ -761,6 +761,8 @@
     "searchPlaceholder": "Rechercher une conversation",
     "emptyTitle": "Aucun message",
     "emptyBody": "Lorsque vous réservez un séjour, votre conversation avec l'hôte apparaîtra ici.",
+    "emptySupportTitle": "Aucun message d’assistance",
+    "emptySupportBody": "Lorsque vous contactez l’assistance Nexa, vos conversations avec notre équipe apparaîtront ici.",
     "emptySearchTitle": "Aucune conversation trouvée",
     "emptySearchBody": "Essayez un autre nom, logement ou filtre.",
     "emptyThreadTitle": "Commencez la conversation",
