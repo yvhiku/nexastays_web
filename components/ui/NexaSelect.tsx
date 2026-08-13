@@ -36,7 +36,7 @@ const TRIGGER = {
     "hover:border-nexa-primary/50 transition-colors",
   ),
   field: cn(
-    "w-full flex items-center gap-2 h-11 min-h-[44px] rounded-xl border border-nexa-line bg-white px-3.5",
+    "w-full flex items-center gap-2 h-11 min-h-[44px] rounded-full border border-nexa-line bg-white px-4",
     "font-sans text-sm text-left text-nexa-ink",
     "focus-visible:border-nexa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/20",
     "hover:border-nexa-primary/40 transition-colors",
@@ -97,7 +97,11 @@ export function NexaSelect({
       setOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        event.preventDefault();
+        setOpen(false);
+      }
     };
     const onReposition = () => updatePosition();
 
@@ -128,7 +132,8 @@ export function NexaSelect({
           top: pos.top,
           left: pos.left,
           width: pos.width,
-          zIndex: LAYERS.dropdown,
+          // Above modal (1500) so lists work inside dialogs like Guest verification.
+          zIndex: LAYERS.toast,
         }}
         className="max-h-64 overflow-y-auto rounded-2xl border border-nexa-line bg-white py-1.5 shadow-nexa-lg"
       >
