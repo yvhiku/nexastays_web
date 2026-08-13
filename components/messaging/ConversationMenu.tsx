@@ -77,18 +77,28 @@ export function ConversationMenu({
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        ref.current &&
-        !ref.current.contains(e.target as Node) &&
-        !panelRef.current?.contains(e.target as Node)
-      ) {
+    if (!open) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (ref.current?.contains(target) || panelRef.current?.contains(target)) {
+        return;
+      }
+      setOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
         setOpen(false);
+        requestAnimationFrame(() => triggerRef.current?.focus());
       }
     };
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, []);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -138,8 +148,14 @@ export function ConversationMenu({
         <button
           ref={triggerRef}
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-12 w-12 items-center justify-center rounded-full text-nexa-ink-3 transition-[background-color,color,transform] duration-messaging-hover hover:bg-nexa-bg-2 hover:text-nexa-ink active:scale-95 active:duration-messaging-press motion-reduce:transition-none lg:h-10 lg:w-10"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }}
+          className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-full text-nexa-ink-3 transition-[background-color,color,transform] duration-messaging-hover hover:bg-nexa-bg-2 hover:text-nexa-ink active:scale-95 active:duration-messaging-press motion-reduce:transition-none lg:h-10 lg:w-10",
+            open && "bg-nexa-bg-2 text-nexa-ink",
+          )}
           aria-label={labels.menu}
           aria-expanded={open}
           aria-haspopup="menu"
@@ -150,7 +166,8 @@ export function ConversationMenu({
       {open ? (
         <AnchoredOverlayPortal
           anchor={ref}
-          layer="dropdown"
+          // Thread surface uses z-layer-drawer; menu must sit above it (same as emoji picker).
+          layer="modal"
           align="end"
           minWidth={208}
           maxWidth={208}
