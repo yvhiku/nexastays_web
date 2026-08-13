@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { NavBar } from "@/components/navbar/NavBar";
 import { Footer } from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
 import { NexaSelect } from "@/components/ui/NexaSelect";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { createSupportTicket } from "@/lib/messaging/messages-api";
 
 import {
   NEXA_PARTNERSHIPS_EMAIL,
@@ -18,21 +21,39 @@ function recipientForReason(reason: string): string {
   return contactEmailForReason(reason);
 }
 
-export default function ContactPage() {
-  const { t } = useLanguage();
+function ContactPageInner() {
+  const { t, localePath } = useLanguage();
+  const { isAuthenticated, token, ready } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [reason, setReason] = useState("");
   const [propertyType, setPropertyType] = useState("Apartments");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formNotice, setFormNotice] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const bookingId =
+    searchParams.get("booking_id") || searchParams.get("booking") || undefined;
+  const reportId = searchParams.get("report_id") || undefined;
+  const safetyIssueId = searchParams.get("safety_issue_id") || undefined;
+  const safetyFlag = searchParams.get("safety") === "1";
+
+  useEffect(() => {
+    if (safetyFlag || reportId || safetyIssueId || bookingId) {
+      setReason("Support");
+    }
+  }, [safetyFlag, reportId, safetyIssueId, bookingId]);
 
   const openMailto = (to: string, subjectLine: string) => {
     const subject = encodeURIComponent(subjectLine);
     window.location.href = `mailto:${to}?subject=${subject}`;
   };
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const el = formRef.current;
-    if (!el) return;
+    if (!el || submitting) return;
     const fd = new FormData(el);
 
     const r = String(fd.get("reason") ?? reason ?? "").trim();
@@ -44,8 +65,53 @@ export default function ContactPage() {
     const city = String(fd.get("city") ?? "").trim();
     const message = String(fd.get("message") ?? "").trim();
     const units = String(fd.get("partnershipUnits") ?? "").trim();
-    const propertyTypeValue = String(fd.get("propertyType") ?? propertyType ?? "").trim();
+    const propertyTypeValue = String(
+      fd.get("propertyType") ?? propertyType ?? "",
+    ).trim();
     const citiesCovered = String(fd.get("partnershipCities") ?? "").trim();
+
+    if (r === "Support" && ready && isAuthenticated && token) {
+      setSubmitting(true);
+      setFormError(null);
+      setFormNotice(null);
+      try {
+        const subject =
+          message.split("\n")[0]?.trim().slice(0, 200) || "Support request";
+        const category =
+          safetyIssueId || safetyFlag
+            ? "FRAUD"
+            : reportId
+              ? "OTHER"
+              : bookingId
+                ? "BOOKING"
+                : "OTHER";
+        const created = await createSupportTicket(
+          {
+            category,
+            subject,
+            message,
+            ...(bookingId ? { bookingId } : {}),
+            ...(reportId ? { reportId } : {}),
+            ...(safetyIssueId ? { safetyIssueId } : {}),
+          },
+          token,
+        );
+        setFormNotice(t("contact.ticketSuccess"));
+        router.push(
+          localePath(`/inbox/${encodeURIComponent(created.conversation_id)}`),
+        );
+        return;
+      } catch {
+        setFormError(t("contact.ticketError"));
+        return;
+      } finally {
+        setSubmitting(false);
+      }
+    }
+
+    if (r === "Support" && ready && !isAuthenticated) {
+      setFormNotice(t("contact.signInForTicket"));
+    }
 
     const parts = [
       "— Nexa Stays contact form —",
@@ -58,8 +124,17 @@ export default function ContactPage() {
       "Message:",
       message || "(none)",
     ];
+    if (bookingId) parts.push("", `Booking ID: ${bookingId}`);
+    if (reportId) parts.push(`Report ID: ${reportId}`);
+    if (safetyIssueId) parts.push(`Safety issue ID: ${safetyIssueId}`);
     if (r === "Partnership (10+ units)") {
-      parts.push("", "Partnership details:", `Units: ${units}`, `Property type: ${propertyTypeValue}`, `Cities covered: ${citiesCovered}`);
+      parts.push(
+        "",
+        "Partnership details:",
+        `Units: ${units}`,
+        `Property type: ${propertyTypeValue}`,
+        `Cities covered: ${citiesCovered}`,
+      );
     }
     const body = encodeURIComponent(parts.join("\n"));
     const subject = encodeURIComponent(`[Nexa Stays] ${r}`);
@@ -98,9 +173,7 @@ export default function ContactPage() {
                     <h3 className="text-lg font-semibold text-nexa-ink mb-2">
                       {t("contact.customerSupport")}
                     </h3>
-                    <p className="text-sm mb-4">
-                      {t("contact.supportDesc")}
-                    </p>
+                    <p className="text-sm mb-4">{t("contact.supportDesc")}</p>
                     <div className="font-semibold text-nexa-primary text-[0.95rem] mb-3">
                       ✉️ {NEXA_SUPPORT_EMAIL}
                     </div>
@@ -109,7 +182,18 @@ export default function ContactPage() {
                       size="sm"
                       onClick={() => {
                         setReason("Support");
-                        openMailto(NEXA_SUPPORT_EMAIL, "Nexa Stays — Customer support");
+                        if (isAuthenticated) {
+                          formRef.current
+                            ?.querySelector<HTMLTextAreaElement>(
+                              'textarea[name="message"]',
+                            )
+                            ?.focus();
+                          return;
+                        }
+                        openMailto(
+                          NEXA_SUPPORT_EMAIL,
+                          "Nexa Stays — Customer support",
+                        );
                       }}
                     >
                       {t("contact.sendSupport")}
@@ -120,9 +204,7 @@ export default function ContactPage() {
                     <h3 className="text-lg font-semibold text-nexa-ink mb-2">
                       {t("contact.portfolioPartnership")}
                     </h3>
-                    <p className="text-sm mb-4">
-                      {t("contact.portfolioDesc")}
-                    </p>
+                    <p className="text-sm mb-4">{t("contact.portfolioDesc")}</p>
                     <div className="font-semibold text-nexa-primary text-[0.95rem] mb-3">
                       ✉️ {NEXA_PARTNERSHIPS_EMAIL}
                     </div>
@@ -132,7 +214,10 @@ export default function ContactPage() {
                       size="sm"
                       onClick={() => {
                         setReason("Partnership (10+ units)");
-                        openMailto(NEXA_PARTNERSHIPS_EMAIL, "Nexa Stays — Portfolio partnership");
+                        openMailto(
+                          NEXA_PARTNERSHIPS_EMAIL,
+                          "Nexa Stays — Portfolio partnership",
+                        );
                       }}
                     >
                       {t("contact.requestPartnership")}
@@ -155,7 +240,10 @@ export default function ContactPage() {
                       size="sm"
                       onClick={() => {
                         setReason("Investments");
-                        openMailto(NEXA_PARTNERSHIPS_EMAIL, "Nexa Stays — Investments");
+                        openMailto(
+                          NEXA_PARTNERSHIPS_EMAIL,
+                          "Nexa Stays — Investments",
+                        );
                       }}
                     >
                       {t("contact.sendInvestment")}
@@ -171,7 +259,11 @@ export default function ContactPage() {
                   <p className="text-nexa-ink-3 text-sm mb-7">
                     {t("contact.replyNote")}
                   </p>
-                  <form ref={formRef} className="space-y-5" onSubmit={handleFormSubmit}>
+                  <form
+                    ref={formRef}
+                    className="space-y-5"
+                    onSubmit={(e) => void handleFormSubmit(e)}
+                  >
                     <div>
                       <label className="block text-sm font-semibold text-nexa-ink-2 mb-2">
                         {t("contact.reasonRequired")}
@@ -264,7 +356,7 @@ export default function ContactPage() {
                     <div
                       className={cn(
                         "rounded-xl p-5 mb-4 border border-nexa-primary/15 bg-nexa-primary-soft",
-                        reason !== "Partnership (10+ units)" && "hidden"
+                        reason !== "Partnership (10+ units)" && "hidden",
                       )}
                     >
                       <h4 className="text-sm font-bold text-nexa-primary-dark mb-3">
@@ -298,7 +390,11 @@ export default function ContactPage() {
                               { value: "Mixed", label: "Mixed" },
                             ]}
                           />
-                          <input type="hidden" name="propertyType" value={propertyType} />
+                          <input
+                            type="hidden"
+                            name="propertyType"
+                            value={propertyType}
+                          />
                         </div>
                       </div>
                       <div>
@@ -313,7 +409,28 @@ export default function ContactPage() {
                         />
                       </div>
                     </div>
-                    <Button type="submit" size="lg" className="w-full justify-center mt-2">
+                    {formError ? (
+                      <p
+                        className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                        role="alert"
+                      >
+                        {formError}
+                      </p>
+                    ) : null}
+                    {formNotice ? (
+                      <p
+                        className="rounded-xl border border-nexa-primary/20 bg-nexa-primary-soft px-3 py-2 text-sm text-nexa-ink-2"
+                        role="status"
+                      >
+                        {formNotice}
+                      </p>
+                    ) : null}
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full justify-center mt-2"
+                      disabled={submitting}
+                    >
                       {t("contact.sendMessageBtn")}
                     </Button>
                   </form>
@@ -328,5 +445,13 @@ export default function ContactPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={null}>
+      <ContactPageInner />
+    </Suspense>
   );
 }

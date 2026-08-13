@@ -466,7 +466,7 @@ export async function reportConversation(
   conversationId: string,
   input: ConversationReportInput | string | undefined,
   token?: string | null,
-): Promise<void> {
+): Promise<{ ok: boolean; reportId?: string }> {
   const payload =
     typeof input === "string" || input === undefined
       ? { reason: input ?? "" }
@@ -476,11 +476,12 @@ export async function reportConversation(
             ? { attachmentIds: input.attachmentIds }
             : {}),
         };
-  await client.post(
+  const res = await client.post(
     `/messaging/conversations/${encodeURIComponent(conversationId)}/report`,
     payload,
     { headers: getAuthHeaders(token) },
   );
+  return unwrap<{ ok: boolean; reportId?: string }>(res);
 }
 
 export async function blockConversation(
@@ -530,7 +531,7 @@ export async function reportSafetyIssue(
   conversationId: string,
   input: SafetyIssueInput,
   token?: string | null,
-): Promise<{ supportUrl: string }> {
+): Promise<{ supportUrl: string; safetyIssueId?: string }> {
   const details = input.details?.trim();
   const res = await client.post(
     `/messaging/conversations/${encodeURIComponent(conversationId)}/safety`,
@@ -543,7 +544,65 @@ export async function reportSafetyIssue(
     },
     { headers: getAuthHeaders(token) },
   );
-  return unwrap<{ supportUrl: string }>(res);
+  return unwrap<{ supportUrl: string; safetyIssueId?: string }>(res);
+}
+
+export type SupportTicketCategory =
+  | "BOOKING"
+  | "PAYMENT"
+  | "REFUND"
+  | "CANCELLATION"
+  | "HOST"
+  | "GUEST"
+  | "LISTING"
+  | "KYC"
+  | "TECHNICAL"
+  | "FRAUD"
+  | "OTHER";
+
+export interface CreateSupportTicketInput {
+  category: SupportTicketCategory;
+  subject: string;
+  message: string;
+  bookingId?: string;
+  listingId?: string;
+  reportId?: string;
+  safetyIssueId?: string;
+  clientRequestId?: string;
+}
+
+export interface CreateSupportTicketResult {
+  id: string;
+  ticket_number: string;
+  conversation_id: string;
+  status: string;
+  category: string;
+  subject: string;
+  party: string;
+  created_at: string;
+}
+
+export async function createSupportTicket(
+  input: CreateSupportTicketInput,
+  token?: string | null,
+): Promise<CreateSupportTicketResult> {
+  const res = await client.post(
+    "/support/tickets",
+    {
+      category: input.category,
+      subject: input.subject,
+      message: input.message,
+      ...(input.bookingId ? { bookingId: input.bookingId } : {}),
+      ...(input.listingId ? { listingId: input.listingId } : {}),
+      ...(input.reportId ? { reportId: input.reportId } : {}),
+      ...(input.safetyIssueId ? { safetyIssueId: input.safetyIssueId } : {}),
+      ...(input.clientRequestId
+        ? { clientRequestId: input.clientRequestId }
+        : {}),
+    },
+    { headers: getAuthHeaders(token) },
+  );
+  return unwrap<CreateSupportTicketResult>(res);
 }
 
 export async function getConversationByBooking(

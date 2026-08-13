@@ -22,6 +22,7 @@ type Props = {
   onClose: () => void;
   conversationId: string;
   token: string | null;
+  onContactSupport?: (supportUrl: string) => void;
 };
 
 export function ReportConversationSheet({
@@ -29,6 +30,7 @@ export function ReportConversationSheet({
   onClose,
   conversationId,
   token,
+  onContactSupport,
 }: Props) {
   const { t } = useLanguage();
   const [step, setStep] = useState<Step>("category");
@@ -39,6 +41,7 @@ export function ReportConversationSheet({
   const [screenshots, setScreenshots] = useState<ReportScreenshotDraft[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reportId, setReportId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -51,6 +54,7 @@ export function ReportConversationSheet({
     });
     setSubmitting(false);
     setError(null);
+    setReportId(null);
   }, [open]);
 
   const title =
@@ -90,7 +94,7 @@ export function ReportConversationSheet({
         );
         attachmentIds.push(uploaded.id);
       }
-      await reportConversation(
+      const result = await reportConversation(
         conversationId,
         {
           reason,
@@ -103,6 +107,7 @@ export function ReportConversationSheet({
         category,
         screenshot_count: attachmentIds.length,
       });
+      setReportId(result.reportId ?? null);
       setStep("done");
     } catch {
       setError(t("inbox.reportFlow.submitError"));
@@ -185,6 +190,19 @@ export function ReportConversationSheet({
           body={t("inbox.reportFlow.confirmationBody")}
           doneLabel={t("inbox.reportFlow.done")}
           onDone={onClose}
+          secondaryAction={
+            reportId
+              ? {
+                  label: t("inbox.reportFlow.contactSupport"),
+                  onClick: () => {
+                    onContactSupport?.(
+                      `/contact?report_id=${encodeURIComponent(reportId)}`,
+                    );
+                    onClose();
+                  },
+                }
+              : undefined
+          }
         />
       ) : null}
     </ReportFlowShell>

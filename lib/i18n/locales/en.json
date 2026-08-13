@@ -845,6 +845,7 @@
       "submitError": "We couldn’t send your report. Please try again.",
       "confirmationTitle": "Report received",
       "confirmationBody": "Thank you for letting us know. Our team will review your report.",
+      "contactSupport": "Contact Support",
       "done": "Done"
     },
     "safetyFlow": {
@@ -2141,7 +2142,10 @@
     "citiesCovered": "Cities covered *",
     "citiesPlaceholder": "e.g. Marrakech, Casablanca",
     "sendMessageBtn": "Send Message →",
-    "detailsNote": "Your details are used only to respond to your request."
+    "detailsNote": "Your details are used only to respond to your request.",
+    "ticketSuccess": "Your support request was created. Opening your conversation…",
+    "ticketError": "We couldn’t create your support ticket. Please try again.",
+    "signInForTicket": "Sign in to open an in-app support conversation. You can still email us below."
   },
   "fees": {
     "guestsPayLess": "Guests pay less",

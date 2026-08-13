@@ -1343,6 +1343,11 @@ function ConversationPageInner() {
         onClose={() => setReportOpen(false)}
         conversationId={conversationId}
         token={token}
+        onContactSupport={(supportUrl) => {
+          router.push(
+            supportUrl.startsWith("/") ? localePath(supportUrl) : supportUrl,
+          );
+        }}
       />
       <SafetyIssueSheet
         open={safetyOpen}

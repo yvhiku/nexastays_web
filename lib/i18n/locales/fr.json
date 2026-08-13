@@ -845,6 +845,7 @@
       "submitError": "Impossible d’envoyer votre signalement. Veuillez réessayer.",
       "confirmationTitle": "Signalement reçu",
       "confirmationBody": "Merci de nous en avoir informés. Notre équipe examinera votre signalement.",
+      "contactSupport": "Contacter le support",
       "done": "Terminé"
     },
     "safetyFlow": {
@@ -2109,7 +2110,10 @@
     "citiesCovered": "Villes couvertes *",
     "citiesPlaceholder": "ex. Marrakech, Casablanca",
     "sendMessageBtn": "Envoyer le message →",
-    "detailsNote": "Vos données sont utilisées uniquement pour répondre à votre demande."
+    "detailsNote": "Vos données sont utilisées uniquement pour répondre à votre demande.",
+    "ticketSuccess": "Votre demande de support a été créée. Ouverture de la conversation…",
+    "ticketError": "Impossible de créer votre ticket de support. Veuillez réessayer.",
+    "signInForTicket": "Connectez-vous pour ouvrir une conversation de support dans l’app. Vous pouvez toujours nous écrire par e-mail ci-dessous."
   },
   "fees": {
     "guestsPayLess": "Les voyageurs paient moins",
