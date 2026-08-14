@@ -248,15 +248,19 @@ export function MobileBottomNav() {
               <Link
                 key={tab.id}
                 href={tab.href}
-                data-guidance-target={tab.id === "saved" ? "nav-saved" : undefined}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-12 min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.7rem] font-medium transition-all duration-200 active:scale-95",
                   active ? "scale-105 font-semibold text-nexa-primary" : "text-nexa-ink-4",
                 )}
               >
-                <Icon className={cn("h-[22px] w-[22px]", active && "stroke-[2.25px]")} />
-                <span className="truncate max-w-full">{t(tab.labelKey)}</span>
+                <span
+                  data-guidance-target={tab.id === "saved" ? "nav-saved" : undefined}
+                  className="inline-flex flex-col items-center justify-center gap-0.5"
+                >
+                  <Icon className={cn("h-[22px] w-[22px]", active && "stroke-[2.25px]")} />
+                  <span className="truncate max-w-full">{t(tab.labelKey)}</span>
+                </span>
               </Link>
             );
           })}
@@ -273,15 +277,19 @@ export function MobileBottomNav() {
               <Link
                 key={tab.id}
                 href={tab.href}
-                data-guidance-target={guidanceTarget}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-12 min-w-[48px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[0.7rem] font-medium transition-all duration-200 active:scale-95",
                   active ? "scale-105 font-semibold text-nexa-primary" : "text-nexa-ink-4",
                 )}
               >
-                <Icon className={cn("h-[22px] w-[22px]", active && "stroke-[2.25px]")} />
-                <span className="truncate max-w-full">{t(tab.labelKey)}</span>
+                <span
+                  data-guidance-target={guidanceTarget}
+                  className="inline-flex flex-col items-center justify-center gap-0.5"
+                >
+                  <Icon className={cn("h-[22px] w-[22px]", active && "stroke-[2.25px]")} />
+                  <span className="truncate max-w-full">{t(tab.labelKey)}</span>
+                </span>
               </Link>
             );
           })}

@@ -231,9 +231,8 @@ export function Spotlight({ guideId, onPrimary, onNotNow, onTargetReady }: Props
             style={{
               width: hole.r * 2,
               height: hole.r * 2,
-              left: hole.cx,
-              top: hole.cy,
-              transform: "translate(-50%, -50%)",
+              left: hole.cx - hole.r,
+              top: hole.cy - hole.r,
             }}
             animate={reduce ? undefined : { scale: [1, 1.05, 1], opacity: [1, 0.8, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
