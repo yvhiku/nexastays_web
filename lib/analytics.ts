@@ -47,6 +47,7 @@ type AnalyticsEventName =
   | "message_composer_focused"
   | "conversation_archived"
   | "conversation_reported"
+  | "conversation_safety_reported"
   | "conversation_blocked"
   | "conversation_muted"
   | "attachment_selected"
