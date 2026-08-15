@@ -667,14 +667,59 @@ export async function listSupportTickets(
   }));
 }
 
+export type SupportCsatAgent = {
+  id: string;
+  fullName: string | null;
+  profilePhotoUrl: string | null;
+};
+
 export type SupportCsatState = {
   submitted: boolean;
+  alreadyReviewed: boolean;
+  canReview: boolean;
+  ticketStatus: string;
+  agent: SupportCsatAgent | null;
   csat: {
     rating: number;
     comment: string | null;
+    agent_rating: number | null;
+    agent_id: string | null;
     submitted_at: string;
   } | null;
 };
+
+function mapSupportCsatState(data: Record<string, unknown>): SupportCsatState {
+  const csat = data.csat as Record<string, unknown> | null | undefined;
+  const agent = data.agent as Record<string, unknown> | null | undefined;
+  return {
+    submitted: Boolean(data.submitted ?? data.alreadyReviewed),
+    alreadyReviewed: Boolean(data.alreadyReviewed ?? data.submitted),
+    canReview: Boolean(data.canReview),
+    ticketStatus: String(data.ticketStatus ?? data.ticket_status ?? ""),
+    agent: agent
+      ? {
+          id: String(agent.id ?? ""),
+          fullName: (agent.fullName as string | null) ?? null,
+          profilePhotoUrl: (agent.profilePhotoUrl as string | null) ?? null,
+        }
+      : null,
+    csat: csat
+      ? {
+          rating: Number(csat.rating ?? 0),
+          comment: (csat.comment as string | null) ?? null,
+          agent_rating:
+            csat.agent_rating == null && csat.agentRating == null
+              ? null
+              : Number(csat.agent_rating ?? csat.agentRating),
+          agent_id:
+            csat.agent_id == null && csat.agentId == null
+              ? null
+              : String(csat.agent_id ?? csat.agentId),
+          submitted_at: String(csat.submitted_at ?? csat.submittedAt ?? ""),
+        }
+      : null,
+  };
+}
 
 export async function getSupportTicketCsat(
   ticketId: string,
@@ -684,45 +729,24 @@ export async function getSupportTicketCsat(
     `/support/tickets/${encodeURIComponent(ticketId)}/csat`,
     { headers: getAuthHeaders(token) },
   );
-  const data = unwrap<Record<string, unknown>>(res);
-  const csat = data.csat as Record<string, unknown> | null | undefined;
-  return {
-    submitted: Boolean(data.submitted),
-    csat: csat
-      ? {
-          rating: Number(csat.rating ?? 0),
-          comment: (csat.comment as string | null) ?? null,
-          submitted_at: String(csat.submitted_at ?? csat.submittedAt ?? ""),
-        }
-      : null,
-  };
+  return mapSupportCsatState(unwrap<Record<string, unknown>>(res));
 }
 
 export async function submitSupportTicketCsat(
   ticketId: string,
-  input: { rating: number; comment?: string },
+  input: { rating: number; comment?: string; agentRating?: number },
   token?: string | null,
 ): Promise<SupportCsatState> {
   const res = await client.post(
     `/support/tickets/${encodeURIComponent(ticketId)}/csat`,
     {
       rating: input.rating,
+      ...(input.agentRating != null ? { agentRating: input.agentRating } : {}),
       ...(input.comment?.trim() ? { comment: input.comment.trim() } : {}),
     },
     { headers: getAuthHeaders(token) },
   );
-  const data = unwrap<Record<string, unknown>>(res);
-  const csat = data.csat as Record<string, unknown> | null | undefined;
-  return {
-    submitted: Boolean(data.submitted ?? true),
-    csat: csat
-      ? {
-          rating: Number(csat.rating ?? 0),
-          comment: (csat.comment as string | null) ?? null,
-          submitted_at: String(csat.submitted_at ?? csat.submittedAt ?? ""),
-        }
-      : null,
-  };
+  return mapSupportCsatState(unwrap<Record<string, unknown>>(res));
 }
 
 export async function getConversationByBooking(

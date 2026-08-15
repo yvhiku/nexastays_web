@@ -1199,7 +1199,16 @@
     "archivedBannerTitle": "Séjour terminé · Cette conversation a été archivée.",
     "archivedBannerBody": "Besoin d'aide pour cette réservation ?",
     "contactSupport": "Contacter l'assistance",
-    "viewReservation": "Voir la réservation"
+    "viewReservation": "Voir la réservation",
+    "supportClosedTitle": "Cette conversation d'assistance est fermée.",
+    "supportClosedBody": "Vous ne pouvez plus envoyer de messages sur ce ticket.",
+    "csatTitle": "Comment s'est passée votre expérience d'assistance ?",
+    "csatAgent": "Comment s'est passée votre expérience avec {name} ?",
+    "csatAgentFallback": "votre conseiller",
+    "csatThanks": "Merci pour votre retour",
+    "csatSubmit": "Envoyer l'avis",
+    "csatComment": "Commentaire facultatif",
+    "csatError": "Impossible d'envoyer l'avis"
   },
   "host": {
     "hostType": "Type d'hôte",

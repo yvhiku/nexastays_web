@@ -1199,7 +1199,16 @@
     "archivedBannerTitle": "اكتملت الإقامة · تم أرشفة هذه المحادثة.",
     "archivedBannerBody": "هل تحتاج مساعدة بخصوص هذا الحجز؟",
     "contactSupport": "تواصل مع الدعم",
-    "viewReservation": "عرض الحجز"
+    "viewReservation": "عرض الحجز",
+    "supportClosedTitle": "تم إغلاق محادثة الدعم هذه.",
+    "supportClosedBody": "لم يعد بإمكانك إرسال رسائل على هذا الطلب.",
+    "csatTitle": "كيف كانت تجربتك مع الدعم؟",
+    "csatAgent": "كيف كانت تجربتك مع {name}؟",
+    "csatAgentFallback": "موظف الدعم",
+    "csatThanks": "شكرًا على ملاحظاتك",
+    "csatSubmit": "إرسال التقييم",
+    "csatComment": "تعليق اختياري",
+    "csatError": "تعذر إرسال الملاحظات"
   },
   "host": {
     "hostType": "نوع المضيف",

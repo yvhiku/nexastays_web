@@ -1199,7 +1199,16 @@
     "archivedBannerTitle": "Stay completed · This conversation has been archived.",
     "archivedBannerBody": "Need help with this reservation?",
     "contactSupport": "Contact Support",
-    "viewReservation": "View reservation"
+    "viewReservation": "View reservation",
+    "supportClosedTitle": "This support conversation is closed.",
+    "supportClosedBody": "You can no longer send messages on this ticket.",
+    "csatTitle": "How was your support experience?",
+    "csatAgent": "How was your experience with {name}?",
+    "csatAgentFallback": "your support agent",
+    "csatThanks": "Thanks for your feedback",
+    "csatSubmit": "Submit feedback",
+    "csatComment": "Optional comment",
+    "csatError": "Could not submit feedback"
   },
   "hostApply": {
     "title": "Host Application",

@@ -858,6 +858,12 @@ function ConversationPageInner() {
 
   if (!conversation) return null;
 
+  const isSupportThread =
+    conversation.conversation.type.toUpperCase() === "SUPPORT";
+  const isSupportClosed =
+    isSupportThread &&
+    (conversation.conversation.messagingState === "ARCHIVED" ||
+      conversation.conversation.archiveReason === "SUPPORT");
   const readOnlyHint = conversation.permissions.isReadOnly
     ? t("inbox.readOnly")
     : !conversation.permissions.canSend
@@ -1196,7 +1202,14 @@ function ConversationPageInner() {
 
       {draftReady && !attachmentManager.state.isOpen ? (
         <>
-          {conversation.conversation.messagingState === "ARCHIVED" ? (
+          {isSupportClosed ? (
+            <div className="mx-4 mb-3 rounded-lg border border-border bg-muted/40 px-3 py-3 text-sm">
+              <p className="font-medium">{t("inbox.supportClosedTitle")}</p>
+              <p className="mt-1 text-muted-foreground">
+                {t("inbox.supportClosedBody")}
+              </p>
+            </div>
+          ) : conversation.conversation.messagingState === "ARCHIVED" ? (
             <ArchivedThreadBanner
               bookingId={conversation.conversation.bookingId}
               localePath={localePath}
@@ -1226,6 +1239,7 @@ function ConversationPageInner() {
             conversationType={conversation.conversation.type}
             token={token}
           />
+          {!isSupportClosed ? (
           <MessageComposer
             value={draft}
             onChange={updateDraft}
@@ -1256,6 +1270,7 @@ function ConversationPageInner() {
             }}
             onActivity={bumpActivity}
           />
+          ) : null}
         </>
       ) : null}
 
