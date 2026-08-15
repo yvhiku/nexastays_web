@@ -277,6 +277,7 @@ export function useConversationScroll({
     }, 5000);
     return () => {
       if (markReadTimer.current) clearTimeout(markReadTimer.current);
+      onMarkRead();
     };
   }, [enabled, messages.length, onMarkRead]);
 

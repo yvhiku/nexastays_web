@@ -49,9 +49,9 @@ import {
   isOnline,
 } from "@/lib/messaging/offline-queue";
 import { shouldFetchAfterPush } from "@/lib/messaging/push-sync";
-import { formatUserError } from "@/lib/errors";
+import { formatUserError, isClosedSupportConflict } from "@/lib/errors";
 import { trackEvent } from "@/lib/analytics";
-import { setOptimisticInboxActivity } from "@/lib/messaging/inbox-optimistic";
+import { setOptimisticInboxActivity, clearOptimisticInboxActivity } from "@/lib/messaging/inbox-optimistic";
 import { BookingContextStrip } from "@/components/messaging/BookingContextStrip";
 import { CheckInWelcomeBanner } from "@/components/messaging/timeline/CheckInWelcomeBanner";
 import { ConversationSummary } from "@/components/messaging/ConversationSummary";
@@ -247,6 +247,11 @@ function ConversationPageInner() {
   );
   const scheduleReadRef = useRef(scheduleRead);
   scheduleReadRef.current = scheduleRead;
+
+  useEffect(() => {
+    if (conversation?.conversation.id !== conversationId) return;
+    scheduleReadRef.current();
+  }, [conversation?.conversation.id, conversationId]);
 
   const scrollInitializationReady = isConversationScrollReady({
     routeConversationId: conversationId,
@@ -459,7 +464,6 @@ function ConversationPageInner() {
         firstSequence: timeline[0]?.conversationSequence ?? null,
         lastSequence: timeline.at(-1)?.conversationSequence ?? null,
       });
-      scheduleReadRef.current();
     } catch (e) {
       if (
         requestSequence !== conversationRequestSequenceRef.current ||
@@ -790,6 +794,15 @@ function ConversationPageInner() {
       trackEvent("message_sent", { conversation_id: conversationId, offline: false });
       void poll();
     } catch (e) {
+      if (isClosedSupportConflict(e)) {
+        setMessages((prev) =>
+          prev.filter((message) => message.clientMessageId !== clientMessageId),
+        );
+        clearOptimisticInboxActivity(conversationId);
+        void loadConversation();
+        setError(formatUserError(e));
+        return;
+      }
       enqueueOffline({
         conversationId,
         body,
@@ -863,7 +876,9 @@ function ConversationPageInner() {
   const isSupportClosed =
     isSupportThread &&
     (conversation.conversation.messagingState === "ARCHIVED" ||
-      conversation.conversation.archiveReason === "SUPPORT");
+      conversation.conversation.archiveReason === "SUPPORT" ||
+      conversation.permissions.isReadOnly ||
+      !conversation.permissions.canSend);
   const readOnlyHint = conversation.permissions.isReadOnly
     ? t("inbox.readOnly")
     : !conversation.permissions.canSend
@@ -1203,9 +1218,11 @@ function ConversationPageInner() {
       {draftReady && !attachmentManager.state.isOpen ? (
         <>
           {isSupportClosed ? (
-            <div className="mx-4 mb-3 rounded-lg border border-border bg-muted/40 px-3 py-3 text-sm">
-              <p className="font-medium">{t("inbox.supportClosedTitle")}</p>
-              <p className="mt-1 text-muted-foreground">
+            <div className="mx-4 mb-3 rounded-messaging-panel border border-nexa-line bg-white px-5 py-5 text-center shadow-messaging-2">
+              <p className="font-display text-base font-semibold text-nexa-ink">
+                {t("inbox.supportClosedTitle")}
+              </p>
+              <p className="mt-1.5 text-sm text-nexa-ink-2">
                 {t("inbox.supportClosedBody")}
               </p>
             </div>

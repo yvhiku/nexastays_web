@@ -684,6 +684,7 @@ export type SupportCsatState = {
     comment: string | null;
     agent_rating: number | null;
     agent_id: string | null;
+    problem_solved: boolean | null;
     submitted_at: string;
   } | null;
 };
@@ -715,6 +716,10 @@ function mapSupportCsatState(data: Record<string, unknown>): SupportCsatState {
             csat.agent_id == null && csat.agentId == null
               ? null
               : String(csat.agent_id ?? csat.agentId),
+          problem_solved:
+            csat.problem_solved == null && csat.problemSolved == null
+              ? null
+              : Boolean(csat.problem_solved ?? csat.problemSolved),
           submitted_at: String(csat.submitted_at ?? csat.submittedAt ?? ""),
         }
       : null,
@@ -734,13 +739,19 @@ export async function getSupportTicketCsat(
 
 export async function submitSupportTicketCsat(
   ticketId: string,
-  input: { rating: number; comment?: string; agentRating?: number },
+  input: {
+    rating: number;
+    comment?: string;
+    agentRating?: number;
+    problemSolved: boolean;
+  },
   token?: string | null,
 ): Promise<SupportCsatState> {
   const res = await client.post(
     `/support/tickets/${encodeURIComponent(ticketId)}/csat`,
     {
       rating: input.rating,
+      problemSolved: input.problemSolved,
       ...(input.agentRating != null ? { agentRating: input.agentRating } : {}),
       ...(input.comment?.trim() ? { comment: input.comment.trim() } : {}),
     },

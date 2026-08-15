@@ -43,6 +43,15 @@ export function setOptimisticInboxActivity(conversationId: string, preview: stri
   window.dispatchEvent(new Event(SYNC_EVENT));
 }
 
+export function clearOptimisticInboxActivity(conversationId: string): void {
+  if (typeof window === "undefined") return;
+  const map = readOptimisticInboxMap();
+  if (!(conversationId in map)) return;
+  delete map[conversationId];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+  window.dispatchEvent(new Event(SYNC_EVENT));
+}
+
 export function subscribeOptimisticInbox(onChange: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   const handler = () => onChange();

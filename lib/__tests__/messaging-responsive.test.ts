@@ -217,3 +217,41 @@ test("phase 7.5 uses one semantic messaging design system", () => {
   assert.match(shell, /messaging-ui/);
   assert.match(globals, /\.messaging-ui svg\.lucide/);
 });
+
+test("closed SUPPORT 409 drops the optimistic bubble and never queues offline", () => {
+  const thread = read("app/[locale]/inbox/[id]/page.tsx");
+  const start = thread.indexOf("if (isClosedSupportConflict(e))");
+  const nextOffline = thread.indexOf("enqueueOffline({", start);
+  assert.ok(start >= 0);
+  assert.ok(nextOffline > start);
+  const closedHandler = thread.slice(start, nextOffline);
+  assert.match(closedHandler, /clientMessageId !== clientMessageId/);
+  assert.match(closedHandler, /clearOptimisticInboxActivity\(conversationId\)/);
+  assert.match(closedHandler, /loadConversation\(\)/);
+  assert.doesNotMatch(closedHandler, /enqueueOffline/);
+  assert.match(thread, /!isSupportClosed \? \(/);
+  assert.match(thread, /<MessageComposer/);
+});
+
+test("archived SUPPORT rows use support preview instead of stay dates", () => {
+  const row = read("components/messaging/ConversationRow.tsx");
+  assert.match(row, /conversation\.type === "SUPPORT"/);
+  assert.match(row, /Headphones/);
+  assert.match(
+    row,
+    /conversation\.type === "SUPPORT"[\s\S]*presentation\.subtitle \|\| t\("inbox\.filters\.support"\)/,
+  );
+  assert.doesNotMatch(
+    row.slice(row.indexOf("conversation.type === \"SUPPORT\""), row.indexOf("dateRange || statusLabel")),
+    /dateRange \?/,
+  );
+});
+
+test("support review card follows GET /csat, not archive state", () => {
+  const prompt = read("components/messaging/SupportCsatPrompt.tsx");
+  assert.match(prompt, /getSupportTicketCsat/);
+  assert.match(prompt, /setCanReview\(state\.canReview\)/);
+  assert.match(prompt, /if \(!canReview && !submitted\) return null/);
+  assert.doesNotMatch(prompt, /messagingState/);
+  assert.match(prompt, /inbox\.csatSolvedQuestion/);
+});

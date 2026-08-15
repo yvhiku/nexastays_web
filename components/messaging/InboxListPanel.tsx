@@ -184,7 +184,14 @@ export function InboxListPanel({ activeConversationId = null }: Props) {
 
   useMessagingRealtime("inbox", load, !!token, token);
 
-  const sorted = useMemo(() => sortConversations(items, optimistic), [items, optimistic]);
+  const sorted = useMemo(() => {
+    const rows = sortConversations(items, optimistic).map((item) =>
+      item.conversation.id === activeConversationId
+        ? { ...item, sync: { ...item.sync, unreadCount: 0 } }
+        : item,
+    );
+    return rows;
+  }, [items, optimistic, activeConversationId]);
   const sections = useMemo(
     () => groupConversations(sorted, optimistic),
     [sorted, optimistic],

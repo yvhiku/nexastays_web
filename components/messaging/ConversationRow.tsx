@@ -269,12 +269,21 @@ function ConversationRowInner({
         </div>
 
         <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-          <Home
-            className="h-3 w-3 shrink-0 text-nexa-primary/75"
-            aria-hidden
-          />
+          {conversation.type === "SUPPORT" ? (
+            <Headphones
+              className="h-3 w-3 shrink-0 text-nexa-primary/75"
+              aria-hidden
+            />
+          ) : (
+            <Home
+              className="h-3 w-3 shrink-0 text-nexa-primary/75"
+              aria-hidden
+            />
+          )}
           <p className="min-w-0 flex-1 truncate text-[11px] font-semibold text-nexa-ink-2">
-            {presentation.listing.title}
+            {conversation.type === "SUPPORT"
+              ? presentation.subtitle || t("inbox.filters.support")
+              : presentation.listing.title}
           </p>
         </div>
 
@@ -308,7 +317,22 @@ function ConversationRowInner({
           ) : null}
         </div>
 
-        {dateRange || statusLabel ? (
+        {conversation.type === "SUPPORT"
+          ? statusLabel
+            ? (
+          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                "max-w-full truncate rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.07em]",
+                statusTone(statusLabel),
+              )}
+            >
+              {statusLabel}
+            </span>
+          </div>
+              )
+            : null
+          : dateRange || statusLabel ? (
           <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
             {dateRange ? (
               <span className="truncate text-[10px] font-medium text-nexa-ink-4">
@@ -362,5 +386,6 @@ export const ConversationRow = React.memo(
       next.item.presentation.avatar?.version &&
     previous.item.presentation.reservation.coverMedia?.version ===
       next.item.presentation.reservation.coverMedia?.version &&
-    previous.item.conversation.visibility === next.item.conversation.visibility,
+    previous.item.conversation.visibility === next.item.conversation.visibility &&
+    previous.item.conversation.type === next.item.conversation.type,
 );

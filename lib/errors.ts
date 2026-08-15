@@ -195,6 +195,13 @@ export function formatUserError(err: unknown): string {
   return app.message || app.title;
 }
 
+export function isClosedSupportConflict(err: unknown): boolean {
+  if (!axios.isAxiosError(err) || err.response?.status !== 409) return false;
+  const payload = err.response?.data as ApiPayload | undefined;
+  const text = `${joinMessages(payload?.message) ?? ""} ${payload?.error ?? ""} ${err.message}`;
+  return /closed/i.test(text);
+}
+
 /** Attach structured data for interceptors / logging. */
 export function toErrorWithAppError(err: unknown): Error & { appError: AppError } {
   const app = toAppError(err);
