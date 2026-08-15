@@ -5,19 +5,25 @@ import {
   MessagingRealtimeAdapter,
   type RealtimeMode,
 } from "@/lib/messaging/realtime-adapter";
-import { subscribeMessagingRealtime } from "@/lib/messaging/realtime-stream";
+import {
+  subscribeMessagingRealtime,
+  type MessagingRealtimeEvent,
+} from "@/lib/messaging/realtime-stream";
 
 export function useMessagingRealtime(
   mode: RealtimeMode,
   onPoll: () => void | Promise<void>,
   enabled = true,
   token?: string | null,
+  onRealtimeEvent?: (event: MessagingRealtimeEvent) => void,
 ): { bumpActivity: () => void } {
   const onPollRef = useRef(onPoll);
+  const onRealtimeEventRef = useRef(onRealtimeEvent);
   const adapterRef = useRef<MessagingRealtimeAdapter | null>(null);
   const inFlightRef = useRef(false);
   const queuedRef = useRef(false);
   onPollRef.current = onPoll;
+  onRealtimeEventRef.current = onRealtimeEvent;
 
   if (!adapterRef.current) {
     adapterRef.current = new MessagingRealtimeAdapter();
@@ -61,7 +67,10 @@ export function useMessagingRealtime(
 
   useEffect(() => {
     if (!enabled || mode === "off" || !token) return;
-    return subscribeMessagingRealtime(token, () => void runPoll());
+    return subscribeMessagingRealtime(token, (event) => {
+      onRealtimeEventRef.current?.(event);
+      void runPoll();
+    });
   }, [enabled, mode, runPoll, token]);
 
   useEffect(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,6 +15,8 @@ type Props = {
   conversationId: string;
   conversationType?: string | null;
   token?: string | null;
+  /** Re-run GET /csat when the live thread changes (close, version, realtime). Not review authority. */
+  refreshKey?: string | number;
 };
 
 function IntegerStarRating({
@@ -62,6 +64,7 @@ export function SupportCsatPrompt({
   conversationId,
   conversationType,
   token,
+  refreshKey,
 }: Props) {
   const { t, tf } = useLanguage();
   const [ticketId, setTicketId] = useState<string | null>(null);
@@ -77,6 +80,8 @@ export function SupportCsatPrompt({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [ready, setReady] = useState(false);
+  const ticketIdRef = useRef<string | null>(null);
+  ticketIdRef.current = ticketId;
 
   useEffect(() => {
     if (conversationType && conversationType.toUpperCase() !== "SUPPORT") {
@@ -86,14 +91,19 @@ export function SupportCsatPrompt({
     let cancelled = false;
     void (async () => {
       try {
-        const tickets = await listSupportTickets(token, 100);
-        const match = tickets.find((row) => row.conversation_id === conversationId);
-        if (cancelled || !match) {
-          if (!cancelled) setReady(true);
-          return;
+        let id = ticketIdRef.current;
+        if (!id) {
+          const tickets = await listSupportTickets(token, 100);
+          const match = tickets.find((row) => row.conversation_id === conversationId);
+          if (cancelled || !match) {
+            if (!cancelled) setReady(true);
+            return;
+          }
+          id = match.id;
+          ticketIdRef.current = id;
+          setTicketId(id);
         }
-        setTicketId(match.id);
-        const state = await getSupportTicketCsat(match.id, token);
+        const state = await getSupportTicketCsat(id, token);
         if (cancelled) return;
         setCanReview(state.canReview);
         setSubmitted(state.submitted || state.alreadyReviewed);
@@ -109,7 +119,7 @@ export function SupportCsatPrompt({
     return () => {
       cancelled = true;
     };
-  }, [conversationId, conversationType, token]);
+  }, [conversationId, conversationType, token, refreshKey]);
 
   if (!ready || !ticketId) return null;
   if (!canReview && !submitted) return null;

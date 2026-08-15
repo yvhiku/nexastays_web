@@ -249,9 +249,18 @@ test("archived SUPPORT rows use support preview instead of stay dates", () => {
 
 test("support review card follows GET /csat, not archive state", () => {
   const prompt = read("components/messaging/SupportCsatPrompt.tsx");
+  const thread = read("app/[locale]/inbox/[id]/page.tsx");
+  const realtime = read("components/messaging/hooks/useMessagingRealtime.ts");
   assert.match(prompt, /getSupportTicketCsat/);
   assert.match(prompt, /setCanReview\(state\.canReview\)/);
   assert.match(prompt, /if \(!canReview && !submitted\) return null/);
+  assert.match(prompt, /refreshKey/);
+  assert.match(prompt, /\[conversationId, conversationType, token, refreshKey\]/);
   assert.doesNotMatch(prompt, /messagingState/);
   assert.match(prompt, /inbox\.csatSolvedQuestion/);
+  assert.match(thread, /refreshKey=\{`\$\{conversation\.sync\.conversationVersion\}/);
+  assert.match(thread, /event\.reason === "MESSAGE_READ"/);
+  assert.match(thread, /setCsatRefreshNonce/);
+  assert.match(thread, /threadLockChanged/);
+  assert.match(realtime, /onRealtimeEventRef\.current\?\.\(event\)/);
 });

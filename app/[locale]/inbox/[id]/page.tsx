@@ -194,6 +194,7 @@ function ConversationPageInner() {
   const [gallery, setGallery] = useState<{ attachments: MessageDto["attachments"]; index: number } | null>(null);
   const [draftPrompt, setDraftPrompt] = useState<{ fileCount: number } | null>(null);
   const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState("");
+  const [csatRefreshNonce, setCsatRefreshNonce] = useState(0);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -565,12 +566,19 @@ function ConversationPageInner() {
         localVersion != null &&
         !shouldFetchAfterPush(localVersion, detail.sync.conversationVersion) &&
         sameTail;
+      const threadLockChanged =
+        conversation?.permissions.canSend !== detail.permissions.canSend ||
+        conversation?.permissions.isReadOnly !== detail.permissions.isReadOnly ||
+        conversation?.conversation.messagingState !==
+          detail.conversation.messagingState ||
+        conversation?.conversation.archiveReason !==
+          detail.conversation.archiveReason;
       const refreshAttachments = shouldRefreshAttachments(
         localAttachVersion,
         detail.sync.attachmentVersion,
       );
 
-      if (skipConversation && !refreshAttachments) return;
+      if (skipConversation && !refreshAttachments && !threadLockChanged) return;
 
       setConversation(detail);
       setMessages((prev) =>
@@ -594,6 +602,10 @@ function ConversationPageInner() {
     scrollToBottom,
     conversation?.sync.conversationVersion,
     conversation?.sync.attachmentVersion,
+    conversation?.permissions.canSend,
+    conversation?.permissions.isReadOnly,
+    conversation?.conversation.messagingState,
+    conversation?.conversation.archiveReason,
     messages,
     atBottomRef,
   ]);
@@ -612,6 +624,14 @@ function ConversationPageInner() {
     poll,
     !!token && !!conversation,
     token,
+    (event) => {
+      if (
+        event.conversationId === conversationId &&
+        event.reason === "MESSAGE_READ"
+      ) {
+        setCsatRefreshNonce((n) => n + 1);
+      }
+    },
   );
 
   const attachmentManager = useAttachmentManager(conversationId, token, {
@@ -1255,6 +1275,7 @@ function ConversationPageInner() {
             conversationId={conversationId}
             conversationType={conversation.conversation.type}
             token={token}
+            refreshKey={`${conversation.sync.conversationVersion}:${conversation.permissions.canSend}:${conversation.permissions.isReadOnly}:${csatRefreshNonce}`}
           />
           {!isSupportClosed ? (
           <MessageComposer
