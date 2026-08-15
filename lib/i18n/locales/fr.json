@@ -1213,7 +1213,8 @@
     "csatThanks": "Merci pour votre retour",
     "csatSubmit": "Envoyer l'avis",
     "csatComment": "Commentaire facultatif",
-    "csatError": "Impossible d'envoyer l'avis"
+    "csatError": "Impossible d'envoyer l'avis",
+    "csatRateAgentHint": "Veuillez noter {name} pour envoyer."
   },
   "host": {
     "hostType": "Type d'hôte",

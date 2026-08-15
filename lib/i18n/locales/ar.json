@@ -1213,7 +1213,8 @@
     "csatThanks": "شكرًا على ملاحظاتك",
     "csatSubmit": "إرسال التقييم",
     "csatComment": "تعليق اختياري",
-    "csatError": "تعذر إرسال الملاحظات"
+    "csatError": "تعذر إرسال الملاحظات",
+    "csatRateAgentHint": "يرجى تقييم {name} للإرسال."
   },
   "host": {
     "hostType": "نوع المضيف",

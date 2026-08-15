@@ -258,6 +258,10 @@ test("support review card follows GET /csat, not archive state", () => {
   assert.match(prompt, /\[conversationId, conversationType, token, refreshKey\]/);
   assert.doesNotMatch(prompt, /messagingState/);
   assert.match(prompt, /inbox\.csatSolvedQuestion/);
+  assert.match(prompt, /fill-nexa-primary-light/);
+  assert.match(prompt, /fill-nexa-primary/);
+  assert.match(prompt, /i \+ 0\.5/);
+  assert.match(prompt, /inbox\.csatRateAgentHint/);
   assert.match(thread, /refreshKey=\{`\$\{conversation\.sync\.conversationVersion\}/);
   assert.match(thread, /event\.reason === "MESSAGE_READ"/);
   assert.match(thread, /setCsatRefreshNonce/);

@@ -1213,7 +1213,8 @@
     "csatThanks": "Thanks for your feedback",
     "csatSubmit": "Submit feedback",
     "csatComment": "Optional comment",
-    "csatError": "Could not submit feedback"
+    "csatError": "Could not submit feedback",
+    "csatRateAgentHint": "Please rate {name} to submit."
   },
   "hostApply": {
     "title": "Host Application",

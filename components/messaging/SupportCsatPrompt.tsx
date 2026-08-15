@@ -19,7 +19,10 @@ type Props = {
   refreshKey?: string | number;
 };
 
-function IntegerStarRating({
+const STAR_PATH =
+  "M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z";
+
+function CsatStarRating({
   value,
   onChange,
   label,
@@ -31,29 +34,41 @@ function IntegerStarRating({
   return (
     <div className="mt-2 flex justify-center gap-2" role="radiogroup" aria-label={label}>
       {Array.from({ length: 5 }, (_, i) => {
-        const star = i + 1;
-        const filled = value >= star;
+        const fill = Math.min(1, Math.max(0, value - i));
         return (
-          <button
-            key={star}
-            type="button"
-            className="group"
-            onClick={() => onChange(star)}
-            aria-label={`${star} stars`}
-          >
+          <div key={i} className="group relative h-9 w-9 shrink-0">
             <svg
               viewBox="0 0 24 24"
-              className={cn(
-                "h-9 w-9 transition-transform duration-200 group-hover:scale-110",
-                filled
-                  ? "fill-nexa-primary/90 text-nexa-primary"
-                  : "fill-nexa-bg-2 text-nexa-line",
-              )}
+              className="h-9 w-9 fill-nexa-primary-light/70 text-nexa-primary-light transition-transform duration-200 group-hover:scale-110"
               aria-hidden
             >
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+              <path d={STAR_PATH} />
             </svg>
-          </button>
+            <div
+              className="pointer-events-none absolute inset-0 overflow-hidden"
+              style={{ width: `${fill * 100}%` }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-9 w-9 fill-nexa-primary text-nexa-primary"
+                aria-hidden
+              >
+                <path d={STAR_PATH} />
+              </svg>
+            </div>
+            <button
+              type="button"
+              className="absolute inset-y-0 left-0 w-1/2 cursor-pointer"
+              aria-label={`${i + 0.5} stars`}
+              onClick={() => onChange(i + 0.5)}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 w-1/2 cursor-pointer"
+              aria-label={`${i + 1} stars`}
+              onClick={() => onChange(i + 1)}
+            />
+          </div>
         );
       })}
     </div>
@@ -146,8 +161,8 @@ export function SupportCsatPrompt({
   const needsAgentRating = Boolean(agent);
   const canSubmit =
     problemSolved !== null &&
-    rating >= 1 &&
-    (!needsAgentRating || agentRating >= 1);
+    rating >= 0.5 &&
+    (!needsAgentRating || agentRating >= 0.5);
 
   return (
     <div className="mx-4 mb-3 rounded-messaging-panel border border-nexa-primary/25 bg-nexa-primary-soft/50 px-5 py-5 shadow-messaging-2">
@@ -176,7 +191,7 @@ export function SupportCsatPrompt({
       </div>
 
       <p className="mt-5 text-center font-semibold text-nexa-ink">{t("inbox.csatTitle")}</p>
-      <IntegerStarRating
+      <CsatStarRating
         value={rating}
         onChange={setRating}
         label={t("inbox.csatTitle")}
@@ -189,7 +204,7 @@ export function SupportCsatPrompt({
               name: agent.fullName ?? t("inbox.csatAgentFallback"),
             })}
           </p>
-          <IntegerStarRating
+          <CsatStarRating
             value={agentRating}
             onChange={setAgentRating}
             label={tf("inbox.csatAgent", {
@@ -208,6 +223,17 @@ export function SupportCsatPrompt({
         className="mt-4 w-full rounded-xl border border-nexa-line bg-nexa-bg-2 px-3 py-2.5 text-sm text-nexa-ink placeholder:text-nexa-ink-4 focus:outline-none focus:ring-2 focus:ring-nexa-primary/30"
       />
       {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
+      {!canSubmit &&
+      needsAgentRating &&
+      agentRating < 0.5 &&
+      problemSolved !== null &&
+      rating >= 0.5 ? (
+        <p className="mt-2 text-center text-xs text-nexa-ink-3">
+          {tf("inbox.csatRateAgentHint", {
+            name: agent?.fullName ?? t("inbox.csatAgentFallback"),
+          })}
+        </p>
+      ) : null}
       <button
         type="button"
         disabled={saving || !canSubmit}
