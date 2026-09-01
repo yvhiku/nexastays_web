@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import {
   logoutBrowserSession,
@@ -14,6 +15,7 @@ import {
 import { hydrateAuthSession, fetchCurrentUserWithJwt } from "@/lib/auth-session";
 import {
   clearMemoryAccessToken,
+  getMemoryAccessToken,
   setMemoryAccessToken,
 } from "@/lib/access-token-store";
 import { clearRegistrationPhone } from "@/lib/registration-phone-store";
@@ -90,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [onboarding, setOnboarding] =
     useState<IdentityOnboardingState | null>(null);
   const [ready, setReady] = useState(false);
+  const hydrateGenRef = useRef(0);
 
   const clearStoredTokens = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -125,13 +128,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setOnboarding(null);
     void (async () => {
+      const gen = ++hydrateGenRef.current;
       const result = await hydrateAuthSession();
-      if (cancelled) return;
+      if (cancelled || gen !== hydrateGenRef.current) return;
       if (result.cleared || !result.accessToken) {
-        if (result.cleared) clearStoredTokens();
+        // Do not wipe a session established while refresh hydration was in flight
+        // (common on /login when OTP completes before hydrate resolves).
+        if (result.cleared && !getMemoryAccessToken()) {
+          clearStoredTokens();
+        }
         // Soft SPA remount may still hold an in-memory binder from this heap.
         const pendingOtp = getOtpSessionToken();
-        if (pendingOtp) {
+        if (pendingOtp && !getMemoryAccessToken()) {
           setToken(pendingOtp);
           setTokenType("otp_session");
           setUser(null);
@@ -220,17 +228,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenType("jwt");
     setUser(null);
     if (nextOnboarding) setOnboarding(nextOnboarding);
-    fetchCurrentUserWithJwt(accessToken).then(({ user: u, status }) => {
+    void (async () => {
+      const { user: u, status } = await fetchCurrentUserWithJwt(accessToken);
       if (status === 401 && typeof window !== "undefined") {
-        clearMemoryAccessToken();
-        setToken(null);
-        setTokenType("none");
-        setOnboarding(null);
-      } else {
-        setUser(u ?? null);
-        if (u?.onboarding) setOnboarding(u.onboarding);
+        try {
+          const tokens = await refreshTokenApi();
+          setMemoryAccessToken(tokens.access_token);
+          setToken(tokens.access_token);
+          const { user: u2, status: s2 } = await fetchCurrentUserWithJwt(
+            tokens.access_token,
+          );
+          if (s2 === 401) {
+            clearMemoryAccessToken();
+            setToken(null);
+            setTokenType("none");
+            setOnboarding(null);
+            return;
+          }
+          setUser(u2 ?? null);
+          if (u2?.onboarding) setOnboarding(u2.onboarding);
+          window.dispatchEvent(
+            new CustomEvent(AUTH_TOKEN_REFRESHED, {
+              detail: { accessToken: tokens.access_token },
+            }),
+          );
+          return;
+        } catch {
+          // Keep OTP-issued JWT when refresh is not ready yet (cookie race).
+          if (!getMemoryAccessToken()) {
+            setToken(null);
+            setTokenType("none");
+            setOnboarding(null);
+          }
+          return;
+        }
       }
-    });
+      setUser(u ?? null);
+      if (u?.onboarding) setOnboarding(u.onboarding);
+    })();
     broadcastAuth("session");
   }, []);
 
