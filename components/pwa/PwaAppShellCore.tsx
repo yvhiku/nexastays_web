@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SwUpdateBanner } from "@/components/pwa/SwUpdateBanner";
+import { PwaZoomLock } from "@/components/pwa/PwaZoomLock";
 import { SearchShell } from "@/components/search/SearchShell.client";
 
 /** Minimal PWA shell: bottom nav + SW updates only. */
@@ -19,6 +20,7 @@ export function PwaAppShellCore() {
 
   return (
     <>
+      <PwaZoomLock />
       <SwUpdateBanner />
       <SearchShell />
     </>

@@ -89,6 +89,25 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Installed PWA: native-app feel — no pinch or double-tap zoom. */
+  @media (display-mode: standalone) {
+    html,
+    body {
+      touch-action: manipulation;
+    }
+  }
+
+  html[data-pwa-zoom-lock="1"],
+  html[data-pwa-zoom-lock="1"] body {
+    touch-action: manipulation;
+  }
+
+  html[data-pwa-zoom-lock="1"] input,
+  html[data-pwa-zoom-lock="1"] textarea,
+  html[data-pwa-zoom-lock="1"] select {
+    font-size: max(16px, 1rem);
+  }
+
   #main-content {
     max-width: 100%;
     min-width: 0;
