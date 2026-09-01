@@ -1,0 +1,9 @@
+.git
+.github
+.next
+.next-dev
+node_modules
+npm-debug.log*
+.env*
+!.env.example
+!.env.local.example

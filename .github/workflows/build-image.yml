@@ -1,0 +1,38 @@
+name: Build web release image
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-web-image-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require build-time APIs
+        run: |
+          curl --fail --silent --show-error --retry 3 https://identity.nexastays.ma/api/v1/health/ready >/dev/null
+          curl --fail --silent --show-error --retry 3 https://api.nexastays.ma/api/v1/health/ready >/dev/null
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.prod
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/nexa-web:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
