@@ -165,8 +165,7 @@ function guideEntity(
     locale,
     name: guide.title,
     summary: guide.description || undefined,
-    // Phase 5: always point to indexable EN guide articles (not FR/AR clones).
-    href: indexableGuideArticlePath(guide.slug),
+    href: indexableGuideArticlePath(guide.slug, locale),
     source: "editorial",
     lastUpdated,
   };

@@ -7,11 +7,15 @@ import type {
 } from "./types";
 
 const REVALIDATE = 86400;
+const GUIDE_FETCH_TIMEOUT_MS = 3_000;
 
 async function guideFetch<T>(path: string, revalidate = REVALIDATE): Promise<T | null> {
   const base = getStaysApiBaseUrl().replace(/\/$/, "");
   try {
-    const res = await fetch(`${base}${path}`, { next: { revalidate } });
+    const res = await fetch(`${base}${path}`, {
+      next: { revalidate },
+      signal: AbortSignal.timeout(GUIDE_FETCH_TIMEOUT_MS),
+    });
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {

@@ -16,7 +16,8 @@ const ALLOWED_TAGS = [
 ] as const;
 
 /** Sanitize curated SEO copy again at the frontend trust boundary. */
-export function sanitizeContentHtml(value: string): string {
+export function sanitizeContentHtml(value: string | null | undefined): string {
+  if (!value) return "";
   return sanitizeHtml(value, {
     allowedTags: [...ALLOWED_TAGS],
     allowedAttributes: {
