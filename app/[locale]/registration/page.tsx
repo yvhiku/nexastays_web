@@ -33,6 +33,11 @@ import {
   type SumsubFinalStatus,
 } from "@/components/kyc/SumsubWebVerification";
 import { resolveRegistrationPhone } from "@/lib/registration-phone-store";
+import {
+  clearPersistedRegistrationStep,
+  getPersistedRegistrationStep,
+  setPersistedRegistrationStep,
+} from "@/lib/registration-step-store";
 
 const steps = [
   { id: 1, labelKey: "registration.stepPersonalInfo" },
@@ -154,9 +159,44 @@ export default function RegistrationPage() {
           setPhone,
           setNationality,
         });
+        const persisted = getPersistedRegistrationStep();
+        const kycProfileExists =
+          u.kyc_status && String(u.kyc_status).toUpperCase() !== "NONE";
+        if (persisted === 2 || persisted === 3 || kycProfileExists) {
+          setStep(persisted === 3 ? 3 : 2);
+          if (persisted === 3) setAwaitingDecision(true);
+        }
       });
     }
   }, [tokenType, token, router, redirectTarget, setOnboarding]);
+
+  useEffect(() => {
+    if (tokenType === "otp_session" && token) {
+      const persisted = getPersistedRegistrationStep();
+      if (persisted === 2) setStep(2);
+      if (persisted === 3) {
+        setStep(3);
+        setAwaitingDecision(true);
+      }
+      getCurrentUserOrNull(() => token).then((u) => {
+        if (!u) return;
+        applyProfileToForm(u, {
+          setFirstName,
+          setLastName,
+          setEmail,
+          setCity,
+          setDateOfBirth,
+          setPhone,
+          setNationality,
+        });
+        const kycProfileExists =
+          u.kyc_status && String(u.kyc_status).toUpperCase() !== "NONE";
+        if (kycProfileExists && !persisted) {
+          setStep(2);
+        }
+      });
+    }
+  }, [tokenType, token]);
 
   useEffect(() => {
     if (user && tokenType === "jwt") {
@@ -244,6 +284,7 @@ export default function RegistrationPage() {
       setFinalOutcome(null);
       setAwaitingDecision(false);
       setStep(2);
+      setPersistedRegistrationStep(2);
     } catch (err: unknown) {
       const apiErr = normalizeError(err);
       setError(
@@ -260,6 +301,7 @@ export default function RegistrationPage() {
     setAwaitingDecision(true);
     setFinalOutcome(null);
     setStep(3);
+    setPersistedRegistrationStep(3);
   };
 
   const handleSumsubFinalStatus = async (
@@ -290,6 +332,10 @@ export default function RegistrationPage() {
     setFinalOutcome(status);
     setAwaitingDecision(false);
     setStep(3);
+    setPersistedRegistrationStep(3);
+    if (status === "APPROVED" || status === "VERIFIED") {
+      clearPersistedRegistrationStep();
+    }
   };
 
   /** Poll while waiting on step 3 (widget unmounted). */
@@ -338,9 +384,15 @@ export default function RegistrationPage() {
         if (!cancelled) {
           setFinalOutcome(terminal);
           setAwaitingDecision(false);
+          if (terminal === "APPROVED" || terminal === "VERIFIED") {
+            clearPersistedRegistrationStep();
+          }
         }
-      } catch {
-        //
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const apiErr = normalizeError(err);
+          setError(apiErr.message || "Verification status check failed");
+        }
       }
     };
 

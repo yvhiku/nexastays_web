@@ -18,3 +18,18 @@ export function isJwtExpired(token: string, skewMs = 30_000): boolean {
   if (expMs == null) return false;
   return Date.now() >= expMs - skewMs;
 }
+
+/** Identity registration binder tokens cannot use refresh-cookie recovery. */
+export function isIdentitySessionJwt(token: string): boolean {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return false;
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+    ) as { type?: unknown };
+    const t = payload.type;
+    return t === "otp_session" || t === "identity_session";
+  } catch {
+    return false;
+  }
+}

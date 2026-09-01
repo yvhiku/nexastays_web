@@ -10,6 +10,7 @@ import {
   pollForUpdates,
   watchForWaiting,
 } from "@/lib/pwa-sw-update";
+import { isKycFlowActive } from "@/lib/registration-step-store";
 import { cn } from "@/lib/utils";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
 
@@ -27,6 +28,8 @@ export function SwUpdateBanner() {
 
     const onControllerChange = () => {
       if (reloading.current) return;
+      if (isKycFlowActive()) return;
+      if (window.location.pathname.includes("/registration")) return;
       reloading.current = true;
       void clearStaleRuntimeCaches().finally(() => {
         window.location.reload();
@@ -47,6 +50,8 @@ export function SwUpdateBanner() {
     applyWaitingWorker(waiting);
     window.setTimeout(() => {
       if (reloading.current) return;
+      if (isKycFlowActive()) return;
+      if (window.location.pathname.includes("/registration")) return;
       reloading.current = true;
       void clearStaleRuntimeCaches().finally(() => {
         window.location.reload();

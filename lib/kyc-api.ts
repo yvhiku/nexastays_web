@@ -5,7 +5,7 @@
 
 import axios from "axios";
 import { getIdentityApiBaseUrl } from "./env";
-import { isJwtExpired } from "./jwt-utils";
+import { isIdentitySessionJwt, isJwtExpired } from "./jwt-utils";
 import { unwrapResponse } from "./api-client";
 import { normalizeError } from "./api-client";
 import { normalizePhone, validateImageFile } from "./validators";
@@ -108,6 +108,11 @@ jsonClient.interceptors.response.use(
           config.headers = { ...config.headers, Authorization: `Bearer ${tokens.access_token}` };
           return jsonClient.request(config);
         } catch {
+          const authHeader = config.headers?.Authorization as string | undefined;
+          const bearer = authHeader?.replace(/^Bearer\s+/i, "").trim() ?? "";
+          if (!bearer || isIdentitySessionJwt(bearer)) {
+            return Promise.reject(err);
+          }
           notifyAuthLogout();
         }
       }

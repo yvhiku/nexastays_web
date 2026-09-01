@@ -8,6 +8,10 @@ import {
 } from "@/lib/kyc-api";
 import { normalizeError } from "@/lib/api-client";
 import type { IdentityOnboardingState } from "@/lib/auth-api";
+import {
+  clearKycFlowActive,
+  markKycFlowActive,
+} from "@/lib/registration-step-store";
 
 const SUMSUB_SCRIPT_SRC =
   "https://static.sumsub.com/idensic/static/sns-websdk-builder.js";
@@ -98,13 +102,37 @@ function mapBackendStatusToFinal(
   return null;
 }
 
+function isApplicantSubmittedSignal(type: string, payload: unknown): boolean {
+  const t = (type || "").toLowerCase();
+  if (
+    t.includes("applicantsubmitted") ||
+    t.includes("onapplicantsubmitted") ||
+    t.includes("applicant submitted")
+  ) {
+    return true;
+  }
+  if (payload && typeof payload === "object") {
+    const p = payload as Record<string, unknown>;
+    const reviewStatus = String(p.reviewStatus ?? p.review_status ?? "").toLowerCase();
+    if (reviewStatus === "completed" || reviewStatus === "awaitingservice") {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isReviewAwaitingDecision(reviewStatus?: string | null): boolean {
+  const review = (reviewStatus || "").toLowerCase();
+  return review === "completed" || review === "awaitingservice";
+}
+
 export interface SumsubWebVerificationProps {
   getToken: () => string | null;
   source?: KycProductSource;
   applicantEmail?: string;
   applicantPhone?: string;
   lang?: string;
-  /** First successful backend sync (applicant exists / pending review). */
+  /** Sumsub applicant fully submitted (all steps done, pending review). */
   onSubmitted: () => void;
   /** Terminal verification outcome from Nexa after Sumsub sync. */
   onFinalStatus: (
@@ -127,26 +155,38 @@ export function SumsubWebVerification({
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const submittedOnceRef = useRef(false);
   const finalEmittedRef = useRef(false);
-  /** Avoid JWT exchange until user has interacted with Sumsub (step completed). */
-  const hasSdkProgressRef = useRef(false);
 
   const getTokenRef = useRef(getToken);
   const onSubmittedRef = useRef(onSubmitted);
   const onFinalStatusRef = useRef(onFinalStatus);
   const onErrorRef = useRef(onError);
+  const applicantEmailRef = useRef(applicantEmail);
+  const applicantPhoneRef = useRef(applicantPhone);
+  const langRef = useRef(lang);
 
   useEffect(() => {
     getTokenRef.current = getToken;
     onSubmittedRef.current = onSubmitted;
     onFinalStatusRef.current = onFinalStatus;
     onErrorRef.current = onError;
-  }, [getToken, onSubmitted, onFinalStatus, onError]);
+    applicantEmailRef.current = applicantEmail;
+    applicantPhoneRef.current = applicantPhone;
+    langRef.current = lang;
+  }, [getToken, onSubmitted, onFinalStatus, onError, applicantEmail, applicantPhone, lang]);
 
   useEffect(() => {
     let cancelled = false;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     let instance: { launch?: (s: string) => void; destroy?: () => void } | null =
       null;
+
+    markKycFlowActive();
+
+    const markApplicantSubmitted = () => {
+      if (submittedOnceRef.current) return;
+      submittedOnceRef.current = true;
+      onSubmittedRef.current();
+    };
 
     const trySync = async (): Promise<void> => {
       const token = getTokenRef.current();
@@ -160,23 +200,16 @@ export function SumsubWebVerification({
           onFinalStatusRef.current(terminal, result.onboarding);
           return;
         }
-        const review = (result.reviewStatus || "").toLowerCase();
-        /** Backend mapped decision may still be PENDING while Sumsub finished steps */
-        const reviewDoneHint =
-          review === "completed" || review === "awaitingservice";
 
         if (
           !submittedOnceRef.current &&
-          result.updated !== false &&
-          (hasSdkProgressRef.current || reviewDoneHint)
+          isReviewAwaitingDecision(result.reviewStatus)
         ) {
-          submittedOnceRef.current = true;
-          onSubmittedRef.current();
+          markApplicantSubmitted();
         }
       } catch (e: unknown) {
         const err = normalizeError(e);
         if (err.status === 404) return;
-        // Backend used to map Sumsub applicant 404 to HTTP 400 with JSON body { code: 404 }.
         const msg = `${err.message}`.toLowerCase();
         if (
           err.status === 400 &&
@@ -205,21 +238,31 @@ export function SumsubWebVerification({
           return r.token;
         };
 
+        const email = applicantEmailRef.current;
+        const phone = applicantPhoneRef.current;
+        const locale = langRef.current;
+
         const builder = window.snsWebSdk.init(accessToken, refreshAccessToken);
 
         instance = builder
           .withConf({
-            lang,
-            ...(applicantEmail ? { email: applicantEmail } : {}),
-            ...(applicantPhone ? { phone: applicantPhone } : {}),
+            lang: locale,
+            ...(email ? { email } : {}),
+            ...(phone ? { phone } : {}),
           })
           .withOptions({ addViewportTag: false, adaptIframeHeight: true })
+          .on("idCheck.onApplicantSubmitted", () => {
+            markApplicantSubmitted();
+            void trySync();
+          })
+          .on("idCheck.applicantSubmitted", () => {
+            markApplicantSubmitted();
+            void trySync();
+          })
           .on("idCheck.onStepCompleted", () => {
-            hasSdkProgressRef.current = true;
             void trySync();
           })
           .on("idCheck.stepCompleted", () => {
-            hasSdkProgressRef.current = true;
             void trySync();
           })
           .on("idCheck.onError", (error: unknown) => {
@@ -232,7 +275,10 @@ export function SumsubWebVerification({
                 : "Verification error";
             onErrorRef.current?.(msg);
           })
-          .onMessage((type: string) => {
+          .onMessage((type: string, payload: unknown) => {
+            if (isApplicantSubmittedSignal(type, payload)) {
+              markApplicantSubmitted();
+            }
             const t = (type || "").toLowerCase();
             if (
               t.includes("applicantstatus") ||
@@ -262,6 +308,7 @@ export function SumsubWebVerification({
 
     return () => {
       cancelled = true;
+      clearKycFlowActive();
       if (pollTimer) clearInterval(pollTimer);
       try {
         instance?.destroy?.();
@@ -269,7 +316,7 @@ export function SumsubWebVerification({
         //
       }
     };
-  }, [source, applicantEmail, applicantPhone, lang]);
+  }, [source]);
 
   return (
     <div className="space-y-4">
@@ -283,8 +330,8 @@ export function SumsubWebVerification({
         className="min-h-[480px] w-full rounded-xl border border-nexa-line bg-white overflow-hidden"
       />
       <p className="text-[0.78rem] text-nexa-ink-4">
-        Complete the steps below. Camera access may be required for identity
-        verification.
+        Complete every step below (selfie and ID documents). Camera access may
+        be required. Do not close this page until Sumsub confirms submission.
       </p>
     </div>
   );

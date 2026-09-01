@@ -73,6 +73,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip locale rewrite for Next internals, API, static assets, and browser probes
-    "/((?!api|_next/static|_next/image|favicon\\.ico|icons|images|guidance|pwa|manifest\\.webmanifest|manifest\\.json|sw\\.js|workbox|offline\\.html|fallback|\\.well-known|apple-touch-icon|robots\\.txt|sitemap\\.xml|browserconfig\\.xml).*)",
+    "/((?!api|_next/static|_next/image|favicon\\.ico|icons|images|guidance|pwa|manifest\\.webmanifest|manifest\\.json|sw\\.js|nexa-sw\\.js|workbox|offline\\.html|fallback|\\.well-known|apple-touch-icon|robots\\.txt|sitemap\\.xml|browserconfig\\.xml).*)",
   ],
 };
