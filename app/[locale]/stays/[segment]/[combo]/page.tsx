@@ -3,54 +3,21 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getServerLocale } from "@/lib/i18n/server";
 import type { SeoLocale } from "@/lib/seo/types";
-import {
-  SEO_AMENITY_SLUGS,
-  SEO_PROPERTY_TYPE_SLUGS,
-} from "@/lib/seo/types";
-import { SEO_NEIGHBORHOODS_BY_CITY } from "@/lib/seo/catalog";
-import { fetchSeoDestinations, fetchSeoPage, fetchSeoListings } from "@/lib/seo/seo-api";
+import { fetchSeoPage, fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoPageJsonLd } from "@/lib/seo/json-ld";
 import { localizeSeoPagePayload } from "@/lib/seo/locale-seo-copy";
 import { enrichSeoPageWithRelatedGuides } from "@/lib/seo/enrich-related-guides";
 import { SeoLandingPageClient } from "@/components/seo/SeoLandingPage.client";
-import { staticParamsInDev } from "@/lib/seo/dev-static-params";
 import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
 
-export const revalidate = 86400;
+// This route reads request-aware locale state and live catalog data. Keeping it
+// runtime SSR avoids a build-time API dependency and static fallback crashes.
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ locale: string; segment: string; combo: string }>;
 };
-
-export async function generateStaticParams() {
-  const destinations = await fetchSeoDestinations();
-  const locales: SeoLocale[] = ["en", "fr", "ar"];
-  const typeAmenityCombos = [
-    ...SEO_PROPERTY_TYPE_SLUGS.map((slug) => ({ slug, kind: "filter" as const })),
-    ...SEO_AMENITY_SLUGS.map((slug) => ({ slug, kind: "filter" as const })),
-  ];
-  const filterParams = destinations.flatMap((d) =>
-    locales.flatMap((locale) =>
-      typeAmenityCombos.map(({ slug }) => ({
-        locale,
-        segment: d.slug,
-        combo: slug,
-      })),
-    ),
-  );
-  const neighborhoodParams = destinations.flatMap((d) => {
-    const neighborhoods = SEO_NEIGHBORHOODS_BY_CITY[d.slug] ?? [];
-    return locales.flatMap((locale) =>
-      neighborhoods.map((nb) => ({
-        locale,
-        segment: d.slug,
-        combo: nb.slug,
-      })),
-    );
-  });
-  return staticParamsInDev([...filterParams, ...neighborhoodParams]);
-}
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;

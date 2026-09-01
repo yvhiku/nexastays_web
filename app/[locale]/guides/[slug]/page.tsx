@@ -3,31 +3,22 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getServerLocale } from "@/lib/i18n/server";
 import type { SeoLocale } from "@/lib/seo/types";
-import { fetchSeoGuidePage, fetchSeoGuides } from "@/lib/seo/guide-api";
+import { fetchSeoGuidePage } from "@/lib/seo/guide-api";
 import { fetchSeoListings } from "@/lib/seo/seo-api";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { buildSeoGuideJsonLd } from "@/lib/seo/json-ld";
 import { applyGuideLocaleIndexPolicy } from "@/lib/seo/locale-seo-copy";
 import { SeoGuidePageClient } from "@/components/seo/SeoGuidePage.client";
-import { staticParamsInDev } from "@/lib/seo/dev-static-params";
 import { serializeJsonLd } from "@/lib/seo/safe-json-ld";
 import { sanitizeContentHtml } from "@/lib/seo/sanitize-content-html";
 
-export const revalidate = 86400;
+// Guide articles are live server content. Runtime SSR keeps builds immutable
+// and avoids request-aware static fallback failures.
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
-
-export async function generateStaticParams() {
-  const locales: SeoLocale[] = ["en", "fr", "ar"];
-  const enGuides = await fetchSeoGuides("en");
-  return staticParamsInDev(
-    enGuides.flatMap((guide) =>
-      locales.map((locale) => ({ locale, slug: guide.slug })),
-    ),
-  );
-}
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;

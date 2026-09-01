@@ -18,13 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Require build-time APIs
-        run: |
-          # Static SEO generation reads the Stays catalog only. Identity is a
-          # runtime browser dependency and must not gate the image build.
-          curl --fail --silent --show-error --retry 3 \
-            --resolve api.nexastays.ma:443:72.60.133.228 \
-            https://api.nexastays.ma/api/v1/health/ready >/dev/null
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -34,11 +27,6 @@ jobs:
         with:
           context: .
           file: Dockerfile.prod
-          # Build-time SSG fetches use the origin because Cloudflare blocks
-          # GitHub runner IPs. Browser/runtime URLs remain Cloudflare-backed.
-          add-hosts: |
-            api.nexastays.ma:72.60.133.228
-            identity.nexastays.ma:72.60.133.228
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/nexa-web:${{ github.sha }}
           labels: |
