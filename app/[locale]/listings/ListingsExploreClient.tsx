@@ -48,7 +48,12 @@ import {
   MOROCCO_CONTEXT,
   slugifyNeighborhood,
 } from "@/lib/explore-city-context";
-import { resolveExploreLayout, showsExploreMap, type ExploreLayout } from "@/lib/explore-layout";
+import {
+  resolveExploreLayout,
+  showsExploreMap,
+  EXPLORE_DESKTOP_MIN_PX,
+  type ExploreLayout,
+} from "@/lib/explore-layout";
 import { ListingsMapPanel } from "@/components/explore/ListingsMapPanel";
 import { parseNeighborhood } from "@/lib/listing-location";
 import { trackEvent } from "@/lib/analytics";
@@ -147,7 +152,7 @@ export default function ListingsExploreClient() {
   }, [urlSearch]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1280px)");
+    const mq = window.matchMedia(`(min-width: ${EXPLORE_DESKTOP_MIN_PX}px)`);
     const update = () => setViewport(mq.matches ? "desktop" : "mobile");
     update();
     mq.addEventListener("change", update);
@@ -643,7 +648,7 @@ export default function ListingsExploreClient() {
         <h1 className="sr-only">{t("listings.staysTitle")}</h1>
         <div className="w-full">
           <div className="bg-nexa-bg min-w-0 w-full max-w-full">
-            <div className="hidden xl:block bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 lg:px-6 xl:px-8 min-w-0 w-full">
+            <div className="hidden lg:block bg-white border-b border-nexa-line py-3 sm:py-4 px-4 sm:px-6 lg:px-6 xl:px-8 min-w-0 w-full">
               <div className="flex flex-col gap-3 min-w-0 w-full">
                 <div className="flex flex-wrap items-start gap-3 min-w-0 w-full">
                   <div className="min-w-0 flex-1">
@@ -672,7 +677,7 @@ export default function ListingsExploreClient() {
               </div>
             </div>
 
-            <div className="xl:hidden">
+            <div className="lg:hidden">
               {effectiveLayout !== "map" ? (
                 <ExploreFeed
                   mode={exploreMode}
@@ -728,7 +733,7 @@ export default function ListingsExploreClient() {
 
             <div
               className={cn(
-                "hidden xl:block min-w-0 w-full max-w-full",
+                "hidden lg:block min-w-0 w-full max-w-full",
                 effectiveLayout === "split"
                   ? "pt-4 pb-6"
                   : "p-4 sm:p-5 md:p-6 xl:p-7 xl:px-8",
@@ -891,7 +896,7 @@ export default function ListingsExploreClient() {
                 <div
                   className={cn(
                     effectiveLayout === "split" &&
-                      "grid grid-cols-[minmax(0,1fr)_minmax(340px,42%)] items-start gap-0",
+                      "grid grid-cols-[minmax(0,1fr)_minmax(280px,40%)] lg:grid-cols-[minmax(0,1fr)_minmax(320px,42%)] items-start gap-0",
                   )}
                 >
                   <div
@@ -1056,7 +1061,7 @@ export default function ListingsExploreClient() {
               />
             </div>
 
-            <div className="xl:hidden p-4 sm:p-5 min-w-0 w-full max-w-full">
+            <div className="lg:hidden p-4 sm:p-5 min-w-0 w-full max-w-full">
               {effectiveLayout === "map" && (
                 <>
                   {/*

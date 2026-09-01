@@ -25,7 +25,6 @@ const linkClass =
 export const Footer = () => {
   const { t, localePath, isRtl } = useLanguage();
   const year = new Date().getFullYear();
-  const textStart = isRtl ? "text-right" : "text-left";
 
   return (
     <footer className="relative border-t border-nexa-ink-2 bg-nexa-ink text-white">
@@ -47,7 +46,7 @@ export const Footer = () => {
         </div>
 
         <p
-          className={`mt-8 max-w-3xl text-xs leading-relaxed text-white/70 ${textStart}`}
+          className="mt-8 max-w-3xl text-xs leading-relaxed text-white/70 text-start"
         >
           {t("footer.disclaimer")}
         </p>
@@ -57,7 +56,7 @@ export const Footer = () => {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-white/95">
               {t("footer.platform")}
             </h3>
-            <ul className={`mt-3 space-y-2 ${textStart}`}>
+            <ul className="mt-3 space-y-2 text-start">
               <li>
                 <Link href={localePath("/listings")} className={linkClass}>
                   {t("nav.stays")}
@@ -85,7 +84,7 @@ export const Footer = () => {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-white/95">
               {t("footer.company")}
             </h3>
-            <ul className={`mt-3 space-y-2 ${textStart}`}>
+            <ul className="mt-3 space-y-2 text-start">
               <li>
                 <Link href={localePath("/safety-transparency")} className={linkClass}>
                   {t("nav.safetyTransparency")}
@@ -108,7 +107,7 @@ export const Footer = () => {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-white/95">
               {t("footer.legal")}
             </h3>
-            <ul className={`mt-3 space-y-2 ${textStart}`}>
+            <ul className="mt-3 space-y-2 text-start">
               <li>
                 <Link href={localePath("/terms")} className={linkClass}>
                   {t("footer.terms")}
@@ -131,7 +130,7 @@ export const Footer = () => {
             <h3 className="text-sm font-semibold uppercase tracking-wide text-white/95">
               {t("footer.contactLabel")}
             </h3>
-            <ul className={`mt-3 space-y-2 ${textStart}`}>
+            <ul className="mt-3 space-y-2 text-start">
               {NEXA_CONTACT_EMAILS.map(({ email, labelKey }) => (
                 <li key={email}>
                   <a
@@ -180,7 +179,7 @@ export const Footer = () => {
           <p>{t("footer.secured")}</p>
           <p
             className={
-              isRtl ? "text-right sm:text-left" : "text-left sm:text-right"
+              "text-start sm:text-end"
             }
           >
             © {year} Nexa — Morocco · {t("footer.rightsReserved")}

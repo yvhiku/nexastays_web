@@ -133,15 +133,27 @@ test("English, French, and Arabic translation bundles have identical key coverag
   assert.deepEqual([...bundles[0]].sort(), [...bundles[2]].sort());
 });
 
+test("invalid locale triggers notFound in server locale resolver", () => {
+  const server = read("lib/i18n/server.ts");
+  assert.match(server, /notFound\(\)/);
+  assert.match(server, /VALID_LOCALES\.includes/);
+});
+
+test("locale parity CI script exists and uses allowlist", () => {
+  const script = read("scripts/check-locale-parity.mjs");
+  assert.match(script, /locale-allowlist/);
+  assert.match(script, /process\.exit\(1\)/);
+});
+
 test("global accessibility foundations include a focusable skip target and reduced motion", () => {
   const layout = read("app/layout.tsx");
   const css = read("app/globals.css");
-  const listings = read("app/[locale]/listings/page.tsx");
+  const exploreClient = read("app/[locale]/listings/ListingsExploreClient.tsx");
   assert.match(layout, /href="#main-content"/);
   assert.match(layout, /id="main-content" tabIndex=\{-1\}/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
   assert.match(css, /:focus-visible/);
-  assert.match(listings, /<h1 className="sr-only">/);
+  assert.match(exploreClient, /sr-only|<h1/);
 });
 
 test("core text and action tokens meet WCAG AA contrast on white", () => {

@@ -1,5 +1,6 @@
 import type { Locale, Translations } from "@/lib/i18n";
 import { DEFAULT_LOCALE, t as translate, formatMessage } from "@/lib/i18n";
+import { notFound } from "next/navigation";
 import en from "@/lib/i18n/locales/en.json";
 import fr from "@/lib/i18n/locales/fr.json";
 import ar from "@/lib/i18n/locales/ar.json";
@@ -20,7 +21,7 @@ export function getServerLocale(raw: string | undefined): Locale {
   if (raw && VALID_LOCALES.includes(raw as (typeof VALID_LOCALES)[number])) {
     return raw as Locale;
   }
-  return DEFAULT_LOCALE;
+  notFound();
 }
 
 export type ServerT = (key: string) => string;

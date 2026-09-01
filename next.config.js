@@ -2,8 +2,14 @@
 const isProd = process.env.NODE_ENV === "production";
 const isDev = process.env.NODE_ENV === "development";
 const appUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
-const identityApi = process.env.NEXT_PUBLIC_IDENTITY_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3001";
-const staysApi = process.env.NEXT_PUBLIC_STAYS_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:3002";
+const identityApi =
+  process.env.NEXT_PUBLIC_IDENTITY_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:3001";
+const staysApi =
+  process.env.NEXT_PUBLIC_STAYS_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:3002";
 const analyticsEndpoint = process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT;
 const errorReportingEndpoint = process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT;
 
@@ -34,19 +40,39 @@ const staysImageHost = (() => {
     return undefined;
   }
 })();
+const uniqueOrigins = (...origins) => [...new Set(origins.filter(Boolean))];
+// Browsers treat localhost and 127.0.0.1 as different origins. Dev CSP must
+// allow both so OTP/login is not blocked as a connect-src violation.
+const devLoopbackApis = isDev
+  ? [
+      "http://localhost:3001",
+      "http://127.0.0.1:3001",
+      "http://localhost:3002",
+      "http://127.0.0.1:3002",
+      "http://localhost:3005",
+      "http://127.0.0.1:3005",
+    ]
+  : [];
+const connectOrigins = uniqueOrigins(
+  siteOrigin,
+  identityOrigin,
+  staysOrigin,
+  sumsubApiOrigin,
+  analyticsOrigin,
+  errorReportingOrigin,
+  ...devLoopbackApis,
+);
+const staysMediaOrigins = uniqueOrigins(staysOrigin, ...devLoopbackApis.filter((o) => o.endsWith(":3002")));
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' ${sumsubStaticOrigin} ${isProd ? "" : "'unsafe-eval'"} 'unsafe-inline'`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://images.unsplash.com https://*.tile.openstreetmap.org https://staticmap.openstreetmap.de https://*.basemaps.cartocdn.com" +
-    (staysOrigin ? ` ${staysOrigin}` : ""),
+    staysMediaOrigins.map((origin) => ` ${origin}`).join(""),
   "font-src 'self' data:",
-  "media-src 'self'" + (staysOrigin ? ` ${staysOrigin}` : ""),
-  "connect-src 'self'" +
-    [siteOrigin, identityOrigin, staysOrigin, sumsubApiOrigin, analyticsOrigin, errorReportingOrigin]
-      .filter(Boolean)
-      .map((origin) => ` ${origin}`)
-      .join(""),
+  "media-src 'self'" + staysMediaOrigins.map((origin) => ` ${origin}`).join(""),
+  "connect-src 'self'" + connectOrigins.map((origin) => ` ${origin}`).join(""),
   `frame-src 'self' ${sumsubApiOrigin}`,
   "worker-src 'self'",
   "manifest-src 'self'",

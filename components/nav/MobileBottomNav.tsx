@@ -161,6 +161,10 @@ export function MobileBottomNav() {
     return null;
   }
 
+  if (barePath === "/host") {
+    return null;
+  }
+
   if (isHostArea) {
     return (
       <nav

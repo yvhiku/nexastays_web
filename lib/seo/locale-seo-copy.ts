@@ -481,9 +481,6 @@ export function localizeSeoPagePayload(page: SeoPagePayload): SeoPagePayload {
   });
 
   let robots = page.robots;
-  if (shouldNoindexUntranslatedNeighborhood(page)) {
-    robots = "noindex,follow";
-  }
 
   const aiSnippets = page.aiSnippets.map((snippet) => {
     if (snippet.source !== "marketplace") return snippet;
@@ -528,28 +525,23 @@ export function localizeSeoPagePayload(page: SeoPagePayload): SeoPagePayload {
   };
 }
 
-/** Guides FR/AR are English seed clones — must not stay indexable as localized content. */
+/** Guides: localize chrome; indexability follows API payload after translated FR/AR content. */
 export function applyGuideLocaleIndexPolicy(
   page: SeoGuidePagePayload,
 ): SeoGuidePagePayload {
-  if (page.locale === "en") return page;
+  const guidesLabel =
+    page.locale === "fr"
+      ? "Guides"
+      : page.locale === "ar"
+        ? "الأدلة"
+        : "Guides";
+
   return {
     ...page,
-    robots: "noindex,follow",
-    indexable: false,
-    hreflang: { en: page.hreflang.en ?? `/en/guides/${page.slug}` },
     breadcrumbs: page.breadcrumbs.map((crumb, index) => {
       if (index === 0) return { ...crumb, name: pick(HOME, page.locale) };
       if (index === 1) {
-        return {
-          ...crumb,
-          name:
-            page.locale === "fr"
-              ? "Guides"
-              : page.locale === "ar"
-                ? "الأدلة"
-                : "Guides",
-        };
+        return { ...crumb, name: guidesLabel };
       }
       return crumb;
     }),

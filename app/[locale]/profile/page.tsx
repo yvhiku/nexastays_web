@@ -124,7 +124,7 @@ function ProfilePageContent() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                     className="absolute bottom-0 right-0 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-nexa-primary text-white flex items-center justify-center shadow-lg hover:bg-nexa-primary-dark transition-colors disabled:opacity-60"
-                    aria-label="Change photo"
+                    aria-label={t("profile.changePhotoAria")}
                   >
                     <Camera className="h-5 w-5" />
                   </button>
@@ -211,7 +211,7 @@ function ProfilePageContent() {
                     }
                     readOnly
                     disabled
-                    placeholder="Not set"
+                    placeholder={t("profile.notSet")}
                     className="w-full px-4 py-3 rounded-xl border border-nexa-line bg-nexa-bg-2 text-nexa-ink cursor-not-allowed"
                   />
                   <p className="text-xs text-nexa-ink-4 mt-1">{t("profile.locked")}</p>
@@ -243,7 +243,7 @@ function ProfilePageContent() {
                     onChange={setCity}
                     aria-label={t("profile.city")}
                     options={[
-                      { value: "", label: "Select city" },
+                      { value: "", label: t("profile.selectCity") },
                       ...(city && !MOROCCO_CITIES.includes(city)
                         ? [{ value: city, label: city }]
                         : []),

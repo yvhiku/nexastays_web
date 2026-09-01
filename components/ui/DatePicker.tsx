@@ -21,6 +21,8 @@ type DatePickerProps = {
   todayLabel?: string;
   className?: string;
   locale?: string;
+  /** Max calendar panel width (px). Defaults to 280. */
+  panelMaxWidth?: number;
   /** Trigger chrome — plain sits inside a parent field; field is a standalone bordered control. */
   variant?: "plain" | "field";
   "aria-label"?: string;
@@ -36,10 +38,10 @@ const DEFAULT_MIN_YEAR = 1900;
 
 const TRIGGER = {
   plain:
-    "w-full flex items-center gap-2 border-none outline-none bg-transparent font-sans text-sm text-left text-nexa-ink",
+    "w-full flex items-center gap-2 border-none outline-none bg-transparent font-sans text-sm text-start text-nexa-ink",
   field: cn(
     "w-full flex items-center gap-2 h-11 min-h-[44px] rounded-xl border-2 border-nexa-line bg-white px-3.5",
-    "font-sans text-sm text-left text-nexa-ink",
+    "font-sans text-sm text-start text-nexa-ink",
     "focus-visible:border-nexa-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nexa-primary/20",
     "hover:border-nexa-primary/40 transition-colors",
   ),
@@ -91,6 +93,7 @@ export function DatePicker({
   todayLabel = "Today",
   className,
   locale = "en",
+  panelMaxWidth = 280,
   variant = "plain",
   "aria-label": ariaLabel,
   id,
@@ -127,7 +130,7 @@ export function DatePicker({
     const el = rootRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const panelWidth = Math.min(280, window.innerWidth - 16);
+    const panelWidth = Math.min(panelMaxWidth, window.innerWidth - 16);
     let left = rect.left;
     if (left + panelWidth > window.innerWidth - 8) {
       left = Math.max(8, window.innerWidth - panelWidth - 8);
@@ -140,7 +143,7 @@ export function DatePicker({
       top = rect.top - gap - approxHeight;
     }
     setPos({ top, left, width: panelWidth });
-  }, []);
+  }, [panelMaxWidth]);
 
   useEffect(() => {
     if (open) {
@@ -518,7 +521,7 @@ export function DatePicker({
     );
 
   return (
-    <div ref={rootRef} className={cn("relative", className)}>
+    <div ref={rootRef} className={cn("relative min-w-0", className)}>
       <button
         type="button"
         id={id}
@@ -530,11 +533,17 @@ export function DatePicker({
         onClick={() => !disabled && setOpen(!open)}
         className={cn(
           TRIGGER[variant],
+          "min-w-0",
           open && variant === "field" && "border-nexa-primary ring-2 ring-nexa-primary/20",
           disabled && "opacity-50 cursor-not-allowed",
         )}
       >
-        <span className={cn("flex-1 truncate", !displayValue && "text-nexa-ink-4")}>
+        <span
+          className={cn(
+            "flex-1 min-w-0 truncate text-left",
+            !displayValue && "text-nexa-ink-4",
+          )}
+        >
           {displayValue || placeholder}
         </span>
         <CalendarIcon

@@ -2,6 +2,9 @@ export type ExploreLayout = "list" | "map" | "split";
 
 export type ExploreViewport = "mobile" | "desktop";
 
+/** Viewport width where desktop explore (split / sticky map) activates. Matches Tailwind `lg`. */
+export const EXPLORE_DESKTOP_MIN_PX = 1024;
+
 export function parseExploreLayout(raw: string | null): ExploreLayout {
   if (raw === "map" || raw === "split" || raw === "list") return raw;
   return "list";

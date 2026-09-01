@@ -124,7 +124,7 @@ export const NavBar = () => {
         </Link>
 
         {/* Inline links only when width fits full labels (no overflow clipping). */}
-        <div className="hidden 2xl:flex flex-1 items-center justify-center gap-5 min-w-0">
+        <div className="hidden xl:flex flex-1 items-center justify-center gap-5 min-w-0">
           {visibleNavLinks.map(({ href, labelKey, id }) => (
             <Link
               key={id}
@@ -256,7 +256,7 @@ export const NavBar = () => {
           )}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="inline-flex 2xl:hidden items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
+            className="inline-flex xl:hidden items-center justify-center w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg hover:bg-nexa-bg-2 text-nexa-ink transition-colors"
             aria-label={t("common.menu")}
             aria-expanded={mobileMenuOpen}
           >
@@ -270,7 +270,7 @@ export const NavBar = () => {
     <OverlayPortal layer="drawer">
     <div
       className={cn(
-        "fixed inset-0 z-layer-drawer 2xl:hidden transition-opacity duration-300",
+        "fixed inset-0 z-layer-drawer xl:hidden transition-opacity duration-300",
         mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       )}
       aria-hidden={!mobileMenuOpen}

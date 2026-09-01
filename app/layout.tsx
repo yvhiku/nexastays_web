@@ -96,15 +96,22 @@ export default async function RootLayout(
     sameAs: [],
   };
 
+  const skipLabel =
+    locale === "fr"
+      ? "Aller au contenu principal"
+      : locale === "ar"
+        ? "الانتقال إلى المحتوى الرئيسي"
+        : "Skip to main content";
+
   return (
     <html lang={locale} dir={dir} className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ClientMonitoring />
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-layer-modal focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-nexa-ink focus:shadow-nexa-card"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-layer-modal focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-nexa-ink focus:shadow-nexa-card"
         >
-          Skip to main content
+          {skipLabel}
         </a>
         <div id="main-content" tabIndex={-1}>{children}</div>
         <script

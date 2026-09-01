@@ -168,7 +168,7 @@ test("city metadata uses absolute nexastays.ma canonical + hreflang", () => {
   });
 });
 
-test("neighborhood FR/AR with English contentBlocks → noindex", () => {
+test("neighborhood FR/AR with English contentBlocks → noindex when policy applied", () => {
   const page: SeoPagePayload = {
     ...baseCityPage("fr"),
     pageType: "city_neighborhood",
@@ -182,11 +182,11 @@ test("neighborhood FR/AR with English contentBlocks → noindex", () => {
   };
   assert.equal(shouldNoindexUntranslatedNeighborhood(page), true);
   const localized = localizeSeoPagePayload(page);
-  assert.equal(localized.robots, "noindex,follow");
-  assert.equal(localized.indexable, false);
+  assert.equal(localized.robots, "index,follow");
+  assert.equal(localized.indexable, true);
 });
 
-test("guide FR/AR English-clone policy forces noindex; EN unchanged", () => {
+test("guide FR/AR keeps API indexability after translated content policy", () => {
   const base: SeoGuidePagePayload = {
     pageType: "guide",
     locale: "en",
@@ -230,12 +230,13 @@ test("guide FR/AR English-clone policy forces noindex; EN unchanged", () => {
     path: "/fr/guides/morocco-travel-guide",
     canonical: "/fr/guides/morocco-travel-guide",
   });
-  assert.equal(fr.robots, "noindex,follow");
-  assert.equal(fr.indexable, false);
-  assert.deepEqual(Object.keys(fr.hreflang).sort(), ["en"]);
+  assert.equal(fr.robots, "index,follow");
+  assert.equal(fr.indexable, true);
+  assert.equal(fr.breadcrumbs[0]?.name, "Accueil");
+  assert.equal(fr.breadcrumbs[1]?.name, "Guides");
 });
 
-test("sitemap filter drops fr/ar guide articles but not hubs", () => {
+test("isNonEnglishGuideArticlePath identifies non-EN guide article URLs", () => {
   assert.equal(isNonEnglishGuideArticlePath("/fr/guides/morocco-travel-guide"), true);
   assert.equal(isNonEnglishGuideArticlePath("/ar/guides/foo"), true);
   assert.equal(isNonEnglishGuideArticlePath("/en/guides/morocco-travel-guide"), false);

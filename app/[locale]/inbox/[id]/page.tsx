@@ -641,8 +641,8 @@ function ConversationPageInner() {
       setOptimisticInboxActivity(
         conversationId,
         message.type === "IMAGE"
-          ? "You sent a photo"
-          : message.body?.trim() || "You sent a file",
+          ? t("inbox.sentPhoto")
+          : message.body?.trim() || t("inbox.sentFile"),
       );
       bumpActivity();
       scrollToBottom(true);

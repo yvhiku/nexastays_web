@@ -12,6 +12,8 @@ export type GuestsPanelProps = {
   onChange: (patch: Partial<SearchBarValue>) => void;
   /** Cap adults+children (booking card). Search leaves undefined. */
   maxOccupancy?: number;
+  /** Booking card / narrow embed — drops fixed min-width so panels don't overflow. */
+  embedded?: boolean;
   t: TFn;
   className?: string;
   /** Extra warning / note nodes below steppers */
@@ -22,6 +24,7 @@ export function GuestsPanel({
   value,
   onChange,
   maxOccupancy,
+  embedded = false,
   t,
   className,
   footer,
@@ -29,7 +32,13 @@ export function GuestsPanel({
   const occ = value.adults + value.children;
 
   return (
-    <div className={cn("p-4 sm:p-5 w-full min-w-[280px] max-w-sm", className)}>
+    <div
+      className={cn(
+        "w-full",
+        embedded ? "min-w-0 max-w-none p-0" : "p-4 sm:p-5 min-w-[280px] max-w-sm",
+        className,
+      )}
+    >
       <GuestStepper
         label={t("searchBar.adults")}
         subtitle={t("searchBar.adultsSub")}

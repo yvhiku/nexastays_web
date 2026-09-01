@@ -39,7 +39,7 @@ export function LegalLayout({
 
         <section className="py-8 sm:py-14">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 lg:gap-0">
-            <aside className="lg:sticky lg:top-[calc(72px+32px)] lg:self-start h-fit lg:pr-10 lg:border-r lg:border-nexa-line pt-2 lg:mb-0 mb-6">
+            <aside className="lg:sticky lg:top-[calc(72px+32px)] lg:self-start h-fit lg:pe-10 lg:border-e lg:border-nexa-line pt-2 lg:mb-0 mb-6">
               <h4 className="text-xs font-bold uppercase tracking-wider text-nexa-ink-4 mb-3.5">
                 {t("legalLayout.sections")}
               </h4>
@@ -67,7 +67,7 @@ export function LegalLayout({
                 ))}
               </div>
             </aside>
-            <div className="pl-0 lg:pl-14 pb-20">{children}</div>
+            <div className="ps-0 lg:ps-14 pb-20">{children}</div>
           </div>
         </section>
       </main>

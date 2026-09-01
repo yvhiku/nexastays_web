@@ -20,12 +20,16 @@ function ReviewCard({
   optimistic,
   yourLabel,
   justNowLabel,
+  verifiedStayLabel,
+  editedLabel,
   locale,
 }: {
   review: ListingReview;
   optimistic?: boolean;
   yourLabel: string;
   justNowLabel: string;
+  verifiedStayLabel: string;
+  editedLabel: string;
   locale: string;
 }) {
   return (
@@ -47,11 +51,11 @@ function ReviewCard({
             {review.is_verified_stay && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-green-700 bg-green-50 dark:bg-green-950/40 px-2 py-0.5 rounded-full">
                 <BadgeCheck className="h-3 w-3" />
-                Verified stay
+                {verifiedStayLabel}
               </span>
             )}
             {review.is_edited && (
-              <span className="text-[10px] text-nexa-ink-4 uppercase tracking-wide">Edited</span>
+              <span className="text-[10px] text-nexa-ink-4 uppercase tracking-wide">{editedLabel}</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-1">
@@ -158,7 +162,7 @@ export function ListingReviewsSection({
   initialAvg,
   initialCount = 0,
 }: ListingReviewsSectionProps) {
-  const { t, locale } = useLanguage();
+  const { t, tf, locale } = useLanguage();
   const [reviews, setReviews] = useState<ListingReview[]>([]);
   const [optimisticIds, setOptimisticIds] = useState<Set<string>>(() => new Set());
   const [avg, setAvg] = useState<number | null>(initialAvg ?? null);
@@ -245,8 +249,8 @@ export function ListingReviewsSection({
   if (!loading && total === 0) {
     return (
       <section className="border-t border-nexa-line/60 pt-10">
-        <h2 className="font-display text-2xl font-semibold mb-4">Reviews</h2>
-        <p className="text-nexa-ink-3 text-sm">No reviews yet. Be the first to share your experience.</p>
+        <h2 className="font-display text-2xl font-semibold mb-4">{t("listingReviews.title")}</h2>
+        <p className="text-nexa-ink-3 text-sm">{t("listingReviews.empty")}</p>
       </section>
     );
   }
@@ -256,7 +260,7 @@ export function ListingReviewsSection({
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
           <h2 className="font-display text-2xl font-semibold text-nexa-ink dark:text-white">
-            Reviews
+            {t("listingReviews.title")}
           </h2>
           {avg != null && total > 0 && (
             <div className="flex items-center gap-2 mt-2">
@@ -265,7 +269,9 @@ export function ListingReviewsSection({
                 {avg.toFixed(2)}
               </span>
               <span className="text-sm text-nexa-ink-3">
-                ({total} {total === 1 ? "review" : "reviews"})
+                ({total === 1
+                  ? tf("listingReviews.reviewCount", { count: total })
+                  : tf("listingReviews.reviewsCount", { count: total })})
               </span>
             </div>
           )}
@@ -274,18 +280,18 @@ export function ListingReviewsSection({
           variant="pill"
           value={sort}
           onChange={(v) => setSort(v as ReviewSort)}
-          aria-label="Sort reviews"
+          aria-label={t("listingReviews.sortAria")}
           options={[
-            { value: "newest", label: "Newest" },
-            { value: "highest", label: "Highest rated" },
-            { value: "lowest", label: "Lowest rated" },
+            { value: "newest", label: t("listingReviews.sortNewest") },
+            { value: "highest", label: t("listingReviews.sortHighest") },
+            { value: "lowest", label: t("listingReviews.sortLowest") },
           ]}
         />
       </div>
 
       {total > 0 && Object.keys(distribution).length > 0 && (
         <div className="mb-8 p-5 rounded-2xl bg-nexa-bg-2/80 dark:bg-nexa-ink/20 border border-nexa-line/40">
-          <h3 className="text-sm font-semibold text-nexa-ink mb-4">Rating breakdown</h3>
+          <h3 className="text-sm font-semibold text-nexa-ink mb-4">{t("listingReviews.ratingBreakdown")}</h3>
           <Histogram distribution={distribution} total={total} />
         </div>
       )}
@@ -300,6 +306,8 @@ export function ListingReviewsSection({
                 optimistic={optimisticIds.has(r.id)}
                 yourLabel={t("rateStay.yourReviewLabel")}
                 justNowLabel={t("rateStay.justNow")}
+                verifiedStayLabel={t("listingReviews.verifiedStay")}
+                editedLabel={t("listingReviews.edited")}
                 locale={locale}
               />
             ))}

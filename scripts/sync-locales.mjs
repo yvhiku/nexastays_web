@@ -5,6 +5,15 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { frGapOverlay, arGapOverlay } from "./locale-gap-overlays.mjs";
+import {
+  listingDetailArOverlay,
+  listingDetailFrOverlay,
+} from "./listing-detail-i18n-overlay.mjs";
+import {
+  hostReviewArOverlay,
+  hostReviewFrOverlay,
+} from "./host-review-i18n-overlay.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const localesDir = path.join(__dirname, "../lib/i18n/locales");
@@ -527,9 +536,18 @@ function fillMissingFromEn(target, en, path = "") {
 
 const en = JSON.parse(fs.readFileSync(path.join(localesDir, "en.json"), "utf8"));
 
+const frOverlayMerged = deepMerge(
+  deepMerge(deepMerge(frOverlay, frGapOverlay), listingDetailFrOverlay),
+  hostReviewFrOverlay,
+);
+const arOverlayMerged = deepMerge(
+  deepMerge(deepMerge(arOverlay, arGapOverlay), listingDetailArOverlay),
+  hostReviewArOverlay,
+);
+
 for (const [locale, overlay] of [
-  ["fr", frOverlay],
-  ["ar", arOverlay],
+  ["fr", frOverlayMerged],
+  ["ar", arOverlayMerged],
 ]) {
   const file = path.join(localesDir, `${locale}.json`);
   let current = JSON.parse(fs.readFileSync(file, "utf8"));

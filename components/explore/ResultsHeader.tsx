@@ -73,7 +73,7 @@ export function ResultsHeader({
     <div
       className={cn(
         "flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 w-full",
-        compact && "flex-nowrap gap-2",
+        compact && "flex-wrap gap-2 sm:flex-nowrap",
         className,
       )}
     >

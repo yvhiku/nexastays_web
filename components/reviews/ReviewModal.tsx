@@ -17,6 +17,7 @@ import {
 import type { StaysReviewDetail } from "@/lib/stays-types";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import { useModalDialog } from "@/components/ui/useModalDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MAX_COMMENT = 1000;
 const MAX_PHOTOS = 5;
@@ -39,6 +40,7 @@ export function ReviewModal({
   onClose,
   onSuccess,
 }: ReviewModalProps) {
+  const { t, tf } = useLanguage();
   const isEdit = !!existingReview?.can_edit;
   const [rating, setRating] = useState(existingReview?.rating ?? 0);
   const [comment, setComment] = useState(existingReview?.comment ?? "");
@@ -67,10 +69,10 @@ export function ReviewModal({
         for (const file of Array.from(files)) {
           if (nextIds.length >= MAX_PHOTOS) break;
           if (!ACCEPTED_TYPES.includes(file.type)) {
-            throw new Error("Only JPG, PNG, and WebP images are allowed");
+            throw new Error(t("rateStay.invalidImageType"));
           }
           if (file.size > 10 * 1024 * 1024) {
-            throw new Error("Each image must be under 10MB");
+            throw new Error(t("rateStay.imageTooLarge"));
           }
           const { asset_id } = await uploadReviewPhoto(file, token);
           nextIds.push(asset_id);
@@ -79,13 +81,13 @@ export function ReviewModal({
         setAssetIds(nextIds);
         setPreviews(nextPreviews);
       } catch (err) {
-        setError(formatUserError(err) || "Upload failed");
+        setError(formatUserError(err) || t("rateStay.uploadFailed"));
       } finally {
         setUploading(false);
         if (fileRef.current) fileRef.current.value = "";
       }
     },
-    [assetIds, previews, token],
+    [assetIds, previews, token, t],
   );
 
   const removePhoto = (index: number) => {
@@ -99,7 +101,7 @@ export function ReviewModal({
 
   const handleSubmit = async () => {
     if (rating < 0.5) {
-      setError("Please select a rating");
+      setError(t("rateStay.ratingRequired"));
       return;
     }
     setError(null);
@@ -119,7 +121,7 @@ export function ReviewModal({
       setSuccess(true);
       setTimeout(() => onSuccess(result), 800);
     } catch (err) {
-      setError(formatUserError(err) || "Failed to submit review");
+      setError(formatUserError(err) || t("rateStay.submitFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +140,7 @@ export function ReviewModal({
         type="button"
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t("rateStay.close")}
       />
       <div className="relative w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white dark:bg-nexa-ink shadow-2xl border border-nexa-line/40">
         <div className="sticky top-0 z-layer-content flex items-center justify-between px-6 py-4 border-b border-nexa-line/40 bg-white/95 dark:bg-nexa-ink backdrop-blur">
@@ -147,7 +149,7 @@ export function ReviewModal({
               id="review-modal-title"
               className="font-[family-name:var(--font-playfair)] text-xl font-bold text-nexa-ink dark:text-white"
             >
-              {isEdit ? "Edit your review" : "Write a review"}
+              {isEdit ? t("rateStay.editTitle") : t("rateStay.writeReview")}
             </h2>
             {listingTitle && (
               <p className="text-sm text-nexa-ink-3 mt-0.5 truncate">{listingTitle}</p>
@@ -157,7 +159,7 @@ export function ReviewModal({
             type="button"
             onClick={onClose}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full hover:bg-nexa-bg-2 text-nexa-ink-3"
-            aria-label="Close"
+            aria-label={t("rateStay.close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -168,13 +170,13 @@ export function ReviewModal({
             <div className="flex flex-col items-center py-10 text-center">
               <CheckCircle2 className="h-14 w-14 text-green-600 mb-4" />
               <p className="font-semibold text-lg text-nexa-ink dark:text-white">
-                Thanks for your review!
+                {t("rateStay.thankYou")}
               </p>
             </div>
           ) : (
             <>
               <div>
-                <p className="text-sm font-medium text-nexa-ink mb-3">Overall rating *</p>
+                <p className="text-sm font-medium text-nexa-ink mb-3">{t("rateStay.overallRatingRequired")}</p>
                 <StarRatingSelector
                   value={rating}
                   onChange={setRating}
@@ -187,14 +189,14 @@ export function ReviewModal({
                   htmlFor="review-comment"
                   className="text-sm font-medium text-nexa-ink block mb-2"
                 >
-                  Your experience
+                  {t("rateStay.yourExperience")}
                 </label>
                 <textarea
                   id="review-comment"
                   value={comment}
                   onChange={(e) => setComment(e.target.value.slice(0, MAX_COMMENT))}
                   rows={5}
-                  placeholder="Tell other guests about your stay…"
+                  placeholder={t("rateStay.commentPlaceholder")}
                   disabled={submitting}
                   className={cn(
                     "w-full rounded-xl border border-nexa-line/60 px-4 py-3 text-sm",
@@ -210,7 +212,7 @@ export function ReviewModal({
 
               <div>
                 <p className="text-sm font-medium text-nexa-ink mb-2">
-                  Photos <span className="text-nexa-ink-4 font-normal">(optional, max {MAX_PHOTOS})</span>
+                  {tf("rateStay.photosOptional", { max: MAX_PHOTOS })}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {previews.map((src, i) => (
@@ -220,8 +222,8 @@ export function ReviewModal({
                       <button
                         type="button"
                         onClick={() => removePhoto(i)}
-                        className="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white"
-                        aria-label="Remove photo"
+                        className="absolute top-1 end-1 p-0.5 rounded-full bg-black/60 text-white"
+                        aria-label={t("rateStay.removePhoto")}
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -239,7 +241,7 @@ export function ReviewModal({
                       ) : (
                         <ImagePlus className="h-5 w-5" />
                       )}
-                      <span className="text-[10px]">Add</span>
+                      <span className="text-[10px]">{t("rateStay.addPhoto")}</span>
                     </button>
                   )}
                 </div>
@@ -265,12 +267,12 @@ export function ReviewModal({
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Submitting…
+                    {t("rateStay.submitting")}
                   </>
                 ) : isEdit ? (
-                  "Save changes"
+                  t("rateStay.saveChanges")
                 ) : (
-                  "Submit review"
+                  t("rateStay.submitReview")
                 )}
               </Button>
             </>

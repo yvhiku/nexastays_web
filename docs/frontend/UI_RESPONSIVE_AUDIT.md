@@ -135,6 +135,24 @@ Primary controls and the audited modal controls meet the 48px requirement. Some 
 - background scroll locking and cleanup;
 - shared modal behavior adoption by critical dialogs and drawers.
 
+## i18n / RTL manual matrix (EN / FR / AR)
+
+Use this checklist after locale or layout changes. Locales: `en`, `fr`, `ar`. Widths: 375, 768, 1024, 1280, 1440.
+
+| Page group | Routes to spot-check |
+|------------|---------------------|
+| Marketing | `/`, `/about`, `/contact`, `/host` (apply) |
+| Explore / booking | `/listings`, `/listings/[id]`, `/bookings/[id]` |
+| Auth | `/login`, `/registration` |
+| Guest | `/profile`, `/my-bookings`, `/inbox` |
+| Host portal | `/host/dashboard`, `/host/listings/new` |
+| SEO | `/guides/[slug]`, `/stays/casablanca` |
+| Legal | `/terms`, `/privacy` |
+
+Verify: no English fallbacks on FR/AR (except brand names), NavBar inline nav at `xl`, listing gallery RTL controls, host apply without guest bottom nav, footer `text-start`, legal sidebar logical borders, FR/AR guide pages `index,follow` when indexable.
+
+Automated: `npm run check:locales` (parity), `npm test` (i18n/SEO audit tests).
+
 ## Validation
 
 - TypeScript: passed.

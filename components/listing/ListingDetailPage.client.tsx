@@ -112,12 +112,14 @@ const STABLE_AMENITY_ICONS: Record<string, React.ReactNode> = {
   cleaning: <Sparkles className="h-5 w-5" />,
 };
 
-const HIGHLIGHT_AMENITIES = [
-  { tag: "wifi", title: "Fast WiFi", desc: "Reliable connection for work and streaming" },
-  { tag: "kitchen", title: "Full Kitchen", desc: "Cook meals with complete appliances" },
-  { tag: "parking", title: "Free Parking", desc: "Dedicated parking on premises" },
-  { tag: "cleaning", title: "Enhanced Clean", desc: "Strict health and safety protocols" },
-];
+function highlightAmenityDefs(t: (key: string) => string) {
+  return [
+    { tag: "wifi", title: t("listingDetail.amenityWifiTitle"), desc: t("listingDetail.amenityWifiDesc") },
+    { tag: "kitchen", title: t("listingDetail.amenityKitchenTitle"), desc: t("listingDetail.amenityKitchenDesc") },
+    { tag: "parking", title: t("listingDetail.amenityParkingTitle"), desc: t("listingDetail.amenityParkingDesc") },
+    { tag: "cleaning", title: t("listingDetail.amenityCleaningTitle"), desc: t("listingDetail.amenityCleaningDesc") },
+  ];
+}
 
 function listingTypeLabel(type: string): string {
   return LISTING_TYPES.find((t) => t.id === type)?.label ?? type;
@@ -134,7 +136,7 @@ export function ListingDetailPageClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token, isAuthenticated } = useAuth();
-  const { t, locale, localePath } = useLanguage();
+  const { t, tf, locale, localePath } = useLanguage();
   const { rates } = useStaysFees();
   const id = params.id as string;
 
@@ -225,7 +227,7 @@ export function ListingDetailPageClient({
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(formatUserError(err) || "Failed to load");
+          setError(formatUserError(err) || t("listingDetail.failedLoad"));
           setListing(null);
         }
       })
@@ -298,7 +300,7 @@ export function ListingDetailPageClient({
 
   const handleCheckoutChange = (value: string) => {
     if (checkin && value && rangeOverlapsBlockedNights(checkin, value, blockedNights)) {
-      setBookingError("Selected dates overlap an existing booking. Please choose different dates.");
+      setBookingError(t("listingDetail.bookingOverlapError"));
       return;
     }
     setBookingError(null);
@@ -325,15 +327,15 @@ export function ListingDetailPageClient({
       return;
     }
     if (!checkin || !checkout) {
-      setBookingError("Please select check-in and check-out dates.");
+      setBookingError(t("listingDetail.selectDatesError"));
       return;
     }
     if (!isValidBookingRange(checkin, checkout)) {
-      setBookingError("Check-out must be at least one night after check-in.");
+      setBookingError(t("listingDetail.checkoutAfterCheckinError"));
       return;
     }
     if (rangeOverlapsBlockedNights(checkin, checkout, blockedNights)) {
-      setBookingError("Selected dates overlap an existing booking. Please choose different dates.");
+      setBookingError(t("listingDetail.bookingOverlapError"));
       return;
     }
     if (userProfile && userProfile.kyc_status !== "APPROVED" && userProfile.kyc_status !== "VERIFIED") return;
@@ -423,7 +425,7 @@ export function ListingDetailPageClient({
         // Booking exists but something blocked navigation — still send user to checkout.
         router.push(localePath(`/bookings/${createdBookingId}?checkout=1&intent=error`));
       } else {
-        setBookingError(err instanceof Error ? err.message : "Booking failed");
+        setBookingError(err instanceof Error ? err.message : t("listingDetail.bookingFailed"));
       }
     } finally {
       bookingSubmissionRef.current = false;
@@ -458,7 +460,7 @@ export function ListingDetailPageClient({
         <main className="min-h-screen pt-[72px]">
           <ListingDetailSkeleton />
           {seoGraph && (
-            <div className="mx-auto max-w-[1280px] px-4 pb-12 sm:px-6 md:px-16">
+            <div className="mx-auto max-w-[1280px] px-4 pb-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
               <EntityRelationshipHub graph={seoGraph} />
             </div>
           )}
@@ -473,7 +475,7 @@ export function ListingDetailPageClient({
         <NavBar />
         <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4 px-4">
           <div className="w-full max-w-md">
-            <ErrorAlert error={error || "Listing not found"} />
+            <ErrorAlert error={error || t("listingDetail.listingNotFound")} />
           </div>
           <Button asChild>
             <Link href={localePath("/listings")}>
@@ -498,7 +500,7 @@ export function ListingDetailPageClient({
   const hasWalkthrough = listing.media?.some((m) => m.kind === "WALKTHROUGH");
   const walkthroughMedia = listing.media?.find((m) => m.kind === "WALKTHROUGH");
   const visibleAmenities = showAllAmenities ? amenities : amenities.slice(0, 6);
-  const highlights = HIGHLIGHT_AMENITIES.filter(
+  const highlights = highlightAmenityDefs(t).filter(
     (h) => h.tag === "cleaning" || amenities.includes(h.tag)
   ).slice(0, 4);
 
@@ -514,8 +516,8 @@ export function ListingDetailPageClient({
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-nexa-bg pb-24 pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] md:pb-0 md:pt-[72px]">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-16 py-6 md:py-8">
+      <main className="min-h-screen bg-nexa-bg pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] lg:pt-[72px]">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-6 md:py-8 min-w-0">
           {seoBreadcrumbs && seoBreadcrumbs.length > 0 && (
             <SemanticBreadcrumbs items={seoBreadcrumbs} className="mb-4" />
           )}
@@ -554,7 +556,7 @@ export function ListingDetailPageClient({
           {/* Video Tour — directly below photos */}
           {hasWalkthrough && walkthroughMedia && (
             <section className="mb-8">
-              <h2 className="font-display text-2xl font-semibold mb-4">Video Tour</h2>
+              <h2 className="font-display text-2xl font-semibold mb-4">{t("listingDetail.videoTour")}</h2>
               <div className="relative rounded-2xl overflow-hidden aspect-video shadow-nexa-card bg-nexa-ink">
                 {!videoPlaying ? (
                   <button
@@ -565,7 +567,7 @@ export function ListingDetailPageClient({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={photoUrls[0]}
-                      alt="Video tour thumbnail"
+                      alt={t("listingDetail.videoTourThumbnailAlt")}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80"
                     />
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
@@ -574,7 +576,7 @@ export function ListingDetailPageClient({
                       </div>
                     </div>
                     <div className="absolute bottom-6 left-6 text-white font-medium drop-shadow-md text-sm">
-                      Experience the space in motion
+                      {t("listingDetail.videoTourExperience")}
                     </div>
                   </button>
                 ) : (
@@ -605,7 +607,7 @@ export function ListingDetailPageClient({
                     <TextSeparator className="hidden sm:inline mx-0" />
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <BadgeCheck className="w-3.5 h-3.5" />
-                      Verified Walkthrough
+                      {t("listingDetail.verifiedWalkthrough")}
                     </span>
                   </>
                 )}
@@ -614,11 +616,11 @@ export function ListingDetailPageClient({
             <div className="flex flex-col items-start md:items-end gap-3">
               <ShareButton title={listing.title} text={getShortLocationLabel(listing)} />
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-nexa-ink-3">
-              <span>{maxGuests} Guests max</span>
+              <span>{tf("listingDetail.guestsMax", { count: maxGuests })}</span>
               {listing.instant_booking && (
                 <>
                   <TextSeparator className="mx-0" />
-                  <span className="text-nexa-primary">Instant booking</span>
+                  <span className="text-nexa-primary">{t("listingDetail.instantBooking")}</span>
                 </>
               )}
               </div>
@@ -626,18 +628,20 @@ export function ListingDetailPageClient({
           </section>
 
           {/* Content Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mt-8">
             {/* Left Column */}
-            <div className="md:col-span-8 space-y-12 order-2 md:order-1">
+            <div className="lg:col-span-8 space-y-12 order-2 lg:order-1 min-w-0">
               {/* About */}
               <section>
-                <h2 className="font-display text-2xl font-semibold mb-4">About this stay</h2>
+                <h2 className="font-display text-2xl font-semibold mb-4">{t("listingDetail.aboutStay")}</h2>
                 {listing.description ? (
                   <p className="text-lg text-nexa-ink-3 leading-relaxed max-w-3xl">{cleanText(listing.description)}</p>
                 ) : (
                   <p className="text-lg text-nexa-ink-3 leading-relaxed max-w-3xl">
-                    A beautifully curated {listingTypeLabel(listing.listing_type).toLowerCase()} in {listing.city},
-                    designed for comfort and verified by the Nexa Stays team.
+                    {tf("listingDetail.fallbackDescription", {
+                      type: listingTypeLabel(listing.listing_type).toLowerCase(),
+                      city: listing.city,
+                    })}
                   </p>
                 )}
                 {highlights.length > 0 && (
@@ -665,7 +669,7 @@ export function ListingDetailPageClient({
 
               {/* Amenities */}
               <section>
-                <h2 className="font-display text-2xl font-semibold mb-4">What this place offers</h2>
+                <h2 className="font-display text-2xl font-semibold mb-4">{t("listingDetail.whatPlaceOffers")}</h2>
                 {amenities.length > 0 ? (
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -691,7 +695,9 @@ export function ListingDetailPageClient({
                         onClick={() => setShowAllAmenities((v) => !v)}
                         className="mt-5 font-semibold underline text-nexa-ink hover:text-nexa-primary transition-colors text-sm"
                       >
-                        {showAllAmenities ? "Show fewer amenities" : `Show all ${amenities.length} amenities`}
+                        {showAllAmenities
+                          ? t("listingDetail.showFewerAmenities")
+                          : tf("listingDetail.showAllAmenities", { count: amenities.length })}
                       </button>
                     )}
                   </>
@@ -699,11 +705,11 @@ export function ListingDetailPageClient({
                   <div className="flex flex-wrap gap-3 text-sm text-nexa-ink-3">
                     <span className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-nexa-primary" />
-                      Check-in {listing.checkin_time}
+                      {tf("listingDetail.checkInTime", { time: listing.checkin_time })}
                     </span>
                     <span className="flex items-center gap-2">
                       <LogOut className="w-4 h-4 text-nexa-primary" />
-                      Check-out {listing.checkout_time}
+                      {tf("listingDetail.checkOutTime", { time: listing.checkout_time })}
                     </span>
                     {listing.instant_booking && (
                       <span className="flex items-center gap-2">
@@ -731,16 +737,18 @@ export function ListingDetailPageClient({
                       <Shield className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="font-display text-xl font-semibold">Nexa Trust Guarantee</h3>
-                      <p className="text-nexa-ink-3 text-sm">We&apos;ve verified every detail for your peace of mind.</p>
+                      <h3 className="font-display text-xl font-semibold">{t("listingDetail.trustGuaranteeTitle")}</h3>
+                      <p className="text-nexa-ink-3 text-sm">{t("listingDetail.trustGuaranteeSubtitle")}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3">
                     {[
-                      "Host identity verified",
-                      "Property listing confirmed",
-                      hasWalkthrough ? "Walkthrough video approved" : "Photo documentation reviewed",
-                      "Safe neighborhood certified",
+                      t("listingDetail.trustHostVerified"),
+                      t("listingDetail.trustListingConfirmed"),
+                      hasWalkthrough
+                        ? t("listingDetail.trustWalkthroughApproved")
+                        : t("listingDetail.trustPhotosReviewed"),
+                      t("listingDetail.trustNeighborhood"),
                     ].map((item) => (
                       <div key={item} className="flex items-center gap-3">
                         <CheckCircle2 className="w-5 h-5 text-green-700 shrink-0" />
@@ -767,20 +775,22 @@ export function ListingDetailPageClient({
                     </div>
                     <div className="flex-1 text-center md:text-left">
                       <h3 className="font-display text-xl font-semibold">
-                        Meet your host, {listing.host.full_name ?? "Host"}
+                        {tf("listingDetail.meetHost", {
+                          name: listing.host.full_name ?? t("listingDetail.hostDefaultName"),
+                        })}
                       </h3>
                       <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3">
                         <span className="bg-white px-3 py-1 rounded-full text-xs font-semibold border border-nexa-line/40">
-                          Verified Host
+                          {t("listingDetail.verifiedHostBadge")}
                         </span>
                         {hasWalkthrough && (
                           <span className="bg-white px-3 py-1 rounded-full text-xs font-semibold border border-nexa-line/40">
-                            Video Walkthrough
+                            {t("listingDetail.videoWalkthroughBadge")}
                           </span>
                         )}
                         {listing.instant_booking && (
                           <span className="bg-white px-3 py-1 rounded-full text-xs font-semibold border border-nexa-line/40">
-                            Instant Booking
+                            {t("listingDetail.instantBookingBadge")}
                           </span>
                         )}
                       </div>
@@ -800,61 +810,63 @@ export function ListingDetailPageClient({
 
               {/* House Rules */}
               <section className="border-t border-nexa-line/60 pt-10">
-                <h2 className="font-display text-2xl font-semibold mb-8">Things to know</h2>
+                <h2 className="font-display text-2xl font-semibold mb-8">{t("listingDetail.thingsToKnow")}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div>
-                    <h3 className="font-semibold text-base mb-4">House Rules</h3>
+                    <h3 className="font-semibold text-base mb-4">{t("listingDetail.houseRules")}</h3>
                     <ul className="space-y-3">
                       <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                         <Clock className="w-4 h-4 text-nexa-primary shrink-0" />
-                        Check-in: {listing.checkin_time}
+                        {tf("listingDetail.checkInRule", { time: listing.checkin_time })}
                       </li>
                       <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                         <LogOut className="w-4 h-4 text-nexa-primary shrink-0" />
-                        Checkout: {listing.checkout_time}
+                        {tf("listingDetail.checkoutRule", { time: listing.checkout_time })}
                       </li>
                       {listing.rules?.smoking_policy === "NOT_ALLOWED" && (
                         <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                           <CigaretteOff className="w-4 h-4 text-nexa-primary shrink-0" />
-                          No smoking inside
+                          {t("listingDetail.noSmokingInside")}
                         </li>
                       )}
                       {listing.rules?.pets_policy && listing.rules.pets_policy !== "NO" && (
                         <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                           <PawPrint className="w-4 h-4 text-nexa-primary shrink-0" />
-                          Pets {listing.rules.pets_policy === "ALLOWED" ? "allowed" : "allowed (dogs & cats)"}
+                          {listing.rules.pets_policy === "ALLOWED"
+                            ? t("listingDetail.petsAllowed")
+                            : t("listingDetail.petsAllowedDogsCats")}
                         </li>
                       )}
                       {listing.rules?.pets_policy === "NO" && (
                         <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                           <PawPrint className="w-4 h-4 text-nexa-primary shrink-0" />
-                          No pets allowed
+                          {t("listingDetail.noPetsAllowed")}
                         </li>
                       )}
                     </ul>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base mb-4">Safety &amp; Property</h3>
+                    <h3 className="font-semibold text-base mb-4">{t("listingDetail.safetyAndProperty")}</h3>
                     <ul className="space-y-3">
                       <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                         <Shield className="w-4 h-4 text-nexa-primary shrink-0" />
-                        Host identity verified
+                        {t("listingDetail.trustHostVerified")}
                       </li>
                       {hasWalkthrough && (
                         <li className="flex items-center gap-3 text-nexa-ink-3 text-sm">
                           <BadgeCheck className="w-4 h-4 text-nexa-primary shrink-0" />
-                          Walkthrough video on file
+                          {t("listingDetail.walkthroughOnFile")}
                         </li>
                       )}
                     </ul>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base mb-4">Cancellation Policy</h3>
+                    <h3 className="font-semibold text-base mb-4">{t("listingDetail.cancellationPolicy")}</h3>
                     <p className="text-nexa-ink-3 text-sm leading-relaxed mb-3">
-                      Add your trip dates to get the cancellation details for this stay.
+                      {t("listingDetail.cancellationAddDates")}
                     </p>
                     <Link href={localePath("/refund")} className="font-semibold underline text-sm hover:text-nexa-primary">
-                      View refund policy
+                      {t("listingDetail.viewRefundPolicy")}
                     </Link>
                   </div>
                 </div>
@@ -864,7 +876,7 @@ export function ListingDetailPageClient({
             {/* Right Column: Booking Card */}
             <aside
               id="booking-card"
-              className="scroll-mt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] md:scroll-mt-[104px] md:col-span-4 order-1 md:order-2"
+              className="scroll-mt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] lg:scroll-mt-[104px] lg:col-span-4 order-1 lg:order-2 min-w-0 max-w-xl lg:max-w-none mx-auto w-full"
             >
               <ListingBookingCard
                 listing={listing}
@@ -897,7 +909,7 @@ export function ListingDetailPageClient({
           {/* Similar Stays */}
           {similarListings.length > 0 && (
             <section className="mt-16 mb-8 overflow-hidden">
-              <h2 className="font-display text-2xl font-semibold mb-8">Similar stays you might like</h2>
+              <h2 className="font-display text-2xl font-semibold mb-8">{t("listingDetail.similarStays")}</h2>
               <div className="flex gap-5 overflow-x-auto pb-4 snap-x scrollbar-hide">
                 {similarListings.map((item) => {
                   const itemPrice = item.rate_plan?.base_price ?? 0;
@@ -923,12 +935,12 @@ export function ListingDetailPageClient({
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <h4 className="font-bold text-sm line-clamp-1">{item.title}</h4>
-                          <p className="text-nexa-ink-4 text-xs">{item.city}, Morocco</p>
+                          <p className="text-nexa-ink-4 text-xs">{tf("listingDetail.moroccoSuffix", { city: item.city })}</p>
                         </div>
                         {item.instant_booking && (
                           <span className="flex items-center gap-0.5 text-xs font-semibold text-nexa-primary shrink-0">
                             <Star className="w-3 h-3 fill-nexa-primary" />
-                            Instant
+                            {t("listingDetail.instantBadge")}
                           </span>
                         )}
                       </div>
@@ -950,23 +962,23 @@ export function ListingDetailPageClient({
 
           {/* Trust Ecosystem */}
           <section className="mt-8 mb-12 bg-nexa-bg-2/60 p-8 md:p-12 rounded-2xl">
-            <h2 className="font-display text-2xl font-semibold text-center mb-10">The Nexa Trust Ecosystem</h2>
+            <h2 className="font-display text-2xl font-semibold text-center mb-10">{t("listingDetail.trustEcosystemTitle")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[
                 {
                   icon: <BadgeCheck className="w-8 h-8 text-nexa-primary" />,
-                  title: "Verified Hosts Only",
-                  desc: "Every host undergoes rigorous identity and background checks to ensure your safety and comfort.",
+                  title: t("listingDetail.trustVerifiedHostsTitle"),
+                  desc: t("listingDetail.trustVerifiedHostsDesc"),
                 },
                 {
                   icon: <Shield className="w-8 h-8 text-nexa-primary" />,
-                  title: "Secure Escrow Payments",
-                  desc: "Your funds are held securely by Nexa and only released to the host 24 hours after a successful check-in.",
+                  title: t("listingDetail.trustEscrowTitle"),
+                  desc: t("listingDetail.trustEscrowDesc"),
                 },
                 {
                   icon: <Sparkles className="w-8 h-8 text-nexa-primary" />,
-                  title: "24/7 Premium Support",
-                  desc: "Our digital concierge team is available around the clock to assist with any request during your stay.",
+                  title: t("listingDetail.trustConciergeTitle"),
+                  desc: t("listingDetail.trustConciergeDesc"),
                 },
               ].map((item) => (
                 <div key={item.title} className="text-center space-y-4">
@@ -982,7 +994,7 @@ export function ListingDetailPageClient({
         </div>
 
         {/* Mobile sticky booking bar */}
-        <div className="fixed inset-x-0 top-[calc(var(--nexa-app-banner-h,0px)+72px+env(safe-area-inset-top))] z-layer-sticky flex items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-nexa-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur md:hidden">
+        <div className="fixed inset-x-0 top-[calc(var(--nexa-app-banner-h,0px)+72px+env(safe-area-inset-top))] z-layer-sticky flex items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-nexa-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur lg:hidden">
           <div className="min-w-0">
             <p className="font-bold text-base sm:text-lg truncate">
               {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}
@@ -1028,13 +1040,13 @@ export function ListingDetailPageClient({
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === "Escape" && setFullscreenImage(null)}
-          aria-label="Close gallery"
+          aria-label={t("listingDetail.galleryClose")}
         >
           <button
             type="button"
             onClick={() => setFullscreenImage(null)}
-            className="absolute top-4 right-4 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-            aria-label="Close"
+            className="absolute top-4 end-4 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+            aria-label={t("listingDetail.galleryCloseBtn")}
           >
             <X className="h-6 w-6" />
           </button>
@@ -1047,10 +1059,10 @@ export function ListingDetailPageClient({
                   const next = (fullscreenIndex - 1 + photoUrls.length) % photoUrls.length;
                   openGalleryAt(next);
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-                aria-label="Previous"
+                className="absolute start-4 top-1/2 -translate-y-1/2 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                aria-label={t("listingDetail.galleryPrevious")}
               >
-                <ChevronLeft className="h-8 w-8" />
+                <ChevronLeft className="h-8 w-8 rtl:rotate-180" />
               </button>
               <button
                 type="button"
@@ -1059,10 +1071,10 @@ export function ListingDetailPageClient({
                   const next = (fullscreenIndex + 1) % photoUrls.length;
                   openGalleryAt(next);
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
-                aria-label="Next"
+                className="absolute end-4 top-1/2 -translate-y-1/2 z-layer-content p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                aria-label={t("listingDetail.galleryNext")}
               >
-                <ChevronRight className="h-8 w-8" />
+                <ChevronRight className="h-8 w-8 rtl:rotate-180" />
               </button>
               <div className="absolute bottom-6 left-0 right-0 text-center text-white/80 text-sm">
                 {fullscreenIndex + 1} / {photoUrls.length}
@@ -1072,7 +1084,7 @@ export function ListingDetailPageClient({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={fullscreenImage}
-            alt="Listing photo"
+            alt={t("listingDetail.listingPhotoAlt")}
             className="max-w-[95vw] max-h-[95vh] object-contain"
             onClick={(e) => e.stopPropagation()}
           />

@@ -35,9 +35,9 @@ import {
 import { resolveRegistrationPhone } from "@/lib/registration-phone-store";
 
 const steps = [
-  { id: 1, label: "Personal Info" },
-  { id: 2, label: "Verify" },
-  { id: 3, label: "Result" },
+  { id: 1, labelKey: "registration.stepPersonalInfo" },
+  { id: 2, labelKey: "registration.stepVerify" },
+  { id: 3, labelKey: "registration.stepResult" },
 ];
 
 function splitFullName(fullName: string): { first: string; last: string } {
@@ -94,7 +94,7 @@ export default function RegistrationPage() {
     refreshUser,
     user,
   } = useAuth();
-  const { localePath, locale } = useLanguage();
+  const { localePath, locale, t } = useLanguage();
   const redirectTarget = resolveLocalizedPath(redirectRaw, locale);
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
@@ -184,23 +184,23 @@ export default function RegistrationPage() {
 
   const handlePersonalContinue = async () => {
     if (!phone) {
-      setError("Phone number is required");
+      setError(t("registration.phoneRequired"));
       return;
     }
     const emailRes = validateEmail(email);
     if (!emailRes.valid) {
-      setError(emailRes.error ?? "Invalid email");
+      setError(emailRes.error ?? t("registration.invalidEmail"));
       return;
     }
     if (dateOfBirth) {
       const dobRes = validateDateOfBirth(dateOfBirth);
       if (!dobRes.valid) {
-        setError(dobRes.error ?? "Invalid date of birth");
+        setError(dobRes.error ?? t("registration.invalidDob"));
         return;
       }
     }
     if (!fullName) {
-      setError("Full name is required");
+      setError(t("registration.fullNameRequired"));
       return;
     }
 
@@ -249,7 +249,7 @@ export default function RegistrationPage() {
       setError(
         apiErr.title
           ? `${apiErr.title}. ${apiErr.message}`
-          : apiErr.message || "Could not save your information",
+          : apiErr.message || t("registration.couldNotSave"),
       );
     } finally {
       setStep1Submitting(false);
@@ -284,7 +284,7 @@ export default function RegistrationPage() {
       setError(
         apiErr.title
           ? `${apiErr.title}. ${apiErr.message}`
-          : apiErr.message || "Could not complete registration",
+          : apiErr.message || t("registration.couldNotComplete"),
       );
     }
     setFinalOutcome(status);
@@ -455,7 +455,7 @@ export default function RegistrationPage() {
                         : "text-nexa-ink-4"
                     )}
                   >
-                    {s.label}
+                    {t(s.labelKey)}
                   </div>
                 </div>
               ))}

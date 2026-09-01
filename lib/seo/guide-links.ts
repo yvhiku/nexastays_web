@@ -1,38 +1,34 @@
 /**
- * Phase 4/5: only EN guide articles are treated as indexable localized content.
- * FR/AR guide rows are English clones (noindex) — do not promote those URLs.
+ * Guide article paths — all locales may be indexable when backend marks them indexable.
  */
 
-export function indexableGuideArticlePath(slug: string): string {
+export function indexableGuideArticlePath(slug: string, locale = "en"): string {
   const cleaned = slug
     .trim()
     .replace(/^\/+/, "")
     .replace(/^(en|fr|ar)\/guides\//, "")
     .replace(/^guides\//, "");
-  return `/en/guides/${cleaned}`;
+  const loc = locale === "fr" || locale === "ar" ? locale : "en";
+  return `/${loc}/guides/${cleaned}`;
 }
 
 export function isIndexableGuideArticleHref(href: string): boolean {
-  return /^\/en\/guides\/[^/]+\/?$/.test(href.trim());
+  return /^\/(en|fr|ar)\/guides\/[^/]+\/?$/.test(href.trim());
 }
 
-/** EN guide article path (with or without origin) for sitemap alternate scoping. */
-export function isEnglishGuideArticlePath(path: string): boolean {
-  return /^\/en\/guides\/[^/]+\/?$/.test(path.trim());
+/** Guide article path (with or without origin) for sitemap alternate scoping. */
+export function isGuideArticlePath(path: string): boolean {
+  return /^\/(en|fr|ar)\/guides\/[^/]+\/?$/.test(path.trim());
 }
 
 /**
  * Resolve href for Next `<Link>` + localePath:
- * - EN guide articles stay on `/en/guides/...`
- * - everything else is stripped for localePath re-prefixing
+ * Guide articles keep locale in path; other SEO paths strip for localePath re-prefixing.
  */
 export function seoLinkHrefForLocalePath(href: string): {
   href: string;
   preserveAbsolute: boolean;
 } {
-  if (isIndexableGuideArticleHref(href)) {
-    return { href: href.replace(/\/$/, ""), preserveAbsolute: true };
-  }
   const stripped = href.replace(/^\/(en|fr|ar)(?=\/|$)/, "") || "/";
   return { href: stripped, preserveAbsolute: false };
 }
@@ -42,7 +38,5 @@ export function toClientSeoHref(
   localePath: (path: string) => string,
 ): string {
   const resolved = seoLinkHrefForLocalePath(href);
-  return resolved.preserveAbsolute
-    ? resolved.href
-    : localePath(resolved.href);
+  return localePath(resolved.href);
 }

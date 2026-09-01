@@ -10,7 +10,7 @@ Living design reference for the Nexa Stays web client (`nexastays_web`). Source 
 | Buttons | `../components/ui/button.tsx` |
 | Brand assets | `../lib/brand-assets.ts` |
 
-Related docs: [monorepo `docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) · [monorepo `docs/DEPLOYMENT.md`](../../docs/DEPLOYMENT.md) · [canonical copy](../../docs/NEXA_STAYS_WEB_DESIGN.md)
+Related docs: [monorepo `docs/NEXA_STAYS_WEB_DESIGN.md`](../../docs/NEXA_STAYS_WEB_DESIGN.md) · [monorepo `docs/DEPLOYMENT.md`](../../docs/DEPLOYMENT.md) · [canonical design pointer](../../docs/NEXA_STAYS_WEB_DESIGN.md)
 
 ---
 

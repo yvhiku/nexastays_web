@@ -56,7 +56,7 @@ test("mobile listings use the shared step-by-step search flow", () => {
 
 test("mobile center FAB adapts from search to map and list", () => {
   const nav = read("components/nav/MobileBottomNav.tsx");
-  const listings = read("app/[locale]/listings/page.tsx");
+  const listings = read("app/[locale]/listings/ListingsExploreClient.tsx");
   const feed = read("components/explore/feed/ExploreFeed.tsx");
   const header = read("components/explore/ResultsHeader.tsx");
 
@@ -119,7 +119,7 @@ test("mobile center FAB adapts from search to map and list", () => {
   );
   assert.match(
     listings,
-    /grid-cols-\[minmax\(0,1fr\)_minmax\(340px,42%\)\]/,
+    /grid-cols-\[minmax\(0,1fr\)_minmax\(280px,40%\)\]/,
   );
   // Split: Filters only in sticky toolbar — not duplicated in search chrome.
   assert.match(
@@ -155,7 +155,7 @@ test("mobile listing booking bar sits safely below the upper navigation", () => 
   );
   assert.match(
     detail,
-    /pb-24 pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top\)\)\] md:pb-0 md:pt-\[72px\]/,
+    /pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top\)\)\] lg:pt-\[72px\]/,
   );
   assert.doesNotMatch(
     detail,
@@ -258,7 +258,7 @@ test("saved listings synchronize silently across tabs for the active user", () =
 });
 
 test("only the latest map viewport request can replace discovery pins", () => {
-  const listings = read("app/[locale]/listings/page.tsx");
+  const listings = read("app/[locale]/listings/ListingsExploreClient.tsx");
 
   assert.match(listings, /const mapRequestSequenceRef = useRef\(0\)/);
   assert.match(

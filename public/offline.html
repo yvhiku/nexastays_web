@@ -26,6 +26,7 @@
         padding: 24px;
         padding-bottom: max(24px, env(safe-area-inset-bottom));
       }
+      html[dir="rtl"] body { font-family: "Noto Sans Arabic", "DM Sans", system-ui, sans-serif; }
       .card {
         max-width: 420px;
         width: 100%;
@@ -62,7 +63,7 @@
       }
       .primary { background: var(--primary); color: #fff; }
       .ghost { background: #f8f2f5; color: var(--ink); }
-      #recent { text-align: left; margin-top: 18px; display: none; }
+      #recent { text-align: start; margin-top: 18px; display: none; }
       #recent h2 {
         font-size: 0.8rem;
         text-transform: uppercase;
@@ -85,8 +86,8 @@
   <body>
     <main class="card">
       <img class="logo" src="/images/nexastays.png" alt="Nexa Stays" width="64" height="64" />
-      <h1>No internet connection</h1>
-      <p>You can still open stays you viewed recently.</p>
+      <h1 id="title">No internet connection</h1>
+      <p id="subtitle">You can still open stays you viewed recently.</p>
       <div class="actions">
         <button type="button" class="btn primary" id="retry">Retry</button>
         <button type="button" class="btn ghost" id="browse-recent" style="display:none">
@@ -94,12 +95,61 @@
         </button>
       </div>
       <div id="recent">
-        <h2>Recently viewed</h2>
+        <h2 id="recent-heading">Recently viewed</h2>
         <div id="recent-list"></div>
       </div>
     </main>
     <script>
       (function () {
+        var COPY = {
+          en: {
+            title: "No internet connection",
+            subtitle: "You can still open stays you viewed recently.",
+            retry: "Retry",
+            browse: "Browse recently viewed",
+            recent: "Recently viewed",
+            stay: "Stay",
+            pageTitle: "No internet · Nexa Stays",
+            dir: "ltr",
+            lang: "en",
+          },
+          fr: {
+            title: "Pas de connexion Internet",
+            subtitle: "Vous pouvez encore ouvrir les séjours consultés récemment.",
+            retry: "Réessayer",
+            browse: "Voir les séjours récents",
+            recent: "Consultés récemment",
+            stay: "Séjour",
+            pageTitle: "Pas de connexion · Nexa Stays",
+            dir: "ltr",
+            lang: "fr",
+          },
+          ar: {
+            title: "لا يوجد اتصال بالإنترنت",
+            subtitle: "يمكنك فتح الإقامات التي شاهدتها مؤخرًا.",
+            retry: "إعادة المحاولة",
+            browse: "تصفح المشاهدات الأخيرة",
+            recent: "شوهد مؤخرًا",
+            stay: "إقامة",
+            pageTitle: "لا يوجد اتصال · Nexa Stays",
+            dir: "rtl",
+            lang: "ar",
+          },
+        };
+        var params = new URLSearchParams(location.search);
+        var cookieLocale = (document.cookie.match(/(?:^|; )nexa_locale=([^;]*)/) || [])[1];
+        var locale = params.get("locale") || cookieLocale || "en";
+        if (!COPY[locale]) locale = "en";
+        var c = COPY[locale];
+        document.documentElement.lang = c.lang;
+        document.documentElement.dir = c.dir;
+        document.title = c.pageTitle;
+        document.getElementById("title").textContent = c.title;
+        document.getElementById("subtitle").textContent = c.subtitle;
+        document.getElementById("retry").textContent = c.retry;
+        document.getElementById("browse-recent").textContent = c.browse;
+        document.getElementById("recent-heading").textContent = c.recent;
+
         document.getElementById("retry").addEventListener("click", function () {
           location.reload();
         });
@@ -115,9 +165,8 @@
           items.slice(0, 8).forEach(function (item) {
             if (!item || !item.id) return;
             var a = document.createElement("a");
-            var locale = (document.cookie.match(/(?:^|; )nexa_locale=([^;]*)/) || [])[1] || "en";
             a.href = "/" + locale + "/listings/" + item.id;
-            a.textContent = item.title || "Stay";
+            a.textContent = item.title || c.stay;
             if (item.city) a.textContent += " · " + item.city;
             list.appendChild(a);
           });

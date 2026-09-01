@@ -4,13 +4,17 @@ import { SkeletonImage } from "./SkeletonImage";
 import { SkeletonText } from "./SkeletonText";
 import { SkeletonButton } from "./SkeletonButton";
 
-/** Full listing detail page placeholder — gallery, header, amenities, CTA. */
+/** Full listing detail page placeholder — mirrors live page grid and spacing. */
 export function ListingDetailSkeleton() {
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-28 pt-6" aria-busy="true" aria-label="Loading listing">
+    <div
+      className="mx-auto max-w-[1280px] px-4 pb-12 pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] sm:px-6 md:px-8 lg:px-12 xl:px-16 lg:pt-[72px] min-w-0"
+      aria-busy="true"
+      aria-label="Loading listing"
+    >
       <SkeletonImage ratio="16/10" className="mb-6 w-full rounded-2xl" />
-      <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-8">
+        <div className="space-y-6 lg:col-span-8 order-2 lg:order-1 min-w-0">
           <div className="space-y-3">
             <SkeletonText className="h-8 w-3/4 max-w-md" />
             <SkeletonText className="h-4 w-1/2 max-w-xs" />
@@ -19,7 +23,7 @@ export function ListingDetailSkeleton() {
               <Skeleton className="h-6 w-20 rounded-full" />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-16 rounded-xl" />
             ))}
@@ -32,7 +36,7 @@ export function ListingDetailSkeleton() {
           </div>
           <Skeleton className="h-64 w-full rounded-2xl" />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 lg:col-span-4 order-1 lg:order-2 min-w-0 max-w-xl lg:max-w-none mx-auto w-full">
           <Skeleton className="h-72 w-full rounded-2xl" />
           <SkeletonButton size="lg" className="h-12 w-full rounded-full" />
         </div>

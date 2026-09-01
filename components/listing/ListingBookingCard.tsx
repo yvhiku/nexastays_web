@@ -157,7 +157,7 @@ export function ListingBookingCard({
   };
 
   return (
-    <div className="md:sticky md:top-[100px] bg-white/80 backdrop-blur-xl rounded-2xl shadow-nexa-card border border-white p-6">
+    <div className="min-w-0 lg:sticky lg:top-[100px] bg-white/80 backdrop-blur-xl rounded-2xl shadow-nexa-card border border-white p-4 sm:p-6">
       <div className="flex items-baseline justify-between mb-6">
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-bold text-nexa-ink">
@@ -173,8 +173,8 @@ export function ListingBookingCard({
       </div>
 
       <form onSubmit={handleGuidedSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 border border-nexa-line rounded-xl">
-          <div className="relative p-3 border-b sm:border-b-0 sm:border-r border-nexa-line sm:rounded-tl-xl">
+        <div className="grid grid-cols-1 border border-nexa-line rounded-xl min-w-0">
+          <div className="relative p-3 border-b border-nexa-line rounded-t-xl min-w-0">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               {t("listingDetail.checkIn")}
             </label>
@@ -189,9 +189,10 @@ export function ListingBookingCard({
               clearLabel={t("home.search.clearDate")}
               todayLabel={t("home.search.today")}
               locale={locale}
+              panelMaxWidth={320}
             />
           </div>
-          <div className="relative p-3 border-b sm:border-b-0 border-nexa-line sm:rounded-tr-xl">
+          <div className="relative p-3 border-b border-nexa-line min-w-0">
             <label className="block text-[10px] font-bold uppercase text-nexa-ink-4 tracking-wide mb-1">
               {t("listingDetail.checkOut")}
             </label>
@@ -206,9 +207,10 @@ export function ListingBookingCard({
               clearLabel={t("home.search.clearDate")}
               todayLabel={t("home.search.today")}
               locale={locale}
+              panelMaxWidth={320}
             />
           </div>
-          <div className="relative p-3 border-t border-nexa-line col-span-2 rounded-b-xl">
+          <div className="relative p-3 rounded-b-xl min-w-0">
             <GuestsPanel
               value={{
                 adults,
@@ -217,6 +219,7 @@ export function ListingBookingCard({
                 pets,
               }}
               maxOccupancy={maxGuests}
+              embedded
               onChange={(patch) => {
                 if (patch.adults != null) setAdults(patch.adults);
                 if (patch.children != null) setChildrenCount(patch.children);
@@ -224,7 +227,6 @@ export function ListingBookingCard({
                 if (patch.pets != null) setPets(patch.pets);
               }}
               t={t}
-              className="p-0 max-w-none"
               footer={
                 pets > 0 && petsPolicy === "NO" ? (
                   <p className="mt-2 text-xs text-amber-800">

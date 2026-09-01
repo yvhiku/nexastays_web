@@ -97,6 +97,7 @@ function HostVerificationStep({
   onLoginRedirect: () => void;
   onDismissError: () => void;
 }) {
+  const { t, tf } = useLanguage();
   const onLoadStatusRef = React.useRef(onLoadStatus);
   onLoadStatusRef.current = onLoadStatus;
 
@@ -107,14 +108,14 @@ function HostVerificationStep({
   if (!isAuthenticated || !token) {
     return (
       <div>
-        <span className="text-xs font-semibold uppercase text-nexa-primary">Step 4 of {totalSteps}</span>
-        <h2 className="text-2xl font-semibold mt-2 mb-2">Identity Verification</h2>
-        <p className="text-nexa-ink-3 mb-8">
-          Sign in or create an account to submit your host application.
-        </p>
+        <span className="text-xs font-semibold uppercase text-nexa-primary">
+          {tf("hostApply.stepOf", { step: 4, total: totalSteps })}
+        </span>
+        <h2 className="text-2xl font-semibold mt-2 mb-2">{t("host.identityVerification")}</h2>
+        <p className="text-nexa-ink-3 mb-8">{t("hostApply.signInForApplication")}</p>
         <div className="flex gap-3">
-          <Button variant="ghost" onClick={onBack}>← Back</Button>
-          <Button onClick={onLoginRedirect}>Sign in to continue</Button>
+          <Button variant="ghost" onClick={onBack}>{t("hostApply.back")}</Button>
+          <Button onClick={onLoginRedirect}>{t("hostApply.signInToContinue")}</Button>
         </div>
       </div>
     );
@@ -124,30 +125,28 @@ function HostVerificationStep({
 
   return (
     <div>
-      <span className="text-xs font-semibold uppercase text-nexa-primary">Step 4 of {totalSteps}</span>
-      <h2 className="text-2xl font-semibold mt-2 mb-2">Verify your identity</h2>
-      <p className="text-nexa-ink-3 mb-6">
-        This protects guests and property owners. Required to become a host.
-      </p>
+      <span className="text-xs font-semibold uppercase text-nexa-primary">
+        {tf("hostApply.stepOf", { step: 4, total: totalSteps })}
+      </span>
+      <h2 className="text-2xl font-semibold mt-2 mb-2">{t("hostApply.step4Title")}</h2>
+      <p className="text-nexa-ink-3 mb-6">{t("hostApply.step4SubtitleShort")}</p>
       {hostLoading ? (
-        <div className="py-8 text-center text-nexa-ink-4">Loading status…</div>
+        <div className="py-8 text-center text-nexa-ink-4">{t("common.loading")}</div>
       ) : (
         <>
           {kycApproved && (
             <div className="mb-6 p-5 rounded-xl bg-nexa-primary-soft border border-nexa-primary/20">
-              <h3 className="font-semibold text-nexa-ink mb-2">Use your verified identity</h3>
-              <p className="text-sm text-nexa-ink-3 mb-4">
-                Your identity is already verified (name, phone, email, date of birth). We&apos;ll use the same information for your host application — no need to re-upload documents.
-              </p>
+              <h3 className="font-semibold text-nexa-ink mb-2">{t("hostApply.useVerifiedIdentityTitle")}</h3>
+              <p className="text-sm text-nexa-ink-3 mb-4">{t("hostApply.useVerifiedIdentityDesc")}</p>
               <Button onClick={onSubmitUseExistingKyc} disabled={hostSubmitLoading} className="w-full sm:w-auto">
-                {hostSubmitLoading ? "Applying…" : "Apply as Host with My Verified Identity"}
+                {hostSubmitLoading ? t("host.applying") : t("host.applyAsHost")}
               </Button>
             </div>
           )}
           {kycApproved && (
             <div className="mb-6 flex items-center gap-3">
               <div className="flex-1 h-px bg-nexa-line" />
-              <span className="text-xs font-medium text-nexa-ink-4">Or submit new documents</span>
+              <span className="text-xs font-medium text-nexa-ink-4">{t("hostApply.orSubmitNewDocuments")}</span>
               <div className="flex-1 h-px bg-nexa-line" />
             </div>
           )}
@@ -160,23 +159,23 @@ function HostVerificationStep({
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
             <div>
-              <label className="block text-sm font-semibold mb-2">ID Type *</label>
+              <label className="block text-sm font-semibold mb-2">{t("hostApply.idTypeRequired")}</label>
               <NexaSelect
                 variant="field"
                 value={docType}
                 onChange={onDocTypeChange}
-                aria-label="ID Type"
+                aria-label={t("hostApply.idType")}
                 options={[
-                  { value: "CNIE", label: "CNIE" },
-                  { value: "PASSPORT", label: "Passport" },
-                  { value: "OTHER", label: "Other" },
+                  { value: "CNIE", label: t("hostApply.idTypeCnie") },
+                  { value: "PASSPORT", label: t("hostApply.idTypePassport") },
+                  { value: "OTHER", label: t("hostApply.idTypeOther") },
                 ]}
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2">ID Number</label>
+              <label className="block text-sm font-semibold mb-2">{t("hostApply.idNumber")}</label>
               <Input
-                placeholder="Your ID number"
+                placeholder={t("host.yourIdNumber")}
                 value={docNumber}
                 onChange={(e) => onDocNumberChange(e.target.value)}
               />
@@ -196,7 +195,11 @@ function HostVerificationStep({
               />
               <div className="text-3xl mb-2">📄</div>
               <div className="text-sm text-nexa-ink-4">
-                {docFrontLoading ? "Uploading…" : docFrontAssetId ? "✓ ID Front uploaded" : "ID Front *"}
+                {docFrontLoading
+                  ? t("common.uploading")
+                  : docFrontAssetId
+                    ? t("host.idFrontUploaded")
+                    : t("host.idFront")}
               </div>
             </label>
             <label className="border-2 border-dashed border-nexa-line rounded-xl p-6 sm:p-7 text-center cursor-pointer hover:border-nexa-primary hover:bg-nexa-primary-soft transition-colors min-h-[120px] flex flex-col items-center justify-center">
@@ -212,12 +215,16 @@ function HostVerificationStep({
               />
               <div className="text-3xl mb-2">📄</div>
               <div className="text-sm text-nexa-ink-4">
-                {docBackLoading ? "Uploading…" : docBackAssetId ? "✓ ID Back uploaded" : "ID Back *"}
+                {docBackLoading
+                  ? t("common.uploading")
+                  : docBackAssetId
+                    ? t("host.idBackUploaded")
+                    : t("host.idBack")}
               </div>
             </label>
           </div>
           <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2">Profile Photo *</label>
+            <label className="block text-sm font-semibold mb-2">{t("hostApply.profilePhotoRequired")}</label>
             <label className="block border-2 border-dashed border-nexa-line rounded-xl p-7 text-center cursor-pointer hover:border-nexa-primary hover:bg-nexa-primary-soft transition-colors">
               <input
                 type="file"
@@ -231,14 +238,18 @@ function HostVerificationStep({
               />
               <div className="text-3xl mb-2">🤳</div>
               <div className="text-sm text-nexa-ink-3">
-                {selfieLoading ? "Uploading…" : selfieAssetId ? "✓ Selfie uploaded" : "Clear face photo"}
+                {selfieLoading
+                  ? t("common.uploading")
+                  : selfieAssetId
+                    ? t("host.selfieUploaded")
+                    : t("host.selfie")}
               </div>
             </label>
           </div>
           <div className="flex gap-3">
-            <Button variant="ghost" onClick={onBack}>← Back</Button>
+            <Button variant="ghost" onClick={onBack}>{t("hostApply.back")}</Button>
             <Button onClick={onSubmit} disabled={hostSubmitLoading}>
-              {hostSubmitLoading ? "Submitting…" : "Submit Application →"}
+              {hostSubmitLoading ? t("host.submitting") : t("hostApply.submitApplication")}
             </Button>
           </div>
         </>
@@ -249,7 +260,7 @@ function HostVerificationStep({
 
 export default function HostPage() {
   const router = useRouter();
-  const { t, localePath } = useLanguage();
+  const { t, tf, localePath } = useLanguage();
   const { token, isAuthenticated, user } = useAuth();
   const [step, setStep] = useState(1);
   const [hostType, setHostType] = useState<"apartment" | "hotel" | "hostel">("apartment");
@@ -382,24 +393,24 @@ export default function HostPage() {
 
   const handleStep2Continue = () => {
     if (!termsAccepted) {
-      setStep2Error("You must agree to the Terms and Privacy Policy to continue.");
+      setStep2Error(t("hostApply.termsRequired"));
       return;
     }
     if (!fullName.trim()) {
-      setStep2Error("Full legal name is required.");
+      setStep2Error(t("hostApply.fullNameRequired"));
       return;
     }
     if (!phone.trim()) {
-      setStep2Error("Phone number is required.");
+      setStep2Error(t("hostApply.phoneRequired"));
       return;
     }
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
-      setStep2Error(emailCheck.error ?? "Valid email is required.");
+      setStep2Error(emailCheck.error ?? t("hostApply.validEmailRequired"));
       return;
     }
     if (email.trim().toLowerCase() !== emailCode.trim().toLowerCase()) {
-      setStep2Error("Re-enter your email address exactly to confirm it.");
+      setStep2Error(t("hostApply.emailConfirmMismatch"));
       return;
     }
     setStep2Error(null);
@@ -408,7 +419,7 @@ export default function HostPage() {
 
   const handleSendSmsCode = async () => {
     if (!phone.trim()) {
-      setStep3Error("Enter your phone number in step 2 first.");
+      setStep3Error(t("hostApply.enterPhoneStep2"));
       return;
     }
     setStep3Error(null);
@@ -416,25 +427,25 @@ export default function HostPage() {
       await sendOtp(phone);
       setSmsCodeSent(true);
     } catch (e) {
-      setStep3Error(e instanceof Error ? e.message : "Failed to send SMS code");
+      setStep3Error(e instanceof Error ? e.message : t("hostApply.smsSendFailed"));
     }
   };
 
   const handleStep3Continue = async () => {
     if (!smsCodeSent || smsCode.trim().length < 4) {
-      setStep3Error("Request an SMS code and enter it to verify your phone.");
+      setStep3Error(t("hostApply.smsCodeRequired"));
       return;
     }
     setStep3Error(null);
     try {
       const result = await verifyOtp(phone, smsCode.trim());
       if (!result.verified) {
-        setStep3Error("Invalid or expired SMS code. Request a new code and try again.");
+        setStep3Error(t("hostApply.smsInvalid"));
         return;
       }
       setStep(4);
     } catch (e) {
-      setStep3Error(e instanceof Error ? e.message : "Phone verification failed");
+      setStep3Error(e instanceof Error ? e.message : t("hostApply.phoneVerifyFailed"));
     }
   };
 
@@ -513,7 +524,7 @@ export default function HostPage() {
             className="flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-full bg-nexa-ink text-white shadow-lg font-semibold text-sm"
           >
             <Menu className="h-4 w-4" />
-            Step {step} of {totalSteps}
+            {tf("hostApply.mobileSteps", { step, total: totalSteps })}
           </button>
         </div>
 
@@ -541,7 +552,7 @@ export default function HostPage() {
         <div className="bg-nexa-bg py-8 sm:py-10 lg:py-12 px-4 sm:px-6 md:px-10 lg:px-20 pb-20 lg:pb-16">
           <div className="max-w-[600px]">
             {!statusChecked && token && (
-              <div className="py-12 text-center text-nexa-ink-4">Loading…</div>
+              <div className="py-12 text-center text-nexa-ink-4">{t("common.loading")}</div>
             )}
 
             {statusChecked && applicationSubmitted && (
@@ -618,7 +629,7 @@ export default function HostPage() {
             {showApplicationForm && step === 1 && (
               <div>
                 <span className="text-xs font-semibold tracking-[0.12em] uppercase text-nexa-primary">
-                  Step 1 of {totalSteps}
+                  {tf("hostApply.stepOf", { step: 1, total: totalSteps })}
                 </span>
                 <h2 className="text-2xl font-semibold mt-2 mb-2">
                   {t("hostApply.step1Title")}
@@ -675,14 +686,14 @@ export default function HostPage() {
                     <p className="text-sm text-nexa-ink-3">{t("hostApply.step1HostelDesc")}</p>
                   </button>
                 </div>
-                <Button onClick={handleStep1Continue}>Continue →</Button>
+                <Button onClick={handleStep1Continue}>{t("hostApply.continue")}</Button>
               </div>
             )}
 
             {showApplicationForm && step === 2 && (
               <div>
                 <span className="text-xs font-semibold uppercase text-nexa-primary">
-                  Step 2 of {totalSteps}
+                  {tf("hostApply.stepOf", { step: 2, total: totalSteps })}
                 </span>
                 <h2 className="text-2xl font-semibold mt-2 mb-2">
                   {t("hostApply.step2Title")}
@@ -693,10 +704,10 @@ export default function HostPage() {
                 <div className="space-y-5 mb-8">
                   <div>
                     <label className="block text-sm font-semibold mb-2">
-                      Full Legal Name <span className="text-nexa-primary">*</span>
+                      {t("hostApply.fullLegalName")} <span className="text-nexa-primary">*</span>
                     </label>
                     <Input
-                      placeholder="As on your ID"
+                      placeholder={t("hostApply.asOnId")}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
@@ -704,22 +715,22 @@ export default function HostPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                       <label className="block text-sm font-semibold mb-2">
-                        Phone <span className="text-nexa-primary">*</span>
+                        {t("hostApply.phoneLabel")} <span className="text-nexa-primary">*</span>
                       </label>
                       <Input
                         type="tel"
-                        placeholder="+212 6 XX XX XX XX"
+                        placeholder={t("contact.phonePlaceholder")}
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold mb-2">
-                        Email <span className="text-nexa-primary">*</span>
+                        {t("hostApply.emailLabel")} <span className="text-nexa-primary">*</span>
                       </label>
                       <Input
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder={t("contact.emailPlaceholder")}
                         value={email}
                         onChange={(e) => {
                           setEmail(e.target.value);
@@ -730,20 +741,18 @@ export default function HostPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold mb-2">
-                      Confirm email address <span className="text-nexa-primary">*</span>
+                      {t("hostApply.confirmEmail")} <span className="text-nexa-primary">*</span>
                     </label>
                     <Input
                       type="email"
-                      placeholder="Re-enter your email"
+                      placeholder={t("hostApply.reenterEmail")}
                       value={emailCode}
                       onChange={(e) => {
                         setEmailCode(e.target.value);
                         setStep2Error(null);
                       }}
                     />
-                    <p className="mt-1 text-xs text-nexa-ink-4">
-                      Type your email again to confirm — no code is sent to email.
-                    </p>
+                    <p className="mt-1 text-xs text-nexa-ink-4">{t("hostApply.confirmEmailHint")}</p>
                   </div>
                   <label className="flex items-start gap-2.5 text-sm cursor-pointer">
                     <input
@@ -756,13 +765,13 @@ export default function HostPage() {
                       className="accent-nexa-primary mt-1"
                     />
                     <span>
-                      I agree to the{" "}
+                      {t("hostApply.agreeTermsPrefix")}{" "}
                       <Link href={localePath("/terms")} className="text-nexa-primary hover:underline">
-                        Terms
+                        {t("hostApply.termsLink")}
                       </Link>{" "}
                       &{" "}
                       <Link href={localePath("/privacy")} className="text-nexa-primary hover:underline">
-                        Privacy
+                        {t("hostApply.privacyLink")}
                       </Link>{" "}
                       <span className="text-nexa-primary">*</span>
                     </span>
@@ -775,10 +784,10 @@ export default function HostPage() {
                 </div>
                 <div className="flex gap-3">
                   <Button variant="ghost" onClick={() => goToStep(1)}>
-                    ← Back
+                    {t("hostApply.back")}
                   </Button>
                   <Button onClick={handleStep2Continue} disabled={!termsAccepted}>
-                    Continue →
+                    {t("hostApply.continue")}
                   </Button>
                 </div>
               </div>
@@ -786,21 +795,27 @@ export default function HostPage() {
 
             {showApplicationForm && step === 3 && (
               <div>
-                <span className="text-xs font-semibold uppercase text-nexa-primary">Step 3 of {totalSteps}</span>
+                <span className="text-xs font-semibold uppercase text-nexa-primary">
+                  {tf("hostApply.stepOf", { step: 3, total: totalSteps })}
+                </span>
                 <h2 className="text-2xl font-semibold mt-2 mb-2">{t("hostApply.step3Title")}</h2>
                 <p className="text-nexa-ink-3 mb-6">
                   {t("hostApply.step3Subtitle")}
                 </p>
                 <p className="text-sm text-nexa-ink-4 mb-6 rounded-lg bg-nexa-bg-2 px-3 py-2">
-                  We will send a one-time code by SMS to {phone || "your phone"}. Email is not used for this step.
+                  {tf("hostApply.smsNotice", {
+                    phone: phone || t("hostApply.yourPhone"),
+                  })}
                 </p>
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-nexa-ink mb-1">SMS verification code</label>
+                    <label className="block text-sm font-medium text-nexa-ink mb-1">
+                      {t("hostApply.smsVerificationCode")}
+                    </label>
                     <Input
                       type="text"
                       inputMode="numeric"
-                      placeholder="6-digit code"
+                      placeholder={t("hostApply.smsCodePlaceholder")}
                       value={smsCode}
                       onChange={(e) => {
                         setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 6));
@@ -814,7 +829,7 @@ export default function HostPage() {
                       className="text-xs text-nexa-primary mt-1 hover:underline"
                       onClick={handleSendSmsCode}
                     >
-                      {smsCodeSent ? "Code sent — resend" : "Send SMS code"}
+                      {smsCodeSent ? t("hostApply.resendSmsCode") : t("hostApply.sendSmsCode")}
                     </button>
                   </div>
                   {step3Error && (
@@ -824,12 +839,12 @@ export default function HostPage() {
                   )}
                 </div>
                 <div className="flex gap-3">
-                  <Button variant="ghost" onClick={() => goToStep(2)}>← Back</Button>
+                  <Button variant="ghost" onClick={() => goToStep(2)}>{t("hostApply.back")}</Button>
                   <Button
                     onClick={handleStep3Continue}
                     disabled={smsCode.length < 4}
                   >
-                    Continue →
+                    {t("hostApply.continue")}
                   </Button>
                 </div>
               </div>
@@ -860,7 +875,7 @@ export default function HostPage() {
                     const res = await uploadHostDocumentFront(file, token);
                     setDocFrontAssetId(res.asset_id);
                   } catch (e) {
-                    setHostError(formatUserError(e) || "Upload failed");
+                    setHostError(formatUserError(e) || t("host.uploadFailed"));
                   } finally {
                     setDocFrontLoading(false);
                   }
@@ -871,7 +886,7 @@ export default function HostPage() {
                     const res = await uploadHostDocumentBack(file, token);
                     setDocBackAssetId(res.asset_id);
                   } catch (e) {
-                    setHostError(formatUserError(e) || "Upload failed");
+                    setHostError(formatUserError(e) || t("host.uploadFailed"));
                   } finally {
                     setDocBackLoading(false);
                   }
@@ -882,7 +897,7 @@ export default function HostPage() {
                     const res = await uploadHostSelfie(file, token);
                     setSelfieAssetId(res.asset_id);
                   } catch (e) {
-                    setHostError(formatUserError(e) || "Upload failed");
+                    setHostError(formatUserError(e) || t("host.uploadFailed"));
                   } finally {
                     setSelfieLoading(false);
                   }
@@ -892,7 +907,7 @@ export default function HostPage() {
                   setHostError(null);
                   getHostVerification(token)
                     .then(setHostStatus)
-                    .catch((e) => setHostError(formatUserError(e) || "Failed to load"))
+                    .catch((e) => setHostError(formatUserError(e) || t("common.failedLoad")))
                     .finally(() => setHostLoading(false));
                 }}
                 onSubmitUseExistingKyc={async () => {
@@ -911,7 +926,7 @@ export default function HostPage() {
                       setReapplying(false);
                     }
                   } catch (e) {
-                    setHostError(formatUserError(e) || "Application failed");
+                    setHostError(formatUserError(e) || t("host.applicationFailed"));
                   } finally {
                     setHostSubmitLoading(false);
                   }
@@ -919,7 +934,7 @@ export default function HostPage() {
                 onSubmit={async () => {
                   if (!token) return;
                   if (!docFrontAssetId || !selfieAssetId) {
-                    setHostError("Please upload ID front and profile photo before submitting.");
+                    setHostError(t("hostApply.missingIdUploads"));
                     return;
                   }
                   setHostSubmitLoading(true);
@@ -936,7 +951,7 @@ export default function HostPage() {
                       setReapplying(false);
                     }
                   } catch (e) {
-                    setHostError(formatUserError(e) || "Submission failed");
+                    setHostError(formatUserError(e) || t("host.submissionFailed"));
                   } finally {
                     setHostSubmitLoading(false);
                   }

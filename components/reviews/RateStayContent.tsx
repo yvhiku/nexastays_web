@@ -29,6 +29,7 @@ import { StarRatingDisplay } from "./StarRatingSelector";
 import { ErrorAlert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
 import { useProductGuidanceOptional } from "@/components/guidance/ProductGuidanceProvider";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MAX_COMMENT = 1000;
 const MAX_PHOTOS = 5;
@@ -37,36 +38,38 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const PLACEHOLDER =
   "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=800&q=80";
 
-function formatStayDates(checkin: string, checkout: string): string {
+function formatStayDates(checkin: string, checkout: string, locale: string): string {
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
-  const a = new Date(checkin).toLocaleDateString(undefined, opts);
-  const b = new Date(checkout).toLocaleDateString(undefined, opts);
+  const a = new Date(checkin).toLocaleDateString(locale, opts);
+  const b = new Date(checkout).toLocaleDateString(locale, opts);
   return `${a} – ${b}`;
 }
 
-function ratingTagline(rating: number): string {
+function ratingTagline(rating: number, t: (key: string) => string): string {
   if (rating <= 0) return "";
-  if (rating >= 4.5) return "A truly exceptional retreat that exceeded expectations.";
-  if (rating >= 4) return "A wonderful stay — would happily return.";
-  if (rating >= 3) return "A good stay with a few areas to improve.";
-  if (rating >= 2) return "The stay had noticeable issues.";
-  return "Unfortunately, the stay did not meet expectations.";
+  if (rating >= 4.5) return t("rateStay.ratingTagline5");
+  if (rating >= 4) return t("rateStay.ratingTagline4");
+  if (rating >= 3) return t("rateStay.ratingTagline3");
+  if (rating >= 2) return t("rateStay.ratingTagline2");
+  return t("rateStay.ratingTagline1");
 }
 
 interface LargeStarRatingProps {
   value: number;
   onChange: (v: number) => void;
   disabled?: boolean;
+  ratingAria: string;
+  starsAria: (count: number) => string;
 }
 
-function LargeStarRating({ value, onChange, disabled }: LargeStarRatingProps) {
+function LargeStarRating({ value, onChange, disabled, ratingAria, starsAria }: LargeStarRatingProps) {
   const handle = (index: number, half: boolean) => {
     if (disabled) return;
     onChange(half ? index + 0.5 : index + 1);
   };
 
   return (
-    <div className="flex justify-center gap-2" role="radiogroup" aria-label="Overall rating">
+    <div className="flex justify-center gap-2" role="radiogroup" aria-label={ratingAria}>
       {Array.from({ length: 5 }, (_, i) => {
         const fill = Math.min(1, Math.max(0, value - i));
         return (
@@ -99,14 +102,14 @@ function LargeStarRating({ value, onChange, disabled }: LargeStarRatingProps) {
               type="button"
               disabled={disabled}
               className="absolute inset-y-0 left-0 w-1/2 cursor-pointer disabled:cursor-not-allowed"
-              aria-label={`${i + 0.5} stars`}
+              aria-label={starsAria(i + 0.5)}
               onClick={() => handle(i, true)}
             />
             <button
               type="button"
               disabled={disabled}
               className="absolute inset-y-0 right-0 w-1/2 cursor-pointer disabled:cursor-not-allowed"
-              aria-label={`${i + 1} stars`}
+              aria-label={starsAria(i + 1)}
               onClick={() => handle(i, false)}
             />
           </div>
@@ -133,6 +136,7 @@ export function RateStayContent({
   t,
   onSuccess,
 }: RateStayContentProps) {
+  const { tf, locale } = useLanguage();
   const isEdit = !!existingReview?.can_edit;
   const readOnly = !!existingReview && !existingReview.can_edit;
   const reduce = useReducedMotion();
@@ -185,7 +189,9 @@ export function RateStayContent({
   const hostName =
     listing?.check_in_contact?.full_name?.trim() ||
     listing?.host?.full_name?.trim() ||
-    "Your host";
+    t("rateStay.hostDefault");
+
+  const starsAria = (count: number) => tf("rateStay.starsAria", { count });
 
   const handleFile = useCallback(
     async (files: FileList | null) => {
@@ -272,7 +278,7 @@ export function RateStayContent({
     }
   };
 
-  const tagline = useMemo(() => ratingTagline(rating), [rating]);
+  const tagline = useMemo(() => ratingTagline(rating, t), [rating, t]);
 
   if (success) {
     const celebration = (
@@ -353,7 +359,7 @@ export function RateStayContent({
           <div className="aspect-[3/2] overflow-hidden relative bg-nexa-bg-2">
             <Image
               src={coverUrl}
-              alt={listing?.title ?? "Stay"}
+              alt={listing?.title ?? t("rateStay.stayAlt")}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               sizes="(max-width: 1024px) 100vw, 33vw"
@@ -375,7 +381,7 @@ export function RateStayContent({
               {listing?.title ?? t("rateStay.yourStay")}
             </h2>
             <p className="text-nexa-ink-3 mt-1.5">
-              {formatStayDates(booking.checkin_date, booking.checkout_date)}
+              {formatStayDates(booking.checkin_date, booking.checkout_date, locale)}
             </p>
             <div className="mt-6 pt-6 border-t border-nexa-line/40 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-nexa-primary/15 flex items-center justify-center shrink-0 text-lg font-bold text-nexa-primary border border-nexa-line/30">
@@ -412,7 +418,7 @@ export function RateStayContent({
                   {t("rateStay.overallExperience")}
                 </p>
                 <StarRatingDisplay rating={existingReview.rating} size="md" />
-                <p className="mt-4 text-nexa-ink-3 italic">{ratingTagline(existingReview.rating)}</p>
+                <p className="mt-4 text-nexa-ink-3 italic">{ratingTagline(existingReview.rating, t)}</p>
               </div>
               {existingReview.comment && (
                 <div>
@@ -459,6 +465,8 @@ export function RateStayContent({
                   value={rating}
                   onChange={setRating}
                   disabled={submitting}
+                  ratingAria={t("rateStay.ratingAria")}
+                  starsAria={starsAria}
                 />
                 {tagline && (
                   <p className="mt-5 text-nexa-ink-3 italic text-sm sm:text-base max-w-lg mx-auto">
