@@ -19,7 +19,12 @@ jobs:
       - run: npm run check:text-encoding
       - run: npm run lint
       - run: npm test --if-present
-      - run: npm run build
+      - name: Build production bundle
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://nexastays.ma
+          NEXT_PUBLIC_IDENTITY_API_BASE_URL: https://identity.nexastays.ma/api/v1
+          NEXT_PUBLIC_STAYS_API_BASE_URL: https://api.nexastays.ma/api/v1
 
   gitleaks:
     runs-on: ubuntu-latest
