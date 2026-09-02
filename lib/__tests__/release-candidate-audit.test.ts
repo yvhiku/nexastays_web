@@ -60,7 +60,7 @@ test("analytics and error-reporting origins are admitted by connect-src", () => 
   assert.match(source, /errorReportingOrigin/);
   assert.match(
     source,
-    /\[siteOrigin, identityOrigin, staysOrigin, sumsubApiOrigin, analyticsOrigin, errorReportingOrigin\]/,
+    /const connectOrigins = uniqueOrigins\([\s\S]*siteOrigin,[\s\S]*identityOrigin,[\s\S]*staysOrigin,[\s\S]*sumsubApiOrigin,[\s\S]*analyticsOrigin,[\s\S]*errorReportingOrigin,/,
   );
 });
 

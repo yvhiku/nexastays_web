@@ -32,7 +32,7 @@ export function HostPortalShell({ children }: Props) {
         locale === "ar" && "font-arabic",
       )}
     >
-      <div className="fixed inset-y-0 start-0 z-40 hidden md:block">
+      <div className="fixed inset-y-0 start-0 z-layer-header hidden md:block">
         <HostPortalSidebar />
       </div>
 

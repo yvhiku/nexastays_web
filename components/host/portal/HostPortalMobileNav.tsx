@@ -38,7 +38,7 @@ export function HostPortalMobileDrawer({ open, onClose }: DrawerProps) {
   return (
     <div
       id="host-portal-mobile-drawer"
-      className="fixed inset-0 z-50 md:hidden"
+      className="fixed inset-0 z-layer-drawer md:hidden"
       role="dialog"
       aria-modal="true"
       aria-label={t("hostPortal.navAria")}
@@ -62,7 +62,7 @@ export function HostPortalMobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[color:var(--host-border)] bg-[color:var(--host-surface)] pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-layer-header border-t border-[color:var(--host-border)] bg-[color:var(--host-surface)] pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label={t("hostPortal.mobileNavAria")}
     >
       <ul className="flex items-stretch justify-around px-1 py-1">

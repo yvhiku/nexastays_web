@@ -23,7 +23,7 @@ export function HostPortalTopBar({ onOpenDrawer, drawerOpen = false }: Props) {
   const path = portalPathnameWithoutLocale(pathname);
 
   return (
-    <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-[color:var(--host-border)] bg-[color:var(--host-background)] px-4 py-3 md:px-8">
+    <header className="sticky top-0 z-layer-header flex w-full items-center justify-between border-b border-[color:var(--host-border)] bg-[color:var(--host-background)] px-4 py-3 md:px-8">
       <div className="flex items-center gap-4">
         <button
           type="button"

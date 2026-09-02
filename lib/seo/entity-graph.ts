@@ -496,7 +496,7 @@ export function deriveGuideEntityGraph(
   }
 
   for (const related of page.relatedGuides) {
-    const entity = guideEntity(related, page.locale, page.lastmod);
+    const entity = guideEntity(related, "en", page.lastmod);
     entities.push(entity);
     relationships.push(relationship("related_to", guide.id, entity.id, "editorial"));
   }
