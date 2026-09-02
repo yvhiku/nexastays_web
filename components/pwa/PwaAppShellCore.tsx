@@ -15,7 +15,15 @@ export function PwaAppShellCore() {
     ) {
       return;
     }
-    void navigator.serviceWorker.register("/nexa-sw.js", { scope: "/" });
+    void (async () => {
+      await import("@/lib/pwa-sw-update").then((m) =>
+        m.unregisterLegacyServiceWorkers(),
+      );
+      await navigator.serviceWorker.register("/nexa-sw.js", {
+        scope: "/",
+        updateViaCache: "none",
+      });
+    })();
   }, []);
 
   return (

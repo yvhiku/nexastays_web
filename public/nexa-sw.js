@@ -1,9 +1,12 @@
 /* Nexa Stays service worker: offline shell only. API and user data are never cached. */
-const CACHE_NAME = "nexa-offline-v1";
+const SW_BUILD_ID = "2026-03-02-1";
+const CACHE_NAME = `nexa-offline-${SW_BUILD_ID}`;
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_URL)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_URL)),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -27,7 +30,17 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+  const type = event.data?.type;
+  if (type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
+  if (type === "GET_BUILD_ID") {
+    const source = event.source;
+    if (source && "postMessage" in source) {
+      source.postMessage({ type: "SW_BUILD_ID", buildId: SW_BUILD_ID });
+    }
+  }
 });
 
 self.addEventListener("fetch", (event) => {
