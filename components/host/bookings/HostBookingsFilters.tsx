@@ -48,7 +48,7 @@ type Props = {
   t: TranslateFn;
 };
 
-/** Presentation mirror of HostBookingFilters — same tab/search/listing semantics. */
+/** Presentation filters — same tab/search/listing semantics as the host bookings API. */
 export function HostBookingsFilters({
   filter,
   onFilterChange,

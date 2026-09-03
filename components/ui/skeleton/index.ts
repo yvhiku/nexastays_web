@@ -9,8 +9,5 @@ export { ListingCardSkeleton } from "./ListingCardSkeleton";
 export { ListingGridSkeleton } from "./ListingGridSkeleton";
 export { ListingDetailSkeleton } from "./ListingDetailSkeleton";
 export { ProfileSkeleton } from "./ProfileSkeleton";
-export { NavbarSkeleton } from "./NavbarSkeleton";
-export { SearchBarSkeleton } from "./SearchBarSkeleton";
-export { LocaleRouteSkeleton } from "./LocaleRouteSkeleton";
 export { useDelayedLoading } from "./useDelayedLoading";
 export { useSkeletonCount } from "./useSkeletonCount";

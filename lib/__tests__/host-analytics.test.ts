@@ -158,7 +158,6 @@ describe("host-analytics web integration (source)", () => {
     const source = read("lib/stays-api.ts");
     assert.match(source, /export async function getHostAnalytics/);
     assert.match(source, /buildHostAnalyticsPath/);
-    assert.match(source, /getHostAnalytics,/);
     assert.doesNotMatch(source, /getHostAnalytics[\s\S]{0,500}hostId/);
   });
 
@@ -183,7 +182,6 @@ describe("host-analytics web integration (source)", () => {
   });
 
   it("page supports four periods, occupancy footnote, empty/error/retry", () => {
-    const legacy = read("components/host/HostAnalyticsPage.tsx");
     const insights = read("components/host/analytics/HostInsightsPage.tsx");
     const route = read("app/[locale]/host/(portal)/(content)/analytics/page.tsx");
     assert.match(route, /getHostAnalytics\(/);
@@ -200,26 +198,18 @@ describe("host-analytics web integration (source)", () => {
     assert.doesNotMatch(insights, /last_30_days|sparkline|LineChart|needs.?response/i);
     assert.doesNotMatch(insights, /\bm[lr]-|\bleft-|\bright-/);
     assert.doesNotMatch(route, /last_30_days|sparkline|LineChart/i);
-    // Legacy reference retained (behavioral authority archive)
-    assert.match(legacy, /HostAnalyticsPropertyTable/);
-    assert.match(legacy, /HostAnalyticsPropertyCard/);
   });
 
   it("occupancy display helper used for null → N/A", () => {
-    const card = read("components/host/HostAnalyticsPropertyCard.tsx");
-    const table = read("components/host/HostAnalyticsPropertyTable.tsx");
     const insightsCard = read(
       "components/host/analytics/HostInsightsPropertyCard.tsx",
     );
     const insightsProps = read(
       "components/host/analytics/HostInsightsProperties.tsx",
     );
-    assert.match(card, /formatOccupancyDisplay/);
-    assert.match(table, /formatOccupancyDisplay/);
     assert.match(insightsCard, /formatOccupancyDisplay/);
     assert.match(insightsProps, /formatOccupancyDisplay/);
-    assert.match(card, /occupancyUnavailable/);
-    assert.match(table, /occupancyUnavailable/);
+    assert.match(insightsCard, /occupancyUnavailable/);
   });
 
   it("sortHostInsightsProperties rating uses index as final tie-breaker", () => {

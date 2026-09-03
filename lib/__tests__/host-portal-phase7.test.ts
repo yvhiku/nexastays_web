@@ -26,7 +26,7 @@ describe("Phase 7 host portal integrity", () => {
     assert.doesNotMatch(layout, /getHostVerification/);
   });
 
-  it("preserves legacy Host* components on disk", () => {
+  it("preserves active Host portal building blocks on disk", () => {
     for (const rel of [
       "components/host/HostTodaySection.tsx",
       "components/host/HostUpcomingSection.tsx",
@@ -34,13 +34,12 @@ describe("Phase 7 host portal integrity", () => {
       "components/host/HostDashboardHero.tsx",
       "components/host/HostBusinessSnapshot.tsx",
       "components/host/HostCalendarSyncPanel.tsx",
-      "components/host/HostBookingCenter.tsx",
-      "components/host/HostBookingFilters.tsx",
-      "components/host/HostBookingRow.tsx",
-      "components/host/HostAnalyticsPage.tsx",
-      "components/host/HostReviewsPage.tsx",
+      "components/host/analytics/HostInsightsPage.tsx",
+      "components/host/reviews/HostReviewsPage.tsx",
+      "components/host/bookings/HostBookingsPage.tsx",
+      "components/host/bookings/types.ts",
     ]) {
-      assert.ok(exists(rel), `missing legacy file: ${rel}`);
+      assert.ok(exists(rel), `missing portal file: ${rel}`);
     }
   });
 

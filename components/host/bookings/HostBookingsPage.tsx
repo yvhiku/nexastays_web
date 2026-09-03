@@ -20,7 +20,7 @@ import {
   type HostBookingFilterId,
   type HostBookingSortId,
 } from "@/lib/host-booking-center";
-import type { HostBookingsExportState } from "@/components/host/HostBookingCenter";
+import type { HostBookingsExportState } from "@/components/host/bookings/types";
 import type { Locale } from "@/lib/i18n";
 import { HostBookingsHeader } from "@/components/host/bookings/HostBookingsHeader";
 import { HostBookingsSummary } from "@/components/host/bookings/HostBookingsSummary";

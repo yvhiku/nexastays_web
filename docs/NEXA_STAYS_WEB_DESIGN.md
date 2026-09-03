@@ -285,7 +285,7 @@ Canonical rules: [`components/ui/skeleton/SKELETON.md`](../components/ui/skeleto
 
 - CSS tokens: `--skeleton-base`, `--skeleton-highlight` in `skeleton.css`
 - Marketplace: `ListingGridSkeleton` on initial explore/saved load; keep content on filter revalidation
-- Route shell: `app/[locale]/loading.tsx` → `LocaleRouteSkeleton` (not `AppLoader`)
+- Auth / host portal waits: `AppLoader` on protected and portal routes (no locale-level `loading.tsx` route shell)
 - Shared card dims: `components/listing/listing-card-dims.ts`
 
 ---

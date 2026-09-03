@@ -73,7 +73,7 @@ public/pwa/screenshots/       ← hand-authored install screenshots
 - Branding via `nexastays.png` + `/favicon.ico` (no `public/icons` set)
 - Hardened Update Now (applying state, poll, fallback reload)
 - Listing / profile skeletons (no spinner-first on primary routes)
-- Motion tokens (`lib/motion.ts`) + press feedback on buttons / sheets
+- Motion via `framer-motion` (messaging tokens in `lib/messaging/motion.ts`) + press feedback on buttons / sheets
 - Overscroll + tap highlight polish; focus rings on buttons
 
 ## Sprint 1 — premium mobile nav + Save (shipped)

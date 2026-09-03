@@ -104,11 +104,6 @@ export async function fetchSeoListings(
   }
 }
 
-/** @deprecated use fetchSeoListings */
-export async function fetchCityListings(searchCity: string): Promise<StaysListing[]> {
-  return fetchSeoListings({ city: searchCity });
-}
-
 /** Build listings path from SEO explore filters (canonical ExploreFilters transport). */
 export function buildListingsQueryPath(filters: SeoExploreFiltersDto): string {
   return buildListingsPath(seoFiltersToExploreFilters(filters));

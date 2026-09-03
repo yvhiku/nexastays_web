@@ -7,8 +7,6 @@ export default tseslint.config(
       ".next-dev/**",
       "out/**",
       "build/**",
-      "public/sw.js",
-      "public/workbox-*.js",
       "next-env.d.ts",
     ],
   },

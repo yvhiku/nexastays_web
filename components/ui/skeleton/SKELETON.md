@@ -14,7 +14,7 @@ Production-frozen loading UI for Nexa Stays web. Import from `@/components/ui/sk
 - Images: placeholder → fade-in (never blank white flash).
 - Empty ≠ Loading. Error ≠ Loading. States: Loading / Loaded / Empty / Error.
 - Layout owns spacing; shared dimensions between real components and skeletons (`listing-card-dims.ts`).
-- Route `loading.tsx` = shell only (`LocaleRouteSkeleton`); sections own grid skeletons.
+- Route shells use page-level skeletons; sections own grid skeletons.
 - Single shimmer in `skeleton.css` via `--skeleton-base` / `--skeleton-highlight`.
 
 ## Primitives
@@ -23,7 +23,7 @@ Production-frozen loading UI for Nexa Stays web. Import from `@/components/ui/sk
 
 ## Composed (marketplace)
 
-`ListingCardSkeleton`, `ListingGridSkeleton`, `NavbarSkeleton`, `SearchBarSkeleton`, `LocaleRouteSkeleton`
+`ListingCardSkeleton`, `ListingGridSkeleton`, `ListingDetailSkeleton`, `ProfileSkeleton`
 
 ## Reserved names (later)
 

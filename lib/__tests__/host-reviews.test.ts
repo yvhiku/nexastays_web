@@ -169,7 +169,6 @@ describe("host-reviews web integration (source)", () => {
     const source = read("lib/stays-api.ts");
     assert.match(source, /export async function getHostReviews/);
     assert.match(source, /buildHostReviewsPath/);
-    assert.match(source, /getHostReviews,/);
     assert.doesNotMatch(source, /getHostReviews[\s\S]{0,400}hostId/);
   });
 
@@ -195,7 +194,6 @@ describe("host-reviews web integration (source)", () => {
     const pagination = read("components/host/reviews/HostReviewPagination.tsx");
     const empty = read("components/host/reviews/HostReviewsEmptyState.tsx");
     const links = read("components/host/reviews/HostReviewsQuickLinks.tsx");
-    const legacy = read("components/host/HostReviewsPage.tsx");
 
     assert.match(route, /getHostReviews\(/);
     assert.match(route, /HostReviewsPage/);
@@ -225,8 +223,6 @@ describe("host-reviews web integration (source)", () => {
     assert.match(links, /\/host\/analytics/);
     assert.doesNotMatch(page, /Reply|Respond|response_rate|needs.?response/i);
     assert.doesNotMatch(route, /Reply|Respond|getHostDashboard|getHostAnalytics/i);
-    // Legacy retained (archive)
-    assert.match(legacy, /getHostReviews\(/);
 
     for (const source of [page, summary, card, pagination, empty, links, route]) {
       assert.doesNotMatch(
