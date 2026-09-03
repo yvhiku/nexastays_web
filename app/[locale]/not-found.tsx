@@ -8,7 +8,7 @@ export default function LocaleNotFound() {
   const { t, localePath } = useLanguage();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-nexa-bg-1 px-4 pt-[72px]">
+    <main className="flex min-h-screen items-center justify-center bg-nexa-bg-1 px-4 pt-[calc(72px+env(safe-area-inset-top))]">
       <section className="max-w-md rounded-3xl border border-nexa-line bg-white p-8 text-center shadow-nexa-card">
         <p className="text-sm font-semibold uppercase tracking-wide text-nexa-primary">
           404

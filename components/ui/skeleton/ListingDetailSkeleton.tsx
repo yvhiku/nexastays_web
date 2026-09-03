@@ -8,7 +8,7 @@ import { SkeletonButton } from "./SkeletonButton";
 export function ListingDetailSkeleton() {
   return (
     <div
-      className="mx-auto max-w-[1280px] px-4 pb-12 pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] sm:px-6 md:px-8 lg:px-12 xl:px-16 lg:pt-[72px] min-w-0"
+      className="mx-auto max-w-[1280px] px-4 pb-12 pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] sm:px-6 md:px-8 lg:px-12 xl:px-16 lg:pt-[calc(72px+env(safe-area-inset-top))] min-w-0"
       aria-busy="true"
       aria-label="Loading listing"
     >

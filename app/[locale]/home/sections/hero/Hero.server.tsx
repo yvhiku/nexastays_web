@@ -14,7 +14,7 @@ export function HeroSection({ locale, embedSearch, afterSearch }: Props) {
   const copy = getServerTranslations(locale);
 
   return (
-    <section className="min-h-0 pt-[72px] overflow-hidden relative">
+    <section className="min-h-0 pt-[calc(72px+env(safe-area-inset-top))] overflow-hidden relative">
       {embedSearch ? (
         <div className="hidden lg:block border-b border-nexa-line bg-nexa-bg-2 py-6 relative z-layer-content">
           {embedSearch}

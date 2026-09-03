@@ -58,7 +58,7 @@ function SavedListingsContent() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen bg-nexa-bg">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14">
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-nexa-ink flex items-center gap-2">

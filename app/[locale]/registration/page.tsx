@@ -426,7 +426,7 @@ export default function RegistrationPage() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen grid grid-cols-1 lg:grid-cols-2">
         <div className="order-2 lg:order-1 bg-gradient-to-br from-nexa-primary to-nexa-primary-dark flex items-center justify-center p-6 sm:p-10 md:p-14 lg:p-16 xl:p-20 xl:pl-16 relative overflow-hidden min-h-[40vh] lg:min-h-[calc(100vh-72px)]">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2" />
           <div className="relative z-layer-content max-w-[400px]">

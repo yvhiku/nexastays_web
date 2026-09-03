@@ -155,7 +155,7 @@ test("mobile listing booking bar sits safely below the upper navigation", () => 
   );
   assert.match(
     detail,
-    /pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top\)\)\] lg:pt-\[72px\]/,
+    /pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top\)\)\] lg:pt-\[calc\(72px\+env\(safe-area-inset-top\)\)\]/,
   );
   assert.doesNotMatch(
     detail,

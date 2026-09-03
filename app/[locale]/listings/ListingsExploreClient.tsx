@@ -644,7 +644,7 @@ export default function ListingsExploreClient() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen min-w-0">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen min-w-0">
         <h1 className="sr-only">{t("listings.staysTitle")}</h1>
         <div className="w-full">
           <div className="bg-nexa-bg min-w-0 w-full max-w-full">

@@ -16,7 +16,7 @@ export default function AboutPage() {
     <>
       <NavBar />
       <main>
-        <section className="min-h-[60vh] flex items-center pt-[72px] bg-gradient-to-br from-nexa-primary-soft to-nexa-bg">
+        <section className="min-h-[60vh] flex items-center pt-[calc(72px+env(safe-area-inset-top))] bg-gradient-to-br from-nexa-primary-soft to-nexa-bg">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <div className="max-w-[700px]">
               <span className="block text-xs font-semibold tracking-[0.12em] uppercase text-nexa-primary mb-4">

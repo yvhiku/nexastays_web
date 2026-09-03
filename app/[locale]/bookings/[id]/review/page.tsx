@@ -51,7 +51,7 @@ function RateStayPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex items-center justify-center bg-nexa-bg">
+        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex items-center justify-center bg-nexa-bg">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nexa-primary" />
         </main>
         <Footer />
@@ -63,7 +63,7 @@ function RateStayPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4 bg-nexa-bg px-4">
+        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex flex-col items-center justify-center gap-4 bg-nexa-bg px-4">
           <p className="text-nexa-ink-3">{error ?? t("bookings.bookingNotFound")}</p>
           <Button asChild>
             <Link href={localePath("/my-bookings")}>{t("bookings.backToBookings")}</Link>
@@ -84,7 +84,7 @@ function RateStayPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen bg-nexa-bg">
+        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg">
           <div className="max-w-lg mx-auto px-4 py-16 text-center">
             <AlertCircle className="h-12 w-12 text-nexa-ink-4 mx-auto mb-4" />
             <h1 className="font-display text-2xl font-bold text-nexa-ink mb-2">

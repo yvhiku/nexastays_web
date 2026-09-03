@@ -96,7 +96,7 @@ function ProfilePageContent() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen bg-nexa-bg">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="bg-white rounded-[22px] border border-nexa-line shadow-nexa-sm overflow-hidden">
             {/* Header */}

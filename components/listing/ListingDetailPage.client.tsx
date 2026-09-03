@@ -457,7 +457,7 @@ export function ListingDetailPageClient({
     return (
       <>
         <NavBar />
-        <main className="min-h-screen pt-[72px]">
+        <main className="min-h-screen pt-[calc(72px+env(safe-area-inset-top))]">
           <ListingDetailSkeleton />
           {seoGraph && (
             <div className="mx-auto max-w-[1280px] px-4 pb-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
@@ -473,7 +473,7 @@ export function ListingDetailPageClient({
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex flex-col items-center justify-center gap-4 px-4">
+        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex flex-col items-center justify-center gap-4 px-4">
           <div className="w-full max-w-md">
             <ErrorAlert error={error || t("listingDetail.listingNotFound")} />
           </div>
@@ -516,7 +516,7 @@ export function ListingDetailPageClient({
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-nexa-bg pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] lg:pt-[72px]">
+      <main className="min-h-screen bg-nexa-bg pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] lg:pt-[calc(72px+env(safe-area-inset-top))]">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-6 md:py-8 min-w-0">
           {seoBreadcrumbs && seoBreadcrumbs.length > 0 && (
             <SemanticBreadcrumbs items={seoBreadcrumbs} className="mb-4" />

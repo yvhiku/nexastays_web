@@ -14,7 +14,7 @@ export function LocaleRouteSkeleton() {
       aria-label="Loading page"
     >
       <NavbarSkeleton />
-      <main className="pt-[72px]">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))]">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14 space-y-8">
           <div className="space-y-3 max-w-xl">
             <Skeleton className="h-8 w-48" />

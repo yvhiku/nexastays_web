@@ -32,7 +32,7 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
       : page.h1;
 
   return (
-    <section className="relative pt-[72px] min-h-[360px] sm:min-h-[420px] flex items-end overflow-hidden">
+    <section className="relative pt-[calc(72px+env(safe-area-inset-top))] min-h-[360px] sm:min-h-[420px] flex items-end overflow-hidden">
       {hero ? (
         <SeoHeroBackground src={hero} alt={dest!.name} />
       ) : (

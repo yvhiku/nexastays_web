@@ -27,7 +27,7 @@ export default function SafetyTransparencyPage() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px]">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))]">
         <section className="bg-gradient-to-br from-nexa-primary-soft to-nexa-bg pt-16 pb-16 border-b border-nexa-line">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <span className="block text-xs font-semibold tracking-[0.12em] uppercase text-nexa-primary mb-4">

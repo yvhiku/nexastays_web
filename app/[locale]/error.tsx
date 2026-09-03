@@ -20,7 +20,7 @@ export default function LocaleError({
   }, [error]);
 
   return (
-    <main className="min-h-screen bg-nexa-bg-1 pt-[72px] flex items-center justify-center px-4">
+    <main className="min-h-screen bg-nexa-bg-1 pt-[calc(72px+env(safe-area-inset-top))] flex items-center justify-center px-4">
       <section className="max-w-md rounded-3xl bg-white border border-nexa-line p-8 text-center shadow-nexa-card">
         <p className="text-sm font-semibold uppercase tracking-wide text-red-600">
           {t("navigationError.eyebrow")}

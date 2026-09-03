@@ -350,7 +350,7 @@ export default function MyBookingsPage() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen bg-nexa-bg-1">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg-1">
         <ProtectedRoute>
           <MyBookingsContent />
         </ProtectedRoute>

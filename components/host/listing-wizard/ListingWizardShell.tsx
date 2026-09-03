@@ -139,7 +139,7 @@ export function ListingWizardShell({
   );
 
   return (
-    <main className="grid min-h-screen grid-cols-1 pt-[72px] lg:grid-cols-[320px_1fr]">
+    <main className="grid min-h-screen grid-cols-1 pt-[calc(72px+env(safe-area-inset-top))] lg:grid-cols-[320px_1fr]">
       <aside className="sticky top-[72px] hidden h-[calc(100vh-72px)] overflow-hidden bg-gradient-to-br from-nexa-ink to-nexa-ink-2 p-8 lg:block">
         {sidebar}
       </aside>

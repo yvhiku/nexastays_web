@@ -502,7 +502,7 @@ export default function HostPage() {
     return (
       <>
         <NavBar />
-        <main className="pt-[72px] min-h-screen flex items-center justify-center">
+        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex items-center justify-center">
           <AppLoader />
         </main>
       </>
@@ -512,7 +512,7 @@ export default function HostPage() {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen grid grid-cols-1 lg:grid-cols-[340px_1fr]">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen grid grid-cols-1 lg:grid-cols-[340px_1fr]">
         <aside className="hidden lg:block bg-gradient-to-br from-nexa-ink to-nexa-ink-2 p-10 overflow-y-auto sticky top-[72px] h-[calc(100vh-72px)]">
           {stepsContent}
         </aside>

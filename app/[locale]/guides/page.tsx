@@ -41,7 +41,7 @@ export default async function GuidesHubPage(props: Props) {
   return (
     <>
       <NavBar />
-      <main className="pt-[72px] min-h-screen">
+      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen">
         <section className="py-12 sm:py-16 bg-gradient-to-br from-nexa-primary-soft to-nexa-bg">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <h1 className="font-display text-3xl sm:text-4xl font-semibold text-nexa-ink">
