@@ -531,6 +531,7 @@ export default function HostPage() {
     setDateOfBirth((prev) => prev || draft.dateOfBirth);
     setCity((prev) => prev || draft.city);
     setTermsAccepted(draft.termsAccepted);
+    if (draft.otpStepSkipped) setOtpStepSkipped(true);
     setDraftStep(draft.step);
   }, []);
 
@@ -556,6 +557,7 @@ export default function HostPage() {
       city: city.trim(),
       termsAccepted,
       step: nextStep,
+      otpStepSkipped,
     });
   };
 
@@ -1086,9 +1088,11 @@ export default function HostPage() {
                   {isApproved ? t("hostApply.approvedDesc") : t("hostApply.submittedDesc")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button asChild>
-                    <Link href={localePath("/host/listings/new")}>{t("hostDashboard.addListing")}</Link>
-                  </Button>
+                  {isApproved ? (
+                    <Button asChild>
+                      <Link href={localePath("/host/listings/new")}>{t("hostDashboard.addListing")}</Link>
+                    </Button>
+                  ) : null}
                   <Button asChild>
                     <Link href={localePath("/host/dashboard")}>{t("hostApply.goToDashboard")}</Link>
                   </Button>

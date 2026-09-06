@@ -321,6 +321,7 @@ test("draft round-trips through sessionStorage and clears after submit", () => {
       city: "Marrakech",
       termsAccepted: true,
       step: 4,
+      otpStepSkipped: true,
     });
     assert.ok(sessionStorage.getItem(HOST_APPLY_DRAFT_KEY));
     assert.deepEqual(loadHostApplyDraft(), {
@@ -332,6 +333,7 @@ test("draft round-trips through sessionStorage and clears after submit", () => {
       city: "Marrakech",
       termsAccepted: true,
       step: 4,
+      otpStepSkipped: true,
     });
     clearHostApplyDraft();
     assert.equal(loadHostApplyDraft(), null);
@@ -350,6 +352,7 @@ test("malformed drafts are sanitised instead of crashing the wizard", () => {
       city: "",
       termsAccepted: false,
       step: 2,
+      otpStepSkipped: false,
     });
     sessionStorage.setItem(HOST_APPLY_DRAFT_KEY, "{not json");
     assert.equal(loadHostApplyDraft(), null);

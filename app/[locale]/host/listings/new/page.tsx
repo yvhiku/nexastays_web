@@ -51,6 +51,20 @@ function ListingWizardContent() {
   }
 
   if (w.hostReady === false) {
+    if (w.hostGateError) {
+      return (
+        <div className="mx-auto max-w-lg px-4 py-16 text-center" style={{ paddingTop: `calc(${WIZARD_STICKY_TOP} + 4rem)` }}>
+          <h2 className="mb-2 text-2xl font-semibold text-nexa-ink">{t("hostListing.wizard.states.loadFailedTitle")}</h2>
+          <p className="mb-6 text-nexa-ink-3">{w.hostGateError}</p>
+          <div className="flex flex-col justify-center gap-3 sm:flex-row">
+            <Button onClick={w.refreshHostGate}>{t("hostListing.wizard.save.retry")}</Button>
+            <Button variant="outline" asChild>
+              <Link href={localePath("/host/dashboard")}>{t("hostDashboard.title")}</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center" style={{ paddingTop: `calc(${WIZARD_STICKY_TOP} + 4rem)` }}>
         <h2 className="mb-2 text-2xl font-semibold text-nexa-ink">{t("hostListing.notApprovedTitle")}</h2>

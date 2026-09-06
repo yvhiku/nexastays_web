@@ -709,6 +709,9 @@ export interface UpdateHostListingBody {
   city?: string;
   neighborhood?: string;
   address?: string;
+  postal_code?: string;
+  building_name?: string;
+  landmark?: string;
   geo_lat?: number;
   geo_lng?: number;
   description?: string;
@@ -717,6 +720,7 @@ export interface UpdateHostListingBody {
   instant_booking?: boolean;
   property_details?: Record<string, unknown>;
   policies?: Record<string, unknown>;
+  safety_features?: Record<string, unknown>;
   rate_plan?: {
     base_price?: number;
     weekend_price?: number | null;
@@ -728,6 +732,7 @@ export interface UpdateHostListingBody {
     smoking_policy?: "ALLOWED" | "NOT_ALLOWED";
     amenities?: string[];
     cancellation_policy?: "FLEXIBLE" | "MODERATE" | "STRICT";
+    couples_welcome?: boolean;
   };
   check_in_contact?: {
     full_name?: string;
@@ -764,6 +769,8 @@ export interface ReplaceListingUnitTypesBody {
     currency?: string;
     pricing_unit?: string;
     amenities?: string[];
+    bed_config?: unknown[];
+    size_sqm?: number;
     details?: Record<string, unknown>;
     sort_order?: number;
     is_active?: boolean;

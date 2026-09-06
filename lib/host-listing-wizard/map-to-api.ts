@@ -151,6 +151,9 @@ export function buildUpdateHostListingBody(
     city: form.city.trim(),
     neighborhood: form.neighborhood.trim() || undefined,
     address: form.address.trim() || undefined,
+    postal_code: form.postalCode.trim() || undefined,
+    building_name: form.buildingName.trim() || undefined,
+    landmark: form.landmark.trim() || undefined,
     geo_lat: form.geoLat ?? undefined,
     geo_lng: form.geoLng ?? undefined,
     description: form.description.trim() || undefined,
@@ -169,6 +172,7 @@ export function buildUpdateHostListingBody(
       checkin_method: form.checkinMethod,
       guest_language: form.guestLanguage,
     },
+    safety_features: form.safety,
     policies: {
       children_allowed: form.childrenAllowed,
       visitors_allowed: form.visitorsAllowed,
@@ -183,6 +187,7 @@ export function buildUpdateHostListingBody(
       smoking_policy: form.smokingPolicy,
       cancellation_policy: form.cancellationPolicy,
       amenities: form.amenities,
+      couples_welcome: form.couplesWelcome,
     },
     rate_plan: {
       currency: "MAD",
@@ -215,11 +220,9 @@ export function buildReplaceUnitTypesBody(
       currency: "MAD",
       pricing_unit: u.pricingUnit,
       amenities: u.amenities,
-      details: {
-        ...u.details,
-        bed_config: u.bedConfig,
-        size_sqm: u.sizeSqm ? Number(u.sizeSqm) : undefined,
-      },
+      bed_config: u.bedConfig.trim() ? [{ summary: u.bedConfig.trim() }] : [],
+      size_sqm: u.sizeSqm.trim() ? Number(u.sizeSqm) : undefined,
+      details: u.details,
       sort_order: i,
       is_active: u.isActive,
     })),
@@ -293,8 +296,17 @@ export function hydrateWizardFromListing(
                 (u.bed_config[0] as { summary?: string }).summary ??
                   JSON.stringify(u.bed_config[0]),
               )
-            : "",
-        sizeSqm: u.size_sqm != null ? String(u.size_sqm) : "",
+            : typeof (u.details as { bed_config?: unknown } | undefined)?.bed_config ===
+                "string"
+              ? String((u.details as { bed_config: string }).bed_config)
+              : "",
+        sizeSqm:
+          u.size_sqm != null
+            ? String(u.size_sqm)
+            : (u.details as { size_sqm?: number | string } | undefined)?.size_sqm !=
+                null
+              ? String((u.details as { size_sqm: number | string }).size_sqm)
+              : "",
         amenities: u.amenities ?? [],
         pricingUnit: (u.pricing_unit as "NIGHT" | "BED_NIGHT" | "ROOM_NIGHT") ||
           "ROOM_NIGHT",

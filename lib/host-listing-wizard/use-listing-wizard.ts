@@ -110,6 +110,7 @@ export function useListingWizard({
   const [phase, setPhase] = useState<WizardPhase>(draftParam ? "wizard" : "type");
   const [stepIndex, setStepIndex] = useState(0);
   const [hostReady, setHostReady] = useState<boolean | null>(null);
+  const [hostGateError, setHostGateError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [busyLabel, setBusyLabel] = useState<string | null>(null);
@@ -166,17 +167,29 @@ export function useListingWizard({
   }, [currentStep, form, touched]);
 
   // Host gating
-  useEffect(() => {
+  const refreshHostGate = useCallback(() => {
     if (!token) return;
+    setHostReady(null);
+    setHostGateError(null);
     getHostVerification(token)
       .then((s) => {
         const n = normalizeHostVerificationStatus(
           s as Parameters<typeof normalizeHostVerificationStatus>[0],
         );
         setHostReady(n.status === "APPROVED");
+        setHostGateError(null);
       })
-      .catch(() => setHostReady(false));
+      .catch((err) => {
+        setHostReady(false);
+        setHostGateError(
+          err instanceof Error ? err.message : "Could not verify host status",
+        );
+      });
   }, [token]);
+
+  useEffect(() => {
+    refreshHostGate();
+  }, [refreshHostGate]);
 
   useEffect(() => {
     fetchStaysFeeRates().then(setFeeRates).catch(() => undefined);
@@ -681,6 +694,8 @@ export function useListingWizard({
     listingStatus,
     phase,
     hostReady,
+    hostGateError,
+    refreshHostGate,
     hydrating,
     hydrateError,
     retryHydrate,

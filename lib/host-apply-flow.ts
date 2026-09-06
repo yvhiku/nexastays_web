@@ -20,6 +20,8 @@ export interface HostApplyDraft {
   termsAccepted: boolean;
   /** Highest step the applicant reached (2–4). */
   step: number;
+  /** True when the signed-in user skipped the OTP step. */
+  otpStepSkipped?: boolean;
 }
 
 export const HOST_APPLY_DRAFT_KEY = "nexa-host-apply-draft";
@@ -58,6 +60,7 @@ export function loadHostApplyDraft(): HostApplyDraft | null {
       city: typeof parsed.city === "string" ? parsed.city : "",
       termsAccepted: parsed.termsAccepted === true,
       step,
+      otpStepSkipped: parsed.otpStepSkipped === true,
     };
   } catch {
     return null;
