@@ -582,7 +582,7 @@ export default function HostListingEditPage() {
   return (
     <>
       <NavBar />
-      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg-1">
+      <main className="nexa-guest-main min-h-screen bg-nexa-bg-1">
         <ProtectedRoute>
           <HostListingEditContent />
         </ProtectedRoute>

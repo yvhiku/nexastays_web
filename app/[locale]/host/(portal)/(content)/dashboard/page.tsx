@@ -329,8 +329,8 @@ function HostDashboardContent() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl py-4">
-      <div className="mb-8">
+    <div className="mx-auto max-w-3xl py-2 sm:py-4">
+      <div className="mb-5 sm:mb-8">
         <h1 className="text-2xl font-semibold text-nexa-ink sm:text-3xl">
           {t("hostDashboard.title")}
         </h1>
@@ -347,7 +347,7 @@ function HostDashboardContent() {
         />
       ) : null}
 
-      <div className="mb-8 overflow-hidden rounded-2xl border border-nexa-line bg-white">
+      <div className="mb-5 overflow-hidden rounded-2xl border border-nexa-line bg-white sm:mb-8">
         <div className="p-6 sm:p-8">
           <h2 className="mb-4 text-lg font-semibold text-nexa-ink">
             {t("hostDashboard.hostStatus")}
@@ -457,7 +457,7 @@ function HostDashboardContent() {
         </div>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center pt-1">
         <Button variant="ghost" asChild>
           <Link href={localePath("/")} className="inline-flex items-center gap-2">
             <Home className="h-4 w-4" aria-hidden />

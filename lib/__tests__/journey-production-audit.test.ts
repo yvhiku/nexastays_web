@@ -151,16 +151,69 @@ test("mobile listing booking bar sits safely below the upper navigation", () => 
 
   assert.match(
     detail,
-    /top-\[calc\(var\(--nexa-app-banner-h,0px\)\+72px\+env\(safe-area-inset-top\)\)\]/,
+    /top-\[calc\(var\(--nexa-app-banner-h,0px\)\+72px\+env\(safe-area-inset-top,0px\)\)\]/,
   );
   assert.match(
     detail,
-    /pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top\)\)\] lg:pt-\[calc\(72px\+env\(safe-area-inset-top\)\)\]/,
+    /pt-\[calc\(var\(--nexa-app-banner-h,0px\)\+148px\+env\(safe-area-inset-top,0px\)\)\] lg:nexa-guest-main/,
   );
   assert.doesNotMatch(
     detail,
     /Mobile sticky booking bar[\s\S]{0,240}bottom-\[/,
   );
+});
+
+test("guest chrome uses shared nexa-guest-main; incomplete 72px-only top pad is banned", () => {
+  const globals = read("app/globals.css");
+  assert.match(globals, /\.nexa-guest-main\s*\{/);
+  assert.match(
+    globals,
+    /var\(--nexa-app-banner-h,\s*0px\)\s*\+\s*72px\s*\+\s*env\(safe-area-inset-top,\s*0px\)/,
+  );
+  assert.match(
+    globals,
+    /html\[data-nexa-app-banner="1"\]\s*\.nexa-top-nav/,
+  );
+
+  const nav = read("components/navbar/NavBar.tsx");
+  assert.match(nav, /top-\[var\(--nexa-app-banner-h,0px\)\]/);
+  assert.match(nav, /h-\[calc\(72px\+env\(safe-area-inset-top,0px\)\)\]/);
+  assert.match(nav, /pt-\[env\(safe-area-inset-top,0px\)\]/);
+
+  const banner = read("components/pwa/GetAppBanner.tsx");
+  assert.match(
+    banner,
+    /setProperty\("--nexa-app-banner-h",\s*`\$\{BANNER_H_PX\}px`\)/,
+  );
+  assert.doesNotMatch(
+    banner,
+    /setProperty\(\s*"--nexa-app-banner-h",\s*`calc\(\$\{BANNER_H_PX\}px \+ env/,
+  );
+
+  const bottomNav = read("components/nav/MobileBottomNav.tsx");
+  assert.match(
+    bottomNav,
+    /pb-\[max\(0\.75rem,env\(safe-area-inset-bottom,0px\)\)\]/,
+  );
+  assert.match(bottomNav, /bg-nexa-bg/);
+  assert.match(bottomNav, /pointer-events-none absolute inset-x-0 bottom-0/);
+
+  for (const path of [
+    "app/[locale]/my-bookings/page.tsx",
+    "app/[locale]/saved-listings/page.tsx",
+    "app/[locale]/profile/page.tsx",
+    "app/[locale]/listings/ListingsExploreClient.tsx",
+    "components/legal/LegalLayout.tsx",
+    "components/AppLoader.tsx",
+  ]) {
+    const src = read(path);
+    assert.match(src, /nexa-guest-main/, `${path} should use nexa-guest-main`);
+    assert.doesNotMatch(
+      src,
+      /pt-\[calc\(72px\+env\(safe-area-inset-top\)\)\]/,
+      `${path} still has incomplete top pad`,
+    );
+  }
 });
 
 test("mobile listing gallery supports native swipe navigation", () => {

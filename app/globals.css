@@ -41,26 +41,37 @@
     --input: 330 20% 93%;
     --ring: 347 76% 59%;
     --radius: 0.875rem;
+    /* Content height only — never includes safe-area (banner + pages add inset separately). */
     --nexa-app-banner-h: 0px;
   }
 
-  /* Smart “Get the app” banner sits above the nav; pad page chrome accordingly. */
-  html[data-nexa-app-banner="1"] #main-content {
-    padding-top: var(--nexa-app-banner-h);
+  /*
+   * Guest page top clearance under fixed NavBar (+ optional Get App banner).
+   * Nav covers 0→safe with its own height/pt (or sits below banner when banner on);
+   * bottom edge is always banner-h + 72 + safe.
+   */
+  .nexa-guest-main {
+    padding-top: calc(
+      var(--nexa-app-banner-h, 0px) + 72px + env(safe-area-inset-top, 0px)
+    );
   }
 
-  /* Banner already includes safe-area — keep nav at 72px below it. */
+  /*
+   * When Get App banner is visible it already owns safe-area + 56px content.
+   * Park the top nav directly under it at 72px with no extra safe inset.
+   */
   html[data-nexa-app-banner="1"] .nexa-top-nav {
+    top: calc(
+      var(--nexa-app-banner-h, 0px) + env(safe-area-inset-top, 0px)
+    );
     height: 72px;
     padding-top: 0;
   }
 
   .nexa-sw-update-banner {
-    top: calc(72px + env(safe-area-inset-top, 0px) + var(--nexa-app-banner-h, 0px));
-  }
-
-  html[data-nexa-app-banner="1"] .nexa-sw-update-banner {
-    top: calc(72px + var(--nexa-app-banner-h));
+    top: calc(
+      var(--nexa-app-banner-h, 0px) + 72px + env(safe-area-inset-top, 0px)
+    );
   }
   * {
     @apply border-border;

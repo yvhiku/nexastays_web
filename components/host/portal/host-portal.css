@@ -43,3 +43,19 @@
 .host-portal-drawer-backdrop {
   background-color: rgba(19, 27, 45, 0.4);
 }
+
+/*
+ * Host portal is full-viewport (h-dvh). When Get App banner is visible, shift the
+ * portal below it. --nexa-app-banner-h is content height only (56px); add safe-area
+ * here so we clear the status bar + banner. Top bar then drops its own safe-area
+ * pad to avoid stacking inset twice.
+ */
+html[data-nexa-app-banner="1"] .host-portal {
+  padding-top: calc(
+    var(--nexa-app-banner-h, 0px) + env(safe-area-inset-top, 0px)
+  );
+}
+
+html[data-nexa-app-banner="1"] .host-portal-top-bar {
+  padding-top: 0.75rem;
+}

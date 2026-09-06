@@ -73,7 +73,7 @@ export function ConversationHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-layer-header min-w-0 shrink-0 border-b backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-messaging-context ease-out motion-reduce:transition-none",
+        "sticky top-0 z-layer-header min-w-0 shrink-0 border-b pt-[max(env(safe-area-inset-top,0px),var(--nexa-app-banner-h,0px))] backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-messaging-context ease-out motion-reduce:transition-none",
         compact
           ? "border-nexa-line bg-white/98 shadow-messaging-2"
           : "border-nexa-line/70 bg-white/90 shadow-messaging-1",

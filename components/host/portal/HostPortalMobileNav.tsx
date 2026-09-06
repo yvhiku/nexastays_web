@@ -48,7 +48,9 @@ export function HostPortalMobileDrawer({ open, onClose }: DrawerProps) {
         aria-label={t("common.close")}
         onClick={onClose}
       />
-      <div className="absolute inset-y-0 start-0 w-64 max-w-[85vw] shadow-xl">
+      <div
+        className="absolute inset-y-0 start-0 w-64 max-w-[85vw] pt-[max(env(safe-area-inset-top,0px),var(--nexa-app-banner-h,0px))] shadow-xl"
+      >
         <HostPortalSidebar onNavigate={onClose} className="h-full" />
       </div>
     </div>
@@ -62,7 +64,7 @@ export function HostPortalMobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-layer-header border-t border-[color:var(--host-border)] bg-[color:var(--host-surface)] pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-layer-header border-t border-[color:var(--host-border)] bg-[color:var(--host-surface)] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] md:hidden"
       aria-label={t("hostPortal.mobileNavAria")}
     >
       <ul className="flex items-stretch justify-around px-1 py-1">

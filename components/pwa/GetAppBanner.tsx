@@ -114,10 +114,8 @@ export function GetAppBanner() {
   useEffect(() => {
     const root = document.documentElement;
     if (visible) {
-      root.style.setProperty(
-        "--nexa-app-banner-h",
-        `calc(${BANNER_H_PX}px + env(safe-area-inset-top, 0px))`,
-      );
+      // Content height only — banner element owns safe-area via pt-[env(...)].
+      root.style.setProperty("--nexa-app-banner-h", `${BANNER_H_PX}px`);
       root.dataset.nexaAppBanner = "1";
     } else {
       root.style.setProperty("--nexa-app-banner-h", "0px");

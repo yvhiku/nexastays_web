@@ -44,7 +44,7 @@ export function SeoGuidePageClient({ page, listings }: Props) {
     <>
       <NavBar />
       <main>
-        <section className="relative pt-[calc(72px+env(safe-area-inset-top))] min-h-[280px] sm:min-h-[340px] flex items-end overflow-hidden">
+        <section className="relative nexa-guest-main min-h-[280px] sm:min-h-[340px] flex items-end overflow-hidden">
           {hero ? (
             <SeoHeroBackground src={hero} alt={dest!.name} />
           ) : (

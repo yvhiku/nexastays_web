@@ -3,7 +3,10 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { isMessagingThreadPath } from "@/lib/messaging/thread-routes";
+import {
+  isHostPortalPath,
+  isImmersiveMobilePath,
+} from "@/lib/nav/mobile-chrome";
 
 type Props = {
   children: React.ReactNode;
@@ -11,15 +14,20 @@ type Props = {
   arabicFontClass?: string;
 };
 
-/** Applies mobile bottom-nav padding except on immersive routes (e.g. chat thread). */
+/**
+ * Applies mobile bottom-nav padding except on immersive routes (chat / booking
+ * detail) and host portal (portal owns its own bottom nav clearance).
+ */
 export function LocaleShell({ children, isRtl, arabicFontClass }: Props) {
   const pathname = usePathname() ?? "";
-  const immersive = isMessagingThreadPath(pathname);
+  const skipGuestBottomPad =
+    isImmersiveMobilePath(pathname) || isHostPortalPath(pathname);
 
   return (
     <div
       className={cn(
-        !immersive && "pb-[calc(5.75rem+env(safe-area-inset-bottom))] md:pb-0",
+        !skipGuestBottomPad &&
+          "pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] md:pb-0",
         isRtl && arabicFontClass,
       )}
       dir={isRtl ? "rtl" : "ltr"}

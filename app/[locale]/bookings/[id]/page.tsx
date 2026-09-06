@@ -233,7 +233,7 @@ function BookingDetailPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex items-center justify-center bg-nexa-bg-1">
+        <main className="nexa-guest-main min-h-screen flex items-center justify-center bg-nexa-bg-1">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nexa-primary" />
         </main>
       </>
@@ -244,7 +244,7 @@ function BookingDetailPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex flex-col items-center justify-center gap-4 bg-nexa-bg-1 px-4">
+        <main className="nexa-guest-main min-h-screen flex flex-col items-center justify-center gap-4 bg-nexa-bg-1 px-4">
           <div className="w-full max-w-md">
             <ErrorAlert error={error || t("bookings.bookingNotFound")} />
           </div>
@@ -352,7 +352,7 @@ function BookingDetailPageInner() {
     return (
       <>
         <NavBar />
-        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg-1">
+        <main className="nexa-guest-main min-h-screen bg-nexa-bg-1">
           <HostBookingDetailView
             booking={booking}
             t={t}
@@ -407,7 +407,7 @@ function BookingDetailPageInner() {
   return (
     <>
       <NavBar />
-      <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen bg-nexa-bg-1">
+      <main className="nexa-guest-main min-h-screen bg-nexa-bg-1">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
           <Link
             href={localePath("/my-bookings")}
@@ -672,7 +672,7 @@ function BookingDetailPageInner() {
                     <Button
                       onClick={handleCardPayment}
                       disabled={!canStartPayment || creatingPayment}
-                      className="w-full justify-center"
+                      className="hidden w-full justify-center sm:inline-flex"
                       aria-busy={creatingPayment}
                     >
                       {paymentPhase === "preparing"
@@ -802,7 +802,7 @@ function BookingDetailPageInner() {
         </div>
       </main>
       {booking.status === "PAYMENT_PENDING" && (
-        <div className="fixed bottom-0 inset-x-0 z-layer-sticky border-t border-nexa-line bg-white/95 backdrop-blur-sm p-3 sm:hidden safe-area-pb">
+        <div className="fixed bottom-0 inset-x-0 z-layer-sticky border-t border-nexa-line bg-white/95 backdrop-blur-sm p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
           <Button
             onClick={() => {
               paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });

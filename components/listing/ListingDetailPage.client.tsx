@@ -462,7 +462,7 @@ export function ListingDetailPageClient({
     return (
       <>
         <NavBar />
-        <main className="min-h-screen pt-[calc(72px+env(safe-area-inset-top))]">
+        <main className="min-h-screen nexa-guest-main">
           <ListingDetailSkeleton />
           {seoGraph && (
             <div className="mx-auto max-w-[1280px] px-4 pb-12 sm:px-6 md:px-8 lg:px-12 xl:px-16">
@@ -478,7 +478,7 @@ export function ListingDetailPageClient({
     return (
       <>
         <NavBar />
-        <main className="pt-[calc(72px+env(safe-area-inset-top))] min-h-screen flex flex-col items-center justify-center gap-4 px-4">
+        <main className="nexa-guest-main min-h-screen flex flex-col items-center justify-center gap-4 px-4">
           <div className="w-full max-w-md">
             <ErrorAlert error={error || t("listingDetail.listingNotFound")} />
           </div>
@@ -521,7 +521,7 @@ export function ListingDetailPageClient({
   return (
     <>
       <NavBar />
-      <main className="min-h-screen bg-nexa-bg pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] lg:pt-[calc(72px+env(safe-area-inset-top))]">
+      <main className="min-h-screen bg-nexa-bg pt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top,0px))] lg:nexa-guest-main">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 py-6 md:py-8 min-w-0">
           {seoBreadcrumbs && seoBreadcrumbs.length > 0 && (
             <SemanticBreadcrumbs items={seoBreadcrumbs} className="mb-4" />
@@ -881,7 +881,7 @@ export function ListingDetailPageClient({
             {/* Right Column: Booking Card */}
             <aside
               id="booking-card"
-              className="scroll-mt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top))] lg:scroll-mt-[104px] lg:col-span-4 order-1 lg:order-2 min-w-0 max-w-xl lg:max-w-none mx-auto w-full"
+              className="scroll-mt-[calc(var(--nexa-app-banner-h,0px)+148px+env(safe-area-inset-top,0px))] lg:scroll-mt-[104px] lg:col-span-4 order-1 lg:order-2 min-w-0 max-w-xl lg:max-w-none mx-auto w-full"
             >
               <ListingBookingCard
                 listing={listing}
@@ -999,7 +999,7 @@ export function ListingDetailPageClient({
         </div>
 
         {/* Mobile sticky booking bar */}
-        <div className="fixed inset-x-0 top-[calc(var(--nexa-app-banner-h,0px)+72px+env(safe-area-inset-top))] z-layer-sticky flex items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-nexa-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur lg:hidden">
+        <div className="fixed inset-x-0 top-[calc(var(--nexa-app-banner-h,0px)+72px+env(safe-area-inset-top,0px))] z-layer-sticky flex items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-nexa-line bg-white/95 px-4 py-3 shadow-lg backdrop-blur lg:hidden">
           <div className="min-w-0">
             <p className="font-bold text-base sm:text-lg truncate">
               {formatNightlyPrice(price, currency, locale, t("seo.perNight"))}

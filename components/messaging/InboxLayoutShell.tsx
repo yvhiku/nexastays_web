@@ -65,7 +65,7 @@ export function InboxLayoutShell({
   return (
     <>
       <NavBar />
-      <main className="messaging-ui flex h-[100dvh] min-h-0 flex-col overflow-hidden overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(253,240,243,0.8),transparent_34%),#fdfbfc] pt-[calc(var(--nexa-app-banner-h,0px)_+_72px_+_env(safe-area-inset-top))]">
+      <main className="messaging-ui nexa-guest-main flex h-[100dvh] min-h-0 flex-col overflow-hidden overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(253,240,243,0.8),transparent_34%),#fdfbfc]">
         {body}
       </main>
     </>

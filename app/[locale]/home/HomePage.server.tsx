@@ -14,7 +14,7 @@ import { CompactHomeMarketing } from "./CompactHomeMarketing.client";
 
 function HomeEntryFallback() {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center pt-[calc(72px+env(safe-area-inset-top))]">
+    <div className="flex min-h-[40vh] items-center justify-center nexa-guest-main">
       <span className="h-8 w-8 animate-spin rounded-full border-2 border-nexa-primary border-t-transparent" />
     </div>
   );
