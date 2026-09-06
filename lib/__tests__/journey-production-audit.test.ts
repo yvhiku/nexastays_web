@@ -307,7 +307,7 @@ test("welcome completion forces search spotlight past the normal cooldown", () =
 });
 
 test("host draft autosaves are serialized so stale snapshots cannot arrive last", () => {
-  const wizard = read("app/[locale]/host/listings/new/page.tsx");
+  const wizard = read("lib/host-listing-wizard/use-listing-wizard.ts");
 
   assert.match(
     wizard,

@@ -61,14 +61,23 @@ export interface UnitTypeDraft {
   isActive: boolean;
 }
 
+export type PhotoUploadStatus = "pending" | "uploading" | "uploaded" | "error";
+
 export interface WizardPhoto {
+  /**
+   * Client-generated id (`crypto.randomUUID()`). The ONLY key the grid,
+   * reorder, and remove ever use — never the server asset id.
+   */
   id: string;
   /** Local file pending upload; null when already saved on the server. */
   file: File | null;
+  /** Server asset reference; set once the upload resolves. */
   assetId?: string;
   preview: string;
   category: MediaCategory;
   isCover: boolean;
+  uploadStatus: PhotoUploadStatus;
+  uploadError?: string;
 }
 
 export interface ListingWizardFormState {
@@ -121,21 +130,29 @@ export interface ListingWizardFormState {
 }
 
 export type WizardStepId =
-  | "propertyType"
-  | "bookingModel"
   | "location"
-  | "details"
   | "about"
   | "unitTypes"
-  | "amenities"
-  | "policies"
   | "pricing"
   | "media"
-  | "review"
+  | "amenitiesRules"
   | "submit";
 
 export interface WizardStepDef {
   id: WizardStepId;
-  label: string;
-  description: string;
+  /** i18n key under `hostListing.wizard.steps.*` */
+  labelKey: string;
+  /** i18n key under `hostListing.wizard.steps.*` */
+  descriptionKey: string;
+  /** Skipping never blocks submit. */
+  optional?: boolean;
 }
+
+/** i18n message reference: key + interpolation vars. */
+export interface WizardMessage {
+  key: string;
+  vars?: Record<string, string | number>;
+}
+
+/** Field-level validation errors keyed by form field (or synthetic key like `photos`). */
+export type WizardFieldErrors = Record<string, WizardMessage>;

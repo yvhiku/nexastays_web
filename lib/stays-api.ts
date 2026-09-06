@@ -70,6 +70,16 @@ export function getListingMediaUrl(listingId: string, assetId: string): string {
   return `${API_BASE}/stays/listings/${encodeURIComponent(listingId)}/media/${encodeURIComponent(assetId)}`;
 }
 
+/**
+ * True when `url` points at the Stays media endpoint (`/stays/listings/{id}/media/{asset}`).
+ * Such URLs redirect to signed storage and must bypass the Next image optimizer
+ * (`unoptimized`), regardless of whether the API is served over http or https.
+ */
+export function isListingMediaUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.startsWith(`${API_BASE}/stays/listings/`) && url.includes("/media/");
+}
+
 /** Public URL for review photo attachments */
 export function getReviewMediaUrl(assetId: string): string {
   return `${API_BASE}/stays/reviews/media/${encodeURIComponent(assetId)}`;
@@ -345,6 +355,27 @@ export async function getListing(
     .get(`/stays/listings/${id}`, { headers })
     .catch(handleError);
   return unwrap<StaysListing>(res);
+}
+
+/**
+ * Cheap public-availability probe for a listing id.
+ * The public detail endpoint only serves LIVE listings (paused / rejected /
+ * removed ones 404), so this is how client-side caches (recently viewed,
+ * saved snapshots) learn that a listing went offline.
+ * - `true`  → listing is publicly available
+ * - `false` → definitively gone from the marketplace (404)
+ * - `null`  → unknown (network / server error); callers should keep the item
+ */
+export async function isListingPubliclyAvailable(id: string): Promise<boolean | null> {
+  try {
+    await client.get(`/stays/listings/${encodeURIComponent(id)}`, {
+      headers: getAuthHeaders(),
+    });
+    return true;
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) return false;
+    return null;
+  }
 }
 
 /** Create booking (requires JWT, verified guest) */

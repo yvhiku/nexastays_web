@@ -1,18 +1,3 @@
-import type { CreateHostListingBody } from "./stays-types";
-
-export const LISTING_WIZARD_STEPS = [
-  "Property Type",
-  "Location & Basics",
-  "House Rules",
-  "Amenities",
-  "Pricing",
-  "Check-in Contact",
-  "Photos",
-  "Walkthrough & Submit",
-] as const;
-
-export const MIN_LISTING_PHOTOS = 12;
-
 export const LISTING_TYPES = [
   { id: "APARTMENT" as const, label: "Apartment" },
   { id: "VILLA" as const, label: "Villa" },
@@ -69,55 +54,3 @@ export function normalizeAmenities(value: unknown): string[] {
 export function amenityLabel(tag: string): string {
   return AMENITY_LABEL_BY_TAG[tag] ?? tag.replace(/_/g, " ");
 }
-
-export interface ListingWizardForm {
-  listingType: CreateHostListingBody["listing_type"];
-  title: string;
-  city: string;
-  address: string;
-  description: string;
-  maxGuests: number;
-  petsPolicy: "ALLOWED" | "DOGS_CATS" | "NO";
-  smokingPolicy: "ALLOWED" | "NOT_ALLOWED";
-  quietHours: boolean;
-  couplesWelcome: boolean;
-  cancellationPolicy: "FLEXIBLE" | "MODERATE" | "STRICT";
-  amenities: string[];
-  basePrice: string;
-  weekendPrice: string;
-  checkinTime: string;
-  checkoutTime: string;
-  contactName: string;
-  contactPhone: string;
-  contactRole: "OWNER" | "CO_HOST" | "AGENT";
-  photos: File[];
-  photoPreviews: string[];
-  walkthrough: File | null;
-  walkthroughPreview: string | null;
-}
-
-export const defaultListingForm = (): ListingWizardForm => ({
-  listingType: "APARTMENT",
-  title: "",
-  city: "",
-  address: "",
-  description: "",
-  maxGuests: 2,
-  petsPolicy: "NO",
-  smokingPolicy: "NOT_ALLOWED",
-  quietHours: true,
-  couplesWelcome: true,
-  cancellationPolicy: "MODERATE",
-  amenities: [],
-  basePrice: "",
-  weekendPrice: "",
-  checkinTime: "14:00",
-  checkoutTime: "11:00",
-  contactName: "",
-  contactPhone: "",
-  contactRole: "OWNER",
-  photos: [],
-  photoPreviews: [],
-  walkthrough: null,
-  walkthroughPreview: null,
-});

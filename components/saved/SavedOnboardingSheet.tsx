@@ -9,6 +9,7 @@ import {
   markSavedOnboardingSeen,
   type SavedListingSnapshot,
 } from "@/lib/saved-listings";
+import { isListingMediaUrl } from "@/lib/stays-api";
 import { cn } from "@/lib/utils";
 import { OverlayPortal } from "@/components/ui/OverlayPortal";
 import { useModalDialog } from "@/components/ui/useModalDialog";
@@ -58,7 +59,7 @@ export function SavedOnboardingSheet({ snapshot, onClose }: Props) {
                 fill
                 className="object-cover"
                 sizes="400px"
-                unoptimized={snapshot.imageUrl.startsWith("http://")}
+                unoptimized={isListingMediaUrl(snapshot.imageUrl)}
               />
             ) : (
               <div className="flex h-full items-center justify-center">

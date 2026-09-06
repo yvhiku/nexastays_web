@@ -20,12 +20,39 @@ import {
   normalizeHostVerificationStatus,
 } from "@/lib/stays-api";
 import type { HostVerificationStatus } from "@/lib/stays-types";
-import { sendOtp, verifyOtp } from "@/lib/auth-api";
-import { validateEmail } from "@/lib/validators";
+import {
+  completeRegistration,
+  sendOtp,
+  verifyOtp,
+  type IdentityOnboardingState,
+} from "@/lib/auth-api";
+import { submitKyc, syncSumsubStatus, updateProfile } from "@/lib/kyc-api";
+import { resolveOtpPostVerifyState } from "@/lib/auth-flow";
+import {
+  canAutoSubmitHostApplication,
+  clearHostApplyDraft,
+  identityFieldsFromUser,
+  isKycVerifiedStatus,
+  loadHostApplyDraft,
+  mapKycStatusToFinal,
+  resolveHostApplyIdentityMode,
+  resolveHostApplySession,
+  saveHostApplyDraft,
+  shouldSeedKycProfile,
+  type HostApplyIdentityFields,
+  type HostKycFinalStatus,
+} from "@/lib/host-apply-flow";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { MOROCCO_CITIES } from "@/lib/moroccan-cities";
+import {
+  SumsubWebVerification,
+  type SumsubFinalStatus,
+} from "@/components/kyc/SumsubWebVerification";
+import { normalizePhone, parseLocalDate, validateDateOfBirth, validateEmail, validatePhone } from "@/lib/validators";
 import { formatUserError } from "@/lib/errors";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, type TokenType } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Menu, XCircle } from "lucide-react";
+import { Lock, Menu, ShieldCheck, XCircle } from "lucide-react";
 import { NEXA_STAYS_LOGO_SRC } from "@/lib/brand-assets";
 import { AppLoader } from "@/components/AppLoader";
 
@@ -42,14 +69,96 @@ const progressWidths: Record<number, number> = {
   1: 25, 2: 50, 3: 75, 4: 100,
 };
 
+type HostKycPhase = "verify" | "reviewing" | "rejected";
+
+/**
+ * Read-only identity summary for accounts whose KYC is already verified.
+ * Nothing here is editable on purpose: the host application reuses the
+ * verified Identity profile, so re-typing would only invite mismatches.
+ */
+function VerifiedIdentityCard({
+  identity,
+  t,
+  locale,
+  profileHref,
+}: {
+  identity: HostApplyIdentityFields;
+  t: (key: string) => string;
+  locale: string;
+  profileHref: string;
+}) {
+  const dob = identity.dateOfBirth
+    ? (() => {
+        const d = parseLocalDate(identity.dateOfBirth);
+        return d
+          ? d.toLocaleDateString(locale, {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : identity.dateOfBirth;
+      })()
+    : "";
+  const rows: Array<{ label: string; value: string; locked?: boolean }> = [
+    { label: t("hostApply.fullLegalName"), value: identity.fullName, locked: true },
+    { label: t("hostApply.phoneLabel"), value: identity.phone, locked: true },
+    { label: t("hostApply.dobLabel"), value: dob, locked: true },
+    { label: t("hostApply.emailLabel"), value: identity.email },
+    { label: t("hostApply.cityLabel"), value: identity.city },
+  ];
+  return (
+    <div
+      className="rounded-2xl border border-nexa-primary/20 bg-nexa-primary-soft p-5"
+      data-testid="host-apply-verified-identity"
+    >
+      <div className="mb-4 flex items-start gap-3">
+        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-nexa-primary text-white">
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="font-semibold text-nexa-ink">{t("hostApply.verifiedIdentityCardTitle")}</p>
+          <p className="mt-0.5 text-sm text-nexa-ink-3">{t("hostApply.verifiedIdentityCardBody")}</p>
+        </div>
+      </div>
+      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {rows.map((row) => (
+          <div key={row.label} className="rounded-xl bg-white/80 px-3.5 py-2.5">
+            <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-nexa-ink-4">
+              {row.label}
+              {row.locked && <Lock className="h-3 w-3" aria-hidden="true" />}
+            </dt>
+            <dd className="mt-0.5 text-sm font-medium text-nexa-ink">
+              {row.value || <span className="text-nexa-ink-4">{t("hostApply.notProvided")}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-xs text-nexa-ink-4">
+        {t("hostApply.verifiedIdentityEditHint")}{" "}
+        <Link href={profileHref} className="text-nexa-primary hover:underline">
+          {t("hostApply.openProfile")}
+        </Link>
+      </p>
+    </div>
+  );
+}
+
 function HostVerificationStep({
   token,
-  isAuthenticated,
+  tokenType,
   user,
   hostStatus: _hostStatus,
   hostLoading,
   hostSubmitLoading,
   hostError,
+  kycPhase,
+  applicantEmail,
+  applicantPhone,
+  lang,
+  onSumsubSubmitted,
+  onSumsubFinalStatus,
+  onSumsubError,
+  onRetryKyc,
   docType,
   docNumber,
   docFrontAssetId,
@@ -71,12 +180,23 @@ function HostVerificationStep({
   onDismissError,
 }: {
   token: string | null;
-  isAuthenticated: boolean;
+  tokenType: TokenType;
   user: { kyc_status?: string } | null;
   hostStatus: { status: string; message?: string } | null;
   hostLoading: boolean;
   hostSubmitLoading: boolean;
   hostError: string | null;
+  kycPhase: HostKycPhase;
+  applicantEmail?: string;
+  applicantPhone?: string;
+  lang: string;
+  onSumsubSubmitted: () => void;
+  onSumsubFinalStatus: (
+    status: SumsubFinalStatus,
+    onboarding?: IdentityOnboardingState,
+  ) => void;
+  onSumsubError: (message: string) => void;
+  onRetryKyc: () => void;
   docType: string;
   docNumber: string;
   docFrontAssetId: string | null;
@@ -100,12 +220,15 @@ function HostVerificationStep({
   const { t, tf } = useLanguage();
   const onLoadStatusRef = React.useRef(onLoadStatus);
   onLoadStatusRef.current = onLoadStatus;
+  const [showManualDocs, setShowManualDocs] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && token) onLoadStatusRef.current();
-  }, [isAuthenticated, token]);
+    if (tokenType === "jwt" && token) onLoadStatusRef.current();
+  }, [tokenType, token]);
 
-  if (!isAuthenticated || !token) {
+  // Step 3 could not establish a Nexa session (OTP response without tokens).
+  // Fall back to the classic sign-in wall instead of a dead end.
+  if (!token || tokenType === "none") {
     return (
       <div>
         <span className="text-xs font-semibold uppercase text-nexa-primary">
@@ -121,7 +244,7 @@ function HostVerificationStep({
     );
   }
 
-  const kycApproved = (user?.kyc_status || "").toUpperCase() === "APPROVED" || (user?.kyc_status || "").toUpperCase() === "VERIFIED";
+  const kycApproved = isKycVerifiedStatus(user?.kyc_status);
 
   return (
     <div>
@@ -134,22 +257,6 @@ function HostVerificationStep({
         <div className="py-8 text-center text-nexa-ink-4">{t("common.loading")}</div>
       ) : (
         <>
-          {kycApproved && (
-            <div className="mb-6 p-5 rounded-xl bg-nexa-primary-soft border border-nexa-primary/20">
-              <h3 className="font-semibold text-nexa-ink mb-2">{t("hostApply.useVerifiedIdentityTitle")}</h3>
-              <p className="text-sm text-nexa-ink-3 mb-4">{t("hostApply.useVerifiedIdentityDesc")}</p>
-              <Button onClick={onSubmitUseExistingKyc} disabled={hostSubmitLoading} className="w-full sm:w-auto">
-                {hostSubmitLoading ? t("host.applying") : t("host.applyAsHost")}
-              </Button>
-            </div>
-          )}
-          {kycApproved && (
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-nexa-line" />
-              <span className="text-xs font-medium text-nexa-ink-4">{t("hostApply.orSubmitNewDocuments")}</span>
-              <div className="flex-1 h-px bg-nexa-line" />
-            </div>
-          )}
           {hostError && (
             <ErrorAlert
               error={hostError}
@@ -157,6 +264,79 @@ function HostVerificationStep({
               onDismiss={onDismissError}
             />
           )}
+
+          {kycApproved && (
+            <div className="mb-6 p-5 rounded-xl bg-nexa-primary-soft border border-nexa-primary/20">
+              <h3 className="font-semibold text-nexa-ink mb-2">{t("hostApply.useVerifiedIdentityTitle")}</h3>
+              <p className="text-sm text-nexa-ink-3 mb-4">
+                {hostSubmitLoading
+                  ? t("hostApply.kycAutoSubmitting")
+                  : t("hostApply.useVerifiedIdentityDesc")}
+              </p>
+              <Button onClick={onSubmitUseExistingKyc} disabled={hostSubmitLoading} className="w-full sm:w-auto">
+                {hostSubmitLoading ? t("host.applying") : t("host.applyAsHost")}
+              </Button>
+            </div>
+          )}
+
+          {!kycApproved && kycPhase === "verify" && (
+            <div className="mb-6" data-testid="host-apply-sumsub">
+              <SumsubWebVerification
+                getToken={() => token}
+                source="STAYS"
+                applicantEmail={applicantEmail}
+                applicantPhone={applicantPhone}
+                lang={lang}
+                onSubmitted={onSumsubSubmitted}
+                onFinalStatus={onSumsubFinalStatus}
+                onError={onSumsubError}
+              />
+              <div className="flex gap-3 mt-6">
+                <Button variant="ghost" onClick={onBack}>{t("hostApply.back")}</Button>
+              </div>
+            </div>
+          )}
+
+          {!kycApproved && kycPhase === "reviewing" && (
+            <div className="mb-6 text-center py-6 rounded-2xl border border-nexa-line bg-white px-6">
+              <div className="text-5xl mb-4">⏳</div>
+              <h3 className="text-xl font-semibold text-nexa-ink mb-2">{t("hostApply.kycReviewingTitle")}</h3>
+              <p className="text-sm text-nexa-ink-3 mb-3 max-w-md mx-auto">{t("hostApply.kycReviewingDesc")}</p>
+              <p className="text-xs text-nexa-ink-4">
+                {hostSubmitLoading ? t("hostApply.kycAutoSubmitting") : t("hostApply.kycReviewingHint")}
+              </p>
+            </div>
+          )}
+
+          {!kycApproved && kycPhase === "rejected" && (
+            <div className="mb-6">
+              <Alert variant="warning" title={t("hostApply.kycRejectedTitle")}>
+                {t("hostApply.kycRejectedDesc")}
+              </Alert>
+              <div className="flex gap-3 mt-5">
+                <Button variant="ghost" onClick={onBack}>{t("hostApply.back")}</Button>
+                <Button onClick={onRetryKyc}>{t("hostApply.kycRetry")}</Button>
+              </div>
+            </div>
+          )}
+
+          {kycApproved && (
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex-1 h-px bg-nexa-line" />
+              <button
+                type="button"
+                className="text-xs font-medium text-nexa-ink-4 hover:text-nexa-primary hover:underline"
+                onClick={() => setShowManualDocs((v) => !v)}
+                aria-expanded={showManualDocs}
+              >
+                {t("hostApply.orSubmitNewDocuments")}
+              </button>
+              <div className="flex-1 h-px bg-nexa-line" />
+            </div>
+          )}
+
+          {kycApproved && showManualDocs && (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
             <div>
               <label className="block text-sm font-semibold mb-2">{t("hostApply.idTypeRequired")}</label>
@@ -252,6 +432,8 @@ function HostVerificationStep({
               {hostSubmitLoading ? t("host.submitting") : t("hostApply.submitApplication")}
             </Button>
           </div>
+          </>
+          )}
         </>
       )}
     </div>
@@ -260,9 +442,25 @@ function HostVerificationStep({
 
 export default function HostPage() {
   const router = useRouter();
-  const { t, tf, localePath } = useLanguage();
-  const { token, isAuthenticated, user } = useAuth();
+  const { t, tf, localePath, locale } = useLanguage();
+  const {
+    token,
+    tokenType,
+    user,
+    ready: authReady,
+    setAuthJwt,
+    setAuthOtpSession,
+    setOnboarding,
+    refreshUser,
+  } = useAuth();
   const [step, setStep] = useState(1);
+  const [kycPhase, setKycPhase] = useState<HostKycPhase>("verify");
+  const [step2Submitting, setStep2Submitting] = useState(false);
+  const [step3Submitting, setStep3Submitting] = useState(false);
+  const [otpStepSkipped, setOtpStepSkipped] = useState(false);
+  const [draftStep, setDraftStep] = useState<number | null>(null);
+  /** Guards the one-shot auto-submit after KYC approval (backend is idempotent anyway). */
+  const autoSubmitRef = React.useRef(false);
   const [hostType, setHostType] = useState<"apartment" | "hotel" | "hostel">("apartment");
   const [hostStatus, setHostStatus] = useState<HostVerificationStatus | null>(null);
   const [hostLoading, setHostLoading] = useState(false);
@@ -283,6 +481,8 @@ export default function HostPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [city, setCity] = useState("");
   const [smsCode, setSmsCode] = useState("");
   const [emailCode, setEmailCode] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -293,17 +493,89 @@ export default function HostPage() {
   const hostTypeApi =
     hostType === "hotel" ? "HOTEL" : hostType === "hostel" ? "HOSTEL" : "APARTMENT";
 
+  /**
+   * Step-2 form mode. Verified accounts reuse their Identity profile (no PII
+   * re-entry); guests and unverified accounts fill the real identity fields.
+   */
+  const identityMode = resolveHostApplyIdentityMode({
+    tokenType,
+    hasToken: !!token,
+    kycStatus: user?.kyc_status,
+  });
+  const verifiedIdentity = identityFieldsFromUser(user);
+
   useEffect(() => {
     if (!user) return;
-    setFullName((prev) => prev || user.full_name?.trim() || "");
-    setEmail((prev) => prev || user.email?.trim() || "");
-    setPhone((prev) => prev || user.phone_number?.trim() || "");
-  }, [user]);
+    const fromUser = identityFieldsFromUser(user);
+    setFullName((prev) => prev || fromUser.fullName);
+    setEmail((prev) => prev || fromUser.email);
+    // Always prefer the account phone when signed in — drafts must not lock a different number.
+    if (fromUser.phone && (tokenType === "jwt" || tokenType === "otp_session")) {
+      setPhone(fromUser.phone);
+    } else {
+      setPhone((prev) => prev || fromUser.phone);
+    }
+    setDateOfBirth((prev) => prev || fromUser.dateOfBirth);
+    setCity((prev) => prev || fromUser.city);
+  }, [user, tokenType]);
+
+  // Draft continuity: restore steps 1–2 after a refresh (e.g. mid-Sumsub).
+  useEffect(() => {
+    const draft = loadHostApplyDraft();
+    if (!draft) return;
+    setHostType(draft.hostType);
+    setFullName((prev) => prev || draft.fullName);
+    setEmail((prev) => prev || draft.email);
+    // Do not pre-fill email confirm from draft — force re-typing after refresh.
+    setPhone((prev) => prev || draft.phone);
+    setDateOfBirth((prev) => prev || draft.dateOfBirth);
+    setCity((prev) => prev || draft.city);
+    setTermsAccepted(draft.termsAccepted);
+    setDraftStep(draft.step);
+  }, []);
+
+  // Resume where the applicant left off once we know whether a JWT survived the
+  // reload. OTP binders are memory-only, so without a JWT they re-verify phone.
+  useEffect(() => {
+    if (!authReady || draftStep == null) return;
+    if (draftStep >= 3) {
+      setStep(tokenType === "jwt" && token ? 4 : 3);
+    } else {
+      setStep(draftStep);
+    }
+    setDraftStep(null);
+  }, [authReady, draftStep, tokenType, token]);
+
+  const persistDraft = (nextStep: number) => {
+    saveHostApplyDraft({
+      hostType,
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      dateOfBirth: dateOfBirth.trim(),
+      city: city.trim(),
+      termsAccepted,
+      step: nextStep,
+    });
+  };
+
+  /** Identity fields that go to Stays / Identity: verified accounts always use the verified profile. */
+  const effectiveIdentity =
+    identityMode === "verified"
+      ? verifiedIdentity
+      : {
+          fullName: fullName.trim() || verifiedIdentity.fullName,
+          phone: phone.trim() || verifiedIdentity.phone,
+          email: email.trim() || verifiedIdentity.email,
+          dateOfBirth: dateOfBirth.trim() || verifiedIdentity.dateOfBirth,
+          city: city.trim() || verifiedIdentity.city,
+        };
 
   const buildSubmitPayload = (useExistingKyc: boolean) => ({
-    full_name: fullName.trim() || user?.full_name,
-    email: email.trim() || user?.email,
-    phone: phone.trim() || user?.phone_number,
+    full_name: effectiveIdentity.fullName || undefined,
+    email: effectiveIdentity.email || undefined,
+    phone: effectiveIdentity.phone || undefined,
+    city: effectiveIdentity.city || undefined,
     host_type: hostTypeApi,
     hosting_policies_accepted: termsAccepted,
     use_existing_kyc: useExistingKyc,
@@ -342,10 +614,9 @@ export default function HostPage() {
       normalizedHostStatus?.application_status === "REJECTED");
   const showApplicationForm = statusChecked && !applicationSubmitted && !isRejected;
 
-  // Load host status on mount. If the user has already applied (or is approved),
-  // show the confirmation screen instead of the application form.
+  // Load host status whenever we have a JWT (including mid-onboarding).
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (tokenType !== "jwt" || !token) {
       setStatusChecked(true);
       return;
     }
@@ -363,7 +634,7 @@ export default function HostPage() {
         setHostLoading(false);
         setStatusChecked(true);
       });
-  }, [isAuthenticated, token]);
+  }, [tokenType, token]);
 
   // Approved hosts use the dashboard — don't show the application flow again.
   useEffect(() => {
@@ -391,11 +662,55 @@ export default function HostPage() {
     setStep(2);
   };
 
-  const handleStep2Continue = () => {
+  /** Real identity fields → Identity profile (and KYC seed while onboarding is still open). */
+  const seedIdentityProfile = async (
+    getSessionToken: () => string | null,
+    opts: { seedKyc: boolean; patchProfile: boolean },
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const pii = {
+      full_name: fullName.trim() || undefined,
+      email: email.trim() || undefined,
+      city: city.trim() || undefined,
+      date_of_birth: dateOfBirth.trim() || undefined,
+    };
+    try {
+      if (opts.seedKyc) {
+        await submitKyc(
+          {
+            phone_number: phone,
+            ...pii,
+            documents: { id_document: true, selfie: true },
+            source: "STAYS",
+          },
+          getSessionToken,
+        );
+      }
+      if (opts.patchProfile) {
+        await updateProfile(pii, getSessionToken);
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: formatUserError(e) || t("hostApply.profileSaveFailed") };
+    }
+  };
+
+  const handleStep2Continue = async () => {
     if (!termsAccepted) {
       setStep2Error(t("hostApply.termsRequired"));
       return;
     }
+
+    // Verified account: identity comes from Identity — nothing to re-enter.
+    if (identityMode === "verified") {
+      setStep2Error(null);
+      setOtpStepSkipped(true);
+      autoSubmitRef.current = false;
+      setKycPhase("verify");
+      persistDraft(4);
+      setStep(4);
+      return;
+    }
+
     if (!fullName.trim()) {
       setStep2Error(t("hostApply.fullNameRequired"));
       return;
@@ -404,9 +719,30 @@ export default function HostPage() {
       setStep2Error(t("hostApply.phoneRequired"));
       return;
     }
+    if (!validatePhone(phone).valid) {
+      setStep2Error(t("hostApply.phoneInvalid"));
+      return;
+    }
+    const dobCheck = validateDateOfBirth(dateOfBirth.trim());
+    if (!dobCheck.valid) {
+      setStep2Error(
+        !dateOfBirth.trim()
+          ? t("hostApply.dobRequired")
+          : dobCheck.error === "Invalid date"
+            ? t("hostApply.dobInvalid")
+            : t("hostApply.dobUnderage"),
+      );
+      return;
+    }
+    if (!city.trim()) {
+      setStep2Error(t("hostApply.cityRequired"));
+      return;
+    }
     const emailCheck = validateEmail(email);
     if (!emailCheck.valid) {
-      setStep2Error(emailCheck.error ?? t("hostApply.validEmailRequired"));
+      setStep2Error(
+        !email.trim() ? t("hostApply.validEmailRequired") : t("hostApply.validEmailRequired"),
+      );
       return;
     }
     if (email.trim().toLowerCase() !== emailCode.trim().toLowerCase()) {
@@ -414,7 +750,36 @@ export default function HostPage() {
       return;
     }
     setStep2Error(null);
-    setStep(3);
+    // Already signed in with this phone → no need to re-verify by SMS.
+    const alreadyVerifiedPhone =
+      tokenType === "jwt" &&
+      !!token &&
+      !!user?.phone_number &&
+      normalizePhone(user.phone_number) === normalizePhone(phone);
+    const nextStep = alreadyVerifiedPhone ? 4 : 3;
+    setOtpStepSkipped(alreadyVerifiedPhone);
+    if (alreadyVerifiedPhone) {
+      autoSubmitRef.current = false;
+      setKycPhase("verify");
+      // Skipping OTP means step 3 never runs — push DOB/city to the account here.
+      const jwt = token;
+      setStep2Submitting(true);
+      try {
+        const seeded = await seedIdentityProfile(() => jwt, {
+          seedKyc: user?.onboarding?.required === true,
+          patchProfile: true,
+        });
+        if (!seeded.ok) {
+          setStep2Error(seeded.error || t("hostApply.profileSaveFailed"));
+          return;
+        }
+        void refreshUser().catch(() => undefined);
+      } finally {
+        setStep2Submitting(false);
+      }
+    }
+    persistDraft(nextStep);
+    setStep(nextStep);
   };
 
   const handleSendSmsCode = async () => {
@@ -431,23 +796,176 @@ export default function HostPage() {
     }
   };
 
+  /**
+   * Step 3: OTP verify doubles as account creation. Identity creates the
+   * CONSUMER shell on first verified OTP, so we persist the returned session
+   * (JWT or OTP binder) exactly like /login does, then seed the KYC profile
+   * with the step-2 PII so Sumsub receives name/email.
+   */
   const handleStep3Continue = async () => {
     if (!smsCodeSent || smsCode.trim().length < 4) {
       setStep3Error(t("hostApply.smsCodeRequired"));
       return;
     }
     setStep3Error(null);
+    setStep3Submitting(true);
     try {
       const result = await verifyOtp(phone, smsCode.trim());
       if (!result.verified) {
         setStep3Error(t("hostApply.smsInvalid"));
         return;
       }
+      if (resolveOtpPostVerifyState(result) === "INCOMPLETE_RESPONSE") {
+        setStep3Error(t("hostApply.sessionFailed"));
+        return;
+      }
+      const session = resolveHostApplySession(result);
+      let sessionToken: string | null = null;
+      if (session.kind === "jwt") {
+        setAuthJwt(session.accessToken, session.refreshToken, result.onboarding);
+        sessionToken = session.accessToken;
+      } else if (session.kind === "otp_session") {
+        setAuthOtpSession(session.token, result.onboarding);
+        sessionToken = session.token;
+      }
+      if (!sessionToken) {
+        setStep3Error(t("hostApply.sessionFailed"));
+        return;
+      }
+
+      // Push step-2 PII (name, email, DOB, city) to Identity so the account is real.
+      const getSessionToken = () => sessionToken;
+      const seedKyc = shouldSeedKycProfile(result);
+      const patchProfile = session.kind === "jwt";
+      if (seedKyc || patchProfile) {
+        const seeded = await seedIdentityProfile(getSessionToken, { seedKyc, patchProfile });
+        if (!seeded.ok) {
+          setStep3Error(seeded.error || t("hostApply.profileSaveFailed"));
+          return;
+        }
+      }
+
+      autoSubmitRef.current = false;
+      setKycPhase("verify");
+      persistDraft(4);
       setStep(4);
     } catch (e) {
       setStep3Error(e instanceof Error ? e.message : t("hostApply.phoneVerifyFailed"));
+    } finally {
+      setStep3Submitting(false);
     }
   };
+
+  /** Submit the host application with an explicit JWT (context may lag right after KYC). */
+  const submitApplication = async (useExistingKyc: boolean, jwt: string) => {
+    setHostSubmitLoading(true);
+    setHostError(null);
+    try {
+      const res = await submitHostVerification(buildSubmitPayload(useExistingKyc), jwt);
+      const normalized = normalizeHostVerificationStatus(res);
+      setHostStatus(normalized);
+      if (isApplicationPendingOrApproved(normalized)) {
+        setApplicationSubmitted(true);
+        setReapplying(false);
+        clearHostApplyDraft();
+      }
+      return true;
+    } catch (e) {
+      autoSubmitRef.current = false;
+      setHostError(
+        formatUserError(e) ||
+          t(useExistingKyc ? "host.applicationFailed" : "host.submissionFailed"),
+      );
+      return false;
+    } finally {
+      setHostSubmitLoading(false);
+    }
+  };
+
+  /**
+   * Terminal Sumsub outcome (from the widget or our own polling). On approval,
+   * turn the OTP binder into a JWT if needed and send the application to the
+   * ops inbox automatically. Rejections never reach the dashboard.
+   */
+  const handleKycFinalStatus = async (
+    status: HostKycFinalStatus,
+    canonicalOnboarding?: IdentityOnboardingState,
+  ) => {
+    if (canonicalOnboarding) setOnboarding(canonicalOnboarding);
+    if (status === "REJECTED") {
+      setKycPhase("rejected");
+      return;
+    }
+    if (!canAutoSubmitHostApplication(status, canonicalOnboarding)) {
+      // Identity still reports onboarding required — keep waiting for sync.
+      setKycPhase("reviewing");
+      return;
+    }
+    if (autoSubmitRef.current) return;
+    autoSubmitRef.current = true;
+
+    let jwt: string | null = tokenType === "jwt" ? token : null;
+    try {
+      if (tokenType === "otp_session" && token) {
+        const exchanged = await completeRegistration(token);
+        if (exchanged?.access_token) {
+          setAuthJwt(exchanged.access_token, exchanged.refresh_token, canonicalOnboarding);
+          jwt = exchanged.access_token;
+        }
+      } else if (tokenType === "jwt") {
+        await refreshUser().catch(() => {
+          /* profile refresh is cosmetic here; submit uses the live Identity snapshot */
+        });
+      }
+    } catch (e) {
+      autoSubmitRef.current = false;
+      setHostError(formatUserError(e) || t("hostApply.sessionFailed"));
+      return;
+    }
+    if (!jwt) {
+      autoSubmitRef.current = false;
+      setHostError(t("hostApply.sessionFailed"));
+      return;
+    }
+    await submitApplication(true, jwt);
+  };
+
+  // Widget is unmounted while "reviewing" — keep polling Identity ourselves.
+  useEffect(() => {
+    if (step !== 4 || kycPhase !== "reviewing" || !token) return;
+    let cancelled = false;
+    const tok = token;
+    const pollOnce = async () => {
+      try {
+        const r = await syncSumsubStatus(() => tok, "STAYS");
+        if (cancelled) return;
+        if (r.onboarding) setOnboarding(r.onboarding);
+        const terminal = mapKycStatusToFinal(r.status);
+        if (terminal) void handleKycFinalStatus(terminal, r.onboarding);
+      } catch {
+        // transient; next tick retries
+      }
+    };
+    void pollOnce();
+    const id = setInterval(() => void pollOnce(), 6000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, kycPhase, token]);
+
+  // Already-verified identity (existing Nexa user, or KYC finished elsewhere):
+  // reuse it and send the application without asking for documents again.
+  useEffect(() => {
+    if (step !== 4 || !statusChecked || hostLoading) return;
+    if (applicationSubmitted || autoSubmitRef.current) return;
+    if (tokenType !== "jwt" || !token) return;
+    if (!isKycVerifiedStatus(user?.kyc_status)) return;
+    autoSubmitRef.current = true;
+    void submitApplication(true, token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, statusChecked, hostLoading, applicationSubmitted, tokenType, token, user?.kyc_status]);
 
   const resolvedHostStatus = hostStatus
     ? normalizeHostVerificationStatus(
@@ -572,10 +1090,10 @@ export default function HostPage() {
                     <Link href={localePath("/host/listings/new")}>{t("hostDashboard.addListing")}</Link>
                   </Button>
                   <Button asChild>
-                    <Link href={localePath("/host/dashboard")}>Go to dashboard</Link>
+                    <Link href={localePath("/host/dashboard")}>{t("hostApply.goToDashboard")}</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href={localePath("/")}>Back to home</Link>
+                    <Link href={localePath("/")}>{t("hostApply.backToHome")}</Link>
                   </Button>
                 </div>
               </div>
@@ -696,64 +1214,164 @@ export default function HostPage() {
                   {tf("hostApply.stepOf", { step: 2, total: totalSteps })}
                 </span>
                 <h2 className="text-2xl font-semibold mt-2 mb-2">
-                  {t("hostApply.step2Title")}
+                  {identityMode === "verified"
+                    ? t("hostApply.step2VerifiedTitle")
+                    : t("hostApply.step2Title")}
                 </h2>
                 <p className="text-nexa-ink-3 mb-8">
-                  {t("hostApply.step2Subtitle")}
+                  {identityMode === "verified"
+                    ? t("hostApply.step2VerifiedSubtitle")
+                    : identityMode === "signed_in"
+                      ? t("hostApply.step2SignedInSubtitle")
+                      : t("hostApply.step2Subtitle")}
                 </p>
                 <div className="space-y-5 mb-8">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      {t("hostApply.fullLegalName")} <span className="text-nexa-primary">*</span>
-                    </label>
-                    <Input
-                      placeholder={t("hostApply.asOnId")}
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                  {identityMode === "verified" ? (
+                    <VerifiedIdentityCard
+                      identity={verifiedIdentity}
+                      t={t}
+                      locale={locale}
+                      profileHref={localePath("/profile")}
                     />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">
-                        {t("hostApply.phoneLabel")} <span className="text-nexa-primary">*</span>
-                      </label>
-                      <Input
-                        type="tel"
-                        placeholder={t("contact.phonePlaceholder")}
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">
-                        {t("hostApply.emailLabel")} <span className="text-nexa-primary">*</span>
-                      </label>
-                      <Input
-                        type="email"
-                        placeholder={t("contact.emailPlaceholder")}
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          setStep2Error(null);
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      {t("hostApply.confirmEmail")} <span className="text-nexa-primary">*</span>
-                    </label>
-                    <Input
-                      type="email"
-                      placeholder={t("hostApply.reenterEmail")}
-                      value={emailCode}
-                      onChange={(e) => {
-                        setEmailCode(e.target.value);
-                        setStep2Error(null);
-                      }}
-                    />
-                    <p className="mt-1 text-xs text-nexa-ink-4">{t("hostApply.confirmEmailHint")}</p>
-                  </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label htmlFor="host-apply-full-name" className="block text-sm font-semibold mb-2">
+                          {t("hostApply.fullLegalName")} <span className="text-nexa-primary">*</span>
+                        </label>
+                        <Input
+                          id="host-apply-full-name"
+                          autoComplete="name"
+                          placeholder={t("hostApply.asOnId")}
+                          value={fullName}
+                          onChange={(e) => {
+                            setFullName(e.target.value);
+                            setStep2Error(null);
+                          }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                          <label htmlFor="host-apply-phone" className="block text-sm font-semibold mb-2">
+                            {t("hostApply.phoneLabel")} <span className="text-nexa-primary">*</span>
+                          </label>
+                          <Input
+                            id="host-apply-phone"
+                            type="tel"
+                            autoComplete="tel"
+                            placeholder={t("contact.phonePlaceholder")}
+                            value={phone}
+                            readOnly={
+                              identityMode === "signed_in" &&
+                              !!verifiedIdentity.phone &&
+                              normalizePhone(phone) === normalizePhone(verifiedIdentity.phone)
+                            }
+                            aria-describedby={
+                              identityMode === "signed_in" &&
+                              verifiedIdentity.phone &&
+                              normalizePhone(phone) === normalizePhone(verifiedIdentity.phone)
+                                ? "host-apply-phone-hint"
+                                : undefined
+                            }
+                            className={cn(
+                              identityMode === "signed_in" &&
+                                verifiedIdentity.phone &&
+                                normalizePhone(phone) === normalizePhone(verifiedIdentity.phone) &&
+                                "bg-nexa-bg-2 text-nexa-ink-2",
+                            )}
+                            onChange={(e) => {
+                              setPhone(e.target.value);
+                              setStep2Error(null);
+                            }}
+                          />
+                          {identityMode === "signed_in" &&
+                            verifiedIdentity.phone &&
+                            normalizePhone(phone) === normalizePhone(verifiedIdentity.phone) && (
+                            <p id="host-apply-phone-hint" className="mt-1 text-xs text-nexa-ink-4">
+                              {t("hostApply.phoneFromAccount")}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label htmlFor="host-apply-email" className="block text-sm font-semibold mb-2">
+                            {t("hostApply.emailLabel")} <span className="text-nexa-primary">*</span>
+                          </label>
+                          <Input
+                            id="host-apply-email"
+                            type="email"
+                            autoComplete="email"
+                            placeholder={t("contact.emailPlaceholder")}
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              setStep2Error(null);
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label htmlFor="host-apply-email-confirm" className="block text-sm font-semibold mb-2">
+                          {t("hostApply.confirmEmail")} <span className="text-nexa-primary">*</span>
+                        </label>
+                        <Input
+                          id="host-apply-email-confirm"
+                          type="email"
+                          autoComplete="off"
+                          placeholder={t("hostApply.reenterEmail")}
+                          value={emailCode}
+                          onChange={(e) => {
+                            setEmailCode(e.target.value);
+                            setStep2Error(null);
+                          }}
+                        />
+                        <p className="mt-1 text-xs text-nexa-ink-4">{t("hostApply.confirmEmailHint")}</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                          <label htmlFor="host-apply-dob" className="block text-sm font-semibold mb-2">
+                            {t("hostApply.dobLabel")} <span className="text-nexa-primary">*</span>
+                          </label>
+                          <DatePicker
+                            id="host-apply-dob"
+                            variant="field"
+                            value={dateOfBirth}
+                            onChange={(v) => {
+                              setDateOfBirth(v);
+                              setStep2Error(null);
+                            }}
+                            aria-label={t("hostApply.dobLabel")}
+                            placeholder={t("hostApply.dobPlaceholder")}
+                            max={new Date().toISOString().slice(0, 10)}
+                            locale={locale}
+                          />
+                          <p className="mt-1 text-xs text-nexa-ink-4">{t("hostApply.dobHint")}</p>
+                        </div>
+                        <div>
+                          <label htmlFor="host-apply-city" className="block text-sm font-semibold mb-2">
+                            {t("hostApply.cityLabel")} <span className="text-nexa-primary">*</span>
+                          </label>
+                          <NexaSelect
+                            id="host-apply-city"
+                            variant="field"
+                            value={city}
+                            onChange={(v) => {
+                              setCity(v);
+                              setStep2Error(null);
+                            }}
+                            aria-label={t("hostApply.cityLabel")}
+                            options={[
+                              { value: "", label: t("hostApply.cityPlaceholder") },
+                              ...(city && !MOROCCO_CITIES.includes(city)
+                                ? [{ value: city, label: city }]
+                                : []),
+                              ...MOROCCO_CITIES.map((c) => ({ value: c, label: c })),
+                            ]}
+                          />
+                          <p className="mt-1 text-xs text-nexa-ink-4">{t("hostApply.cityHint")}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <label className="flex items-start gap-2.5 text-sm cursor-pointer">
                     <input
                       type="checkbox"
@@ -786,8 +1404,12 @@ export default function HostPage() {
                   <Button variant="ghost" onClick={() => goToStep(1)}>
                     {t("hostApply.back")}
                   </Button>
-                  <Button onClick={handleStep2Continue} disabled={!termsAccepted}>
-                    {t("hostApply.continue")}
+                  <Button
+                    onClick={() => void handleStep2Continue()}
+                    disabled={!termsAccepted || step2Submitting}
+                    aria-busy={step2Submitting || undefined}
+                  >
+                    {step2Submitting ? t("hostApply.savingProfile") : t("hostApply.continue")}
                   </Button>
                 </div>
               </div>
@@ -842,9 +1464,9 @@ export default function HostPage() {
                   <Button variant="ghost" onClick={() => goToStep(2)}>{t("hostApply.back")}</Button>
                   <Button
                     onClick={handleStep3Continue}
-                    disabled={smsCode.length < 4}
+                    disabled={smsCode.length < 4 || step3Submitting}
                   >
-                    {t("hostApply.continue")}
+                    {step3Submitting ? t("hostApply.creatingAccount") : t("hostApply.continue")}
                   </Button>
                 </div>
               </div>
@@ -853,12 +1475,25 @@ export default function HostPage() {
             {showApplicationForm && step === 4 && (
               <HostVerificationStep
                 token={token}
-                isAuthenticated={isAuthenticated}
+                tokenType={tokenType}
                 user={user}
                 hostStatus={hostStatus}
                 hostLoading={hostLoading}
                 hostSubmitLoading={hostSubmitLoading}
                 hostError={hostError}
+                kycPhase={kycPhase}
+                applicantEmail={email.trim() || user?.email || undefined}
+                applicantPhone={phone.trim() || user?.phone_number || undefined}
+                lang={locale}
+                onSumsubSubmitted={() => setKycPhase("reviewing")}
+                onSumsubFinalStatus={(s, nextOnboarding) =>
+                  void handleKycFinalStatus(s, nextOnboarding)
+                }
+                onSumsubError={(msg) => setHostError(msg)}
+                onRetryKyc={() => {
+                  setHostError(null);
+                  setKycPhase("verify");
+                }}
                 docType={docType}
                 docNumber={docNumber}
                 docFrontAssetId={docFrontAssetId}
@@ -911,52 +1546,19 @@ export default function HostPage() {
                     .finally(() => setHostLoading(false));
                 }}
                 onSubmitUseExistingKyc={async () => {
-                  if (!token) return;
-                  setHostSubmitLoading(true);
-                  setHostError(null);
-                  try {
-                    const res = await submitHostVerification(
-                      buildSubmitPayload(true),
-                      token,
-                    );
-                    const normalized = normalizeHostVerificationStatus(res);
-                    setHostStatus(normalized);
-                    if (isApplicationPendingOrApproved(normalized)) {
-                      setApplicationSubmitted(true);
-                      setReapplying(false);
-                    }
-                  } catch (e) {
-                    setHostError(formatUserError(e) || t("host.applicationFailed"));
-                  } finally {
-                    setHostSubmitLoading(false);
-                  }
+                  if (!token || tokenType !== "jwt") return;
+                  autoSubmitRef.current = true;
+                  await submitApplication(true, token);
                 }}
                 onSubmit={async () => {
-                  if (!token) return;
+                  if (!token || tokenType !== "jwt") return;
                   if (!docFrontAssetId || !selfieAssetId) {
                     setHostError(t("hostApply.missingIdUploads"));
                     return;
                   }
-                  setHostSubmitLoading(true);
-                  setHostError(null);
-                  try {
-                    const res = await submitHostVerification(
-                      buildSubmitPayload(false),
-                      token,
-                    );
-                    const normalized = normalizeHostVerificationStatus(res);
-                    setHostStatus(normalized);
-                    if (isApplicationPendingOrApproved(normalized)) {
-                      setApplicationSubmitted(true);
-                      setReapplying(false);
-                    }
-                  } catch (e) {
-                    setHostError(formatUserError(e) || t("host.submissionFailed"));
-                  } finally {
-                    setHostSubmitLoading(false);
-                  }
+                  await submitApplication(false, token);
                 }}
-                onBack={() => goToStep(3)}
+                onBack={() => goToStep(otpStepSkipped ? 2 : 3)}
                 onLoginRedirect={() =>
                   router.push(
                     `${localePath("/login")}?redirect=${encodeURIComponent(localePath("/host"))}`,

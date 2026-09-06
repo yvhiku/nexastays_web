@@ -16,6 +16,8 @@ import {
   getExplorePersonalization,
   type ExplorePersonalization,
 } from "@/lib/explore-personalization";
+import { pruneUnavailableRecentlyViewed } from "@/lib/recently-viewed";
+import { isListingPubliclyAvailable } from "@/lib/stays-api";
 import { getCollectionsForContext } from "@/lib/explore-collections";
 import { getExploreDestinationCards } from "@/lib/explore-destination-counts";
 import type { ExplorePageMode } from "@/lib/explore-mode";
@@ -123,6 +125,9 @@ export function ExploreFeed(props: ExploreFeedProps) {
     const refresh = () => setPersonalization(getExplorePersonalization());
     refresh();
     window.addEventListener("nexa-recently-viewed-changed", refresh);
+    // Paused / removed listings must not linger in "Continue browsing":
+    // prune entries the marketplace no longer serves (fires a refresh if any).
+    void pruneUnavailableRecentlyViewed(isListingPubliclyAvailable);
     return () => window.removeEventListener("nexa-recently-viewed-changed", refresh);
   }, []);
 

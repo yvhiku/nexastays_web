@@ -2,8 +2,9 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import Image from "next/image";
-import { Grid3X3, BadgeCheck, Zap } from "lucide-react";
+import { Grid3X3, BadgeCheck, Zap, ImageOff } from "lucide-react";
 import { getListingMediaUrl } from "@/lib/stays-api";
+import { cn } from "@/lib/utils";
 
 interface MediaItem {
   asset_id: string;
@@ -44,14 +45,51 @@ export function ListingHeroGallery({
 
   const getSrc = useCallback(
     (assetId: string) => {
-      if (assetId === "placeholder" || imgErrors[assetId]) return placeholder;
+      if (assetId === "placeholder") return placeholder;
       return getListingMediaUrl(listingId, assetId);
     },
-    [listingId, placeholder, imgErrors]
+    [listingId, placeholder]
   );
 
   const handleError = (assetId: string) => {
     setImgErrors((prev) => ({ ...prev, [assetId]: true }));
+  };
+
+  /**
+   * One gallery slot. Listing media is served by the Stays API (often a 302 to a
+   * signed URL), so it bypasses the Next image optimizer (`unoptimized`) like
+   * ListingCard does. A failed asset renders a distinct "unavailable" state —
+   * never the shared Unsplash hero, which made distinct photos look duplicated.
+   */
+  const renderSlot = (
+    assetId: string,
+    slotAlt: string,
+    opts: { sizes: string; priority?: boolean; hoverScale?: string },
+  ) => {
+    if (assetId !== "placeholder" && imgErrors[assetId]) {
+      return (
+        <div
+          role="img"
+          aria-label={slotAlt}
+          className="flex h-full w-full flex-col items-center justify-center gap-2 bg-nexa-bg-2 text-nexa-ink-4"
+        >
+          <ImageOff className="h-6 w-6" aria-hidden="true" />
+          <span className="text-xs font-medium">Photo unavailable</span>
+        </div>
+      );
+    }
+    return (
+      <Image
+        src={getSrc(assetId)}
+        alt={slotAlt}
+        fill
+        priority={opts.priority}
+        unoptimized={assetId !== "placeholder"}
+        sizes={opts.sizes}
+        className={cn("object-cover transition-transform duration-700", opts.hoverScale)}
+        onError={() => handleError(assetId)}
+      />
+    );
   };
 
   const items =
@@ -64,8 +102,8 @@ export function ListingHeroGallery({
   const totalCount = items.length;
 
   const openImage = (assetId: string) => {
-    const src = getSrc(assetId);
-    onImageClick?.(src);
+    if (assetId !== "placeholder" && imgErrors[assetId]) return;
+    onImageClick?.(getSrc(assetId));
   };
 
   const updateActivePhoto = () => {
@@ -89,15 +127,11 @@ export function ListingHeroGallery({
             onClick={() => openImage(main.asset_id)}
             className="relative block w-full h-full focus:outline-none"
           >
-            <Image
-              src={getSrc(main.asset_id)}
-              alt={alt}
-              fill
-              priority
-              sizes="(min-width: 768px) 66vw, 100vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              onError={() => handleError(main.asset_id)}
-            />
+            {renderSlot(main.asset_id, alt, {
+              sizes: "(min-width: 768px) 66vw, 100vw",
+              priority: true,
+              hoverScale: "group-hover:scale-105",
+            })}
           </button>
           <div className="absolute top-5 left-5 flex flex-wrap gap-2">
             {verified && (
@@ -124,14 +158,7 @@ export function ListingHeroGallery({
             className="relative h-full min-w-full shrink-0 snap-center focus:outline-none md:hidden"
             aria-label={`${alt}, photo ${index + 2} of ${totalCount}`}
           >
-            <Image
-              src={getSrc(photo.asset_id)}
-              alt={`${alt}, photo ${index + 2}`}
-              fill
-              sizes="100vw"
-              className="object-cover"
-              onError={() => handleError(photo.asset_id)}
-            />
+            {renderSlot(photo.asset_id, `${alt}, photo ${index + 2}`, { sizes: "100vw" })}
           </button>
         ))}
 
@@ -144,14 +171,10 @@ export function ListingHeroGallery({
                   onClick={() => openImage(photo.asset_id)}
                   className="relative block w-full h-full focus:outline-none"
                 >
-                  <Image
-                    src={getSrc(photo.asset_id)}
-                    alt={`${alt} — ${i + 2}`}
-                    fill
-                    sizes="(min-width: 768px) 17vw, 50vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={() => handleError(photo.asset_id)}
-                  />
+                  {renderSlot(photo.asset_id, `${alt} — ${i + 2}`, {
+                    sizes: "(min-width: 768px) 17vw, 50vw",
+                    hoverScale: "group-hover:scale-110",
+                  })}
                 </button>
                 {i === thumbs.length - 1 && totalCount > 5 && (
                   <button

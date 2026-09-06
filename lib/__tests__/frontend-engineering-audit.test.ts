@@ -49,7 +49,7 @@ test("every JSON-LD script uses the shared safe serializer", () => {
 
 test("upload preview object URLs are released when their owners unmount", () => {
   const attachments = read("lib/messaging/AttachmentManager.ts");
-  const listingWizard = read("app/[locale]/host/listings/new/page.tsx");
+  const listingWizard = read("lib/host-listing-wizard/use-listing-wizard.ts");
   assert.match(
     attachments,
     /return \(\) => \{[\s\S]*revokePreviews\(itemsRef\.current\)/,

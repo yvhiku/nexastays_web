@@ -12,6 +12,7 @@ import type {
   ListingWizardFormState,
   MediaCategory,
   UnitKind,
+  WizardPhoto,
 } from "./form-types";
 import { defaultWizardForm, newBedroom } from "./form-defaults";
 import { defaultBookingModel, isMultiUnitFlow } from "./step-config";
@@ -20,6 +21,7 @@ import {
   computeCompletionPercentage,
   type CompletionInput,
 } from "./completion";
+import { mediaBodyFromPhotos } from "./photo-queue";
 
 export function buildCreateHostListingBody(
   form: ListingWizardFormState,
@@ -227,26 +229,7 @@ export function buildReplaceUnitTypesBody(
 export function buildReplaceMediaBody(
   form: ListingWizardFormState,
 ): ReplaceListingMediaBody {
-  const media: ReplaceListingMediaBody["media"] = form.photos
-    .filter((p) => p.assetId)
-    .map((p, i) => ({
-      asset_id: p.assetId!,
-      kind: "PHOTO" as const,
-      sort_order: i,
-      category: p.category,
-      is_cover: p.isCover,
-    }));
-
-  const walkId = form.walkthroughAssetId;
-  if (walkId) {
-    media.push({
-      asset_id: walkId,
-      kind: "WALKTHROUGH",
-      sort_order: media.length,
-    });
-  }
-
-  return { media };
+  return mediaBodyFromPhotos(form.photos, form.walkthroughAssetId);
 }
 
 export function hydrateWizardFromListing(
@@ -275,16 +258,21 @@ export function hydrateWizardFromListing(
         })
       : [newBedroom(1)];
 
-  const photos = (listing.media ?? [])
+  const photoMedia = (listing.media ?? [])
     .filter((m) => m.kind === "PHOTO")
-    .map((m, i) => ({
-      id: m.asset_id,
-      file: null as File | null,
-      assetId: m.asset_id,
-      preview: getListingMediaUrl(listing.id, m.asset_id),
-      category: (m.category as MediaCategory) || "OTHER",
-      isCover: Boolean(m.is_cover) || i === 0,
-    }));
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const hasExplicitCover = photoMedia.some((m) => Boolean(m.is_cover));
+  const photos: WizardPhoto[] = photoMedia.map((m, i) => ({
+    // Client id is the grid key; keep it stable across hydrations by
+    // deriving from the asset id (server ids are already unique).
+    id: `srv-${m.asset_id}`,
+    file: null,
+    assetId: m.asset_id,
+    preview: getListingMediaUrl(listing.id, m.asset_id),
+    category: (m.category as MediaCategory) || "OTHER",
+    isCover: hasExplicitCover ? Boolean(m.is_cover) : i === 0,
+    uploadStatus: "uploaded",
+  }));
 
   const walk = (listing.media ?? []).find((m) => m.kind === "WALKTHROUGH");
 
@@ -416,7 +404,7 @@ export function completionInputFromForm(
     description: form.description,
     max_guests: form.maxGuests,
     base_price: basePrice,
-    photo_count: form.photos.length,
+    photo_count: form.photos.filter((p) => p.uploadStatus === "uploaded").length,
     has_walkthrough: Boolean(form.walkthrough || form.walkthroughAssetId),
     unit_count: form.unitTypes.length,
     amenities_count: form.amenities.length,
@@ -429,21 +417,4 @@ export function listingCompletePercent(form: ListingWizardFormState): number {
   return computeCompletionPercentage(
     computeCompletionFlags(completionInputFromForm(form)),
   );
-}
-
-/** @deprecated Draft JSON without File blobs — localStorage is no longer SoT. */
-export function serializeWizardDraft(form: ListingWizardFormState) {
-  const {
-    photos: _p,
-    walkthrough: _w,
-    walkthroughPreview: _wp,
-    ...rest
-  } = form;
-  return {
-    ...rest,
-    photos: [],
-    walkthrough: null,
-    walkthroughPreview: null,
-    walkthroughAssetId: form.walkthroughAssetId ?? null,
-  };
 }

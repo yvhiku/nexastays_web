@@ -90,6 +90,3 @@ export function defaultWizardForm(): ListingWizardFormState {
     walkthroughAssetId: null,
   };
 }
-
-/** @deprecated LocalStorage is no longer the source of truth for drafts. */
-export const DRAFT_STORAGE_PREFIX = "nexa_listing_wizard_draft_";

@@ -70,7 +70,7 @@ import {
 import type { StaysListing, CreateBookingOccupantDto } from "@/lib/stays-types";
 import { sanitizeGuestCount } from "@/lib/input-sanitize";
 import { trackEvent } from "@/lib/analytics";
-import { recordRecentlyViewed } from "@/lib/recently-viewed";
+import { recordRecentlyViewed, removeRecentlyViewed } from "@/lib/recently-viewed";
 import { recordListingViewForInstall } from "@/lib/pwa-engagement";
 import { ShareButton } from "@/components/pwa/ShareButton";
 import { EntityRelationshipHub } from "@/components/seo/EntityRelationshipHub";
@@ -229,6 +229,11 @@ export function ListingDetailPageClient({
         if (!cancelled) {
           setError(formatUserError(err) || t("listingDetail.failedLoad"));
           setListing(null);
+          // Public detail 404s once a listing is paused/removed — forget it so
+          // it disappears from "Continue browsing" immediately.
+          if ((err as { appError?: { status?: number } })?.appError?.status === 404) {
+            removeRecentlyViewed([id]);
+          }
         }
       })
       .finally(() => {

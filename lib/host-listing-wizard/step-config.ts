@@ -5,65 +5,44 @@ import type {
 } from "./form-types";
 import { roomsRequiredForType } from "./completion";
 
+/** i18n keys under `hostListing.wizard.types.<TYPE>.*` */
 export const PROPERTY_TYPE_COPY: Record<
   ListingType,
-  { label: string; support: string; selected: string }
+  { labelKey: string; supportKey: string }
 > = {
   APARTMENT: {
-    label: "Apartment",
-    support: "A flat, studio, or private residential unit.",
-    selected: "You'll set up an apartment listing.",
+    labelKey: "hostListing.wizard.types.APARTMENT.label",
+    supportKey: "hostListing.wizard.types.APARTMENT.support",
   },
   VILLA: {
-    label: "Villa",
-    support: "A private house, usually with outdoor space.",
-    selected: "You'll set up a villa listing.",
+    labelKey: "hostListing.wizard.types.VILLA.label",
+    supportKey: "hostListing.wizard.types.VILLA.support",
   },
   RIAD: {
-    label: "Riad",
-    support: "A traditional Moroccan home.",
-    selected: "You'll set up a riad listing.",
+    labelKey: "hostListing.wizard.types.RIAD.label",
+    supportKey: "hostListing.wizard.types.RIAD.support",
   },
   HOTEL: {
-    label: "Hotel",
-    support: "Managed stay with room categories and quantities.",
-    selected: "You'll add hotel room types next.",
+    labelKey: "hostListing.wizard.types.HOTEL.label",
+    supportKey: "hostListing.wizard.types.HOTEL.support",
   },
   HOSTEL: {
-    label: "Hostel",
-    support: "Shared dorm beds, private rooms, or both.",
-    selected: "You'll configure dorms and rooms next.",
+    labelKey: "hostListing.wizard.types.HOSTEL.label",
+    supportKey: "hostListing.wizard.types.HOSTEL.support",
   },
 };
 
 /** Guest House is UI-only; maps to APARTMENT + guest_house flag. */
 export const GUEST_HOUSE_UI = {
   id: "GUEST_HOUSE" as const,
-  label: "Guest House",
-  support: "A small hospitality property — maps to apartment inventory for now.",
+  labelKey: "hostListing.wizard.types.GUEST_HOUSE.label",
+  supportKey: "hostListing.wizard.types.GUEST_HOUSE.support",
 };
 
 export function defaultBookingModel(type: ListingType): BookingModel {
   if (type === "HOTEL") return "ROOM_TYPES";
   if (type === "HOSTEL") return "DORM_AND_PRIVATE";
   return "ENTIRE_PROPERTY";
-}
-
-export function bookingModelOptions(type: ListingType): Array<{
-  id: BookingModel;
-  label: string;
-  support: string;
-}> {
-  // Kept for compatibility; wizard no longer asks this for apartments.
-  if (type === "HOTEL") {
-    return [{ id: "ROOM_TYPES", label: "Hotel room types", support: "" }];
-  }
-  if (type === "HOSTEL") {
-    return [
-      { id: "DORM_AND_PRIVATE", label: "Dorms and private rooms", support: "" },
-    ];
-  }
-  return [{ id: "ENTIRE_PROPERTY", label: "Entire place", support: "" }];
 }
 
 export function isMultiUnitFlow(
@@ -73,7 +52,10 @@ export function isMultiUnitFlow(
   return roomsRequiredForType(type, model);
 }
 
-/** Adaptive wizard AFTER property type is chosen and DRAFT exists. */
+/**
+ * Adaptive wizard AFTER property type is chosen and DRAFT exists.
+ * Labels/descriptions are i18n keys resolved by the shell.
+ */
 export function getWizardSteps(
   type: ListingType | null,
   model: BookingModel | null,
@@ -81,56 +63,64 @@ export function getWizardSteps(
   if (!type) return [];
 
   const rooms = roomsRequiredForType(type, model);
-  const aboutLabel =
-    type === "HOTEL" ? "About hotel" : type === "HOSTEL" ? "About hostel" : "About";
-  const pricingLabel = rooms ? "Room pricing" : "Pricing";
+  const aboutLabelKey =
+    type === "HOTEL"
+      ? "hostListing.wizard.steps.aboutHotel"
+      : type === "HOSTEL"
+        ? "hostListing.wizard.steps.aboutHostel"
+        : "hostListing.wizard.steps.about";
 
   const steps: WizardStepDef[] = [
     {
       id: "location",
-      label: "Location",
-      description: "Where is the property?",
+      labelKey: "hostListing.wizard.steps.location",
+      descriptionKey: "hostListing.wizard.steps.locationDesc",
     },
     {
       id: "about",
-      label: aboutLabel,
-      description: "Basics and property details",
+      labelKey: aboutLabelKey,
+      descriptionKey: "hostListing.wizard.steps.aboutDesc",
     },
   ];
 
   if (rooms) {
     steps.push({
       id: "unitTypes",
-      label: type === "HOSTEL" ? "Rooms & dorms" : "Room types",
-      description: "Inventory and capacity",
+      labelKey:
+        type === "HOSTEL"
+          ? "hostListing.wizard.steps.roomsAndDorms"
+          : "hostListing.wizard.steps.roomTypes",
+      descriptionKey: "hostListing.wizard.steps.unitTypesDesc",
     });
   }
 
   steps.push(
     {
       id: "pricing",
-      label: pricingLabel,
-      description: rooms ? "Price each room type" : "Nightly price",
+      labelKey: rooms
+        ? "hostListing.wizard.steps.roomPricing"
+        : "hostListing.wizard.steps.pricing",
+      descriptionKey: rooms
+        ? "hostListing.wizard.steps.roomPricingDesc"
+        : "hostListing.wizard.steps.pricingDesc",
     },
     {
       id: "media",
-      label: "Photos",
-      description: "Photo workspace",
+      labelKey: "hostListing.wizard.steps.photos",
+      descriptionKey: "hostListing.wizard.steps.photosDesc",
+    },
+    {
+      id: "amenitiesRules",
+      labelKey: "hostListing.wizard.steps.amenitiesRules",
+      descriptionKey: "hostListing.wizard.steps.amenitiesRulesDesc",
+      optional: true,
     },
     {
       id: "submit",
-      label: "Submit",
-      description: "Checklist and send for review",
+      labelKey: "hostListing.wizard.steps.submit",
+      descriptionKey: "hostListing.wizard.steps.submitDesc",
     },
   );
 
   return steps;
-}
-
-/** @deprecated — booking structure step removed from create flow */
-export function getWizardStepsLegacy(
-  type: ListingType | null,
-  model: BookingModel | null,
-): WizardStepDef[] {
-  return getWizardSteps(type, model);
 }

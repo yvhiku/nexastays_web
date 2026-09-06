@@ -448,6 +448,17 @@ export interface SubmitHostOnboardingBody {
 }
 
 export interface SubmitHostVerificationBody {
+  full_name?: string;
+  phone?: string;
+  email?: string;
+  city?: string;
+  host_type?: string;
+  source?: "MOBILE" | "WEB" | "ADMIN" | "UNKNOWN";
+  submitted_from?: string;
+  hosting_policies_accepted?: boolean;
+  identity_reused?: boolean;
+  sumsub_applicant_id?: string;
+  identity_status?: string;
   document_type?: string;
   document_number_hash?: string;
   document_front_asset_id?: string;

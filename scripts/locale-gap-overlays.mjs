@@ -74,7 +74,6 @@ export const frGapOverlay = {
   hostListing: {
     description: "Description",
     cancelFlexible: "Flexible",
-    stepLabel7: "Photos",
   },
   hostAnalytics: {
     attention: "Attention",

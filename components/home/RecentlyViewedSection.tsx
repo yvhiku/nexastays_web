@@ -6,8 +6,10 @@ import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   getRecentlyViewed,
+  pruneUnavailableRecentlyViewed,
   type RecentlyViewedItem,
 } from "@/lib/recently-viewed";
+import { isListingMediaUrl, isListingPubliclyAvailable } from "@/lib/stays-api";
 
 export function RecentlyViewedSection() {
   const { t, localePath } = useLanguage();
@@ -17,6 +19,7 @@ export function RecentlyViewedSection() {
     const refresh = () => setItems(getRecentlyViewed());
     refresh();
     window.addEventListener("nexa-recently-viewed-changed", refresh);
+    void pruneUnavailableRecentlyViewed(isListingPubliclyAvailable);
     return () => window.removeEventListener("nexa-recently-viewed-changed", refresh);
   }, []);
 
@@ -43,7 +46,7 @@ export function RecentlyViewedSection() {
                     fill
                     className="object-cover"
                     sizes="208px"
-                    unoptimized={item.imageUrl.startsWith("http://")}
+                    unoptimized={isListingMediaUrl(item.imageUrl)}
                   />
                 ) : null}
               </div>

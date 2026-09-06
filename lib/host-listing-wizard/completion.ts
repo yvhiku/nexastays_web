@@ -106,42 +106,67 @@ export function computeCompletionPercentage(flags: ListingCompletionFlags): numb
   return Math.min(100, Math.max(0, score));
 }
 
-export function assertCanSubmit(flags: ListingCompletionFlags): string | null {
-  if (!flags.location_complete) return "Location (city, address, and map pin) is required.";
-  if (!flags.about_complete) {
-    return "Title, description (20+ characters), and guest capacity are required.";
-  }
-  if (!flags.rooms_complete) return "Room configuration is required for this property type.";
-  if (!flags.pricing_complete) return "Pricing is required.";
+/** Submit gate. Returns an i18n message (key + vars) or null when submittable. */
+export function assertCanSubmit(
+  flags: ListingCompletionFlags,
+): { key: string; vars?: Record<string, string | number> } | null {
+  const K = "hostListing.wizard.submitGate.";
+  if (!flags.location_complete) return { key: K + "location" };
+  if (!flags.about_complete) return { key: K + "about" };
+  if (!flags.rooms_complete) return { key: K + "rooms" };
+  if (!flags.pricing_complete) return { key: K + "pricing" };
   if (!flags.photos_complete) {
-    return `At least ${SUBMIT_MIN_PHOTOS} photos are required to submit.`;
+    return { key: K + "photos", vars: { min: SUBMIT_MIN_PHOTOS } };
   }
   return null;
 }
 
-export type MissingItem = { key: string; label: string; required: boolean };
+/** Wizard step that owns fixing this checklist item. */
+export type MissingStep = "location" | "about" | "unitTypes" | "pricing" | "media";
+
+export type MissingItem = {
+  key: string;
+  /** i18n key under `hostListing.wizard.missing.*` */
+  labelKey: string;
+  vars?: Record<string, string | number>;
+  required: boolean;
+  step: MissingStep;
+};
 
 export function listMissing(flags: ListingCompletionFlags): MissingItem[] {
+  const K = "hostListing.wizard.missing.";
   const items: MissingItem[] = [];
-  if (!flags.location_complete) items.push({ key: "location", label: "Location", required: true });
+  if (!flags.location_complete) {
+    items.push({ key: "location", labelKey: K + "location", required: true, step: "location" });
+  }
   if (!flags.about_complete) {
-    items.push({ key: "about", label: "About your property", required: true });
+    items.push({ key: "about", labelKey: K + "about", required: true, step: "about" });
   }
   if (!flags.rooms_complete) {
-    items.push({ key: "rooms", label: "Room configuration", required: true });
+    items.push({ key: "rooms", labelKey: K + "rooms", required: true, step: "unitTypes" });
   }
-  if (!flags.pricing_complete) items.push({ key: "pricing", label: "Pricing", required: true });
+  if (!flags.pricing_complete) {
+    items.push({ key: "pricing", labelKey: K + "pricing", required: true, step: "pricing" });
+  }
   if (!flags.photos_complete) {
-    items.push({ key: "photos", label: `${SUBMIT_MIN_PHOTOS} photos`, required: true });
+    items.push({
+      key: "photos",
+      labelKey: K + "photos",
+      vars: { min: SUBMIT_MIN_PHOTOS },
+      required: true,
+      step: "media",
+    });
   }
   if (!flags.walkthrough_complete) {
-    items.push({ key: "walkthrough", label: "Walkthrough video", required: false });
+    items.push({ key: "walkthrough", labelKey: K + "walkthrough", required: false, step: "media" });
   }
   if (!flags.photos_quality_complete) {
     items.push({
       key: "photos_quality",
-      label: `${QUALITY_TARGET_PHOTOS} photos (recommended)`,
+      labelKey: K + "photosQuality",
+      vars: { count: QUALITY_TARGET_PHOTOS },
       required: false,
+      step: "media",
     });
   }
   return items;

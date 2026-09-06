@@ -180,23 +180,55 @@ export function validateEmail(value: string): ValidationResult {
   return { valid: true };
 }
 
-/** Validate date of birth: must be valid date and age >= 18 */
+/** Validate date of birth: must be valid local calendar date and age >= 18 */
 export function validateDateOfBirth(value: string): ValidationResult {
   if (!value) {
     return { valid: false, error: "Date of birth is required" };
   }
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) {
+    return { valid: false, error: "Invalid date" };
+  }
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const day = Number(match[3]);
+  // Local midnight — avoid UTC `new Date("YYYY-MM-DD")` off-by-one near birthdays.
+  const d = new Date(y, m - 1, day);
+  if (
+    Number.isNaN(d.getTime()) ||
+    d.getFullYear() !== y ||
+    d.getMonth() !== m - 1 ||
+    d.getDate() !== day
+  ) {
     return { valid: false, error: "Invalid date" };
   }
   const now = new Date();
   let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  const monthDiff = now.getMonth() - d.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < d.getDate())) age--;
   if (age < 18) {
     return { valid: false, error: "You must be at least 18 years old" };
   }
   return { valid: true };
+}
+
+/** Parse YYYY-MM-DD as a local calendar date (or null if invalid). */
+export function parseLocalDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const day = Number(match[3]);
+  const d = new Date(y, m - 1, day);
+  if (
+    Number.isNaN(d.getTime()) ||
+    d.getFullYear() !== y ||
+    d.getMonth() !== m - 1 ||
+    d.getDate() !== day
+  ) {
+    return null;
+  }
+  return d;
 }
 
 /** Validate ID number (basic: non-empty, reasonable length) */
