@@ -35,6 +35,17 @@
     "goHome": "Retour à l’accueil"
   },
   "seo": {
+    "hostIntroBody": "Demandez à devenir hôte sur Nexa Stays. Consultez les frais et les conditions de vérification avant de proposer votre logement.",
+    "hostIntroTitle": "Proposez votre logement au Maroc",
+    "destinationGuides": "Lire les guides des destinations",
+    "moroccoHub": "Explorer les destinations au Maroc",
+    "brandDefinition": "Nexa Stays est une plateforme marocaine d’hébergement qui met en relation des voyageurs et des hôtes proposant des séjours de courte durée au Maroc.",
+    "marketplaceNote": "Ces statistiques présentent les annonces, pas leur disponibilité à vos dates. Consultez chaque annonce pour les prix, le règlement et les vérifications.",
+    "sortLabel": "Trier :",
+    "reviewPrice": "Vérifiez le prix total",
+    "checkRules": "Consultez le règlement",
+    "compareDetails": "Comparez les logements",
+    "liveStays": "Hébergements proposés",
     "staysHubTitle": "Séjours au Maroc | Nexa Stays",
     "staysHubDescription": "Parcourez des séjours vérifiés au Maroc — Marrakech, Casablanca, Agadir, Fès et plus.",
     "staysHubHeading": "Séjours à travers le Maroc",
@@ -45,7 +56,7 @@
     "guidesHubTitle": "Guides de voyage au Maroc | Nexa Stays",
     "guidesHubDescription": "Guides par ville, conseils saisonniers et expériences au Maroc — alimentés par les données Nexa Stays.",
     "guidesHubHeading": "Guides de voyage au Maroc",
-    "guideForCity": "Planifiez votre voyage à {city} avec des séjours vérifiés.",
+    "guideForCity": "Préparez votre séjour à {city}, au Maroc.",
     "relatedGuides": "Guides associés",
     "relatedStayCategories": "Types de séjours associés",
     "browseStaysIn": "Séjours à {city}",
@@ -74,7 +85,7 @@
     "cheapest": "Le moins cher",
     "luxuryStays": "Séjours de luxe",
     "avgRating": "Note moyenne",
-    "topArea": "Quartier le plus réservé",
+    "topArea": "Quartier avec le plus d’annonces",
     "bestTime": "Meilleure période",
     "topAmenities": "Équipements populaires",
     "perNight": "/nuit",
@@ -94,7 +105,7 @@
     "atAGlance": "En bref",
     "neighborhoodFacts": "Faits clés",
     "topPropertyType": "Type de logement courant",
-    "verifiedPercent": "Visite vidéo vérifiée",
+    "verifiedPercent": "Avec une vidéo de visite",
     "whyStayIn": "Pourquoi séjourner à {area} ?",
     "highlights": "Points forts",
     "travelersLove": "Ce que les voyageurs apprécient",
@@ -104,7 +115,7 @@
     "cons": "Inconvénients",
     "avoidIf": "À éviter si",
     "availableStaysIn": "Séjours disponibles à {area}",
-    "listingsSubline": "{count} séjours vérifiés · Mis à jour {updated}",
+    "listingsSubline": "{count} hébergements affichés",
     "sortRecommended": "Recommandés",
     "sortPrice": "Prix",
     "sortRating": "Note",
@@ -494,7 +505,8 @@
     "emailPartnerships": "Partenariats",
     "social": "Réseaux sociaux",
     "instagramJoinNexa": "@joinnexa",
-    "instagramNexaStays": "@nexastays.ma"
+    "instagramNexaStays": "@nexastays.ma",
+    "nexaEcosystem": "Écosystème Nexa"
   },
   "login": {
     "title": "Entrez votre numéro",
@@ -2621,7 +2633,12 @@
     "partnerCta": "Vous souhaitez devenir partenaire ?",
     "partnerBody": "Si vous gérez des biens, des hôtels ou un portefeuille d'unités, nous pouvons vous intégrer comme partenaire.",
     "contactPartnerships": "Contacter les partenariats →",
-    "startHosting": "Commencer l'hébergement"
+    "startHosting": "Commencer l'hébergement",
+    "ecosystemEyebrow": "Fait partie de Nexa",
+    "ecosystemTitle": "Nexa Stays fait partie de l’écosystème Nexa",
+    "ecosystemBody": "Nexa Stays est un produit de Nexa, entreprise technologique marocaine qui construit un écosystème connecté de services numériques spécialisés. nexastays.ma est l’expérience commerciale d’hébergement ; nexa.ma présente l’entreprise et la place de Stays aux côtés de Nexa Go, Pay, Fresh, Market et Jobs.",
+    "ecosystemCompanyLink": "Visiter Nexa (nexa.ma)",
+    "ecosystemProductLink": "Nexa Stays sur nexa.ma"
   },
   "profile": {
     "changePhoto": "Changer la photo",

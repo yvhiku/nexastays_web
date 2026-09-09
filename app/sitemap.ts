@@ -18,20 +18,19 @@ const staticRoutes = [
   "/refund",
 ] as const;
 
-function languageAlternates(path: string) {
+function languageAlternates(path: string, eligiblePaths?: Set<string>) {
   const suffix = path.replace(/^\/(en|fr|ar)(?=\/|$)/, "");
   return Object.fromEntries(
-    locales.map((locale) => [locale, toPublicAbsoluteUrl(`/${locale}${suffix}`)]),
+    locales.filter((locale) => !eligiblePaths || eligiblePaths.has(`/${locale}${suffix}`))
+      .map((locale) => [locale, toPublicAbsoluteUrl(`/${locale}${suffix}`)]),
   );
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
 
   const staticEntries: MetadataRoute.Sitemap = locales.flatMap((locale) =>
     staticRoutes.map((route) => ({
       url: toPublicAbsoluteUrl(`/${locale}${route}`),
-      lastModified: now,
       changeFrequency:
         route === "" || route === "/listings" || route === "/stays" ? "daily" : "monthly",
       priority: route === "" ? 1 : route === "/listings" || route === "/stays" ? 0.9 : 0.6,
@@ -45,16 +44,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchSeoSitemapEntries(),
     fetchSeoListingSitemapEntries(),
   ]);
-  const dynamicEntries: MetadataRoute.Sitemap = [
-    ...seoEntries,
-    ...listingEntries,
-  ].map((entry) => ({
+  const eligiblePaths = new Set([...seoEntries, ...listingEntries].map((entry) => entry.path));
+  const dynamicEntries: MetadataRoute.Sitemap = [...seoEntries, ...listingEntries].map((entry) => ({
     url: toPublicAbsoluteUrl(entry.path),
-    lastModified: entry.lastmod ? new Date(entry.lastmod) : now,
+    lastModified: entry.lastmod && Number.isFinite(Date.parse(entry.lastmod)) ? new Date(entry.lastmod) : undefined,
     changeFrequency: "daily" as const,
     priority: entry.priority ?? 0.85,
     alternates: {
-      languages: languageAlternates(entry.path),
+      languages: languageAlternates(entry.path, eligiblePaths),
     },
   }));
 

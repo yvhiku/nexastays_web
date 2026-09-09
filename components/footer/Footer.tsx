@@ -96,6 +96,16 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <a
+                  href="https://nexa.ma/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                >
+                  {t("footer.nexaEcosystem")}
+                </a>
+              </li>
+              <li>
                 <Link href={localePath("/contact")} className={linkClass}>
                   {t("nav.contact")}
                 </Link>

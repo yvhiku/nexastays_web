@@ -39,7 +39,7 @@ export function DestinationIntelligencePanel({
   if (intelligence.listingCount > 0) {
     rows.push({
       label: labels.verifiedStays,
-      value: `${intelligence.listingCount}${intelligence.verifiedCount > 0 ? ` (${intelligence.verifiedCount} verified walkthrough)` : ""}`,
+      value: String(intelligence.listingCount),
     });
   }
   if (intelligence.avgNightlyPrice != null) {

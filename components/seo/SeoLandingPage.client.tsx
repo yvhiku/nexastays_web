@@ -148,7 +148,7 @@ export function SeoLandingPageClient({ page, listings }: Props) {
             bestTimeToVisit={dest?.bestTimeToVisit ?? null}
             labels={{
               title: intelligenceTitle,
-              verifiedStays: t("seo.verifiedStays"),
+              verifiedStays: t("seo.liveStays"),
               avgPrice: t("seo.avgPrice"),
               cheapest: t("seo.cheapest"),
               luxury: t("seo.luxuryStays"),
@@ -162,6 +162,8 @@ export function SeoLandingPageClient({ page, listings }: Props) {
             }}
           />
 
+          <p className="text-sm text-nexa-muted">{t("seo.marketplaceNote")}</p>
+
           <SeoLandingFacts
             title={t("seo.neighborhoodFacts")}
             intelligence={page.intelligence}
@@ -171,7 +173,7 @@ export function SeoLandingPageClient({ page, listings }: Props) {
               topPropertyType: t("seo.topPropertyType"),
               verifiedPercent: t("seo.verifiedPercent"),
               avgRating: t("seo.avgRating"),
-              listingCount: t("seo.verifiedStays"),
+              listingCount: t("seo.liveStays"),
               perNight: t("seo.perNight"),
             }}
           />
@@ -207,7 +209,7 @@ export function SeoLandingPageClient({ page, listings }: Props) {
           <SeoLandingListings
             title={tf("seo.availableStaysIn", { area })}
             subline={tf("seo.listingsSubline", {
-              count: String(page.intelligence.listingCount),
+              count: String(listings.length),
               updated: formatLastmod(page.lastmod, page.locale),
             })}
             listings={listings}

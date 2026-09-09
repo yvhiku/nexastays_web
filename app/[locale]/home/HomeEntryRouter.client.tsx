@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,7 @@ import {
 } from "@/lib/mobile-entry-routing";
 
 type Props = {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export function HomeEntryRouter({ children }: Props) {
@@ -18,7 +18,6 @@ export function HomeEntryRouter({ children }: Props) {
   const searchParams = useSearchParams();
   const { localePath } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
@@ -42,16 +41,7 @@ export function HomeEntryRouter({ children }: Props) {
       return;
     }
 
-    setReady(true);
   }, [isAuthenticated, localePath, router, searchParams]);
-
-  if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center nexa-guest-main">
-        <span className="h-8 w-8 animate-spin rounded-full border-2 border-nexa-primary border-t-transparent" />
-      </div>
-    );
-  }
 
   return <>{children}</>;
 }

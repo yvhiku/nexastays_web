@@ -35,6 +35,17 @@
     "goHome": "Return home"
   },
   "seo": {
+    "hostIntroBody": "Apply to host on Nexa Stays. Review the fees and verification requirements before submitting your property.",
+    "hostIntroTitle": "Host your property in Morocco",
+    "destinationGuides": "Read destination guides",
+    "moroccoHub": "Explore destinations in Morocco",
+    "brandDefinition": "Nexa Stays is a Moroccan accommodation marketplace connecting guests with hosts offering short-term stays in Morocco.",
+    "marketplaceNote": "Listing statistics are a snapshot, not availability for your dates. Check the listing for prices, house rules and verification details.",
+    "sortLabel": "Sort:",
+    "reviewPrice": "Review the total price",
+    "checkRules": "Check house rules",
+    "compareDetails": "Compare property details",
+    "liveStays": "Listed stays",
     "staysHubTitle": "Stays in Morocco | Nexa Stays",
     "staysHubDescription": "Browse verified stays across Morocco — Marrakech, Casablanca, Agadir, Fes, and more.",
     "staysHubHeading": "Stays across Morocco",
@@ -45,7 +56,7 @@
     "guidesHubTitle": "Morocco Travel Guides | Nexa Stays",
     "guidesHubDescription": "City travel guides, seasonal tips, and experience planning for Morocco — powered by live Nexa Stays marketplace data.",
     "guidesHubHeading": "Morocco travel guides",
-    "guideForCity": "Plan your trip to {city} with verified stays and local insights.",
+    "guideForCity": "Plan where to stay in {city}, Morocco.",
     "relatedGuides": "Related guides",
     "relatedStayCategories": "Related stay types",
     "browseStaysIn": "Browse stays in {city}",
@@ -74,7 +85,7 @@
     "cheapest": "Cheapest stay",
     "luxuryStays": "Luxury stays",
     "avgRating": "Average rating",
-    "topArea": "Most booked area",
+    "topArea": "Area with most listings",
     "bestTime": "Best time to visit",
     "topAmenities": "Top amenities",
     "perNight": "/night",
@@ -94,7 +105,7 @@
     "atAGlance": "At a glance",
     "neighborhoodFacts": "Neighborhood facts",
     "topPropertyType": "Typical property type",
-    "verifiedPercent": "Walkthrough verified",
+    "verifiedPercent": "With a walkthrough video",
     "whyStayIn": "Why stay in {area}?",
     "highlights": "Highlights",
     "travelersLove": "Things travelers love",
@@ -104,7 +115,7 @@
     "cons": "Cons",
     "avoidIf": "Consider another area if",
     "availableStaysIn": "Available stays in {area}",
-    "listingsSubline": "Showing {count} verified stays · Updated {updated}",
+    "listingsSubline": "Showing {count} stays",
     "sortRecommended": "Recommended",
     "sortPrice": "Price",
     "sortRating": "Guest rating",
@@ -494,7 +505,8 @@
     "emailPartnerships": "Partnerships",
     "social": "Social",
     "instagramJoinNexa": "@joinnexa",
-    "instagramNexaStays": "@nexastays.ma"
+    "instagramNexaStays": "@nexastays.ma",
+    "nexaEcosystem": "Nexa ecosystem"
   },
   "login": {
     "title": "Enter your phone",
@@ -2742,7 +2754,12 @@
     "partnerCta": "Want to partner with us?",
     "partnerBody": "If you manage properties, hotels, or a portfolio of units, we can onboard you as a featured partner.",
     "contactPartnerships": "Contact Partnerships →",
-    "startHosting": "Start Hosting"
+    "startHosting": "Start Hosting",
+    "ecosystemEyebrow": "Part of Nexa",
+    "ecosystemTitle": "Nexa Stays is part of the Nexa ecosystem",
+    "ecosystemBody": "Nexa Stays is a product of Nexa, a Moroccan technology company building a connected ecosystem of specialized digital services. nexastays.ma is the commercial accommodation experience; nexa.ma explains the company and how Stays fits with Nexa Go, Pay, Fresh, Market and Jobs.",
+    "ecosystemCompanyLink": "Visit Nexa (nexa.ma)",
+    "ecosystemProductLink": "Nexa Stays on nexa.ma"
   },
   "profile": {
     "changePhoto": "Change photo",

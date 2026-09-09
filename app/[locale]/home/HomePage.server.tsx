@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { NavBar } from "@/components/navbar/NavBar";
 import { FooterSection } from "@/components/footer/Footer.server";
@@ -11,14 +12,6 @@ import { MarketingSections } from "./Marketing.server";
 import { DeferredHomeClient } from "./Deferred.client";
 import { HomeEntryRouter } from "./HomeEntryRouter.client";
 import { CompactHomeMarketing } from "./CompactHomeMarketing.client";
-
-function HomeEntryFallback() {
-  return (
-    <div className="flex min-h-[40vh] items-center justify-center nexa-guest-main">
-      <span className="h-8 w-8 animate-spin rounded-full border-2 border-nexa-primary border-t-transparent" />
-    </div>
-  );
-}
 
 export const revalidate = 3600;
 
@@ -34,9 +27,15 @@ export default async function HomePage({ params }: Props) {
   return (
     <>
       <NavBar />
-      <Suspense fallback={<HomeEntryFallback />}>
-        <HomeEntryRouter>
+      <Suspense fallback={null}><HomeEntryRouter /></Suspense>
           <main>
+            <section className="nexa-guest-main max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-12 pt-8">
+              <p className="text-nexa-muted max-w-3xl">{t("seo.brandDefinition")}</p>
+              <nav className="flex flex-wrap gap-5 mt-3 text-nexa-primary" aria-label={t("seo.moroccoHub")}>
+                <Link href={`/${locale}/stays`}>{t("seo.moroccoHub")}</Link>
+                <Link href={`/${locale}/guides`}>{t("seo.destinationGuides")}</Link>
+              </nav>
+            </section>
             <HeroSection
               locale={locale}
               embedSearch={
@@ -66,8 +65,7 @@ export default async function HomePage({ params }: Props) {
             </CompactHomeMarketing>
           </main>
           <FooterSection locale={locale} />
-        </HomeEntryRouter>
-      </Suspense>
+
     </>
   );
 }

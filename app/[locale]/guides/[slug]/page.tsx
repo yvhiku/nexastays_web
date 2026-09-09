@@ -33,8 +33,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     locale,
     ogImage: page.destination?.heroImageUrl ?? undefined,
     robots: page.robots,
-    // Only EN guide articles are treated as localized/indexable content.
-    hreflangLocales: ["en"],
+    // Backend publication/quality policy also supplies sitemap eligibility.
+    hreflangLocales: (["en", "fr", "ar"] as const).filter((loc) => Boolean(page.hreflang[loc])),
   });
 }
 

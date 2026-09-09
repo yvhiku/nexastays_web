@@ -1071,6 +1071,8 @@ export default function HostPage() {
 
         <div className="bg-nexa-bg py-8 sm:py-10 lg:py-12 px-4 sm:px-6 md:px-10 lg:px-20 pb-20 lg:pb-16">
           <div className="max-w-[600px]">
+            <h1 className="font-display text-3xl font-semibold text-nexa-ink mb-3">{t("seo.hostIntroTitle")}</h1>
+            <p className="text-nexa-muted mb-6">{t("seo.hostIntroBody")}</p>
             {!statusChecked && token && (
               <div className="py-12 text-center text-nexa-ink-4">{t("common.loading")}</div>
             )}

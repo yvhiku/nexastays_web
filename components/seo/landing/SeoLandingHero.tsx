@@ -65,7 +65,7 @@ export function SeoLandingHero({ page, listingsPath, heroIntro }: Props) {
         <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/85">
           {intel.listingCount > 0 && (
             <span>
-              {intel.listingCount} {t("seo.verifiedStays").toLowerCase()}
+              {intel.listingCount} {t("seo.liveStays").toLowerCase()}
               {intel.avgNightlyPrice != null &&
                 ` · ${t("seo.avgPrice").toLowerCase()} ${formatNightlyPrice(intel.avgNightlyPrice, intel.currency, locale, t("seo.perNight"))}`}
             </span>

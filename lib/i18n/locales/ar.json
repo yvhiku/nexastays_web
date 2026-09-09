@@ -35,6 +35,17 @@
     "goHome": "العودة إلى الرئيسية"
   },
   "seo": {
+    "hostIntroBody": "تقدم لتصبح مضيفًا على Nexa Stays. راجع الرسوم ومتطلبات التحقق قبل تقديم عقارك.",
+    "hostIntroTitle": "استضف الضيوف في عقارك بالمغرب",
+    "destinationGuides": "اقرأ أدلة الوجهات",
+    "moroccoHub": "استكشف الوجهات في المغرب",
+    "brandDefinition": "Nexa Stays منصة مغربية للإقامة تربط الضيوف بمضيفين يقدمون إقامات قصيرة المدة في المغرب.",
+    "marketplaceNote": "تعكس هذه الإحصاءات الإعلانات ولا تؤكد التوفر في تواريخ رحلتك. راجع كل إعلان لمعرفة الأسعار والقواعد وتفاصيل التحقق.",
+    "sortLabel": "ترتيب:",
+    "reviewPrice": "تحقق من السعر الإجمالي",
+    "checkRules": "راجع قواعد الإقامة",
+    "compareDetails": "قارن تفاصيل أماكن الإقامة",
+    "liveStays": "أماكن الإقامة المعروضة",
     "staysHubTitle": "إقامات في المغرب | Nexa Stays",
     "staysHubDescription": "تصفح إقامات موثقة في المغرب — مراكش، الدار البيضاء، أكادير، فاس والمزيد.",
     "staysHubHeading": "إقامات في جميع أنحاء المغرب",
@@ -45,7 +56,7 @@
     "guidesHubTitle": "دلائل السفر في المغرب | Nexa Stays",
     "guidesHubDescription": "أدلة المدن ونصائح موسمية وتخطيط التجارب في المغرب — مدعومة ببيانات Nexa Stays.",
     "guidesHubHeading": "دلائل السفر في المغرب",
-    "guideForCity": "خطط لرحلتك إلى {city} مع إقامات موثقة.",
+    "guideForCity": "خطط لإقامتك في {city}، المغرب.",
     "relatedGuides": "أدلة ذات صلة",
     "relatedStayCategories": "أنواع إقامات ذات صلة",
     "browseStaysIn": "تصفح الإقامات في {city}",
@@ -74,7 +85,7 @@
     "cheapest": "أقل سعر",
     "luxuryStays": "إقامات فاخرة",
     "avgRating": "متوسط التقييم",
-    "topArea": "المنطقة الأكثر حجزاً",
+    "topArea": "الحي الذي يضم أكبر عدد من الإعلانات",
     "bestTime": "أفضل وقت للزيارة",
     "topAmenities": "المرافق الأكثر شيوعاً",
     "perNight": "/ليلة",
@@ -94,7 +105,7 @@
     "atAGlance": "نظرة سريعة",
     "neighborhoodFacts": "حقائق عن الحي",
     "topPropertyType": "نوع العقار الشائع",
-    "verifiedPercent": "موثق بجولة فيديو",
+    "verifiedPercent": "مع فيديو جولة في العقار",
     "whyStayIn": "لماذا الإقامة في {area}؟",
     "highlights": "أبرز المميزات",
     "travelersLove": "ما يحبه المسافرون",
@@ -104,7 +115,7 @@
     "cons": "العيوب",
     "avoidIf": "فكّر في منطقة أخرى إذا",
     "availableStaysIn": "إقامات متاحة في {area}",
-    "listingsSubline": "{count} إقامة موثقة · محدّث {updated}",
+    "listingsSubline": "عرض {count} أماكن إقامة",
     "sortRecommended": "موصى به",
     "sortPrice": "السعر",
     "sortRating": "التقييم",
@@ -494,7 +505,8 @@
     "emailPartnerships": "الشراكات",
     "social": "وسائل التواصل",
     "instagramJoinNexa": "@joinnexa",
-    "instagramNexaStays": "@nexastays.ma"
+    "instagramNexaStays": "@nexastays.ma",
+    "nexaEcosystem": "منظومة نكسا"
   },
   "login": {
     "title": "أدخل رقم هاتفك",
@@ -2621,7 +2633,12 @@
     "partnerCta": "تريد الشراكة معنا؟",
     "partnerBody": "إذا كنت تدير عقارات أو فنادق أو محفظة وحدات، يمكننا إدماجك كشريك.",
     "contactPartnerships": "تواصل للشراكات →",
-    "startHosting": "ابدأ الاستضافة"
+    "startHosting": "ابدأ الاستضافة",
+    "ecosystemEyebrow": "جزء من نكسا",
+    "ecosystemTitle": "Nexa Stays جزء من منظومة نكسا",
+    "ecosystemBody": "Nexa Stays منتج من نكسا، شركة تكنولوجيا مغربية تبني منظومة متصلة من خدمات رقمية متخصصة. nexastays.ma تجربة الإقامة التجارية؛ nexa.ma يشرح الشركة ومكان Stays إلى جانب Nexa Go وPay وFresh وMarket وJobs.",
+    "ecosystemCompanyLink": "زيارة نكسا (nexa.ma)",
+    "ecosystemProductLink": "Nexa Stays على nexa.ma"
   },
   "profile": {
     "changePhoto": "تغيير الصورة",

@@ -33,6 +33,40 @@ export default function AboutPage() {
           </div>
         </section>
 
+        <section className="py-12 sm:py-16 border-y border-nexa-line bg-white">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+            <span className="block text-xs font-semibold tracking-[0.12em] uppercase text-nexa-primary mb-4">
+              {t("about.ecosystemEyebrow")}
+            </span>
+            <h2 className="text-2xl font-semibold text-nexa-ink mb-4 max-w-[640px]">
+              {t("about.ecosystemTitle")}
+            </h2>
+            <p className="mb-6 max-w-[640px] text-nexa-ink-3">
+              {t("about.ecosystemBody")}
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button asChild>
+                <a
+                  href="https://nexa.ma/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("about.ecosystemCompanyLink")}
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a
+                  href="https://nexa.ma/stays/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("about.ecosystemProductLink")}
+                </a>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         <section className="py-12 sm:py-24">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">

@@ -1,14 +1,15 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import React from "react";
 import { CheckCircle2, Shield, CreditCard, BadgeCheck } from "lucide-react";
 
 type Props = { compact?: boolean };
 
 export function SeoTrustSignals({ compact }: Props) {
+  const { t } = useLanguage();
   const items = [
-    { icon: BadgeCheck, label: "Walkthrough verified" },
-    { icon: Shield, label: "Identity verified" },
-    { icon: CreditCard, label: "Secure booking" },
-    { icon: CheckCircle2, label: "Transparent pricing" },
+    { icon: BadgeCheck, label: t("seo.compareDetails") },
+    { icon: Shield, label: t("seo.checkRules") },
+    { icon: CreditCard, label: t("seo.reviewPrice") },
   ];
   return (
     <ul
@@ -25,7 +26,8 @@ export function SeoTrustSignals({ compact }: Props) {
 }
 
 export function SeoTrustSignalsLight() {
-  const items = ["Walkthrough verified", "Secure booking", "Transparent pricing"];
+  const { t } = useLanguage();
+  const items = [t("seo.compareDetails"), t("seo.checkRules"), t("seo.reviewPrice")];
   return (
     <p className="text-xs text-nexa-muted flex flex-wrap gap-x-3 gap-y-1">
       {items.map((label) => (

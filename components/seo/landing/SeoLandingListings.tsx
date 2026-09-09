@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import React, { useMemo, useState } from "react";
 import { SeoListingsGrid } from "@/components/seo/SeoListingsGrid.client";
 import { SeoTrustSignalsLight } from "@/components/seo/landing/SeoTrustSignals";
@@ -27,6 +28,7 @@ export function SeoLandingListings({
   sortLabels,
   locale: _locale,
 }: Props) {
+  const { t } = useLanguage();
   const [sort, setSort] = useState<SortKey>("recommended");
 
   const sorted = useMemo(() => {
@@ -62,7 +64,7 @@ export function SeoLandingListings({
         </div>
         {listings.length > 1 && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-nexa-muted">Sort:</span>
+            <span className="text-nexa-muted">{t("seo.sortLabel")}</span>
             {(Object.keys(sortLabels) as SortKey[]).map((key) => (
               <button
                 key={key}

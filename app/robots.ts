@@ -23,7 +23,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/", ...localizedPrivatePaths],
+        disallow: ["/api/", ...localizedPrivatePaths],
       },
     ],
     sitemap: toPublicAbsoluteUrl("/sitemap.xml"),

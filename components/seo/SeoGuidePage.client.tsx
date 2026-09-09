@@ -101,7 +101,7 @@ export function SeoGuidePageClient({ page, listings }: Props) {
                     bestTimeToVisit={dest.bestTimeToVisit}
                     labels={{
                       title: tf("seo.intelligenceForCity", { city: dest.name }),
-                      verifiedStays: t("seo.verifiedStays"),
+                      verifiedStays: t("seo.liveStays"),
                       avgPrice: t("seo.avgPrice"),
                       cheapest: t("seo.cheapest"),
                       luxury: t("seo.luxuryStays"),

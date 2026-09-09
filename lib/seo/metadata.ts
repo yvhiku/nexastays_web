@@ -28,9 +28,7 @@ export function buildSeoMetadata(args: {
   hreflangLocales?: readonly SeoLocale[];
 }): Metadata {
   const canonicalPath = seoPathname(args.path);
-  const hreflangLocales = args.hreflangLocales?.length
-    ? args.hreflangLocales
-    : LOCALES;
+  const hreflangLocales = args.hreflangLocales ?? LOCALES;
   const languages = Object.fromEntries(
     hreflangLocales.map((loc) => {
       const localized = canonicalPath.replace(/^\/(en|fr|ar)/, `/${loc}`);
@@ -53,7 +51,7 @@ export function buildSeoMetadata(args: {
     description: args.description,
     alternates: {
       canonical,
-      languages: { ...languages, "x-default": xDefault },
+      languages: hreflangLocales.length ? { ...languages, "x-default": xDefault } : undefined,
     },
     robots: indexable
       ? { index: true, follow: true }
@@ -64,7 +62,7 @@ export function buildSeoMetadata(args: {
       title: args.title,
       description: args.description,
       locale: OPEN_GRAPH_LOCALES[args.locale],
-      alternateLocale: LOCALES
+      alternateLocale: hreflangLocales
         .filter((locale) => locale !== args.locale)
         .map((locale) => OPEN_GRAPH_LOCALES[locale]),
       images: [{ url: image }],

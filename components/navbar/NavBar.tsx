@@ -107,6 +107,7 @@ export const NavBar = () => {
       <div className="w-full max-w-[1280px] mx-auto ps-4 pe-2 sm:ps-6 sm:pe-3 md:px-8 flex items-center justify-between gap-2 sm:gap-3 lg:gap-4 min-w-0">
         <Link
           href={localePath("/")}
+          aria-label="Nexa Stays"
           className="flex items-center gap-2 sm:gap-2.5 cursor-pointer hover:opacity-90 transition-opacity shrink-0"
         >
           <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border-2 border-nexa-primary-soft shrink-0">
@@ -118,7 +119,7 @@ export const NavBar = () => {
               className="object-cover"
             />
           </div>
-          <span className="font-display text-lg sm:text-xl font-bold text-nexa-ink whitespace-nowrap">
+          <span className="hidden min-[400px]:inline font-display text-lg sm:text-xl font-bold text-nexa-ink whitespace-nowrap">
             Nexa <span className="text-nexa-primary">Stays</span>
           </span>
         </Link>

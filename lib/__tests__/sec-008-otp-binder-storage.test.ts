@@ -13,7 +13,7 @@ import {
   getOtpSessionToken,
   LEGACY_OTP_SESSION_STORAGE_KEY,
   setOtpSessionToken,
-} from "../otp-session-store.ts";
+} from "../otp-session-store";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 

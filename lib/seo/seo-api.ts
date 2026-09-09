@@ -1,4 +1,4 @@
-import { getStaysApiBaseUrl } from "@/lib/env";
+import { fetchSeoJson } from "./fetch-json";
 import {
   buildListingsPath,
   exploreFiltersToApiParams,
@@ -17,22 +17,8 @@ import type {
 } from "./types";
 
 const REVALIDATE = 86400;
-/** Fail open quickly when the stays API is down/hung (local or prod). */
-const SEO_FETCH_TIMEOUT_MS = 3_000;
-
-async function seoFetch<T>(path: string, revalidate = REVALIDATE): Promise<T | null> {
-  const base = getStaysApiBaseUrl().replace(/\/$/, "");
-  try {
-    const res = await fetch(`${base}${path}`, {
-      next: { revalidate },
-      signal: AbortSignal.timeout(SEO_FETCH_TIMEOUT_MS),
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
-}
+const seoFetch = <T>(path: string, revalidate = REVALIDATE, allowNotFound = false) =>
+  fetchSeoJson<T>(path, revalidate, allowNotFound);
 
 export async function fetchSeoDestinations(): Promise<SeoDestinationDto[]> {
   return (await seoFetch<SeoDestinationDto[]>("/stays/seo/destinations")) ?? [];
@@ -45,11 +31,11 @@ export async function fetchSeoPage(
   if (segments.length === 0) return null;
   if (segments.length === 1) {
     return seoFetch<SeoPagePayload>(
-      `/stays/seo/pages/${encodeURIComponent(segments[0]!)}?locale=${locale}`,
+      `/stays/seo/pages/${encodeURIComponent(segments[0]!)}?locale=${locale}`, REVALIDATE, true,
     );
   }
   return seoFetch<SeoPagePayload>(
-    `/stays/seo/pages/${encodeURIComponent(segments[0]!)}/${encodeURIComponent(segments[1]!)}?locale=${locale}`,
+    `/stays/seo/pages/${encodeURIComponent(segments[0]!)}/${encodeURIComponent(segments[1]!)}?locale=${locale}`, REVALIDATE, true,
   );
 }
 
@@ -79,7 +65,6 @@ function seoFiltersToExploreFilters(filters: SeoExploreFiltersDto): ExploreFilte
 export async function fetchSeoListings(
   filters: SeoExploreFiltersDto,
 ): Promise<StaysListing[]> {
-  const base = getStaysApiBaseUrl().replace(/\/$/, "");
   const apiParams = exploreFiltersToApiParams(seoFiltersToExploreFilters(filters));
   const q = new URLSearchParams();
   for (const [key, value] of Object.entries(apiParams)) {
@@ -91,17 +76,8 @@ export async function fetchSeoListings(
     }
   }
   q.set("limit", "12");
-  try {
-    const res = await fetch(`${base}/stays/explore?${q.toString()}`, {
-      next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(SEO_FETCH_TIMEOUT_MS),
-    });
-    if (!res.ok) return [];
-    const data = (await res.json()) as ExploreListEnvelope;
-    return (data.items ?? []).map(exploreCardToListing);
-  } catch {
-    return [];
-  }
+  const data = await fetchSeoJson<ExploreListEnvelope>(`/stays/explore?${q.toString()}`, 3600);
+  return (data?.items ?? []).map(exploreCardToListing);
 }
 
 /** Build listings path from SEO explore filters (canonical ExploreFilters transport). */
